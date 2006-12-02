@@ -54,54 +54,59 @@ class EOFToken(Token):
 
 class Tokeniser(object):
     def __init__(self, dataStream):
-        self.states = {
-            "DATA":self.dataState,
-            "ENTITY_DATA":self.entityDataState,
-            "TAG_OPEN",
-            "CLOSE_TAG_OPEN",
-            "TAG_NAME",
-            "BEFORE_ATTRIBUTE_NAME",
-            "ATTRIBUTE_NAME",
-            "AFTER_ATTRIBUTE_NAME",
-            "BEFORE_ATTRIBUTE_VALUE",
-            "ATTRIBUTE_VALUE_DOUBLE_QUOTE",
-            "ATTRIBUTE_VALUE_SINGLE_QUOTE",
-            "ENTITY_IN_ATTRIBUTE_VALUE",
-            "BOGUS_COMMENT",
-            "MARKUP_DECLERATION_OPEN",
-            "COMMENT",
-            "COMMENT_DASH",
-            "COMMENT_END",
-            "DOCTYPE"
-            "BEFORE_DOCTYPE_NAME",
-            "DOCTYPE_NAME"
-            "AFTER_DOCTYPE_NAME",
-            "BOGUS_DOCTYPE"
-            }
-
 	#For simplicity we assume here that the input to the tokeniser is
 	#already decoded to unicode
 	self.dataStrem = dataStream
 
+        self.states = {
+            "data":self.dataState,
+            "entityData":self.entityDataState,
+            "tagOpen":self.tagOpenState,
+            "closeTagOpen":self.closeTagOpenState,
+            "tagName":self.tagNameState,
+            "beforeAttributeName":self.beforeAttributeNameState,
+            "attributeName":self.attributeNameState,
+            "afterAttributeName":self.afterAttributeNameState,
+            "beforeAttributeValue":self.beforeAttributeValueState,
+            "attributeValueDoubleQuote":self.attributeValueDoubleQuoteState,
+            "attributeValueSingleQuote":self.attributeValueSingleQuoteState,
+            "entityInAttributeValue":self.entityInAttributeValueState,
+            "bogusComment":self.bogusCommentState,
+            "markupDeclerationOpen":self.markupDeclerationOpenState,
+            "comment":self.commentState,
+            "commentDash":self.commentDashState,
+            "commentEnd":self.commentEndState,
+            "doctype":self.doctypeState,
+            "beforeDoctypeName":self.beforeDoctypeNameState,
+            "doctypeName":self.doctypeNameState,
+            "afterDoctypeName":self.afterDoctypeNameState,
+            "bogusDoctype":self.bogusDoctypeState,
+            }
+
+
 	#Setup the initial tokeniser state
 	self.contentModelFlag = contentModelFlags['PCDATA']
-	self.state = self.states['DATA'](self)
+	self.state = self.states['data'](self)
 
 	#The current token being processed
 	self.token = None
 	
-	self.characterStack = []
+	self.characterQueue = []
 	self.tokenQueue = []
 
     def getToken(self):	
 	#Continue reading data until we have a token to return
 	while not (self.tokenQueue):
-	    self.state():
+	    self.state()
 	return self.tokenQueue.pop()
-
+	
     def consumeNext(self):
-	if self.characterStack:
-	    return self.characterStack.pop()
+        """Get the next character to be consumed"""
+        #If the characterQueue has chacracters they must be processed 
+        #efore any character is added to the stream. 
+        #This is to allow e.g. lookahead
+	if self.characterQueue:
+	    return self.characterQueue.pop(0)
 	else: 
 	    return self.dataStream.read(1)
     
@@ -110,10 +115,10 @@ class Tokeniser(object):
 	if (data == u"&" and 
 	    (tokenizer.contentModelFlag in 
 	     (contentModelFlags['PCDATA'] or contentModelFlags['RCDATA']))):
-	    self.state = self.states['ENTITY']
+	    self.state = self.states['entity']
 	elif (data == u"<" and 
 	      self.contentModelFlag != contentModelFlags['PLAINTEXT']):
-	    self.state = self.states['TAG_OPEN']
+	    self.state = self.states['tagOpen']
 	elif data == EOF:
 	    self.tokenQueue.append(EOFToken())
 	else:
@@ -128,14 +133,72 @@ class Tokeniser(object):
 	if (tokenizer.contentModelFlag in 
 	    (contentModelFlags['RCDATA'] or contentModelFlags['CDATA'])):
 	    if data == u"/":
-		self.state=self.states['CLOSE_TAG_OPEN']
+		self.state=self.states['closeTagOpen']
 	    else:
-		self.characterStack.append(data)
+		self.characterQueue.append(data)
 		self.state = self.states['DATA_STATE']
 	elif tokenizer.contentModelFlag == contentModelFlags['PCDATA']:
-	    
+	    if data == u"!":
+                self.state = self.states["markupDeclerationOpen"]
 	else:
 	    assert False
+          
+    def closeTagOpenState(self):
+        raise NotImplementedError
+
+    def tagNameState(self):
+        raise NotImplementedError
+
+    def beforeAttributeNameState(self):
+        raise NotImplementedError
+
+    def attributeNameState(self):
+        raise NotImplementedError
+
+    def afterAttributeNameState(self):
+        raise NotImplementedError
+
+    def beforeAttributeValueState(self):
+        raise NotImplementedError
+
+    def attributeValueDoubleQuoteState(self):
+        raise NotImplementedError
+
+    def attributeValueSingleQuoteState(self):
+        raise NotImplementedError
+
+    def entityInAttributeValueState(self):
+        raise NotImplementedError
+
+    def bogusCommentState(self):
+        raise NotImplementedError
+
+    def markupDeclerationOpenState(self):
+        raise NotImplementedError
+
+    def commentState(self):
+        raise NotImplementedError
+
+    def commentDashState(self):
+        raise NotImplementedError
+    
+    def commentEndState(self):
+        raise NotImplementedError
+    
+    def doctypeState(self):
+        raise NotImplementedError
+
+    def beforeDoctypeNameState(self):
+        raise NotImplementedError
+
+    def doctypeNameState(self):
+        raise NotImplementedError
+
+    def afterDoctypeNameState(self):
+        raise NotImplementedError
+
+    def bogusDoctypeState(self):
+        raise NotImplementedError
 
 class ParseError(Exception):
     """Error in parsed document"""
