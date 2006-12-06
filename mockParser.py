@@ -1,3 +1,6 @@
+
+import sys
+
 from parser import *
 
 class HTMLParser(object):
@@ -47,4 +50,7 @@ class HTMLParser(object):
 
 if __name__ == "__main__":
     x = HTMLParser()
-    x.parse(open("tests/test1.html", "r"))
+    if len(sys.argv) > 1:
+        x.parse(open(sys.argv[1]))
+    else:
+        print "Usage: python mockParser.py filename"
