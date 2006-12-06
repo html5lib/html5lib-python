@@ -468,8 +468,10 @@ class HTMLTokenizer(object):
         charStack = []
 
         # Consume all the characters that are in range.
-        while c is self.consumeChar() and c in range: # XXX does this work!?
+        c = self.consumeChar()
+        while c in range:
             charStack.append(c)
+            c = self.consumeChar()
 
         # Convert the set of characters consumed to an int.
         charAsInt = int("".join(charStack), radix)
@@ -504,17 +506,16 @@ class HTMLTokenizer(object):
             if charStack[1].lower() == u"x" \
               and charStack[2] in string.hexdigits:
                 # Hexadecimal entity detected.
-                self.characterQueue.append(charStack[2]) # XXX does this work!?
-                char = consumeNumberEntity(True)
+                self.characterQueue.append(charStack[2])
+                char = self.consumeNumberEntity(True)
             elif charStack[1] in string.digits:
                 # Decimal entity detected.
-                charStack.pop(0)
-                self.characterQueue.append(charStack[1]) # XXX does this work!?
-                self.characterQueue.append(charStack[2]) # XXX does this work!?
-                char = consumeNumberEntity(False)
+                self.characterQueue.append(charStack[1])
+                self.characterQueue.append(charStack[2])
+                char = self.consumeNumberEntity(False)
             else:
                 # No number entity detected.
-                self.characterQueue.extend(charStack) # XXX does this work!?
+                self.characterQueue.extend(charStack)
                 self.parser.parseError()
         else:
             # At this point in the process might have named entity. Entities
