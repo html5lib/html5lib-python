@@ -909,21 +909,19 @@ class HTMLTokenizer(object):
         return True
 
     def doctypeNameState(self):
-        # XXX when you exit this state we should check if the name exactly
-        # matches "HTML" (case-sensitive) and if it does we should set
-        # currentToken.error to False.
-
         data = self.consumeChar()
         if data in spaceCharacters:
             self.changeState("afterDoctypeName")
         elif data == u">":
             self.emitCurrentToken()
-        elif data in string.ascii_lowercase:
-            self.currentToken.name += data.upper()
         elif data == EOF:
             self.emitCurrentTokenWithParseError(data)
         else:
+            if data in string.ascii_lowercase:
+                data = data.upper()
             self.currentToken.name += data
+            if self.currentToken.name == u"HTML":
+                self.currentToken.error = False
         return True
 
     def afterDoctypeNameState(self):
@@ -933,6 +931,7 @@ class HTMLTokenizer(object):
         elif data == u">":
             self.emitCurrentToken()
         elif data == EOF:
+            self.currentToken.error = True
             self.emitCurrentTokenWithParseError(data)
         else:
             self.parser.parseError()
