@@ -39,11 +39,11 @@ class HTMLParser(object):
         print "EOF"
 
     def parseError(self):
-        print "Parse Error", self.tokenizer.state
+        print "    Parse Error"
 
     def atheistParseError(self):
         """This error is not an error"""
-        print "Atheist Parse Error"
+        print "    Atheist Parse Error"
 
 if __name__ == "__main__":
     x = HTMLParser()

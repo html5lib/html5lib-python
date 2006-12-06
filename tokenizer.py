@@ -295,7 +295,7 @@ class DoctypeToken(Token):
                  error: The Error status of the doctype)
     """
     def __init__(self, name=None):
-        self.name = None
+        self.name = name
         self.error = True
 
 class TagToken(Token):
@@ -489,10 +489,9 @@ class HTMLTokenizer(object):
 
         # Discard the ; if present. Otherwise, put it back on the queue and
         # invoke parseError on parser.
-        data = self.consumeChar()
-        if data != u";":
+        if c != u";":
             self.parser.parseError()
-            self.characterQueue.append(data)
+            self.characterQueue.append(c)
 
         return char
 
@@ -575,7 +574,8 @@ class HTMLTokenizer(object):
         elif isinstance(self.currentToken, CommentToken):
             self.parser.processComment(self.currentToken.data)
         elif isinstance(self.currentToken, DoctypeToken):
-            self.parser.processDoctype(self.currentToken.name, self.currentToken.error)
+            self.parser.processDoctype(self.currentToken.name, \
+              self.currentToken.error)
         else:
             assert False
         self.changeState("data")
@@ -936,6 +936,7 @@ class HTMLTokenizer(object):
             pass
         elif data in string.ascii_lowercase:
             self.currentToken = DoctypeToken(data.upper())
+            self.changeState("doctypeName")
         elif data == u">":
             # Character needs to be consumed per the specification so don't
             # invoke with "data" as argument.
@@ -944,12 +945,15 @@ class HTMLTokenizer(object):
             self.emitCurrentTokenWithParseError(data)
         else:
             self.currentToken = DoctypeToken(data)
+            self.changeState("doctypeName")
         return True
 
     def doctypeNameState(self):
         data = self.consumeChar()
+        needsDoctypeCheck = False
         if data in spaceCharacters:
             self.changeState("afterDoctypeName")
+            needsDoctypeCheck = True
         elif data == u">":
             self.emitCurrentToken()
         elif data == EOF:
@@ -960,11 +964,12 @@ class HTMLTokenizer(object):
             if data in string.ascii_lowercase:
                 data = data.upper()
             self.currentToken.name += data
+            needsDoctypeCheck = True
 
-            # After some iterations through this state it should eventually say
-            # "HTML". Otherwise there's an error.
-            if self.currentToken.name == u"HTML":
-                self.currentToken.error = False
+        # After some iterations through this state it should eventually say
+        # "HTML". Otherwise there's an error.
+        if needsDoctypeCheck and self.currentToken.name == u"HTML":
+            self.currentToken.error = False
         return True
 
     def afterDoctypeNameState(self):
