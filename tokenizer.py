@@ -303,6 +303,9 @@ class TagToken(Token):
     Attributes - name:       The tag name
                  attributes: A list of (attribute-name,value) lists
     """
+
+    # Note: the parser gets a dict, not a list of lists.
+
     def __init__(self, name=""):
         self.name = name
         self.attributes = []
@@ -330,8 +333,8 @@ class HTMLTokenizer(object):
       Points to the parser object that implements the following methods:
 
       - processDoctype(name, error)
-      - processStartTag(tagname, attributes[])
-      - processEndTag(tagname, attributes[])
+      - processStartTag(tagname, attributes{})
+      - processEndTag(tagname)
       - processComment(data)
       - processCharacter(data)
       - processEOF()
@@ -345,8 +348,6 @@ class HTMLTokenizer(object):
     * self.states
       Holds a mapping between states and methods that implement the state.
     """
-
-    # XXX does processEndTag really need that second argument?
 
     def __init__(self, parser):
         self.parser = parser
@@ -561,10 +562,15 @@ class HTMLTokenizer(object):
         # internal usage.
 
         if isinstance(self.currentToken, StartTagToken):
-            # XXX set last emitted tag name...
-            self.parser.processStartTag(self.currentToken.name, self.currentToken.attributes)
+            # We need to remove the duplicate attributes and convert attributes
+            # to a dict so that [["x", "y"], ["x", "z"]] becomes {"x": "y"}
+
+            # AT When Python 2.4 is widespread we should use
+            # dict(reversed(self.currentToken.attributes))
+            attrsDict = dict(self.currentToken.attributes[::-1])
+            self.parser.processStartTag(self.currentToken.name, attrsDict)
         elif isinstance(self.currentToken, EndTagToken):
-            self.parser.processEndTag(self.currentToken.name, self.currentToken.attributes)
+            self.parser.processEndTag(self.currentToken.name)
         elif isinstance(self.currentToken, CommentToken):
             self.parser.processComment(self.currentToken.data)
         elif isinstance(self.currentToken, DoctypeToken):
@@ -832,7 +838,7 @@ class HTMLTokenizer(object):
         return True
 
     def bogusCommentState(self):
-        assert self.contentModelFlag != contentModelFlags['PCDATA']
+        assert self.contentModelFlag == contentModelFlags["PCDATA"]
 
         charStack = [self.ConsumeChar()]
         while charStack[-1] not in [u">", EOF]:
@@ -848,7 +854,7 @@ class HTMLTokenizer(object):
         self.emitCurrentToken()
 
     def markupDeclerationOpenState(self):
-        assert self.contentModelFlag != contentModelFlags['PCDATA']
+        assert self.contentModelFlag == contentModelFlags["PCDATA"]
 
         charStack = []
         for x in xrange(2):
