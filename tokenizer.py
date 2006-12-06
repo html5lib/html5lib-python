@@ -16,6 +16,41 @@ spaceCharacters = (
     u" "
 )
 
+entitiesWindows1252 = {
+    128: 8364,
+    129: 65533,
+    130: 8218,
+    131: 402,
+    132: 8222,
+    133: 8230,
+    134: 8224,
+    135: 8225,
+    136: 710,
+    137: 8240,
+    138: 352,
+    139: 8249,
+    140: 338,
+    141: 65533,
+    142: 381,
+    143: 65533,
+    144: 65533,
+    145: 8216,
+    146: 8217,
+    147: 8220,
+    148: 8221,
+    149: 8226,
+    150: 8211,
+    151: 8212,
+    152: 732,
+    153: 8482,
+    154: 353,
+    155: 8250,
+    156: 339,
+    157: 65533,
+    158: 382,
+    159: 65533,
+}
+
 entities = {
     "AElig": u"\u00C6",
     "Aacute": u"\u00C1",
@@ -279,7 +314,7 @@ entities = {
 }
 
 # Data representing the end of the input stream
-EOF = object()
+EOF = None
 
 # Token objects used to hold token data when tokens are in the
 # process of being constructed
@@ -475,6 +510,8 @@ class HTMLTokenizer(object):
 
         # Convert the set of characters consumed to an int.
         charAsInt = int("".join(charStack), radix)
+        if 128 < charAsInt < 159:
+            charAsInt = entitiesWindows1252[charAsInt]
 
         try:
             # XXX This is wrong. This doesn't take "windows-1252 entities" into
