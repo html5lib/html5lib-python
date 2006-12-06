@@ -25,8 +25,8 @@ class HTMLParser(object):
     def processStartTag(self, name, attributes):
         print "StartTag:", name, attributes
 
-    def processEndTag(self, name, attributes):
-        print "EndTag:", name, attributes
+    def processEndTag(self, name):
+        print "EndTag:", name
 
     def processComment(self, data):
         print "Comment:", data
@@ -44,3 +44,7 @@ class HTMLParser(object):
     def atheistParseError(self):
         """This error is not an error"""
         print "Atheist Parse Error"
+
+if __name__ == "__main__":
+    x = HTMLParser()
+    x.parse(open("tests/test1.html", "r"))

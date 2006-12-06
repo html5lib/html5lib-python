@@ -452,7 +452,7 @@ class HTMLTokenizer(object):
         # doesn't get lost...
         self.characterQueue.append(data)
 
-    def consumeNumberEntity(isHex):
+    def consumeNumberEntity(self, isHex):
         """This function returns either U+FFFD or the character based on the
         decimal or hexadecimal representation. It also discards ";" if present.
         If not present self.parser.parseError() is invoked.
@@ -494,7 +494,7 @@ class HTMLTokenizer(object):
 
         return char
 
-    def consumeEntity():
+    def consumeEntity(self):
         char = None
         charStack = []
         charStack.append(self.consumeChar())
@@ -610,7 +610,7 @@ class HTMLTokenizer(object):
         if (data == u"&" and
           (self.contentModelFlag in
           (contentModelFlags["PCDATA"], contentModelFlags["RCDATA"]))):
-            self.changeState("entity")
+            self.changeState("entityData")
         elif (data == u"<" and
           self.contentModelFlag != contentModelFlags['PLAINTEXT']):
             self.changeState("tagOpen")
