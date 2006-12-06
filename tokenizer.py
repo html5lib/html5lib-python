@@ -741,12 +741,14 @@ class HTMLTokenizer(object):
             self.emitCurrentToken()
         elif data in string.ascii_uppercase:
             self.currentToken.attributes.append([data.lower(), ""])
+            self.changeState("attributeName")
         elif data == u"/":
             self.processSolidusInTag()
         elif data == u"<" or data == EOF:
             self.emitCurrentTokenWithParseError(data)
         else:
             self.currentToken.attributes.append([data, ""])
+            self.changeState("attributeName")
         return True
 
     def attributeNameState(self):
@@ -801,7 +803,7 @@ class HTMLTokenizer(object):
         return True
 
     def beforeAttributeValueState(self):
-        data = consumeChar()
+        data = self.consumeChar()
         if data in spaceCharacters:
             pass
         elif data == u"\"":
@@ -816,7 +818,7 @@ class HTMLTokenizer(object):
         elif data == u"<" or data == EOF:
             self.emitCurrentTokenWithParseError(data)
         else:
-            self.currentToken[-1][1] += data
+            self.currentToken.attributes[-1][1] += data
             self.changeState("attributeValueUnQuoted")
         return True
 
