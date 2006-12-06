@@ -551,7 +551,7 @@ class HTMLTokenizer(object):
             self.currentToken.attributes[-1][1] += u"&"
 
     def emitCurrentToken(self):
-        """This method is a generic handler for emitting the StarTagToken,
+        """This method is a generic handler for emitting the StartTagToken,
         EndTagToken, CommentToken and DoctypeToken. It also sets the state to
         "data" because that's what's needed after a token has been emitted.
         """
@@ -651,7 +651,7 @@ class HTMLTokenizer(object):
                 self.changeState("dataState")
             elif data == u"?":
                 self.parser.parseError()
-                # XXX this character should be put on the stack again...
+                self.characterQueue.append(data)
                 self.changeState("bogusComment")
             else:
                 self.parser.parseError()
@@ -664,13 +664,33 @@ class HTMLTokenizer(object):
 
     def closeTagOpenState(self):
         if (self.contentModelFlag in
-          (contentModelFlags['RCDATA'], contentModelFlags['CDATA'])):
-            # XXX We need "tag name of the last start tag token emitted" here.
-            raise NotImplementedError
-        elif (self.contentModelFlag == contentModelFlags['PCDATA']):
-            # XXX This also needs to happen when the tag has been closed...
-            # Perhaps that can be done by setting the state to PCDATA above and
-            # redoing this step ...
+          (contentModelFlags["RCDATA"], contentModelFlags["CDATA"])):
+            charStack = []
+
+            # So far we know that "</" has been consumed. We now need to know
+            # whether the next few characters match the name of last emitted
+            # start tag which also happens to be the currentToken. We also need
+            # to have the character directly after the characters that could
+            # match the start tag name.
+            for x in xrange(len(self.currentToken.name)+1):
+                charStack.append(self.consumeChar())
+
+            # Since this is just for checking. We put the characters back on
+            # the stack.
+            self.characterQueue.append(charStack)
+
+            if not self.currentToken.name == "".join(charStack[:-1]).lower() \
+              and charStack[-1] in spaceCharacters + [u">", u"/", u"<", EOF]:
+                self.parser.parseError()
+                self.parser.processCharacter(u"<")
+                self.parser.processCharacter(u"/")
+                self.changeState("data")
+
+                # Need to return here since we don't want the rest of the
+                # method to be walked through.
+                return True
+
+        elif self.contentModelFlag != contentModelFlags["PLAINTEXT"]:
             data = self.consumeChar()
             if data in string.ascii_letters:
                 self.currentToken = EndTagToken(data)
@@ -686,7 +706,7 @@ class HTMLTokenizer(object):
                 self.changeState("data")
             else:
                 self.parser.parseError()
-                # XXX character on the stack again??
+                self.characterQueue.append(data)
                 self.changeState("bogusComment")
         return True
 
@@ -787,7 +807,7 @@ class HTMLTokenizer(object):
         return True
 
     def attributeValueDoubleQuotedState(self):
-        # XXX We could also let self.attributeValueQuotedStateHandler always
+        # AT We could also let self.attributeValueQuotedStateHandler always
         # return true and then return that directly here. Not sure what is
         # faster or better...
         self.attributeValueQuotedStateHandler(u"\"")
@@ -817,7 +837,7 @@ class HTMLTokenizer(object):
         charStack = [self.ConsumeChar()]
         while charStack[-1] not in [u">", EOF]:
             charStack.append(self.consumeChar())
-        
+
         if charStack[-1] == EOF:
             self.characterQueue.append(EOF)
 
@@ -917,9 +937,14 @@ class HTMLTokenizer(object):
         elif data == EOF:
             self.emitCurrentTokenWithParseError(data)
         else:
+            # We can't just uppercase everything that arrives here. For
+            # instance, non-ASCII characters.
             if data in string.ascii_lowercase:
                 data = data.upper()
             self.currentToken.name += data
+
+            # After some iterations through this state it should eventually say
+            # "HTML". Otherwise there's an error.
             if self.currentToken.name == u"HTML":
                 self.currentToken.error = False
         return True
