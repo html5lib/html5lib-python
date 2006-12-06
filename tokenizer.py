@@ -510,7 +510,10 @@ class HTMLTokenizer(object):
 
         # Convert the set of characters consumed to an int.
         charAsInt = int("".join(charStack), radix)
-        if 128 < charAsInt < 159:
+        
+        # If the integer is between 127 and 160 (so 128 and bigger and 159 and
+        # smaller) we need to do the "windows trick".
+        if 127 < charAsInt < 160:
             charAsInt = entitiesWindows1252[charAsInt]
 
         try:
