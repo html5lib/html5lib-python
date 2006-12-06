@@ -690,7 +690,7 @@ class HTMLTokenizer(object):
                 # method to be walked through.
                 return True
 
-        elif self.contentModelFlag != contentModelFlags["PLAINTEXT"]:
+        if self.contentModelFlag != contentModelFlags["PLAINTEXT"]:
             data = self.consumeChar()
             if data in string.ascii_letters:
                 self.currentToken = EndTagToken(data)
