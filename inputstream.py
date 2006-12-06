@@ -1,29 +1,49 @@
+import codecs
+
 class HTMLInputStream(object):
     """For reading data from an input stream
 
-    This deals with character encoding issues automatically.    
+    This deals with character encoding issues automatically.
+
+    This keeps track of the current line and column number in the file
+    automatically, as you consume and unconsume characters.
     """
 
-    def __init__(self, file):
-        self.__file = file
+    def __init__(self, file, encoding = None):
+        """ Initialise the HTMLInputReader.
+
+        The file parameter must be a File object.
+
+        The optional encoding parameter must be a string that indicates
+        the encoding.  If specified, that encoding will be used,
+        regardless of any BOM or later declaration (such as in a meta
+        element)
+        """
+
         self.__line = 1 # Current line number
         self.__col = 0  # Current column number
 
-        self.__charEncoding = self.__detectBOM(file)
+        # Keep a reference to the unencoded file object so that a new
+        # EncodedFile can be created later if the encoding is declared
+        # in a meta element
+        self.__file = file
 
+        skipBOM = False
+        self.__charEncoding = self.__detectBOM(file)
         if self.__charEncoding:
             # The encoding is known from the BOM, don't allow later
             # declarations from the meta element to override this.
+            skipBOM = True
             self.__allowEncodingOverride = False
         else:
+            # Using the default encoding, don't allow later
+            # declarations from the meta element to override this.
             self.__allowEncodingOverride = True
             self.__charEncoding = "cp1252" # default to Windows-1252
 
-        # Read the first line
-        self.__srcLine = unicode(self.__file.readline(), self.__charEncoding)
-
-        # Strip the BOM, if present
-        self.__srcLine = self.__srcLine.lstrip(u"\uFEFF")
+        self.__encodedFile = codecs.EncodedFile(file, self.__charEncoding)
+        if skipBOM:
+            self.__encodedFile.read(1)
 
     # private function
     def __detectBOM(self, fp):
@@ -69,20 +89,33 @@ class HTMLInputStream(object):
         return None
 
     def consumeChar(self):
-        char = self.__srcLine[self.__col]
-        self.__col += 1
-        return char
+        char = unicode(self.__encodedFile.read(1), self.__charEncoding)
+        if char == "\n":
+            # Move to next line and reset column count
+            self.__line += 1
+            self.__col = 0
+        else:
+            # Just increment the column counter
+            self.__col += 1
+        return char or None
 
     def unconsumeChar(self):
-        self.__col -= 1
+        """Unconsume the previous character by seeking backwards thorough
+        the file.
+        """
+        # @TODO - Need to keep track of new lines. If this steps back
+        # past a new line, the line counter should be decremented again.
+        self.__encodedFile.seek(-1, 1)
 
     def getLine(self):
-        return sef.__line
+        """Return the current line number
+        """
+        return self.__line
 
     def getCol(self):
+        """Return the current column number along the current line
+        """
         return self.__col
-        
-        self.__col -= 1
 
     def declareEncoding(self, encoding):
         """Report the encoding declared by the meta element
@@ -102,17 +135,16 @@ if __name__ == "__main__":
         htmlFile = open("tests/utf-8-bom.html", "rU")
         stream = HTMLInputStream(htmlFile)
 
-        print stream.consumeChar()
-        print stream.consumeChar()
-        print stream.consumeChar()
-        print stream.consumeChar()
-
-        print "unconsuming 2 characters and printing again"
-        stream.unconsumeChar()
-        stream.unconsumeChar()
-        print stream.consumeChar()
-        print stream.consumeChar()
-        
+        char = stream.consumeChar()
+        while char:
+            line = stream.getLine()
+            col = stream.getCol()
+            if char == "\n":
+                print "LF (%d, %d)" % (line, col)
+            else:
+                print "%s (%d, %d)" % (char, line, col)
+            char = stream.consumeChar()
+        print "EOF"
         htmlFile.close()
     except IOError:
         print "The file does not exist."
