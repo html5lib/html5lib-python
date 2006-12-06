@@ -750,25 +750,36 @@ class HTMLTokenizer(object):
         return True
 
     def attributeNameState(self):
-        # XXX Doesn't handle leaving the attribute name state very well.
-        # Specifically dropping of duplicate attributes and reporting a parse
-        # error for them...
         data = self.consumeChar()
+        leavingThisState = False
         if data in spaceCharacters:
             self.changeState("afterAttributeName")
+            leavingThisState = True
         elif data == u"=":
             self.changeState("beforeAttributeValue")
+            leavingThisState = True
         elif data == u">":
             self.emitCurrentToken()
+            leavingThisState = True
         elif data in string.ascii_uppercase:
             self.currentToken.attributes[-1][0] += data.lower()
         elif data == u"/":
             self.processSolidusInTag()
             self.changeState("beforeAttributeName")
+            leavingThisState = True
         elif data == u"<" or data == EOF:
             self.emitCurrentTokenWithParseError(data)
+            leavingThisState = True
         else:
             self.currentToken.attributes[-1][0] += data
+        
+        if leavingThisState:
+            # Attributes are not dropped at this stage. That happens when the
+            # start tag token is emitted so values can still be safely appended
+            # to attributes, but we do want to report the parse error in time.
+            for name, value in self.currentToken.attributes[:-1]:
+                if self.currentToken.attributes[-1][0] == name:
+                    self.parser.parseError()
         return True
 
     def afterAttributeNameState(self):
@@ -852,6 +863,7 @@ class HTMLTokenizer(object):
         # part of the comment data.
         self.currentToken = CommentToken("".charStack[:-1])
         self.emitCurrentToken()
+        return True
 
     def markupDeclerationOpenState(self):
         assert self.contentModelFlag == contentModelFlags["PCDATA"]
