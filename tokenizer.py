@@ -751,27 +751,24 @@ class HTMLTokenizer(object):
 
     def attributeNameState(self):
         data = self.consumeChar()
-        leavingThisState = False
+        leavingThisState = True
         if data in spaceCharacters:
             self.changeState("afterAttributeName")
-            leavingThisState = True
         elif data == u"=":
             self.changeState("beforeAttributeValue")
-            leavingThisState = True
         elif data == u">":
             self.emitCurrentToken()
-            leavingThisState = True
         elif data in string.ascii_uppercase:
             self.currentToken.attributes[-1][0] += data.lower()
+            leavingThisState = False
         elif data == u"/":
             self.processSolidusInTag()
             self.changeState("beforeAttributeName")
-            leavingThisState = True
         elif data == u"<" or data == EOF:
             self.emitCurrentTokenWithParseError(data)
-            leavingThisState = True
         else:
             self.currentToken.attributes[-1][0] += data
+            leavingThisState = False
         
         if leavingThisState:
             # Attributes are not dropped at this stage. That happens when the
