@@ -320,8 +320,8 @@ class EndTagToken(TagToken):
 class CommentToken(Token):
     """Token representing a comment
     Attributes - data:   The comment data"""
-    def __init__(self):
-        self.data = None
+    def __init__(self, data=None):
+        self.data = data
 
 class HTMLTokenizer(object):
     """This class has various attributes:
@@ -413,7 +413,7 @@ class HTMLTokenizer(object):
 
     def changeState(self, state):
         self.state = self.states[state]
-    
+
     def consumeChar(self):
         """Get the next character to be consumed
 
@@ -549,7 +549,7 @@ class HTMLTokenizer(object):
             self.currentToken.attributes[-1][1] += entity
         else:
             self.currentToken.attributes[-1][1] += u"&"
-    
+
     def emitCurrentToken(self):
         """This method is a generic handler for emitting the StarTagToken,
         EndTagToken, CommentToken and DoctypeToken. It also sets the state to
@@ -595,7 +595,7 @@ class HTMLTokenizer(object):
 
     # Below are the various tokenizer states worked out.
 
-    # XXX Perhaps we should have Hixie run some evaluation on billions of
+    # XXX AT Perhaps we should have Hixie run some evaluation on billions of
     # documents to figure out what the order of the various if and elif
     # statements should be.
 
@@ -812,14 +812,15 @@ class HTMLTokenizer(object):
         return True
 
     def bogusCommentState(self):
-        charStack = []
-        while charStack.append(self.consumeChar()):
-            c = charStack[-1]
-            if c == EOF:
-                self.characterQueue.append(c)
-            if c == u">" or c == EOF:
-                break
+        assert self.contentModelFlag != contentModelFlags['PCDATA']
+
+        charStack = [self.ConsumeChar()]
+        while charStack[-1] not in [u">", EOF]:
+            charStack.append(self.consumeChar())
         
+        if charStack[-1] == EOF:
+            self.characterQueue.append(EOF)
+
         # Make a new comment token and give it as value the characters the loop
         # consumed. The last character is either > or EOF and should not be
         # part of the comment data.
@@ -827,22 +828,23 @@ class HTMLTokenizer(object):
         self.emitCurrentToken()
 
     def markupDeclerationOpenState(self):
-        # XXX Parts of this section seem very wrong!
+        assert self.contentModelFlag != contentModelFlags['PCDATA']
+
         charStack = []
         for x in xrange(2):
             charStack.append(self.consumeChar())
         if charStack == [u"-", u"-"]:
+            self.currentToken = CommentToken()
             self.changeState("comment")
-        elif "".join(charStack).upper() == u"DO":
+        else:
             for x in xrange(5):
                 charStack.append(self.consumeChar())
-        if "".join(charStack).upper() == u"DOCTYPE":
-            self.changeState("doctype")
-        else:
-            self.parser.parseError()
-            # XXX we need characters on the stack...
-            self.changeState("bogusComment")
-            self.characterQueue.extend(charStack) #XXX Do we really want to replace these characters?
+            if "".join(charStack).upper() == u"DOCTYPE":
+                self.changeState("doctype")
+            else:
+                self.parser.parseError()
+                self.characterQueue.extend(charStack)
+                self.changeState("bogusComment")
         return True
 
     def commentState(self):
