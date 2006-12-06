@@ -378,7 +378,7 @@ class HTMLTokenizer(object):
 
         self.voidElements = (
             # XXX This list doesn't include <event-source> and <command> yet.
-            # XXX Make this a "global" variable?
+            # AT Make this a "global" variable?
             "base",
             "link",
             "meta",
@@ -519,30 +519,12 @@ class HTMLTokenizer(object):
             # At this point in the process might have named entity. Entities
             # are stored in the global variable "entities".
 
-            # Put the character back on the stack we checked to see if it we
-            # where dealing with a numeric entity.
-            self.characterQueue.append(charStack[0])
-
-            # Get the entity names in a list.
-            entityNames = entities.keys()
-
             # Consume characters and compare to these to a substring of the
             # entity names in the list until the substring no longer returns
             # something.
-            # XXX This gives an additional character back I think, which should
-            # be ok, but only if it actually does!
-            i = 0
-            while charStack.append(self.consumeChar()):
-                foundEntitySoFar = False
-                i += 1
-                for name in entityNames:
-                    if "".join(charStack) == name[:i]:
-                         foundEntitySoFar = True
-                         break
-                if foundEntitySoFar:
-                    foundEntitySoFar = False
-                else:
-                    break
+            while filter(lambda name: \
+              name.startswith("".join(charStack)), entities):
+                charStack.append(self.consumeChar())
 
             # At this point we have the name of the named entity or nothing.
             possibleEntityName = "".join(charStack)[:-1]
