@@ -117,8 +117,8 @@ class HTMLParser(object):
     def processStartTag(self, name, attributes):
         self.phase.processStartTag(name, attributes)
 
-    def processEndTag(self, name, attributes):
-        self.phase.processEndTag(name, attributes)
+    def processEndTag(self, name):
+        self.phase.processEndTag(name)
 
     def processComment(self, data):
         self.phase.processComment(data)
@@ -225,7 +225,7 @@ class HTMLParser(object):
             name = self.openElements[-1].name
             if name in frozenset("dd", "dt", "li", "p", "td", "th",
                                  "tr") and name != exclude:
-                self.phase.processEndTag(name, [])
+                self.phase.processEndTag(name)
             else:
                 break
 
@@ -316,9 +316,9 @@ class RootElementPhase(Phase):
         self.createHTMLNode()
         self.parser.phase.processStartTag(tagname, attributes) 
 
-    def processEndTag(self, tagname, attributes):
+    def processEndTag(self, name):
         self.createHTMLNode()
-        self.parser.phase.processEndTag(tagname, attributes) 
+        self.parser.phase.processEndTag(name) 
 
     def processComment(self, data):
         self.parser.document.appendChild(CommentNode(data))
@@ -368,14 +368,14 @@ class MainPhase(Phase):
         if name == "html":
             if self.parser.openElements: #XXX - Is this check right? Need to be sure there has _never_ been a HTML tag open
                 self.parser.parseError()
-            for attr, value in attributes:
+            for attr, value in attributes.iteritems():
                 if attr not in self.parser.openElements[0].attributes:
                     selfparser.openElements[0].attributes[attr] = value
         else:
             self.insertionMode.processStartTag(name, attributes)
     
-    def processEndTag(self, name, attributes):
-        self.insertionMode.processEndTag(name, attributes)
+    def processEndTag(self, name):
+        self.insertionMode.processEndTag(name)
 
     def processComment(self, data):
         self.insertionMode.processComment(data)
@@ -396,10 +396,10 @@ class TrailingEndPhase(Phase):
         self.parser.switchPhase("main")
         self.parser.processStartTag(name, attributes)
     
-    def processEndTag(self, name, attributes):
+    def processEndTag(self, name):
         self.parser.parseError()
         self.parser.switchPhase("main")
-        self.parser.processEndTag(name, attributes)
+        self.parser.processEndTag(name)
 
     def processComment(self, data):
         self.parser.document.appendChild(CommentNode(data))
@@ -449,16 +449,16 @@ class BeforeHead(InsertionMode):
         handlers = {"head":self.startTagHead}
         handlers.get(name, self.createHeadNode)(name, attributes)
 
-    def processEndTag(self, name, attributes):
+    def processEndTag(self, name):
         handlers = {"html":self.createHeadNode}
-        handlers.get(name, self.endTagOther)(name, attributes)
+        handlers.get(name, self.endTagOther)(name)
 
     def startTagHead(self, name, attributes):
         self.parser.insertElement(name, attributes)
         self.parser.headPointer = self.parser.openElements[-1]
         self.parser.switchInsertionMode('inHead')
 
-    def endTagOther(self, name, attributes):
+    def endTagOther(self, name):
         self.parser.parseError()
 
     def createHeadNode(self, name, attributes):
@@ -499,12 +499,12 @@ class InHead(InsertionMode):
         handlers.setDefaultValue(self.startTagOther)
         handlers[name](name, attributes)    
 
-    def processEndTag(self, name, attributes):
+    def processEndTag(self, name):
         if self.collectingCharacters:
             self.finishCollectingCharacters(name, True)
         handlers = {"head":self.endTagHead,
                     "html":self.endTagHTML}
-        handlers.get(name, self.endTagOther)(name, attributes)
+        handlers.get(name, self.endTagOther)(name)
 
     def appendToHead(element):
         if self.headPointer is not None:
@@ -533,27 +533,27 @@ class InHead(InsertionMode):
         element = self.createElement(name, attributes)
         self.appendToHead(element)
 
-    def endTagHead(self, name, attributes):
+    def endTagHead(self, name):
         if self.parser.openElements[-1].name == "head":
             self.parser.openElements.pop()
         else:
             self.parser.parseError()
         self.parser.switchInsertionMode("afterHead")
     
-    def endTagHTML(self, name, attributes):
+    def endTagHTML(self, name):
         self.anythingElse()
-        self.parser.processEndTag(name, attributes)
+        self.parser.processEndTag(name)
 
     def startTagOther(self, name, attributes):
         self.anythingElse()
         self.parser.processStartTag(name, attributes)
         
-    def endTagOther(self, name, attributes):
+    def endTagOther(self, name):
         self.parser.parseError()
 
     def anythingElse(self):
         if self.parser.openElements[-1].name == "head":
-            self.endTagHead()
+            self.endTagHead("head")
         else:
             self.parser.switchInsertionMode("afterHead")
 
@@ -588,9 +588,9 @@ class AfterHead(InsertionMode):
         self.anytingElse()
         self.parser.processStartTag(name, attributes)
 
-    def processEndTag(self, name, attributes):
+    def processEndTag(self, name):
         self.anythingElse()
-        self.parser.processEndTag(name, attributes)
+        self.parser.processEndTag(name)
 
     def anythingElse(self):
         self.parser.insertElement("body", [])
@@ -621,7 +621,7 @@ class InBody(InsertionMode):
                 ])
         handlers[name](name, attributes)
 
-    def processEndTag(self, name, attributes):
+    def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
                 ("p",self.endTagP),
                 ("body",self.endTagBody),
@@ -632,9 +632,9 @@ class InBody(InsertionMode):
                 (("dd", "dt", "li"), self.endTagListItem),
                 (headingElements, self.endTagHeading)
                 ])
-        handlers[name](name, attributes)
+        handlers[name](name)
         
-    def endTagP(self, name, attributes):
+    def endTagP(self, name):
         self.parser.generateImpliedEndTags("p")
         if self.parser.openElements[-1].name != "p":
            self.parser.parseError()
@@ -654,11 +654,11 @@ class InBody(InsertionMode):
         if len(self.parser.openElements)==1 or self.parser.openElements[1].name != "body":
             assert self.parser.innerHtml
         else:
-            for attr, value in attributes:
+            for attr, value in attributes.iteritems():
                 if attr not in self.parser.openElements[1].attributes:
                     self.parser.openElements[1].attributes[attr] = value
 
-    def endTagBody(self, name, attributes): 
+    def endTagBody(self, name): 
         if self.parser.openElements[1].name != "body":
             assert self.innerHtml
             self.parser.parseError()
@@ -668,13 +668,13 @@ class InBody(InsertionMode):
             self.parser.switchInsertionMode("afterBody")
 
     def endTagHtml(self, name, attributes):
-        self.bodyEndTag(name, attributes)
+        self.bodyEndTag(name)
         if not self.parser.innerHtml:
-            self.endTagHtml(name, attributes)
+            self.endTagHtml(name)
     
     def startTagCloseP(self, name, attributes):
         if self.parser.elementInScope("p"):
-            self.endTagP(name, attributes)
+            self.endTagP(name)
         self.parser.insertElement(name, attributes)
 
     def startTagForm(self, name, attributes):
@@ -682,13 +682,13 @@ class InBody(InsertionMode):
             self.parser.parseError()
         else:
             if self.parser.elementInScope("p"):
-                self.handlePEndTag("p", [])
+                self.handlePEndTag("p")
             self.parser.insertElement(name, attributes)
             self.parser.formPointer = self.parser.openElements[-1]
 
     def startTagListItem(self, name, attributes):
         if self.parser.elementInScope("p"):
-            self.handlePEndTag("p", [])
+            self.handlePEndTag("p")
         stopNames = {"li":("li"), "dd":("dd", "dt"), "dt":("dd", "dt")}
         stopName = stopNames[name]
         for i, node in enumerate(self.parser.openElements[::-1]):
@@ -705,11 +705,11 @@ class InBody(InsertionMode):
         
     def startTagPlaintext(self, name, attributes):
         if self.parser.elementInScope("p"):
-            self.endTagP("p", [])
+            self.endTagP("p")
         self.parser.insertElement(name, attributes)
         self.tokenizer.contentModelFlag = self.tokenizer.contentModelFlags["PLAINTEXT"]
  
-    def endTagBlock(self, name, attributes):
+    def endTagBlock(self, name):
         if self.parser.elementInScope(name):
             self.parser.generateImpliedEndTags()
             if self.parser.openElements[-1].name != name:
@@ -721,10 +721,10 @@ class InBody(InsertionMode):
                 node = self.parser.openElements.pop()
         
     def endTagForm(self, name):
-        self.endTagBlock(name, attributes)
+        self.endTagBlock(name)
         self.parser.formPointer = None
 
-    def endTagListItem(self, name, attributes):
+    def endTagListItem(self, name):
         #Could merge this with the Block case
         if self.parser.elementInScope(name):
             self.parser.generateImpliedEndTags(name)
@@ -738,7 +738,7 @@ class InBody(InsertionMode):
     
     def startTagHeading(self, name, attributes):
         if self.parser.elementInScope("p"):
-            self.endTagP("p", [])
+            self.endTagP("p")
         for item in headingElements:
             if self.parser.elementInScope(item):
                 self.parser.parseError()
@@ -748,7 +748,7 @@ class InBody(InsertionMode):
                 break
         self.parser.insertElement(name, attributes)
 
-    def endTagHeading(self, name, attributes):
+    def endTagHeading(self, name):
         for item in headingElements:
             if self.parser.elementInScope(item):
                 self.parser.generateImpliedEndTags()
@@ -772,7 +772,7 @@ class InBody(InsertionMode):
         afeAElement = self.parser.elementInActiveFormattingElements("a")
         if afeAElement:
             self.parser.parseError()
-            self.endTagA("a", [])
+            self.endTagA("a")
             if afeAElement in self.parser.openElements:
                 self.parser.openElements.remove(afeAElement)
             if afeAElement in self.parser.activeFormattingElements:
@@ -784,7 +784,7 @@ class InBody(InsertionMode):
         self.parser.reconstructActiveFormattingElements()
         self.addFormattingElement(self, name, attributes)
 
-    def endTagFormatting(self, name, attributes):
+    def endTagFormatting(self, name):
         """The much-feared adoption agency algorithm"""
         afeElement = self.parser.elementInActiveFormattingElements(name)
         if not afeElement or (afeElement in self.parser.openElements and 
@@ -822,7 +822,7 @@ class InBody(InsertionMode):
     def startTagButton(self, name, attributes):
         if self.parser.elementInScope("button"):
             self.parser.parseError()
-            self.processEndTag("button", [])
+            self.processEndTag("button")
             self.parser.processStartTag(name, attributes)
         else:
             self.parser.reconstructActiveFormattingElements()
@@ -834,7 +834,7 @@ class InBody(InsertionMode):
         self.parser.insertElement(name, attributes)
         self.parser.activeFormattingElements.append(Marker)
     
-    def endTagButtonMarqueeObject(self, name, attributes):
+    def endTagButtonMarqueeObject(self, name):
         if self.parser.elementInScope(name):
             self.parser.generateImpliedEndTags()
         if self.parser.openElements[-1].name != name:
@@ -853,7 +853,7 @@ class InBody(InsertionMode):
 
     def startTagTable(self, name, attributes):
         if self.parser.elementInScope(p):
-            self.processEndTag("p", [])
+            self.processEndTag("p")
         self.parser.insertElement(name, attributes)
         self.parser.switchInsertionMode("inTable")
     
@@ -863,7 +863,7 @@ class InBody(InsertionMode):
         self.parser.openElements.pop()
     
     def startTagHR(self, name, attributes):
-        self.endTagP("p", [])
+        self.endTagP("p")
         self.parser.insertElement(name, attributes)
         self.parser.openElements.pop()
 
@@ -890,14 +890,13 @@ class InBody(InsertionMode):
         self.parser.processStartTag("label", [])
         self.parser.processCharacter(
             "This is a searchable index. Insert your search keywords here:")
-        attrs = dict(attributes)
-        attrs["name"] = "isindex"
-        attrs = [[key,value] for key,value in attrs]
+        attributes["name"] = "isindex"
+        attrs = [[key,value] for key,value in attributes.iteritems()]
         self.parser.processStartTag("input", attrs)
-        self.parser.processEndTag("label", [])
-        self.parser.processEndTag("p", [])
-        self.parser.processStartTag("hr", [])
-        self.parser.processEndTag("form", [])
+        self.parser.processEndTag("label")
+        self.parser.processEndTag("p")
+        self.parser.processStartTag("hr")
+        self.parser.processEndTag("form")
 
 class InTable(InsertionMode): pass 
 class InCaption(InsertionMode): pass 
@@ -916,21 +915,21 @@ class AfterBody(InsertionMode):
         self.parser.switchInsertionMode("inBody")
         self.parser.processStartTag(name, attributes)
 
-    def processEndTag(self, name, attributes):
+    def processEndTag(self, name):
         handlers = utils.MethodDispatcher([('html',self.endTagHtml)])
         handlers.setDefaultValue(self.endTagOther)
-        handlers[name](name, attributes)
+        handlers[name](name)
         
-    def endTagHtml(self,name, attributes):
+    def endTagHtml(self,name):
         if self.parser.innerHTML:
             self.parser.parseError()
         else:
             self.parser.switchPhase("trailingEnd")
     
-    def endTagOther(self, name, attributes):
+    def endTagOther(self, name):
         self.parser.parseError()
         self.parser.switchInsertionMode("inBody")
-        self.parser.processEndTag(name, attributes)
+        self.parser.processEndTag(name)
 
 class InFrameset(InsertionMode): pass 
 class AfterFrameset(InsertionMode): pass 
