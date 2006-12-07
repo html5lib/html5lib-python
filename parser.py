@@ -6,22 +6,22 @@ except:
 import tokenizer
 from utils import utils
 
-scopingElements = frozenset(("button", "caption", "html", "marquee", "object", 
+scopingElements = frozenset(("button", "caption", "html", "marquee", "object",
                             "table", "td", "th"))
 
-formattingElements = frozenset(("a", "b", "big", "em", "font", "i", "nobr", 
+formattingElements = frozenset(("a", "b", "big", "em", "font", "i", "nobr",
                                 "s", "small", "strike", "strong", "tt", "u"))
 
-specialElements = frozenset(("address", "area", "base", "basefont", "bgsound", 
-                            "blockquote", "body", "br", "center", "col", 
-                            "colgroup", "dd", "dir", "div", "dl", "dt", 
+specialElements = frozenset(("address", "area", "base", "basefont", "bgsound",
+                            "blockquote", "body", "br", "center", "col",
+                            "colgroup", "dd", "dir", "div", "dl", "dt",
                             "embed", "fieldset", "form", "frame", "frameset",
-                            "h1", "h2", "h3", "h4", "h5", "h6", "head", "hr", 
+                            "h1", "h2", "h3", "h4", "h5", "h6", "head", "hr",
                             "iframe", "image", "img", "input", "isindex", "li",
-                            "link", "listing", "menu", "meta", "noembed", 
+                            "link", "listing", "menu", "meta", "noembed",
                             "noframes", "noscript", "ol", "optgroup", "option",
-                            "p", "param", "plaintext", "pre", "script", 
-                            "select", "spacer", "style", "tbody", "textarea", 
+                            "p", "param", "plaintext", "pre", "script",
+                            "select", "spacer", "style", "tbody", "textarea",
                             "tfoot", "thead", "title", "tr", "ul", "wbr"))
 
 spaceCharacters = frozenset((u"\t", u"\n", u"\u000B", u"\u000C", u" "))
@@ -49,7 +49,7 @@ class Node(object):
             self.childNodes[-1].value += node.value
         else:
             self.childNodes.append(node)
-            
+
     def cloneNode(self):
         newNode = type(self)(self.name, self.value)
         for attr, value in self.attributes.iteritems():
@@ -99,7 +99,7 @@ class HTMLParser(object):
 
         self.document = Document()
 
-        #We don't actually support inner HTML yet but this should allow 
+        #We don't actually support inner HTML yet but this should allow
         #assertations
         self.innerHTML = innerHTML
 
@@ -147,11 +147,11 @@ class HTMLParser(object):
         """
         print name, self.phases["trailingEnd"]
         #Need to hang on to state between trailing end phase and main phase
-        if (name == "trailingEnd" and 
+        if (name == "trailingEnd" and
             isinstance(self.phase, self.phases["main"])):
             self.mainPhaseState = self.phase
             self.phase = self.phases["trailingEnd"](self)
-        elif (name == "main" and 
+        elif (name == "main" and
               isinstance(self.phase, self.phases["trailingEnd"])):
             self.phase = self.mainPhaseState
         else:
@@ -191,8 +191,8 @@ class HTMLParser(object):
             entry = self.activeFormattingElements.pop()
 
     def elementInActiveFormattingElements(self, name):
-        """Check if an element eists between the end of the active 
-        formatting elements and the last marker. If it does, return it, else 
+        """Check if an element eists between the end of the active
+        formatting elements and the last marker. If it does, return it, else
         return false"""
 
         for item in self.activeFormattingElements[::-1]:
@@ -290,13 +290,15 @@ class Phase(object):
         self.parser.parseError()
 
 class InitialPhase(Phase):
+    # XXX We have to handle also the no doctype/whitespace case here.
     def processDoctype(self, name, error):
         self.parser.document.appendChild(DocumentType(name))
         self.parser.switchPhase("rootElement")
-        
+
 
     def processCharacter(self, data):
         if data in spaceCharacters:
+            # XXX these should be appended to the Document node as Text node.
             pass
         else:
             self.parser.parseError()
@@ -306,6 +308,7 @@ class RootElementPhase(Phase):
         self.parser.parseError()
 
     def processCharacter(self, data):
+        # XXX This doesn't put characters together in a single text node.
         if data in spaceCharacters:
             self.parser.document.appendChild(TextNode(data))
         else:
@@ -314,16 +317,16 @@ class RootElementPhase(Phase):
 
     def processStartTag(self, tagname, attributes):
         self.createHTMLNode()
-        self.parser.phase.processStartTag(tagname, attributes) 
+        self.parser.phase.processStartTag(tagname, attributes)
 
     def processEndTag(self, name):
         self.createHTMLNode()
-        self.parser.phase.processEndTag(name) 
+        self.parser.phase.processEndTag(name)
 
     def processComment(self, data):
         self.parser.document.appendChild(CommentNode(data))
 
-    def processEOF(self, data):    
+    def processEOF(self, data):
         self.createHTMLNode()
         self.parser.phase.processEOF()
 
@@ -337,43 +340,45 @@ class RootElementPhase(Phase):
 class MainPhase(Phase):
     def __init__(self, parser):
         Phase.__init__(self, parser)
-        self.insertionModes = {"beforeHead":BeforeHead, 
+        self.insertionModes = {"beforeHead":BeforeHead,
                                "inHead":InHead,
                                "afterHead":AfterHead,
                                "inBody":InBody,
-                               "inTable":InTable, 
-                               "inCaption":InCaption, 
-                               "inColumnGroup":InColumnGroup, 
-                               "inTableBody":InTableBody, 
-                               "inRow":InRow, 
-                               "inCell":InCell, 
-                               "inSelect":InSelect, 
-                               "afterBody":AfterBody, 
-                               "inFrameset":InFrameset, 
+                               "inTable":InTable,
+                               "inCaption":InCaption,
+                               "inColumnGroup":InColumnGroup,
+                               "inTableBody":InTableBody,
+                               "inRow":InRow,
+                               "inCell":InCell,
+                               "inSelect":InSelect,
+                               "afterBody":AfterBody,
+                               "inFrameset":InFrameset,
                                "afterFrameset":AfterFrameset}
         self.insertionMode = self.insertionModes['beforeHead'](self.parser)
 
     def processDoctype(self, name, error):
         self.parser.parseError()
-    
+
     def processEOF(self):
         self.parser.generateImpliedEndTags()
-        if ((self.parser.innerHTML == False or 
-             len(self.parser.openElements) > 1) 
+        if ((self.parser.innerHTML == False or
+             len(self.parser.openElements) > 1)
             and self.parser.openElements[-1].name != "body"):
             self.parser.parseError()
         #Stop parsing
-    
+
     def processStartTag(self, name, attributes):
         if name == "html":
-            if self.parser.openElements: #XXX - Is this check right? Need to be sure there has _never_ been a HTML tag open
+            if self.parser.openElements:
+                # XXX Is this check right? Need to be sure there has _never_
+                # been a HTML tag open
                 self.parser.parseError()
             for attr, value in attributes.iteritems():
                 if attr not in self.parser.openElements[0].attributes:
                     selfparser.openElements[0].attributes[attr] = value
         else:
             self.insertionMode.processStartTag(name, attributes)
-    
+
     def processEndTag(self, name):
         self.insertionMode.processEndTag(name)
 
@@ -384,18 +389,18 @@ class MainPhase(Phase):
         self.insertionMode.processCharacter(data)
 
 class TrailingEndPhase(Phase):
-    
+
     def processDoctype(self, name, error):
         self.parser.parseError()
-    
+
     def processEOF(self):
         pass
-    
+
     def processStartTag(self, name, attributes):
         self.parser.parseError()
         self.parser.switchPhase("main")
         self.parser.processStartTag(name, attributes)
-    
+
     def processEndTag(self, name):
         self.parser.parseError()
         self.parser.switchPhase("main")
@@ -417,7 +422,7 @@ class InsertionMode(object):
         self.parser = parser
         self.tokenizer = self.parser.tokenizer
 
-        #Some attributes only used in insertion modes that 
+        #Some attributes only used in insertion modes that
         #"collect all character data"
         self.collectingCharacters = False
         self.characterBuffer = []
@@ -481,7 +486,7 @@ class InHead(InsertionMode):
 
     def processNonWhitespaceCharacter(self, data):
         if self.collectingCharacters:
-           self.characterBuffer += data 
+           self.characterBuffer += data
         else:
             self.anythingElse()
             self.parser.processCharacter(data)
@@ -497,7 +502,7 @@ class InHead(InsertionMode):
                 (("base", "link", "meta"),self.startTagBaseLinkMeta),
                 ("head",self.startTagHead)])
         handlers.setDefaultValue(self.startTagOther)
-        handlers[name](name, attributes)    
+        handlers[name](name, attributes)
 
     def processEndTag(self, name):
         if self.collectingCharacters:
@@ -512,7 +517,7 @@ class InHead(InsertionMode):
         else:
             assert self.innerHTML
             self.parser.openElements[-1].append(element)
-    
+
     def startTagTitleStyle(self, name, attributes):
         stateFlags = {"title":"RCDATA", "style":"CDATA"}
         element = self.parser.createElement(name, attributes)
@@ -539,7 +544,7 @@ class InHead(InsertionMode):
         else:
             self.parser.parseError()
         self.parser.switchInsertionMode("afterHead")
-    
+
     def endTagHTML(self, name):
         self.anythingElse()
         self.parser.processEndTag(name)
@@ -547,7 +552,7 @@ class InHead(InsertionMode):
     def startTagOther(self, name, attributes):
         self.anythingElse()
         self.parser.processStartTag(name, attributes)
-        
+
     def endTagOther(self, name):
         self.parser.parseError()
 
@@ -566,7 +571,7 @@ class AfterHead(InsertionMode):
         handlers = utils.MethodDispatcher([
                 ("body",self.startTagBody),
                 ("frameset",self.startTagFrameset),
-                (("base", "link", "meta", "script", "style", "title"), 
+                (("base", "link", "meta", "script", "style", "title"),
                  self.startTagFromHead)
                 ])
         handlers.setDefaultValue(self.startTagOther)
@@ -608,15 +613,15 @@ class InBody(InsertionMode):
                 ("script",self.startTagScript),
                 (("base", "link", "meta", "style", "title"), startTagFromHead),
                 ("body", self.startTagBody),
-                (("address", "blockquote", "center", "dir", "div", 
-                  "dl", "fieldset", "listing", "menu", "ol", "p", 
+                (("address", "blockquote", "center", "dir", "div",
+                  "dl", "fieldset", "listing", "menu", "ol", "p",
                   "pre", "ul"), self.startTagCloseP),
                 ("form", self.startTagForm),
                 (("li", "dd", "dt"), self.startTagListItem),
                 ("plaintext",self.startTagPlaintext),
                 (headingElements, self.startTagHeading),
                 ("a",self.startTagA),
-                (("b", "big", "em", "font", "i", "nobr", "s", "small", 
+                (("b", "big", "em", "font", "i", "nobr", "s", "small",
                   "strike", "strong", "tt", "u"),self.startTagFormatting),
                 ])
         handlers[name](name, attributes)
@@ -633,7 +638,7 @@ class InBody(InsertionMode):
                 (headingElements, self.endTagHeading)
                 ])
         handlers[name](name)
-        
+
     def endTagP(self, name):
         self.parser.generateImpliedEndTags("p")
         if self.parser.openElements[-1].name != "p":
@@ -642,12 +647,12 @@ class InBody(InsertionMode):
             self.parser.openElements.pop()
 
     def startTagScript(self, name, attributes):
-        self.insertionModes["inHead"](self.parser).processStartTag(name, 
+        self.insertionModes["inHead"](self.parser).processStartTag(name,
                                                                    attributes)
-        
+
     def startTagFromHead(self, name, attributes):
         self.parser.parseError()
-        self.insertionModes["inHead"](self.parser).processStartTag(name, 
+        self.insertionModes["inHead"](self.parser).processStartTag(name,
                                                                    attributes)
     def startTagBody(self, name, attributes):
         self.parser.parseError()
@@ -658,7 +663,7 @@ class InBody(InsertionMode):
                 if attr not in self.parser.openElements[1].attributes:
                     self.parser.openElements[1].attributes[attr] = value
 
-    def endTagBody(self, name): 
+    def endTagBody(self, name):
         if self.parser.openElements[1].name != "body":
             assert self.innerHtml
             self.parser.parseError()
@@ -671,7 +676,7 @@ class InBody(InsertionMode):
         self.bodyEndTag(name)
         if not self.parser.innerHtml:
             self.endTagHtml(name)
-    
+
     def startTagCloseP(self, name, attributes):
         if self.parser.elementInScope("p"):
             self.endTagP(name)
@@ -696,19 +701,19 @@ class InBody(InsertionMode):
                 for j in range(i+1):
                     self.parser.openElements.pop()
                     break
-            #Phrasing elements are all non special, non scoping, 
+            #Phrasing elements are all non special, non scoping,
             #non formatting elements
             elif (node.name in (specialElements | scopingElements)
                   and node.name not in ("address", "div")):
                 break
             self.parser.insertElement(name, attributes)
-        
+
     def startTagPlaintext(self, name, attributes):
         if self.parser.elementInScope("p"):
             self.endTagP("p")
         self.parser.insertElement(name, attributes)
         self.tokenizer.contentModelFlag = self.tokenizer.contentModelFlags["PLAINTEXT"]
- 
+
     def endTagBlock(self, name):
         if self.parser.elementInScope(name):
             self.parser.generateImpliedEndTags()
@@ -719,7 +724,7 @@ class InBody(InsertionMode):
             node = self.parser.openElements.pop()
             while node.name != name:
                 node = self.parser.openElements.pop()
-        
+
     def endTagForm(self, name):
         self.endTagBlock(name)
         self.parser.formPointer = None
@@ -730,12 +735,12 @@ class InBody(InsertionMode):
             self.parser.generateImpliedEndTags(name)
             if self.parser.openElements[-1].name != name:
                 self.parser.parseError()
-        
+
         if self.parser.elementInScope(name):
             node = self.parser.openElements.pop()
             while node.name != name:
                 node = self.parser.openElements.pop()
-    
+
     def startTagHeading(self, name, attributes):
         if self.parser.elementInScope("p"):
             self.endTagP("p")
@@ -757,7 +762,7 @@ class InBody(InsertionMode):
             self.parser.parseError()
 
         for item in headingElements:
-            if self.parser.elementInScope(item):     
+            if self.parser.elementInScope(item):
                 item = self.parser.openElements.pop()
                 while item.name not in headingElements:
                     item = self.parser.openElements.pop()
@@ -787,7 +792,7 @@ class InBody(InsertionMode):
     def endTagFormatting(self, name):
         """The much-feared adoption agency algorithm"""
         afeElement = self.parser.elementInActiveFormattingElements(name)
-        if not afeElement or (afeElement in self.parser.openElements and 
+        if not afeElement or (afeElement in self.parser.openElements and
                               not self.parser.elementInScope(afeElement)):
             self.parser.parseError()
             return
@@ -833,13 +838,13 @@ class InBody(InsertionMode):
         self.parser.reconstructActiveFormattingElements()
         self.parser.insertElement(name, attributes)
         self.parser.activeFormattingElements.append(Marker)
-    
+
     def endTagButtonMarqueeObject(self, name):
         if self.parser.elementInScope(name):
             self.parser.generateImpliedEndTags()
         if self.parser.openElements[-1].name != name:
             self.parser.parseError()
-        
+
         if self.parser.elementInScope(name):
             element = self.parser.openElements.pop()
             while element.name != name:
@@ -856,22 +861,22 @@ class InBody(InsertionMode):
             self.processEndTag("p")
         self.parser.insertElement(name, attributes)
         self.parser.switchInsertionMode("inTable")
-    
+
     def startTagVoidFormatting(self, name, attributes):
         self.parser.reconstructActiveFormattingElements()
         self.parser.insertElement(name, attributes)
         self.parser.openElements.pop()
-    
+
     def startTagHR(self, name, attributes):
         self.endTagP("p")
         self.parser.insertElement(name, attributes)
         self.parser.openElements.pop()
 
-    def startTagImage(self, name, attributes):  
+    def startTagImage(self, name, attributes):
         #No really...
         self.parser.parseError()
         self.processStartTag("img", attributes)
-    
+
     def startTagInput(self, name, attributes):
         self.parser.reconstructActiveFormattingElements()
         self.parser.insertElement(name, attributes)
@@ -879,7 +884,7 @@ class InBody(InsertionMode):
             #Not exactly sure what to do here
             self.parser.openElements[-1].form = self.parser.formPointer
         self.parser.openElements.pop()
-    
+
     def startTagIsIndex(self, name, attributes):
         self.parser.parseError()
         if self.parser.formPointer is not None:
@@ -898,13 +903,13 @@ class InBody(InsertionMode):
         self.parser.processStartTag("hr")
         self.parser.processEndTag("form")
 
-class InTable(InsertionMode): pass 
-class InCaption(InsertionMode): pass 
-class InColumnGroup(InsertionMode): pass 
-class InTableBody(InsertionMode): pass 
-class InRow(InsertionMode): pass 
-class InCell(InsertionMode): pass 
-class InSelect(InsertionMode): pass 
+class InTable(InsertionMode): pass
+class InCaption(InsertionMode): pass
+class InColumnGroup(InsertionMode): pass
+class InTableBody(InsertionMode): pass
+class InRow(InsertionMode): pass
+class InCell(InsertionMode): pass
+class InSelect(InsertionMode): pass
 
 class AfterBody(InsertionMode):
     def processComment(self, data):
@@ -919,20 +924,20 @@ class AfterBody(InsertionMode):
         handlers = utils.MethodDispatcher([('html',self.endTagHtml)])
         handlers.setDefaultValue(self.endTagOther)
         handlers[name](name)
-        
+
     def endTagHtml(self,name):
         if self.parser.innerHTML:
             self.parser.parseError()
         else:
             self.parser.switchPhase("trailingEnd")
-    
+
     def endTagOther(self, name):
         self.parser.parseError()
         self.parser.switchInsertionMode("inBody")
         self.parser.processEndTag(name)
 
-class InFrameset(InsertionMode): pass 
-class AfterFrameset(InsertionMode): pass 
+class InFrameset(InsertionMode): pass
+class AfterFrameset(InsertionMode): pass
 
 class ParseError(Exception):
     """Error in parsed document"""
