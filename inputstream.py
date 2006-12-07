@@ -1,30 +1,6 @@
 import codecs
 
-def openSource(source):
-    """ Opens source first trying to open a local file, if that fails 
-    try to open as a URL and finally treating source as a string.
-    
-    Returns a file-like object.
-    """
-    # Already a file-like object?
-    if hasattr(source, 'tell'):
-        return source
-
-    # Try opening source normally
-    try:
-        return open(source)
-    except: pass
-
-    # Try opening source as a URL and storing the bytes returned so
-    # they can be turned into a file-like object below
-    try:
-        import urllib
-        source = urllib.urlopen(source).read(-1)
-    except: pass
-
-    # Treat source as a string and make it into a file-like object
-    import cStringIO as StringIO
-    return StringIO.StringIO(str(source))
+from utils.utils import openSource
 
 class HTMLInputStream(object):
     """For reading data from an input stream
