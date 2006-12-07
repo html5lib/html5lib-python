@@ -561,10 +561,13 @@ class HTMLTokenizer(object):
             # are stored in the global variable "entities".
 
             # Consume characters and compare to these to a substring of the
-            # entity names in the list until the substring no longer returns
-            # something.
-            while filter(lambda name: \
-              name.startswith("".join(charStack)), entities):
+            # entity names in the list until the substring no longer matches.
+            filteredEntityList = [e for e in entities if e.startswith(charStack[0])]
+
+            def entitiesStartingWith(name):
+                return [e for e in filteredEntityList if e.startswith(name)]
+
+            while entitiesStartingWith("".join(charStack)):
                 charStack.append(self.consumeChar())
 
             # At this point we have the name of the named entity or nothing.
