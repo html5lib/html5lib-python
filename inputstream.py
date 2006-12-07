@@ -1,6 +1,6 @@
 import codecs
 
-from utils.utils import openSource
+from utils.utils import openStream
 
 class HTMLInputStream(object):
     """For reading data from an input stream
@@ -11,10 +11,10 @@ class HTMLInputStream(object):
     automatically, as you consume and unconsume characters.
     """
 
-    def __init__(self, source, encoding = None):
+    def __init__(self, stream, encoding = None):
         """ Initialise the HTMLInputReader.
 
-        The file parameter must be a File object.
+        The stream can either be a file-object, filename, url or string
 
         The optional encoding parameter must be a string that indicates
         the encoding.  If specified, that encoding will be used,
@@ -29,7 +29,7 @@ class HTMLInputStream(object):
         # Keep a reference to the unencoded file object so that a new
         # EncodedFile can be created later if the encoding is declared
         # in a meta element
-        self.file = openSource(source)
+        self.file = openStream(stream)
 
         skipBOM = False
         self.charEncoding = self.detectBOM(self.file)
