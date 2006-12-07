@@ -401,7 +401,7 @@ class HTMLTokenizer(object):
             "attributeValueSingleQuoted":self.attributeValueSingleQuotedState,
             "attributeValueUnQuoted":self.attributeValueUnQuotedState,
             "bogusComment":self.bogusCommentState,
-            "markupDeclerationOpen":self.markupDeclerationOpenState,
+            "markupDeclarationOpen":self.markupDeclarationOpenState,
             "comment":self.commentState,
             "commentDash":self.commentDashState,
             "commentEnd":self.commentEndState,
@@ -685,7 +685,7 @@ class HTMLTokenizer(object):
                 self.changeState("data")
         elif self.contentModelFlag == contentModelFlags['PCDATA']:
             if data == u"!":
-                self.changeState("markupDeclerationOpen")
+                self.changeState("markupDeclarationOpen")
             elif data == u"/":
                 self.changeState("closeTagOpen")
             elif data in string.ascii_letters:
@@ -724,7 +724,7 @@ class HTMLTokenizer(object):
 
             # Since this is just for checking. We put the characters back on
             # the stack.
-            self.characterQueue.append(charStack)
+            self.characterQueue.extend(charStack)
 
             if not self.currentToken.name == "".join(charStack[:-1]).lower() \
               and charStack[-1] in spaceCharacters + [u">", u"/", u"<", EOF]:
@@ -901,11 +901,11 @@ class HTMLTokenizer(object):
         # Make a new comment token and give it as value the characters the loop
         # consumed. The last character is either > or EOF and should not be
         # part of the comment data.
-        self.currentToken = CommentToken("".charStack[:-1])
+        self.currentToken = CommentToken("".join(charStack[:-1]))
         self.emitCurrentToken()
         return True
 
-    def markupDeclerationOpenState(self):
+    def markupDeclarationOpenState(self):
         assert self.contentModelFlag == contentModelFlags["PCDATA"]
 
         charStack = []
