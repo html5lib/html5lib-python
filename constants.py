@@ -10,31 +10,128 @@ contentModelFlags = {
     "PLAINTEXT":3
 }
 
-scopingElements = frozenset(("button", "caption", "html", "marquee", "object", 
-                            "table", "td", "th"))
+scopingElements = frozenset((
+    "button",
+    "caption",
+    "html",
+    "marquee",
+    "object",
+    "table",
+    "td",
+    "th"
+))
 
-formattingElements = frozenset(("a", "b", "big", "em", "font", "i", "nobr", 
-                                "s", "small", "strike", "strong", "tt", "u"))
+formattingElements = frozenset((
+    "a",
+    "b",
+    "big",
+    "em",
+    "font",
+    "i",
+    "nobr",
+    "s",
+    "small",
+    "strike",
+    "strong",
+    "tt",
+    "u"
+))
 
-specialElements = frozenset(("address", "area", "base", "basefont", "bgsound", 
-                            "blockquote", "body", "br", "center", "col", 
-                            "colgroup", "dd", "dir", "div", "dl", "dt", 
-                            "embed", "fieldset", "form", "frame", "frameset",
-                            "h1", "h2", "h3", "h4", "h5", "h6", "head", "hr", 
-                            "iframe", "image", "img", "input", "isindex", "li",
-                            "link", "listing", "menu", "meta", "noembed", 
-                            "noframes", "noscript", "ol", "optgroup", "option",
-                            "p", "param", "plaintext", "pre", "script", 
-                            "select", "spacer", "style", "tbody", "textarea", 
-                            "tfoot", "thead", "title", "tr", "ul", "wbr"))
+specialElements = frozenset((
+    "address",
+    "area",
+    "base",
+    "basefont",
+    "bgsound",
+    "blockquote",
+    "body",
+    "br",
+    "center",
+    "col",
+    "colgroup",
+    "dd",
+    "dir",
+    "div",
+    "dl",
+    "dt",
+    "embed",
+    "fieldset",
+    "form",
+    "frame",
+    "frameset",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "head",
+    "hr",
+    "iframe",
+    "image",
+    "img",
+    "input",
+    "isindex",
+    "li",
+    "link",
+    "listing",
+    "menu",
+    "meta",
+    "noembed",
+    "noframes",
+    "noscript",
+    "ol",
+    "optgroup",
+    "option",
+    "p",
+    "param",
+    "plaintext",
+    "pre",
+    "script",
+    "select",
+    "spacer",
+    "style",
+    "tbody",
+    "textarea",
+    "tfoot",
+    "thead",
+    "title",
+    "tr",
+    "ul",
+    "wbr"
+))
 
-spaceCharacters = frozenset((u"\t", u"\n", u"\u000B", u"\u000C", u" "))
+spaceCharacters = frozenset((
+    u"\t",
+    u"\n",
+    u"\u000B",
+    u"\u000C",
+    u" "
+))
 
-headingElements = frozenset(("h1", "h2", "h3", "h4", "h5", "h6"))
+headingElements = frozenset((
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6"
+))
 
-#What about event-source and command?
-voidElements = frozenset(("base", "link", "meta", "hr", "br", "img", "embed",
-                         "param", "area", "col", "input"))
+# XXX What about event-source and command?
+voidElements = frozenset((
+    "base",
+    "link",
+    "meta",
+    "hr",
+    "br",
+    "img",
+    "embed",
+    "param",
+    "area",
+    "col",
+    "input"
+))
 
 entitiesWindows1252 = {
     128: 8364,  # 0x80  0x20AC  EURO SIGN
