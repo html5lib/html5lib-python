@@ -33,8 +33,8 @@ spaceCharacters = frozenset((u"\t", u"\n", u"\u000B", u"\u000C", u" "))
 headingElements = frozenset(("h1", "h2", "h3", "h4", "h5", "h6"))
 
 #What about event-source and command?
-voidElements = frozenset("base", "link", "meta", "hr", "br", "img", "embed",
-                         "param", "area", "col", "input")
+voidElements = frozenset(("base", "link", "meta", "hr", "br", "img", "embed",
+                         "param", "area", "col", "input"))
 
 entitiesWindows1252 = {
     128: 8364,  # 0x80  0x20AC  EURO SIGN
