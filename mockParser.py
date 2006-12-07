@@ -19,23 +19,30 @@ class HTMLParser(object):
 
     def processDoctype(self, name, error):
         if self.output is not None: 
-            self.output.write("DOCTYPE:", name, error)
+            self.output.write("DOCTYPE:")
+            self.output.write(name)
+            self.output.write(unicode(error))
 
     def processStartTag(self, name, attributes):
         if self.output is not None: 
-            self.output.write("StartTag:", name, attributes)
+            self.output.write("StartTag:")
+            self.output.write(name)
+            self.output.write(unicode(attributes))
 
     def processEndTag(self, name):
         if self.output is not None: 
-            self.output.write("EndTag:", name)
+            self.output.write("EndTag:")
+            self.output.write(name)
 
     def processComment(self, data):
         if self.output is not None: 
-            self.output.write("Comment:", data)
+            self.output.write("Comment:")
+            self.output.write(data)
 
     def processCharacter(self, data):
         if self.output is not None:
-            self.output.write("Character:", data)
+            self.output.write("Character:")
+            self.output.write(data)
         
     def processEOF(self):
         if self.output is not None:

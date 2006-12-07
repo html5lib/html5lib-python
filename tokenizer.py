@@ -914,7 +914,7 @@ class HTMLTokenizer(object):
     def markupDeclarationOpenState(self):
         assert self.contentModelFlag == contentModelFlags["PCDATA"]
 
-        charStack = [self.ConsumeChar(), self.consumeChar()]
+        charStack = [self.consumeChar(), self.consumeChar()]
         if charStack == [u"-", u"-"]:
             self.currentToken = CommentToken()
             self.changeState("comment")
