@@ -1,4 +1,30 @@
-import codecs, cStringIO as StringIO
+import codecs
+
+def openSource(source):
+    """ Opens source first trying to open a local file, if that fails 
+    try to open as a URL and finally treating source as a string.
+    
+    Returns a file-like object.
+    """
+    # Already a file-like object?
+    if hasattr(source, 'tell'):
+        return source
+
+    # Try opening source normally
+    try:
+        return open(source)
+    except: pass
+
+    # Try opening source as a URL and storing the bytes returned so
+    # they can be turned into a file-like object below
+    try:
+        import urllib
+        source = urllib.urlopen(source).read(-1)
+    except: pass
+
+    # Treat source as a string and make it into a file-like object
+    import cStringIO as StringIO
+    return StringIO.StringIO(str(source))
 
 class HTMLInputStream(object):
     """For reading data from an input stream
@@ -9,7 +35,7 @@ class HTMLInputStream(object):
     automatically, as you consume and unconsume characters.
     """
 
-    def __init__(self, file, encoding = None):
+    def __init__(self, source, encoding = None):
         """ Initialise the HTMLInputReader.
 
         The file parameter must be a File object.
@@ -27,10 +53,7 @@ class HTMLInputStream(object):
         # Keep a reference to the unencoded file object so that a new
         # EncodedFile can be created later if the encoding is declared
         # in a meta element
-        if hasattr(file, 'tell'):
-            self.file = file
-        else:
-            self.file = StringIO.StringIO(file)
+        self.file = openSource(source)
 
         skipBOM = False
         self.charEncoding = self.detectBOM(self.file)
