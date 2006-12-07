@@ -1,38 +1,15 @@
-try:
-    from sets import ImmutableSet as frozenset
-except:
-    pass
-
 import tokenizer
+
 from utils import utils
-
-scopingElements = frozenset(("button", "caption", "html", "marquee", "object",
-                            "table", "td", "th"))
-
-formattingElements = frozenset(("a", "b", "big", "em", "font", "i", "nobr",
-                                "s", "small", "strike", "strong", "tt", "u"))
-
-specialElements = frozenset(("address", "area", "base", "basefont", "bgsound",
-                            "blockquote", "body", "br", "center", "col",
-                            "colgroup", "dd", "dir", "div", "dl", "dt",
-                            "embed", "fieldset", "form", "frame", "frameset",
-                            "h1", "h2", "h3", "h4", "h5", "h6", "head", "hr",
-                            "iframe", "image", "img", "input", "isindex", "li",
-                            "link", "listing", "menu", "meta", "noembed",
-                            "noframes", "noscript", "ol", "optgroup", "option",
-                            "p", "param", "plaintext", "pre", "script",
-                            "select", "spacer", "style", "tbody", "textarea",
-                            "tfoot", "thead", "title", "tr", "ul", "wbr"))
-
-spaceCharacters = frozenset((u"\t", u"\n", u"\u000B", u"\u000C", u" "))
-
-headingElements = frozenset(("h1", "h2", "h3", "h4", "h5", "h6"))
+from constants import contentModelFlags, spaceCharacters
+from constants import scopingElements, formattingElements, specialElements
+from constants import headingElements
 
 """The scope markers are inserted when entering buttons, object
 elements, marquees, table cells, and table captions, and are used to
 prevent formatting from "leaking" into tables, buttons, object
 elements, and marquees."""
-Marker = object()
+Marker = None
 
 #Really crappy basic implementation of a DOM-core like thing
 class Node(object):
@@ -712,7 +689,7 @@ class InBody(InsertionMode):
         if self.parser.elementInScope("p"):
             self.endTagP("p")
         self.parser.insertElement(name, attributes)
-        self.tokenizer.contentModelFlag = self.tokenizer.contentModelFlags["PLAINTEXT"]
+        self.tokenizer.contentModelFlag = contentModelFlags["PLAINTEXT"]
 
     def endTagBlock(self, name):
         if self.parser.elementInScope(name):
@@ -854,7 +831,7 @@ class InBody(InsertionMode):
     def startTagXMP(self, name, attributes):
         self.parser.reconstructActiveFormattingElements()
         self.parser.insertElement(name, attributes)
-        self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["CDATA"]
+        self.tokenizer.contentModelFlag = contentModelFlags["CDATA"]
 
     def startTagTable(self, name, attributes):
         if self.parser.elementInScope(p):
