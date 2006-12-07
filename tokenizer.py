@@ -604,21 +604,24 @@ class HTMLTokenizer(object):
         # considered harmful it should be ok here given that the classes are for
         # internal usage.
 
-        if isinstance(self.currentToken, StartTagToken):
+        token = self.currentToken
+        if isinstance(token, StartTagToken):
             # We need to remove the duplicate attributes and convert attributes
             # to a dict so that [["x", "y"], ["x", "z"]] becomes {"x": "y"}
 
             # AT When Python 2.4 is widespread we should use
             # dict(reversed(self.currentToken.attributes))
-            attrsDict = dict(self.currentToken.attributes[::-1])
-            self.parser.processStartTag(self.currentToken.name, attrsDict)
-        elif isinstance(self.currentToken, EndTagToken):
-            self.parser.processEndTag(self.currentToken.name)
-        elif isinstance(self.currentToken, CommentToken):
-            self.parser.processComment(self.currentToken.data)
-        elif isinstance(self.currentToken, DoctypeToken):
-            self.parser.processDoctype(self.currentToken.name, \
-              self.currentToken.error)
+            attrsDict = dict(token.attributes[::-1])
+            self.parser.processStartTag(token.name, attrsDict)
+        elif isinstance(token, EndTagToken):
+            # If an end tag has attributes it's a parse error.
+            if token.attributes:
+                self.parser.parseError()
+            self.parser.processEndTag(token.name)
+        elif isinstance(token, CommentToken):
+            self.parser.processComment(token.data)
+        elif isinstance(token, DoctypeToken):
+            self.parser.processDoctype(token.name, token.error)
         else:
             assert False
         self.changeState("data")
