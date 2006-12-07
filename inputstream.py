@@ -1,4 +1,4 @@
-import codecs
+import codecs, cStringIO as StringIO
 
 class HTMLInputStream(object):
     """For reading data from an input stream
@@ -20,34 +20,36 @@ class HTMLInputStream(object):
         element)
         """
 
-        self.__line = 1 # Current line number
-        self.__col = 0  # Current column number
-        self.__lineBreaks = [0]
+        self.line = 1 # Current line number
+        self.col = 0  # Current column number
+        self.lineBreaks = [0]
 
         # Keep a reference to the unencoded file object so that a new
         # EncodedFile can be created later if the encoding is declared
         # in a meta element
-        self.__file = file
+        if hasattr(file, 'tell'):
+            self.file = file
+        else:
+            self.file = StringIO.StringIO(file)
 
         skipBOM = False
-        self.__charEncoding = self.__detectBOM(file)
-        if self.__charEncoding:
+        self.charEncoding = self.detectBOM(self.file)
+        if self.charEncoding:
             # The encoding is known from the BOM, don't allow later
             # declarations from the meta element to override this.
             skipBOM = True
-            self.__allowEncodingOverride = False
+            self.allowEncodingOverride = False
         else:
             # Using the default encoding, don't allow later
             # declarations from the meta element to override this.
-            self.__allowEncodingOverride = True
-            self.__charEncoding = "cp1252" # default to Windows-1252
+            self.allowEncodingOverride = True
+            self.charEncoding = "cp1252" # default to Windows-1252
 
-        self.__encodedFile = codecs.EncodedFile(file, self.__charEncoding)
+        self.encodedFile = codecs.EncodedFile(self.file, self.charEncoding)
         if skipBOM:
-            self.__encodedFile.read(1)
+            self.encodedFile.read(1)
 
-    # private function
-    def __detectBOM(self, fp):
+    def detectBOM(self, fp):
         """ Attempts to detect the character encoding of the html file
         given by a file object fp. fp must not be a codec wrapped file
         object!
@@ -90,38 +92,28 @@ class HTMLInputStream(object):
         return None
 
     def consumeChar(self):
-        char = unicode(self.__encodedFile.read(1), self.__charEncoding)
+        char = unicode(self.encodedFile.read(1), self.charEncoding)
         if char == "\n":
             # Move to next line and reset column count
-            self.__line += 1
-            self.__col = 0
-            self.__lineBreaks.append(self.__encodedFile.tell())
+            self.line += 1
+            self.col = 0
+            self.lineBreaks.append(self.encodedFile.tell())
         else:
             # Just increment the column counter
-            self.__col += 1
+            self.col += 1
         return char or None
 
     def unconsumeChar(self):
         """Unconsume the previous character by seeking backwards thorough
         the file.
         """
-        self.__encodedFile.seek(-1, 1)
-        if self.__encodedFile.tell()+1 == self.__lineBreaks[-1]:
-            self.__line -= 1
-            self.__lineBreaks.pop()
-            self.__col = self.__encodedFile.tell()-self.__lineBreaks[-1]
+        self.encodedFile.seek(-1, 1)
+        if self.encodedFile.tell()+1 == self.lineBreaks[-1]:
+            self.line -= 1
+            self.lineBreaks.pop()
+            self.col = self.encodedFile.tell()-self.lineBreaks[-1]
         else:
-            self.__col -= 1
-
-    def getLine(self):
-        """Return the current line number
-        """
-        return self.__line
-
-    def getCol(self):
-        """Return the current column number along the current line
-        """
-        return self.__col
+            self.col -= 1
 
     def declareEncoding(self, encoding):
         """Report the encoding declared by the meta element
@@ -143,8 +135,8 @@ if __name__ == "__main__":
 
         char = stream.consumeChar()
         while char:
-            line = stream.getLine()
-            col = stream.getCol()
+            line = stream.line
+            col = stream.col
             if char == "\n":
                 print "LF (%d, %d)" % (line, col)
             else:
