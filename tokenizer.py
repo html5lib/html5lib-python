@@ -510,7 +510,7 @@ class HTMLTokenizer(object):
 
         # Convert the set of characters consumed to an int.
         charAsInt = int("".join(charStack), radix)
-        
+
         # If the integer is between 127 and 160 (so 128 and bigger and 159 and
         # smaller) we need to do the "windows trick".
         if 127 < charAsInt < 160:
@@ -733,7 +733,7 @@ class HTMLTokenizer(object):
             self.characterQueue.extend(charStack)
 
             if not self.currentToken.name == "".join(charStack[:-1]).lower() \
-              and charStack[-1] in spaceCharacters + [u">", u"/", u"<", EOF]:
+              and charStack[-1] in (spaceCharacters | [u">", u"/", u"<", EOF]):
                 self.parser.parseError()
                 self.parser.processCharacter(u"<")
                 self.parser.processCharacter(u"/")
@@ -818,7 +818,7 @@ class HTMLTokenizer(object):
         else:
             self.currentToken.attributes[-1][0] += data
             leavingThisState = False
-        
+
         if leavingThisState:
             # Attributes are not dropped at this stage. That happens when the
             # start tag token is emitted so values can still be safely appended
