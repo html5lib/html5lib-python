@@ -358,7 +358,7 @@ class EndTagToken(TagToken):
 class CommentToken(Token):
     """Token representing a comment
     Attributes - data:   The comment data"""
-    def __init__(self, data=None):
+    def __init__(self, data=""):
         self.data = data
 
 class HTMLTokenizer(object):

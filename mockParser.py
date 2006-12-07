@@ -1,4 +1,3 @@
-
 import sys
 
 from parser import *
@@ -6,47 +5,50 @@ from parser import *
 class HTMLParser(object):
     """Main parser class"""
 
-    def __init__(self, strict = False):
+    def __init__(self, output=sys.stdout):
         #Raise an exception on the first error encountered
-        self.strict = strict
+        self.output = output
 
 
-    def parse(self, stream, innerHTML=False):
+    def parse(self, stream):
         """Stream should be a stream of unicode bytes. Character encoding
         issues have not yet been dealt with."""
-
-        #We don't actually support inner HTML yet but this should allow 
-        #assertations
-        self.innerHTML = innerHTML
 
         self.tokenizer = tokenizer.HTMLTokenizer(self)
         self.tokenizer.tokenize(stream)
 
     def processDoctype(self, name, error):
-        print "DOCTYPE:", name, error
+        if self.output is not None: 
+            self.output.write("DOCTYPE:", name, error)
 
     def processStartTag(self, name, attributes):
-        print "StartTag:", name, attributes
+        if self.output is not None: 
+            self.output.write("StartTag:", name, attributes)
 
     def processEndTag(self, name):
-        print "EndTag:", name
+        if self.output is not None: 
+            self.output.write("EndTag:", name)
 
     def processComment(self, data):
-        print "Comment:", data
+        if self.output is not None: 
+            self.output.write("Comment:", data)
 
     def processCharacter(self, data):
-        print "Character:", data
+        if self.output is not None:
+            self.output.write("Character:", data)
         
-
     def processEOF(self):
-        print "EOF"
+        if self.output is not None:
+            self.output.write("EOF")
 
     def parseError(self):
-        print "    Parse Error"
+        if self.output is not None:
+            self.output.write("Parse Error")
 
     def atheistParseError(self):
         """This error is not an error"""
-        print "    Atheist Parse Error"
+        if self.output is not None:
+            self.output.write("Atheist Parse Error")
 
 if __name__ == "__main__":
     x = HTMLParser()
