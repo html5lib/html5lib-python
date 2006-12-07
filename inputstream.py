@@ -22,6 +22,7 @@ class HTMLInputStream(object):
 
         self.__line = 1 # Current line number
         self.__col = 0  # Current column number
+        self.__lineBreaks = [0]
 
         # Keep a reference to the unencoded file object so that a new
         # EncodedFile can be created later if the encoding is declared
@@ -94,6 +95,7 @@ class HTMLInputStream(object):
             # Move to next line and reset column count
             self.__line += 1
             self.__col = 0
+            self.__lineBreaks.append(self.__encodedFile.tell())
         else:
             # Just increment the column counter
             self.__col += 1
@@ -103,9 +105,13 @@ class HTMLInputStream(object):
         """Unconsume the previous character by seeking backwards thorough
         the file.
         """
-        # @TODO - Need to keep track of new lines. If this steps back
-        # past a new line, the line counter should be decremented again.
         self.__encodedFile.seek(-1, 1)
+        if self.__encodedFile.tell()+1 == self.__lineBreaks[-1]:
+            self.__line -= 1
+            self.__lineBreaks.pop()
+            self.__col = self.__encodedFile.tell()-self.__lineBreaks[-1]
+        else:
+            self.__col -= 1
 
     def getLine(self):
         """Return the current line number
