@@ -190,11 +190,11 @@ class HTMLTokenizer(object):
         # smaller) we need to do the "windows trick".
         if 127 < charAsInt < 160:
             charAsInt = entitiesWindows1252[128 - charAsInt]
-        
+
         # 0 is not a good number.
         if charAsInt == 0:
             charAsInt = 65533
-        
+
         try:
             # XXX We should have a separate function that does "int" to
             # "unicodestring" conversion since this doesn't always work
@@ -219,7 +219,7 @@ class HTMLTokenizer(object):
             charStack.append(self.consumeChar())
             charStack.append(self.consumeChar())
             if EOF in charStack:
-                #If we reach the end of the file put everything up to EOF 
+                #If we reach the end of the file put everything up to EOF
                 #back in the queue
                 charStack = charStack[:charStack.index(EOF)]
                 self.characterQueue.extend(charStack)
@@ -258,9 +258,9 @@ class HTMLTokenizer(object):
                 if charStack[-1] == EOF:
                     EOFReached = True
                     break
-            
+
             # At this point we have the name of the named entity or nothing.
-            if EOFReached:  
+            if EOFReached:
                 self.parser.parseError()
                 self.characterQueue.extend(charStack)
             else:
@@ -615,7 +615,7 @@ class HTMLTokenizer(object):
             for x in xrange(5):
                 charStack.append(self.consumeChar())
             #XXX - put in explicit None check
-            if (not EOF in charStack and 
+            if (not EOF in charStack and
                 "".join(charStack).upper() == u"DOCTYPE"):
                 self.changeState("doctype")
             else:
