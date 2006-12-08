@@ -58,4 +58,4 @@ def openStream(stream):
 
     # Treat source as a string and make it into a file-like object
     import cStringIO as StringIO
-    return StringIO.StringIO(str(source))
+    return StringIO.StringIO(str(stream))

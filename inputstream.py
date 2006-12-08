@@ -73,7 +73,6 @@ class HTMLInputStream(object):
                   }
 
         ## go to beginning of file and get the first 4 bytes
-        oldFP = fp.tell()
         fp.seek(0)
         (byte1, byte2, byte3, byte4) = tuple(map(ord, fp.read(4)))
 
@@ -85,7 +84,7 @@ class HTMLInputStream(object):
                 bomDetection = bomDict.get((byte1, byte2, None, None))
         
         ## if BOM detected, we're done :-)
-        fp.seek(0) # No BOM, return to the beginning of the file
+        fp.seek(0)
         if bomDetection :
             return bomDetection
         return None

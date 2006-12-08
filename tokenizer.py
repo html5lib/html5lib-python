@@ -167,10 +167,10 @@ class HTMLTokenizer(object):
         If not present self.parser.parseError() is invoked.
         """
 
-        range = string.digits
+        allowed = string.digits
         radix = 10
         if isHex:
-            range = string.hexdigits
+            allowed = string.hexdigits
             radix = 16
 
         char = u"\uFFFD"
@@ -179,7 +179,7 @@ class HTMLTokenizer(object):
         # Consume all the characters that are in range.
         c = self.consumeChar()
         #XXX Explicit check for EOF
-        while c in range and c is not EOF:
+        while c in allowed and c is not EOF:
             charStack.append(c)
             c = self.consumeChar()
 
