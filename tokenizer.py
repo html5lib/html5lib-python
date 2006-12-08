@@ -189,12 +189,13 @@ class HTMLTokenizer(object):
         # If the integer is between 127 and 160 (so 128 and bigger and 159 and
         # smaller) we need to do the "windows trick".
         if 127 < charAsInt < 160:
-            charAsInt = entitiesWindows1252[charAsInt]
-
+            charAsInt = entitiesWindows1252[128 - charAsInt]
+        
+        # 0 is not a good number.
+        if charAsInt == 0:
+            charAsInt = 65533
+        
         try:
-            # XXX This is wrong. This doesn't take "windows-1252 entities" into
-            # account.
-
             # XXX We should have a separate function that does "int" to
             # "unicodestring" conversion since this doesn't always work
             # according to hsivonen. Also, unichr has a limitation of 65535
