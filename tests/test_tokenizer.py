@@ -46,11 +46,37 @@ class TokenizerTestParser(object):
         """This error is not an error"""
         self.outputTokens.append(u"AtheistParseError")
 
-def loadTests(f):
-    for i, line in enumerate(f):
-        if line and not line[0] == "#":
-            testList = eval(line)
-            yield i+1, tuple(testList)
+def concatanateCharacterTokens(tokens):
+    outputTokens = []
+    for token in tokens:
+        if not "ParseError" in token and token[0] == "Character":
+            if (outputTokens and not "ParseError" in outputTokens[-1] and 
+                outputTokens[-1][0] == "Character"):
+                outputTokens[-1][1] += token[1]
+            else:
+                outputTokens.append(token)
+        else:
+            outputTokens.append(token)
+    return outputTokens
+
+def tokensMatch(expectedTokens, recievedTokens):
+    """Test whether the test has passed or failed
+
+    For brevity in the tests, the test has passed if the sequence of expected
+    tokens appears anywhere in the sequqnce of returned tokens.
+
+    We also concatanate all consecutive character tokens into a single token"""
+
+    expectedTokens = concatanateCharacterTokens(expectedTokens)
+    recievedTokens = concatanateCharacterTokens(recievedTokens)
+
+    for i, token in enumerate(recievedTokens):
+        if expectedTokens[0] == token:
+            if (len(expectedTokens) <= len(recievedTokens[i:]) and
+                recievedTokens[i:i+len(expectedTokens)]):
+                return True
+    return False
+        
 
 def test_tokenizer():
     for filename in glob.glob('tokenizer/*.test'):
@@ -62,21 +88,21 @@ def runTokenizerTest(description, input, output):
     #XXX - move this out into the setup function
     parser = TokenizerTestParser()
     tokens = parser.parse(StringIO.StringIO(input))
-    try:
-        assert tokens == output
-    except AssertionError:
-        print "Failed test %s"%(description,)
-        print "Got", tokens, "expected", output
-        return False
-    return True
+    assert tokensMatch(tokens, output)
 
 def main():
     failed = 0
     tests = 0
     for func, desc, input, output in test_tokenizer():
         tests += 1
-        passed = func(desc, input, output)
-        if not passed: failed +=1
+        try:
+            func(desc, input, output)
+        except AssertionError:
+            print "Failed test %s"%(desc,)
+            parser = TokenizerTestParser()
+            tokens = parser.parse(StringIO.StringIO(input))
+            print "Got", tokens, "expected", output
+            failed +=1
     print "Ran %i tests, failed %i"%(tests, failed)
 
 if __name__ == "__main__":
