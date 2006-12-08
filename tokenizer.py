@@ -178,7 +178,8 @@ class HTMLTokenizer(object):
 
         # Consume all the characters that are in range.
         c = self.consumeChar()
-        while c in range:
+        #XXX Explicit check for EOF
+        while c in range and c is not EOF:
             charStack.append(c)
             c = self.consumeChar()
 
@@ -216,20 +217,29 @@ class HTMLTokenizer(object):
         if charStack[0] == u"#":
             charStack.append(self.consumeChar())
             charStack.append(self.consumeChar())
-            if charStack[1].lower() == u"x" \
-              and charStack[2] in string.hexdigits:
-                # Hexadecimal entity detected.
-                self.characterQueue.append(charStack[2])
-                char = self.consumeNumberEntity(True)
-            elif charStack[1] in string.digits:
-                # Decimal entity detected.
-                self.characterQueue.append(charStack[1])
-                self.characterQueue.append(charStack[2])
-                char = self.consumeNumberEntity(False)
-            else:
-                # No number entity detected.
+            if EOF in charStack:
+                #If we reach the end of the file put everything up to EOF 
+                #back in the queue
+                charStack = charStack[:charStack.index(EOF)]
                 self.characterQueue.extend(charStack)
                 self.parser.parseError()
+            else:
+                if charStack[1].lower() == u"x" \
+                  and charStack[2] in string.hexdigits:
+                    # Hexadecimal entity detected.
+                    self.characterQueue.append(charStack[2])
+                    char = self.consumeNumberEntity(True)
+                elif charStack[1] in string.digits:
+                    # Decimal entity detected.
+                    self.characterQueue.extend(charStack[1:])
+                    char = self.consumeNumberEntity(False)
+                else:
+                    # No number entity detected.
+                    self.characterQueue.extend(charStack)
+                    self.parser.parseError()
+        #Break out if we reach the end of the file
+        elif charStack[0] == EOF:
+            self.parser.parseError()
         else:
             # At this point in the process might have named entity. Entities
             # are stored in the global variable "entities".
@@ -241,22 +251,30 @@ class HTMLTokenizer(object):
             def entitiesStartingWith(name):
                 return [e for e in filteredEntityList if e.startswith(name)]
 
+            EOFReached = False
             while entitiesStartingWith("".join(charStack)):
                 charStack.append(self.consumeChar())
-
+                if charStack[-1] == EOF:
+                    EOFReached = True
+                    break
+            
             # At this point we have the name of the named entity or nothing.
-            possibleEntityName = "".join(charStack)[:-1]
-            if possibleEntityName in entities:
-                char = entities[possibleEntityName]
-
-                # Check whether or not the last character returned can be
-                # discarded or needs to be put back.
-                if not charStack[-1] == ";":
-                    self.parser.parseError()
-                    self.characterQueue.append(charStack[-1])
-            else:
+            if EOFReached:  
                 self.parser.parseError()
                 self.characterQueue.extend(charStack)
+            else:
+                possibleEntityName = "".join(charStack)[:-1]
+                if possibleEntityName in entities:
+                    char = entities[possibleEntityName]
+
+                    # Check whether or not the last character returned can be
+                    # discarded or needs to be put back.
+                    if not charStack[-1] == ";":
+                        self.parser.parseError()
+                        self.characterQueue.append(charStack[-1])
+                else:
+                    self.parser.parseError()
+                    self.characterQueue.extend(charStack)
         return char
 
     def processEntityInAttribute(self):
@@ -571,7 +589,7 @@ class HTMLTokenizer(object):
     def bogusCommentState(self):
         assert self.contentModelFlag == contentModelFlags["PCDATA"]
 
-        charStack = [self.ConsumeChar()]
+        charStack = [self.consumeChar()]
         while charStack[-1] not in [u">", EOF]:
             charStack.append(self.consumeChar())
 
@@ -595,7 +613,9 @@ class HTMLTokenizer(object):
         else:
             for x in xrange(5):
                 charStack.append(self.consumeChar())
-            if "".join(charStack).upper() == u"DOCTYPE":
+            #XXX - put in explicit None check
+            if (not EOF in charStack and 
+                "".join(charStack).upper() == u"DOCTYPE"):
                 self.changeState("doctype")
             else:
                 self.parser.parseError()
