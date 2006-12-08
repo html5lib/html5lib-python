@@ -133,7 +133,7 @@ voidElements = frozenset((
     "input"
 ))
 
-entitiesWindows1252 = [
+entitiesWindows1252 = (
     8364,  # 0x80  0x20AC  EURO SIGN
     65533, # 0x81          UNDEFINED
     8218,  # 0x82  0x201A  SINGLE LOW-9 QUOTATION MARK
@@ -166,7 +166,7 @@ entitiesWindows1252 = [
     65533, # 0x9D          UNDEFINED
     382,   # 0x9E  0x017E  LATIN SMALL LETTER Z WITH CARON
     376    # 0x9F  0x0178  LATIN CAPITAL LETTER Y WITH DIAERESIS
-]
+)
 
 entities = {
     "AElig": u"\u00C6",
