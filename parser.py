@@ -294,6 +294,7 @@ class RootElementPhase(Phase):
 
     def processStartTag(self, tagname, attributes):
         self.createHTMLNode()
+        # XXX doesn't this invoke itself?
         self.parser.phase.processStartTag(tagname, attributes)
 
     def processEndTag(self, name):
@@ -450,7 +451,8 @@ class BeforeHead(InsertionMode):
 
 class InHead(InsertionMode):
 
-    ##XXX - are we sure to only recieve start and end tag tokens once we start colleting characters?
+    # XXX Are we sure to only recieve start and end tag tokens once we start
+    # colleting characters?
 
     def finishCollectingCharacters(self, name, endTag=False):
         InsertionMode.finishCollectingCharacters(self,name)
@@ -459,7 +461,7 @@ class InHead(InsertionMode):
                 self.parser.openElements[-1].append("already excecuted")
             if self.parser.innerHTML:
                 self.parser.openElements[-1].append("already excecuted")
-        #Ignore the rest of the script element handling
+        # Ignore the rest of the script element handling
 
     def processNonWhitespaceCharacter(self, data):
         if self.collectingCharacters:
@@ -500,14 +502,14 @@ class InHead(InsertionMode):
         element = self.parser.createElement(name, attributes)
         self.appendToHead(element)
         self.parser.tokenizer.state = self.parser.tokenizer.states[stateFlags[name]]
-        #We have to start collecting characters
+        # We have to start collecting characters
         self.collectingCharacters = True
         self.collectionStartTag = name
 
     def startTagScript(self, name, attributes):
         element = self.parser.createElement(name, attributes)
         element._flags.append("parser-inserted")
-        #Should this be moved to after we finish collecting characters
+        # XXX Should this be moved to after we finish collecting characters
         self.appendToHead(element)
         self.parser.tokenizer.state = self.parser.tokenizer.states["CDATA"]
 
@@ -586,6 +588,7 @@ class InBody(InsertionMode):
         self.parser.openElements[-1].appendChild(TextNode(data))
 
     def processStartTag(self, name, attributes):
+        # XXX Should this handle unknown elements as well?
         handlers=utils.MethodDispatcher([
                 ("script",self.startTagScript),
                 (("base", "link", "meta", "style", "title"), startTagFromHead),
@@ -604,6 +607,7 @@ class InBody(InsertionMode):
         handlers[name](name, attributes)
 
     def processEndTag(self, name):
+        # XXX Should this handle unknown elements?
         handlers = utils.MethodDispatcher([
                 ("p",self.endTagP),
                 ("body",self.endTagBody),
@@ -678,8 +682,8 @@ class InBody(InsertionMode):
                 for j in range(i+1):
                     self.parser.openElements.pop()
                     break
-            #Phrasing elements are all non special, non scoping,
-            #non formatting elements
+            # Phrasing elements are all non special, non scoping, non
+            # formatting elements
             elif (node.name in (specialElements | scopingElements)
                   and node.name not in ("address", "div")):
                 break
@@ -707,7 +711,7 @@ class InBody(InsertionMode):
         self.parser.formPointer = None
 
     def endTagListItem(self, name):
-        #Could merge this with the Block case
+        # AT Could merge this with the Block case
         if self.parser.elementInScope(name):
             self.parser.generateImpliedEndTags(name)
             if self.parser.openElements[-1].name != name:
@@ -781,7 +785,7 @@ class InBody(InsertionMode):
         if afeElement != self.parser.openElements[-1]:
             self.parser.parseError()
 
-        #Start of the adoption agency algorithm proper
+        # XXX Start of the adoption agency algorithm proper
         afeIndex = self.parser.openElements.index(afeElement)
         furthestBlock = None
         for element in self.parser.openElements[afeIndex:]:
@@ -798,7 +802,7 @@ class InBody(InsertionMode):
 
         if furthestBlock.parent:
             furthestBlock.childNodes.remove(furthestBlock)
-        #Need to finish this
+        # XXX Need to finish this
         raise NotImplementedError
 
     def startTagButton(self, name, attributes):
@@ -850,7 +854,7 @@ class InBody(InsertionMode):
         self.parser.openElements.pop()
 
     def startTagImage(self, name, attributes):
-        #No really...
+        # No really...
         self.parser.parseError()
         self.processStartTag("img", attributes)
 
@@ -858,7 +862,7 @@ class InBody(InsertionMode):
         self.parser.reconstructActiveFormattingElements()
         self.parser.insertElement(name, attributes)
         if self.parser.formPointer is not None:
-            #Not exactly sure what to do here
+            # XXX Not exactly sure what to do here
             self.parser.openElements[-1].form = self.parser.formPointer
         self.parser.openElements.pop()
 
