@@ -421,6 +421,8 @@ class HTMLTokenizer(object):
             # start tag which also happens to be the currentToken. We also need
             # to have the character directly after the characters that could
             # match the start tag name.
+
+            # XXX what if we hit EOF!!!
             for x in xrange(len(self.currentToken.name)+1):
                 charStack.append(self.consumeChar())
 
