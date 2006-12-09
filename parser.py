@@ -116,14 +116,14 @@ class HTMLParser(object):
 
     def switchInsertionMode(self, name):
         """Switch between different insertion modes in the main phase"""
-        #XXX- arguably this should be on the main phase object itself
+        # XXX AT Arguably this should be on the main phase object itself
         self.phase.insertionMode = self.phase.insertionModes[name](self)
 
     def switchPhase(self, name):
         """Switch between different phases of the parsing
         """
         print name, self.phases["trailingEnd"]
-        #Need to hang on to state between trailing end phase and main phase
+        # Need to hang on to state between trailing end phase and main phase
         if (name == "trailingEnd" and
             isinstance(self.phase, self.phases["main"])):
             self.mainPhaseState = self.phase
@@ -144,7 +144,7 @@ class HTMLParser(object):
                 return False
             elif node.name == "html":
                 return False
-        assert False #We should never reach this point
+        assert False # We should never reach this point
 
     def reconstructActiveFormattingElements(self):
         afe = self.activeFormattingElements
@@ -156,7 +156,7 @@ class HTMLParser(object):
                 break
         for j in xrange(i,len(afe)-2):
             entry = afe[j+1]
-            #Is this clone strictly necessary?
+            # Is this clone strictly necessary?
             clone = entry.cloneNode()
             self.openElements[-1].appendChild(clone)
             self.openElements.append(clone)
@@ -180,8 +180,8 @@ class HTMLParser(object):
         return False
 
     def createElement(self, name, attributes):
-        #Change this if we ever implement different node types for different
-        #elements
+        # Change this if we ever implement different node types for different
+        # elements
         element = Element(name)
         element.attributes = attributes
         return element
@@ -194,7 +194,7 @@ class HTMLParser(object):
             self.openElements.append(element)
             print name, self.openElements
         else:
-            #Haven't implemented this yet as spec is vaugely unclear
+            # XXX Haven't implemented this yet as spec is vaugely unclear
             raise NotImplementedError
 
     def generateImpliedEndTags(self, exclude):
@@ -208,26 +208,29 @@ class HTMLParser(object):
 
     def resetInsertionMode(self):
         last = False
-        newModes = {"select":"inSelect",
-                    "td":"inCell",
-                    "th":"inCell",
-                    "tr":"inRow",
-                    "tbody":"inTableBody",
-                    "thead":"inTableBody",
-                    "tfoot":"inTableBody",
-                    "caption":"inCaption",
-                    "colgroup":"inColumnGroup",
-                    "table":"inTable",
-                    "head":"inBody",
-                    "body":"inBody",
-                    "frameset":"inFrameset"}
+        newModes = {
+            "select":"inSelect",
+            "td":"inCell",
+            "th":"inCell",
+            "tr":"inRow",
+            "tbody":"inTableBody",
+            "thead":"inTableBody",
+            "tfoot":"inTableBody",
+            "caption":"inCaption",
+            "colgroup":"inColumnGroup",
+            "table":"inTable",
+            "head":"inBody",
+            "body":"inBody",
+            "frameset":"inFrameset"
+        }
         for node in self.openElements[::-1]:
             if node == self.openElements[0]:
                 last = True
                 if node.name not in ['td', 'th']:
                     assert self.innerHTML
                     raise NotImplementedError
-            #Check for conditions that should only happen in the innerHTML case
+            # Check for conditions that should only happen in the innerHTML
+            # case
             if node.name in ["select", "colgroup", "head", "frameset"]:
                 assert self.innerHTML
             if node.name in newModes:
@@ -310,7 +313,7 @@ class RootElementPhase(Phase):
 
     def createHTMLNode(self):
         self.parser.insertElement("html", [])
-        #Append the html element to the root node
+        # Append the html element to the root node
         self.parser.document.appendChild(self.parser.openElements[-1])
         self.parser.switchPhase("main")
 
@@ -318,20 +321,22 @@ class RootElementPhase(Phase):
 class MainPhase(Phase):
     def __init__(self, parser):
         Phase.__init__(self, parser)
-        self.insertionModes = {"beforeHead":BeforeHead,
-                               "inHead":InHead,
-                               "afterHead":AfterHead,
-                               "inBody":InBody,
-                               "inTable":InTable,
-                               "inCaption":InCaption,
-                               "inColumnGroup":InColumnGroup,
-                               "inTableBody":InTableBody,
-                               "inRow":InRow,
-                               "inCell":InCell,
-                               "inSelect":InSelect,
-                               "afterBody":AfterBody,
-                               "inFrameset":InFrameset,
-                               "afterFrameset":AfterFrameset}
+        self.insertionModes = {
+            "beforeHead":BeforeHead,
+            "inHead":InHead,
+            "afterHead":AfterHead,
+            "inBody":InBody,
+            "inTable":InTable,
+            "inCaption":InCaption,
+            "inColumnGroup":InColumnGroup,
+            "inTableBody":InTableBody,
+            "inRow":InRow,
+            "inCell":InCell,
+            "inSelect":InSelect,
+            "afterBody":AfterBody,
+            "inFrameset":InFrameset,
+            "afterFrameset":AfterFrameset
+        }
         self.insertionMode = self.insertionModes['beforeHead'](self.parser)
 
     def processDoctype(self, name, error):
@@ -343,7 +348,7 @@ class MainPhase(Phase):
              len(self.parser.openElements) > 1)
             and self.parser.openElements[-1].name != "body"):
             self.parser.parseError()
-        #Stop parsing
+        # Stop parsing
 
     def processStartTag(self, name, attributes):
         if name == "html":
