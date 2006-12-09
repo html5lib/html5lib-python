@@ -397,7 +397,7 @@ class HTMLTokenizer(object):
                 self.parser.parseError()
                 self.parser.processCharacter(u"<")
                 self.parser.processCharacter(u">")
-                self.changeState("dataState")
+                self.changeState("data")
             elif data == u"?":
                 self.parser.parseError()
                 self.characterQueue.append(data)
