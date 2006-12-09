@@ -889,7 +889,54 @@ class InBody(InsertionMode):
         self.parser.processStartTag("hr")
         self.parser.processEndTag("form")
 
-class InTable(InsertionMode): pass
+class InTable(InsertionMode):
+    # http://www.whatwg.org/specs/web-apps/current-work/#in-table
+
+    # helper methods
+    def clearStackToTableContext(self):
+        # "clear the stack back to a table context"
+        while self.parser.openElements[-1].name not in ("table", "html"):
+            self.parser.openElements.pop()
+            self.parser.parseError()
+
+        # When the current node is <html> it's an innerHTML case
+
+
+     # processing methods
+    def processCharacter(self, data):
+        # XXX
+        pass
+
+    def processComment(self, data):
+        # XXX AT Perhaps this should be done in InsertionMode and then we can
+        # overwrite it when you don't need to do this...
+        self.parser.openElements[-1].appendChild(CommentNode(data))
+
+    def processStartTag(self, name, attributes):
+        handlers = utils.MethodDispatcher([
+            ("caption", self.startTagCaption),
+            ("colgroup", self.startTagColgroup),
+            ("col", self.startTagCol),
+            (("tbody", "tfoot", "thead"), self.startTagRowGroup),
+            (("td", "th", "tr"), self.startTagImplyTbody),
+            ("table", self.startTagTable)
+        ])
+        # XXX Can we handle this through the anything else case??
+        handlers.setDefaultValue(self.processAnythingElse)
+        handlers[name](name, attributes)
+
+    def startTagCaption(self, name, attributes):
+        self.clearStackToTableContext()
+        # XXX insert marker etc.
+
+    def startTagColgroup(self, name="colgroup", attributes={}):
+        self.clearStackToTableContext()
+        # XXX switch modes
+
+    def startTagCol(self, name, attributes):
+        self.startTagColgroup()
+        self.parser.processStartTag(name, attributes)
+
 class InCaption(InsertionMode): pass
 class InColumnGroup(InsertionMode): pass
 class InTableBody(InsertionMode): pass
@@ -972,7 +1019,7 @@ class InSelect(InsertionMode):
         self.parser.parseError()
         # XXX table elements in scope blah...
 
-    def processAnythingElse(self):
+    def processAnythingElse(self, name, attributes={}):
         self.parser.parseError()
 
 class AfterBody(InsertionMode):
@@ -985,7 +1032,7 @@ class AfterBody(InsertionMode):
         self.parser.processStartTag(name, attributes)
 
     def processEndTag(self, name):
-        handlers = utils.MethodDispatcher([('html',self.endTagHtml)])
+        handlers = utils.MethodDispatcher([("html", self.endTagHtml)])
         handlers.setDefaultValue(self.endTagOther)
         handlers[name](name)
 

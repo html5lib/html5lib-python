@@ -1,10 +1,10 @@
 class MethodDispatcher(dict):
     """Dict with 2 special properties:
 
-    On initiation, keys that are lists, sets or tuples are converted to 
-    multiple keys so accessing any one of the items in the original 
+    On initiation, keys that are lists, sets or tuples are converted to
+    multiple keys so accessing any one of the items in the original
     list-like object returns the matching value
-    
+
     md = MethodDispatcher({["foo", "bar"]:"baz"})
     md["foo"] == "baz"
 
@@ -21,7 +21,7 @@ class MethodDispatcher(dict):
             else:
                 _dictEntries.append((name, value))
         dict.__init__(self, _dictEntries)
-    
+
     def setDefaultValue(self, value):
         self.defaultValue = value
 
