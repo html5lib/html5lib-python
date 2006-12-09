@@ -928,12 +928,8 @@ class InSelect(InsertionMode):
         self.parser.insertElement(name, attributes)
 
     def startTagSelect(self, name, attributes):
-        # XXX innerHTML case ...
-        
-        while self.parser.elementInScope("select"):
-            self.parser.openElements.pop()
-        
-        # XXX reset insertion mode
+        self.parser.parseError()
+        self.endTagSelect()
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
@@ -947,16 +943,34 @@ class InSelect(InsertionMode):
         handlers[name](name)
 
     def endTagOption(self, name="option"):
-        pass
+        if self.parser.openElements[-1].name == "option":
+            self.parser.openElements.pop()
+        else:
+            self.parser.parseError()
 
     def endTagOptgroup(self, name="optgroup"):
-        pass
-    
-    def endTagSelect(self, name):
-        pass
+        # </optgroup> implicitly closes <option>
+        if self.parser.openElements[-1].name == "option" and \
+          self.parser.openElements[-2].name == "optgroup":
+            self.endTagOption()
+        # It also closes </optgroup>
+        if self.parser.openElements[-1].name == "optgroup":
+            self.parser.openElements.pop()
+        # But nothing else
+        else:
+            self.parser.parseError()
+
+    def endTagSelect(self, name="select"):
+        # XXX innerHTML case ...
+
+        while self.parser.elementInScope("select"):
+            self.parser.openElements.pop()
+
+        # XXX reset insertion mode
 
     def endTagTableElements(self, name):
-        pass
+        self.parser.parseError()
+        # XXX table elements in scope blah...
 
     def processAnythingElse(self):
         self.parser.parseError()
