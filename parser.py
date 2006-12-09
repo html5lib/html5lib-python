@@ -345,8 +345,8 @@ class MainPhase(Phase):
     def processEOF(self):
         self.parser.generateImpliedEndTags()
         if ((self.parser.innerHTML == False or
-             len(self.parser.openElements) > 1)
-            and self.parser.openElements[-1].name != "body"):
+          len(self.parser.openElements) > 1)
+          and self.parser.openElements[-1].name != "body"):
             self.parser.parseError()
         # Stop parsing
 
@@ -553,11 +553,11 @@ class AfterHead(InsertionMode):
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
-                ("body",self.startTagBody),
-                ("frameset",self.startTagFrameset),
-                (("base", "link", "meta", "script", "style", "title"),
-                 self.startTagFromHead)
-                ])
+            ("body",self.startTagBody),
+            ("frameset",self.startTagFrameset),
+            (("base", "link", "meta", "script", "style", "title"),
+              self.startTagFromHead)
+        ])
         handlers.setDefaultValue(self.startTagOther)
 
     def startTagBody(self, name, attributes):
@@ -906,24 +906,39 @@ class InSelect(InsertionMode):
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
             ("option", self.startTagOption),
-            ("optgroup", self.startTagOptGroup),
+            ("optgroup", self.startTagOptgroup),
             ("select", self.startTagSelect)
         ])
         handlers.setDefaultValue(self.processAnythingElse)
         handlers[name](name, attributes)
 
     def startTagOption(self, name, attributes):
-        pass
+        # We need to imply </option> if <option> is the current node.
+        if self.parser.openElements[-1].name == "option":
+            # AT We could also pop the node from the stack...
+            self.endTagOption()
+        self.parser.insertElement(name, attributes)
 
-    def startTagOptGroup(self, name, attributes):
-        pass
+    def startTagOptgroup(self, name, attributes):
+        if self.parser.openElements[-1].name == "option":
+            # AT see above
+            self.endTagOption()
+        if self.parser.openElements[-1].name == "optgroup":
+            self.endTagOptgroup()
+        self.parser.insertElement(name, attributes)
 
     def startTagSelect(self, name, attributes):
-        pass
+        # XXX innerHTML case ...
+        
+        while self.parser.elementInScope("select"):
+            self.parser.openElements.pop()
+        
+        # XXX reset insertion mode
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
             ("option", self.endTagOption),
+            ("optgroup", self.endTagOptgroup)
             ("select", self.endTagSelect),
             (("caption", "table", "tbody", "tfoot", "thead", "tr", "td",
               "th"), self.endTagTableElements)
@@ -931,9 +946,12 @@ class InSelect(InsertionMode):
         handlers.setDefaultValue(self.processAnythingElse)
         handlers[name](name)
 
-    def endTagOption(self, name):
+    def endTagOption(self, name="option"):
         pass
 
+    def endTagOptgroup(self, name="optgroup"):
+        pass
+    
     def endTagSelect(self, name):
         pass
 
