@@ -1,146 +1,196 @@
 import codecs
 
-from utils.utils import openStream
-
 class HTMLInputStream(object):
-    """For reading data from an input stream
-
-    This deals with character encoding issues automatically.
-
-    This keeps track of the current line and column number in the file
-    automatically, as you consume and unconsume characters.
+    """ Provides a unicode stream of characters to the HTMLTokenizer.
+    
+    This class takes care of character encoding and removing or replacing
+    incorrect byte-sequences and also provides column and line tracking.
     """
-
-    def __init__(self, stream, encoding = None):
+    
+    def __init__(self, stream, encoding=None):
         """ Initialise the HTMLInputReader.
-
+        
         The stream can either be a file-object, filename, url or string
-
+        
         The optional encoding parameter must be a string that indicates
         the encoding.  If specified, that encoding will be used,
         regardless of any BOM or later declaration (such as in a meta
         element)
         """
-
-        self.line = 1 # Current line number
-        self.col = 0  # Current column number
-        self.lineBreaks = [0]
-
-        # Keep a reference to the unencoded file object so that a new
-        # EncodedFile can be created later if the encoding is declared
-        # in a meta element
-        self.file = openStream(stream)
-
-        skipBOM = False
-        self.charEncoding = self.detectBOM(self.file)
-        if self.charEncoding:
-            # The encoding is known from the BOM, don't allow later
-            # declarations from the meta element to override this.
-            skipBOM = True
+        
+        # Position Statistics
+        self.line = 1
+        self.col = 0
+        
+        # Encoding Information
+        self.charEncoding = encoding
+        
+        # Original Stream
+        self.stream = self.openStream(stream)
+        
+        # Try to detect the encoding of the stream by looking for a BOM
+        encoding = self.detectEncoding()
+        
+        # Store whether we need to skip the BOM in future
+        if encoding:
+            self.skipBOM = True
+        else:
+            self.skipBOM = False
+        
+        # If an encoding was specified or detected from the BOM don't allow
+        # the encoding to be changed futher into the stream
+        if self.charEncoding or encoding:
             self.allowEncodingOverride = False
         else:
-            # Using the default encoding, don't allow later
-            # declarations from the meta element to override this.
             self.allowEncodingOverride = True
-            self.charEncoding = "cp1252" # default to Windows-1252
-
-        self.encodedFile = codecs.EncodedFile(self.file, self.charEncoding)
-        if skipBOM:
-            self.encodedFile.read(1)
-
-    def detectBOM(self, fp):
-        """ Attempts to detect the character encoding of the html file
-        given by a file object fp. fp must not be a codec wrapped file
-        object!
-
-        The return value can be:
-            - if detection of the BOM succeeds, the codec name of the
-              corresponding unicode charset is returned
-
-            - if BOM detection fails, None is returned.
-        """
-        # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/363841
-
-        ### detection using BOM
         
-        ## the BOMs we know, by their pattern
-        bomDict = { # bytepattern : name              
-                   (0x00, 0x00, 0xFE, 0xFF) : "utf_32_be",        
-                   (0xFF, 0xFE, 0x00, 0x00) : "utf_32_le",
-                   (0xFE, 0xFF, None, None) : "utf_16_be", 
-                   (0xFF, 0xFE, None, None) : "utf_16_le", 
-                   (0xEF, 0xBB, 0xBF, None) : "utf_8",
-                  }
-
-        ## go to beginning of file and get the first 4 bytes
-        fp.seek(0)
-        (byte1, byte2, byte3, byte4) = tuple(map(ord, fp.read(4)))
-
-        ## try bom detection using 4 bytes, 3 bytes, or 2 bytes
-        bomDetection = bomDict.get((byte1, byte2, byte3, byte4))
-        if not bomDetection :
-            bomDetection = bomDict.get((byte1, byte2, byte3, None))
-            if not bomDetection :
-                bomDetection = bomDict.get((byte1, byte2, None, None))
+        # If an encoding wasn't specified, use the encoding detected from the
+        # BOM, if present, otherwise use the default encoding
+        if not self.charEncoding:
+            self.charEncoding = encoding or "cp1252"
         
-        ## if BOM detected, we're done :-)
-        fp.seek(0)
-        if bomDetection :
-            return bomDetection
-        return None
-
-    def consumeChar(self):
-        char = unicode(self.encodedFile.read(1), self.charEncoding)
-        if char == "\n":
-            # Move to next line and reset column count
-            self.line += 1
-            self.col = 0
-            self.lineBreaks.append(self.encodedFile.tell())
-        else:
-            # Just increment the column counter
-            self.col += 1
-        return char or None
-
-    def unconsumeChar(self):
-        """Unconsume the previous character by seeking backwards thorough
-        the file.
+        # Encoded file stream providing Unicode characters replacing characters
+        # unable to be encoded with the Unicode replacement character
+        self.encodedStream = codecs.EncodedFile(self.stream, self.charEncoding,
+          errors='replace')
+        
+        self.seek(0)
+    
+    def openStream(self, stream):
+        """ Opens stream first trying the native open function, if that
+        fails try to open as a URL and finally treating stream as a string.
+        
+        Returns a file-like object.
         """
-        self.encodedFile.seek(-1, 1)
-        if self.encodedFile.tell()+1 == self.lineBreaks[-1]:
-            self.line -= 1
-            self.lineBreaks.pop()
-            self.col = self.encodedFile.tell()-self.lineBreaks[-1]
-        else:
-            self.col -= 1
-
+        # Already a file-like object?
+        if hasattr(stream, 'seek'):
+            return stream
+        
+        # Try opening stream normally
+        try:
+            return open(stream)
+        except: pass
+        
+        # Otherwise treat stream as a string and covert to a file-like object
+        import StringIO as StringIO
+        return StringIO.StringIO(str(stream))
+    
+    def detectEncoding(self):
+        """ Attempts to detect the character encoding of the stream.
+        
+        If an encoding can be determined from the BOM return the name of the
+        encoding otherwise return None
+        """
+        
+        bomDict = {
+            codecs.BOM_UTF8: 'utf-8',
+            codecs.BOM_UTF16_LE: 'utf-16-le', codecs.BOM_UTF16_BE: 'utf-16-be',
+            codecs.BOM_UTF32_LE: 'utf-32-le', codecs.BOM_UTF32_BE: 'utf-32-be'
+        }
+        
+        # Go to beginning of file and read in 4 bytes
+        self.stream.seek(0)
+        string = self.stream.read(4)
+        
+        # Try detecting the BOM using bytes from the string
+        encoding = bomDict.get(string[:3])       # UTF-8
+        if not encoding:
+            encoding = bomDict.get(string[:2])   # UTF-16
+            if not encoding:
+                encoding = bomDict.get(string)   # UTF-32
+        
+        # Go back to the beginning of the file
+        self.stream.seek(0)
+        
+        return encoding
+    
     def declareEncoding(self, encoding):
         """Report the encoding declared by the meta element
         
         If the encoding is currently only guessed, then this
         will read subsequent characters in that encoding.
-
+        
         If the encoding is not compatible with the guessed encoding
         and non-US-ASCII characters have been seen, parsing will
         have to begin again.
         """
         pass
+    
+    def read(self, size=1, stopAt=None):
+        """ Read at most size characters from the stream stopping when
+        encountering a character in stopAt if supplied.
+        
+        stopAt can be any iterable object such as a string, list or tuple.
+        
+        Returns a string from the stream with null bytes and new lines
+        normalized
+        """
+        charStack = []
+        
+        while (len(charStack) < size) or stopAt:
+            charStack.append(self.encodedStream.read(1))
+            if charStack[-1] == u"\x00":
+                charStack[-1] = u"\uFFFD"
+            elif charStack[-1] == u"\r":
+                if self.lookAhead(1) == u"\n":
+                    charStack.pop()
+                else:
+                    charStack[-1] = u"\n"
+            if stopAt and charStack and charStack[-1] in stopAt:
+                break
+        
+        # Keep track of line and column count
+        for c in charStack:
+            if c == u"\n":
+                self.line += 1
+                self.col = 0
+            else:
+                self.col += 1
+        
+        # Return normalized stream
+        return "".join(charStack)
+    
+    def seek(self, offset, whence=0):
+        """ Proxy method for seeking withing the input stream.
+        """
+        
+        # XXX TODO: Still need to find a way to track line and col after
+        # seeking. Seeking back is easy but going forward will need reading
+        # characters up to that point
+        
+        self.encodedStream.seek(offset, whence)
+        # Skip over the BOM if needed
+        if not self.tell() and self.skipBOM:
+            self.encodedStream.read(1)
+    
+    def tell(self):
+        """ Returns the streams current position
+        """
+        return self.encodedStream.tell()
+    
+    def readUntil(self, charList):
+        """ Returns a string of characters from the stream until a character
+        in charList is found or EOF is reached
+        """
+        return self.read(stopAt=charList)
+    
+    def lookAhead(self, amount):
+        """ Returns the amount of characters specified without moving
+        forward within the stream.
+        """
+        string = self.read(amount)
+        self.seek(-len(string), 1)
+        return string
 
 if __name__ == "__main__":
     try:
         # Hard coded file name for now, this will need to be fixed later
-        htmlFile = open("tests/utf-8-bom.html", "rU")
-        stream = HTMLInputStream(htmlFile)
-
-        char = stream.consumeChar()
+        stream = HTMLInputStream("tests/utf-8-bom.html")
+        
+        char = stream.read(1)
         while char:
-            line = stream.line
-            col = stream.col
-            if char == "\n":
-                print "LF (%d, %d)" % (line, col)
-            else:
-                print "%s (%d, %d)" % (char, line, col)
-            char = stream.consumeChar()
+            print char
+            char = stream.read(1)
         print "EOF"
-        htmlFile.close()
     except IOError:
         print "The file does not exist."

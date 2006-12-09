@@ -33,29 +33,3 @@ class MethodDispatcher(dict):
                 return self.defaultValue
             else:
                 raise
-
-def openStream(stream):
-    """ Opens stream first trying the native open functino, if that 
-    fails try to open as a URL and finally treating stream as a string.
-
-    Returns a file-like object.
-    """
-    # Already a file-like object?
-    if hasattr(stream, 'tell'):
-        return stream
-
-    # Try opening stream normally
-    try:
-        return open(stream)
-    except: pass
-
-    # Try opening stream as a URL and storing the bytes returned so
-    # they can be turned into a file-like object below
-    try:
-        import urllib
-        stream = urllib.urlopen(stream).read(-1)
-    except: pass
-
-    # Treat source as a string and make it into a file-like object
-    import cStringIO as StringIO
-    return StringIO.StringIO(str(stream))
