@@ -683,7 +683,7 @@ class HTMLTokenizer(object):
             self.changeState("doctypeName")
         elif data == u">":
             # Character needs to be consumed per the specification so don't
-            # invoke with "data" as argument.
+            # invoke emitCurrentTokenWithParseError with "data" as argument.
             self.emitCurrentTokenWithParseError()
         elif data == EOF:
             self.emitCurrentTokenWithParseError(data)
