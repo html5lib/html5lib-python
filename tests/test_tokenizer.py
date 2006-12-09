@@ -64,12 +64,8 @@ def tokensMatch(expectedTokens, recievedTokens):
 
     For brevity in the tests, the test has passed if the sequence of expected
     tokens appears anywhere in the sequqnce of returned tokens.
-
-    We also concatanate all consecutive character tokens into a single token"""
-
-    expectedTokens = concatanateCharacterTokens(expectedTokens)
-    recievedTokens = concatanateCharacterTokens(recievedTokens)
-
+    """
+    return expectedTokens == recievedTokens
     for i, token in enumerate(recievedTokens):
         if expectedTokens[0] == token:
             if (len(expectedTokens) <= len(recievedTokens[i:]) and
@@ -86,8 +82,12 @@ def test_tokenizer():
 
 def runTokenizerTest(description, input, output):
     #XXX - move this out into the setup function
+    #concatanate all consecutive character tokens into a single token
+    output = concatanateCharacterTokens(output)
     parser = TokenizerTestParser()
     tokens = parser.parse(StringIO.StringIO(input))
+    tokens = concatanateCharacterTokens(tokens)
+    print "Got", tokens, "expected", output
     assert tokensMatch(tokens, output)
 
 def main():
