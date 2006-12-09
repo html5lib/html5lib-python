@@ -1,4 +1,4 @@
-import codecs
+import codecs, StringIO
 
 class HTMLInputStream(object):
     """ Provides a unicode stream of characters to the HTMLTokenizer.
@@ -17,9 +17,9 @@ class HTMLInputStream(object):
         regardless of any BOM or later declaration (such as in a meta
         element)
         """
-        # Position Counters
-        self.line = 1
-        self.col = 0
+        
+        # List of where new lines occur
+        self.newLines = [0]
         
         # Encoding Information
         self.charEncoding = encoding
@@ -29,12 +29,6 @@ class HTMLInputStream(object):
         
         # Try to detect the encoding of the stream by looking for a BOM
         encoding = self.detectEncoding()
-        
-        # Store whether we need to skip the BOM in future
-        if encoding:
-            self.skipBOM = True
-        else:
-            self.skipBOM = False
         
         # If an encoding was specified or detected from the BOM don't allow
         # the encoding to be changed futher into the stream
@@ -49,12 +43,25 @@ class HTMLInputStream(object):
         if not self.charEncoding:
             self.charEncoding = encoding or "cp1252"
         
-        # Encoded file stream providing Unicode characters replacing characters
-        # unable to be encoded with the Unicode replacement character
-        self.encodedStream = codecs.EncodedFile(self.stream, self.charEncoding,
-          errors='replace')
+        # Read bytes from stream decoding them into Unicode
+        unicodeStream = self.stream.read().decode(self.charEncoding, 'replace')
+        # Normalize new lines
+        unicodeStream = unicodeStream.replace(u"\r\n", u"\n")
+        unicodeStream = unicodeStream.replace(u"\r", u"\n")
+        # Replace null bytes
+        unicodeStream = unicodeStream.replace(u"\x00", u"\uFFFD")
         
-        self.seek(0)
+        # If encoding was determined from a BOM remove it from the stream
+        if encoding:
+            unicodeStream = unicodeStream[1:]
+            
+        # Turn stream into a file-like object for access to characters
+        self.encodedStream = StringIO.StringIO(unicodeStream)
+        
+        # Loop through stream and find where new lines occur
+        for i in xrange(len(unicodeStream)):
+            if unicodeStream[i] == u"\n":
+                self.newLines.append(i)
     
     def openStream(self, stream):
         """ Opens stream first trying the native open function, if that
@@ -114,32 +121,25 @@ class HTMLInputStream(object):
         and non-US-ASCII characters have been seen, return True indicating
         parsing will have to begin again.
         """
-        if self.allowEncodingOverride:
-            self.charEncoding = encoding
-            self.encodedStream = codecs.EncodedFile(self.stream,
-              self.charEncoding, errors='replace')
-            if self.characterError:
-                return True
-        self.allowEncodingOverride = False
-        return False
+        pass
     
     def position(self):
         """ Returns (line, col) position in the stream
         """
-        return (self.line, self.col)
+        line = 0
+        tell = self.tell()
+        for pos in self.newLines:
+            if pos < tell:
+                line += 1
+            else:
+                break
+        col = tell-self.newLines[line-1]-1
+        return (line, col)
     
     def seek(self, offset, whence=0):
-        """ Seek within the input stream.
-        """
         self.encodedStream.seek(offset, whence)
-        
-        # Skip over the BOM if needed
-        if not self.tell() and self.skipBOM:
-            self.encodedStream.read(1)
     
     def tell(self):
-        """ Returns the streams current position
-        """
         return self.encodedStream.tell()
     
     def read(self, size=1, stopAt=None):
@@ -147,42 +147,17 @@ class HTMLInputStream(object):
         encountering a character in stopAt if supplied.
         
         stopAt can be any iterable object such as a string, list or tuple.
-        
-        Returns a string from the stream with null bytes and new lines
-        normalized
         """
-        charStack = []
         
-        # XXX TODO: Redo this it's ugly... and doing a lookAhead for CR+LF
-        # messes up the line count..
-        
-        # Get the requested amount of characters or keep reading until
-        # a stop character
-        while (len(charStack) < size) or stopAt:
-            charStack.append(self.encodedStream.read(1))
-            # Correct null bytes and line breaks
-            if charStack[-1] == u"\x00":
-                charStack[-1] = u"\uFFFD"
-            elif charStack[-1] == u"\r":
-                charStack.pop()
-            # Update Position Counters
-            if charStack and charStack[-1] == u"\n":
-                self.line += 1
-                self.col = 0
-            else:
-                self.col += 1
-            # Stop if we've reached a character in stopAt
-            if stopAt and charStack and charStack[-1] in stopAt:
-                break
-        
-        # If the character encoding can be overridden note if a Unicode
-        # Replacement character is found
-        if self.allowEncodingOverride and not self.characterError:
-            if u"\uFFFD" in charStack:
-                self.characterError = True
-        
-        # Return normalized stream
-        return "".join(charStack)
+        # If stopAt not specified just return the characters asked for
+        if not stopAt:
+            return self.encodedStream.read(size)
+        else:
+            # Keep reading characters until we reach on that is in stopAt
+            charStack = [self.encodedStream.read(1)]
+            while charStack[-1] not in stopAt:
+                charStack.append(self.encodedStream.read(1))
+            return "".join(charStack)
     
     def readUntil(self, charList):
         """ Returns a string of characters from the stream until a character
@@ -210,7 +185,7 @@ if __name__ == "__main__":
             if c == u"\n":
                 print "Line %s, Column %s: Line Feed" % (line, col)
             else:
-                print "Line %s, Column %s: %s" % (line, col, c)
+                print "Line %s, Column %s: %s" % (line, col, c.encode(stream.charEncoding))
             c = stream.read(1)
         print "EOF"
     except IOError:
