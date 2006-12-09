@@ -590,34 +590,34 @@ class InBody(InsertionMode):
     def processStartTag(self, name, attributes):
         # XXX Should this handle unknown elements as well?
         handlers=utils.MethodDispatcher([
-                ("script",self.startTagScript),
-                (("base", "link", "meta", "style", "title"), startTagFromHead),
-                ("body", self.startTagBody),
-                (("address", "blockquote", "center", "dir", "div",
-                  "dl", "fieldset", "listing", "menu", "ol", "p",
-                  "pre", "ul"), self.startTagCloseP),
-                ("form", self.startTagForm),
-                (("li", "dd", "dt"), self.startTagListItem),
-                ("plaintext",self.startTagPlaintext),
-                (headingElements, self.startTagHeading),
-                ("a",self.startTagA),
-                (("b", "big", "em", "font", "i", "nobr", "s", "small",
-                  "strike", "strong", "tt", "u"),self.startTagFormatting),
-                ])
+            ("script",self.startTagScript),
+            (("base", "link", "meta", "style", "title"), startTagFromHead),
+            ("body", self.startTagBody),
+            (("address", "blockquote", "center", "dir", "div", "dl",
+              "fieldset", "listing", "menu", "ol", "p", "pre", "ul"),
+              self.startTagCloseP),
+            ("form", self.startTagForm),
+            (("li", "dd", "dt"), self.startTagListItem),
+            ("plaintext",self.startTagPlaintext),
+            (headingElements, self.startTagHeading),
+            ("a",self.startTagA),
+            (("b", "big", "em", "font", "i", "nobr", "s", "small",
+              "strike", "strong", "tt", "u"),self.startTagFormatting),
+        ])
         handlers[name](name, attributes)
 
     def processEndTag(self, name):
         # XXX Should this handle unknown elements?
         handlers = utils.MethodDispatcher([
-                ("p",self.endTagP),
-                ("body",self.endTagBody),
-                ("html",self.endTagHtml),
-                (("address", "blockquote", "centre", "div", "dl", "fieldset",
-                  "listing", "menu", "ol", "pre", "ul"), self.endTagBlock),
-                ("form", self.endTagForm),
-                (("dd", "dt", "li"), self.endTagListItem),
-                (headingElements, self.endTagHeading)
-                ])
+            ("p",self.endTagP),
+            ("body",self.endTagBody),
+            ("html",self.endTagHtml),
+            (("address", "blockquote", "centre", "div", "dl", "fieldset",
+              "listing", "menu", "ol", "pre", "ul"), self.endTagBlock),
+            ("form", self.endTagForm),
+            (("dd", "dt", "li"), self.endTagListItem),
+            (headingElements, self.endTagHeading)
+        ])
         handlers[name](name)
 
     def endTagP(self, name):
@@ -890,7 +890,53 @@ class InColumnGroup(InsertionMode): pass
 class InTableBody(InsertionMode): pass
 class InRow(InsertionMode): pass
 class InCell(InsertionMode): pass
-class InSelect(InsertionMode): pass
+class InSelect(InsertionMode):
+    # XXX character token ... always appended to the current node
+
+    def processComment(self, data):
+        # XXX AT Perhaps this should be done in InsertionMode and then we can
+        # overwrite it when you don't need to do this...
+        self.parser.openElements[-1].appendChild(CommentNode(data))
+
+    def processStartTag(self, name, attributes):
+        handlers = utils.MethodDispatcher([
+            ("option", self.startTagOption),
+            ("optgroup", self.startTagOptGroup),
+            ("select", self.startTagSelect)
+        ])
+        handlers.setDefaultValue(self.processAnythingElse)
+        handlers[name](name, attributes)
+
+    def startTagOption(self, name, attributes):
+        pass
+
+    def startTagOptGroup(self, name, attributes):
+        pass
+
+    def startTagSelect(self, name, attributes):
+        pass
+
+    def processEndTag(self, name):
+        handlers = utils.MethodDispatcher([
+            ("option", self.endTagOption),
+            ("select", self.endTagSelect),
+            (("caption", "table", "tbody", "tfoot", "thead", "tr", "td",
+              "th"), self.endTagTableElements)
+        ])
+        handlers.setDefaultValue(self.processAnythingElse)
+        handlers[name](name)
+
+    def endTagOption(self, name):
+        pass
+
+    def endTagSelect(self, name):
+        pass
+
+    def endTagTableElements(self, name):
+        pass
+
+    def processAnythingElse(self):
+        self.parser.parseError()
 
 class AfterBody(InsertionMode):
     def processComment(self, data):
