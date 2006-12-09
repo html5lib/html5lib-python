@@ -176,9 +176,9 @@ class HTMLTokenizer(object):
         char = u"\uFFFD"
         charStack = []
 
-        # Consume all the characters that are in range.
+        # Consume all the characters that are in range while making sure we
+        # don't hit an EOF.
         c = self.consumeChar()
-        #XXX Explicit check for EOF
         while c in allowed and c is not EOF:
             charStack.append(c)
             c = self.consumeChar()
@@ -219,8 +219,8 @@ class HTMLTokenizer(object):
             charStack.append(self.consumeChar())
             charStack.append(self.consumeChar())
             if EOF in charStack:
-                #If we reach the end of the file put everything up to EOF
-                #back in the queue
+                # If we reach the end of the file put everything up to EOF
+                # back in the queue
                 charStack = charStack[:charStack.index(EOF)]
                 self.characterQueue.extend(charStack)
                 self.parser.parseError()
@@ -238,7 +238,7 @@ class HTMLTokenizer(object):
                     # No number entity detected.
                     self.characterQueue.extend(charStack)
                     self.parser.parseError()
-        #Break out if we reach the end of the file
+        # Break out if we reach the end of the file
         elif charStack[0] == EOF:
             self.parser.parseError()
         else:
@@ -247,7 +247,8 @@ class HTMLTokenizer(object):
 
             # Consume characters and compare to these to a substring of the
             # entity names in the list until the substring no longer matches.
-            filteredEntityList = [e for e in entities if e.startswith(charStack[0])]
+            filteredEntityList = [e for e in entities if \
+              e.startswith(charStack[0])]
 
             def entitiesStartingWith(name):
                 return [e for e in filteredEntityList if e.startswith(name)]
@@ -259,16 +260,17 @@ class HTMLTokenizer(object):
             # At this point we have a string that starts with some characters
             # that may match an entity
             entityName = None
-            #Try to find the longest entity the string will match
+
+            # Try to find the longest entity the string will match
             for entityLength in xrange(len(charStack)-1,1,-1):
                 possibleEntityName = "".join(charStack[:entityLength])
                 if possibleEntityName in entities:
                     entityName = possibleEntityName
                     break
-                
+
             if entityName is not None:
                 char = entities[entityName]
-                
+
                 # Check whether or not the last character returned can be
                 # discarded or needs to be put back.
                 if not charStack[-1] == ";":
