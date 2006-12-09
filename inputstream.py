@@ -17,8 +17,7 @@ class HTMLInputStream(object):
         regardless of any BOM or later declaration (such as in a meta
         element)
         """
-        
-        # Position Statistics
+        # Position Counters
         self.line = 1
         self.col = 0
         
@@ -43,6 +42,7 @@ class HTMLInputStream(object):
             self.allowEncodingOverride = False
         else:
             self.allowEncodingOverride = True
+            self.characterError = False
         
         # If an encoding wasn't specified, use the encoding detected from the
         # BOM, if present, otherwise use the default encoding
@@ -111,10 +111,36 @@ class HTMLInputStream(object):
         will read subsequent characters in that encoding.
         
         If the encoding is not compatible with the guessed encoding
-        and non-US-ASCII characters have been seen, parsing will
-        have to begin again.
+        and non-US-ASCII characters have been seen, return True indicating
+        parsing will have to begin again.
         """
-        pass
+        if self.allowEncodingOverride:
+            self.charEncoding = encoding
+            self.encodedStream = codecs.EncodedFile(self.stream,
+              self.charEncoding, errors='replace')
+            if self.characterError:
+                return True
+        self.allowEncodingOverride = False
+        return False
+    
+    def position(self):
+        """ Returns (line, col) position in the stream
+        """
+        return (self.line, self.col)
+    
+    def seek(self, offset, whence=0):
+        """ Seek within the input stream.
+        """
+        self.encodedStream.seek(offset, whence)
+        
+        # Skip over the BOM if needed
+        if not self.tell() and self.skipBOM:
+            self.encodedStream.read(1)
+    
+    def tell(self):
+        """ Returns the streams current position
+        """
+        return self.encodedStream.tell()
     
     def read(self, size=1, stopAt=None):
         """ Read at most size characters from the stream stopping when
@@ -127,46 +153,36 @@ class HTMLInputStream(object):
         """
         charStack = []
         
+        # XXX TODO: Redo this it's ugly... and doing a lookAhead for CR+LF
+        # messes up the line count..
+        
+        # Get the requested amount of characters or keep reading until
+        # a stop character
         while (len(charStack) < size) or stopAt:
             charStack.append(self.encodedStream.read(1))
+            # Correct null bytes and line breaks
             if charStack[-1] == u"\x00":
                 charStack[-1] = u"\uFFFD"
             elif charStack[-1] == u"\r":
-                if self.lookAhead(1) == u"\n":
-                    charStack.pop()
-                else:
-                    charStack[-1] = u"\n"
-            if stopAt and charStack and charStack[-1] in stopAt:
-                break
-        
-        # Keep track of line and column count
-        for c in charStack:
-            if c == u"\n":
+                charStack.pop()
+            # Update Position Counters
+            if charStack and charStack[-1] == u"\n":
                 self.line += 1
                 self.col = 0
             else:
                 self.col += 1
+            # Stop if we've reached a character in stopAt
+            if stopAt and charStack and charStack[-1] in stopAt:
+                break
+        
+        # If the character encoding can be overridden note if a Unicode
+        # Replacement character is found
+        if self.allowEncodingOverride and not self.characterError:
+            if u"\uFFFD" in charStack:
+                self.characterError = True
         
         # Return normalized stream
         return "".join(charStack)
-    
-    def seek(self, offset, whence=0):
-        """ Proxy method for seeking withing the input stream.
-        """
-        
-        # XXX TODO: Still need to find a way to track line and col after
-        # seeking. Seeking back is easy but going forward will need reading
-        # characters up to that point
-        
-        self.encodedStream.seek(offset, whence)
-        # Skip over the BOM if needed
-        if not self.tell() and self.skipBOM:
-            self.encodedStream.read(1)
-    
-    def tell(self):
-        """ Returns the streams current position
-        """
-        return self.encodedStream.tell()
     
     def readUntil(self, charList):
         """ Returns a string of characters from the stream until a character
@@ -178,8 +194,9 @@ class HTMLInputStream(object):
         """ Returns the amount of characters specified without moving
         forward within the stream.
         """
+        cp = self.encodedStream.tell()
         string = self.read(amount)
-        self.seek(-len(string), 1)
+        self.seek(cp)
         return string
 
 if __name__ == "__main__":
@@ -187,10 +204,14 @@ if __name__ == "__main__":
         # Hard coded file name for now, this will need to be fixed later
         stream = HTMLInputStream("tests/utf-8-bom.html")
         
-        char = stream.read(1)
-        while char:
-            print char
-            char = stream.read(1)
+        c = stream.read(1)
+        while c:
+            line, col = stream.position()
+            if c == u"\n":
+                print "Line %s, Column %s: Line Feed" % (line, col)
+            else:
+                print "Line %s, Column %s: %s" % (line, col, c)
+            c = stream.read(1)
         print "EOF"
     except IOError:
         print "The file does not exist."
