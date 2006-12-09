@@ -252,30 +252,31 @@ class HTMLTokenizer(object):
             def entitiesStartingWith(name):
                 return [e for e in filteredEntityList if e.startswith(name)]
 
-            EOFReached = False
-            while entitiesStartingWith("".join(charStack)):
+            while (charStack[-1] != EOF and
+                   entitiesStartingWith("".join(charStack))):
                 charStack.append(self.consumeChar())
-                if charStack[-1] == EOF:
-                    EOFReached = True
-                    break
 
-            # At this point we have the name of the named entity or nothing.
-            if EOFReached:
+            # At this point we have a string that starts with some characters
+            # that may match an entity
+            entityName = None
+            #Try to find the longest entity the string will match
+            for entityLength in xrange(len(charStack)-1,1,-1):
+                possibleEntityName = "".join(charStack[:entityLength])
+                if possibleEntityName in entities:
+                    entityName = possibleEntityName
+                    break
+                
+            if entityName is not None:
+                char = entities[entityName]
+                
+                # Check whether or not the last character returned can be
+                # discarded or needs to be put back.
+                if not charStack[-1] == ";":
+                    self.parser.parseError()
+                    self.characterQueue.extend(charStack[entityLength:])
+            else:
                 self.parser.parseError()
                 self.characterQueue.extend(charStack)
-            else:
-                possibleEntityName = "".join(charStack)[:-1]
-                if possibleEntityName in entities:
-                    char = entities[possibleEntityName]
-
-                    # Check whether or not the last character returned can be
-                    # discarded or needs to be put back.
-                    if not charStack[-1] == ";":
-                        self.parser.parseError()
-                        self.characterQueue.append(charStack[-1])
-                else:
-                    self.parser.parseError()
-                    self.characterQueue.extend(charStack)
         return char
 
     def processEntityInAttribute(self):
