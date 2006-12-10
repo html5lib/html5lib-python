@@ -23,6 +23,8 @@ class MethodDispatcher(dict):
         dict.__init__(self, _dictEntries)
 
     def setDefaultValue(self, value):
+        # XXX I think we should not use a method here... it only complicates
+        # things. I think we should use self.default instead. Short and simple.
         self.defaultValue = value
 
     def __getitem__(self, key):

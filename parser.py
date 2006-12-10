@@ -74,7 +74,7 @@ class CommentNode(Node):
     def __init__(self, data):
         Node.__init__(self, None, None, None)
         self.data = data
-    
+
     def _printNode(self):
         return "<!--" + self.value + "-->\n"
 
@@ -153,7 +153,7 @@ class HTMLParser(object):
         else:
             self.phase = self.phases[name](self)
 
-    #XXX - almost everthing after this point should be moved into a 
+    #XXX - almost everthing after this point should be moved into a
     #seperate treebuilder object
 
     def switchInsertionMode(self, name):
@@ -162,6 +162,7 @@ class HTMLParser(object):
         self.phase.insertionMode = self.phase.insertionModes[name](self)
 
     def elementInScope(self, target, tableVariant=False):
+        # AT use reverse instead of [::-1] when we can rely on Python 2.4
         for node in self.openElements[::-1]:
             if node == target:
                 return True
@@ -175,7 +176,7 @@ class HTMLParser(object):
 
     def reconstructActiveFormattingElements(self):
         afe = self.activeFormattingElements
-        #If there are no active formatting elements exit early
+        # If there are no active formatting elements exit early
         if not afe:
             return
         entry = afe[-1]
@@ -217,6 +218,7 @@ class HTMLParser(object):
         return element
 
     def insertElement(self, name, attributes, parent=None):
+        # XXX dict() should not be needed
         element = self.createElement(name, dict(attributes))
         if parent is None:
             if self.openElements:
@@ -226,7 +228,7 @@ class HTMLParser(object):
             # XXX Haven't implemented this yet as spec is vaugely unclear
             raise NotImplementedError
 
-    def generateImpliedEndTags(self, exclude):
+    def generateImpliedEndTags(self, exclude=None):
         while True:
             name = self.openElements[-1].name
             if name in frozenset("dd", "dt", "li", "p", "td", "th",
@@ -234,6 +236,12 @@ class HTMLParser(object):
                 self.phase.processEndTag(name)
             else:
                 break
+      # XXX AT:
+      # name = self.openElements[-1].name
+      # while name in frozenset("dd", "dt", "li", "p", "td", "th", "tr") and \
+      #   name != exclude:
+      #     self.phase.processEndTag(name)
+      #     name = self.openElements[-1].name
 
     def resetInsertionMode(self):
         last = False
@@ -641,7 +649,7 @@ class InBody(InsertionMode):
             (("marquee", "object"), self.startTagMarqueeObject),
             ("xmp", self.startTagXMP),
             ("table", self.startTagTable),
-            (("area", "basefont", "bgsound", "br", "embed", "img", 
+            (("area", "basefont", "bgsound", "br", "embed", "img",
               "param", "spacer", "wbr"), self.startTagVoidFormatting),
             ("hr", self.startTagHR),
             ("image", self.startTagImage),
@@ -649,10 +657,10 @@ class InBody(InsertionMode):
             ("textarea", self.startTagTextarea),
             (("iframe", "noembed", "noframes", "noscript"), self.startTagCDATA),
             ("select", self.startTagSelect),
-            (("caption", "col", "colgroup", "frame", "frameset", "head", 
-              "option", "optgroup", "tbody", "td", "tfoot", "th", "thead", 
+            (("caption", "col", "colgroup", "frame", "frameset", "head",
+              "option", "optgroup", "tbody", "td", "tfoot", "th", "thead",
               "tr"), self.startTagMisplaced),
-            (("event-source", "section", "nav", "article", "aside", "header", 
+            (("event-source", "section", "nav", "article", "aside", "header",
               "footer", "datagrid", "command"), self.startTagNew)
         ])
         handlers.setDefaultValue(self.startTagOther)
@@ -669,16 +677,16 @@ class InBody(InsertionMode):
             ("form", self.endTagForm),
             (("dd", "dt", "li"), self.endTagListItem),
             (headingElements, self.endTagHeading),
-            (("a", "b", "big", "em", "font", "i", "nobr", "s", "small", 
+            (("a", "b", "big", "em", "font", "i", "nobr", "s", "small",
               "strike", "strong", "tt", "u"), self.endTagFormatting),
             (("marquee", "object", "button"), self.endTagButtonMarqueeObject),
-            (("caption", "col", "colgroup", "frame", "frameset", "head", 
-              "option", "optgroup", "tbody", "td", "tfoot", "th", "thead", 
-              "tr", "area", "basefont", "bgsound", "br", "embed", "hr", 
-              "iframe", "image", "img", "input", "isindex", "noembed", 
-              "noframes", "param", "select", "spacer", "table", "textarea", 
+            (("caption", "col", "colgroup", "frame", "frameset", "head",
+              "option", "optgroup", "tbody", "td", "tfoot", "th", "thead",
+              "tr", "area", "basefont", "bgsound", "br", "embed", "hr",
+              "iframe", "image", "img", "input", "isindex", "noembed",
+              "noframes", "param", "select", "spacer", "table", "textarea",
               "wbr", "noscript"),self.endTagMisplacedNone),
-            (("event-source", "section", "nav", "article", "aside", "header", 
+            (("event-source", "section", "nav", "article", "aside", "header",
               "footer", "datagrid", "command"), self.endTagNew)
             ])
         handlers.setDefaultValue(self.endTagOther)
@@ -961,37 +969,37 @@ class InBody(InsertionMode):
         self.parser.switchInsertionMode("inSelect")
 
     def startTagMisplaced(self, name, attributes):
-        """ Elements that should be children of other elements that have a 
-        different insertion mode; here they are ignored 
-        "caption", "col", "colgroup", "frame", "frameset", "head", 
-        "option", "optgroup", "tbody", "td", "tfoot", "th", "thead", 
+        """ Elements that should be children of other elements that have a
+        different insertion mode; here they are ignored
+        "caption", "col", "colgroup", "frame", "frameset", "head",
+        "option", "optgroup", "tbody", "td", "tfoot", "th", "thead",
         "tr", "noscript"
         """
         self.parser.parseError()
 
     def endTagMisplacedNone(self, name):
-        """ Elements that should be children of other elements that have a 
-        different insertion mode or elements that have no end tag; 
-        here they are ignored 
-        "caption", "col", "colgroup", "frame", "frameset", "head", 
-        "option", "optgroup", "tbody", "td", "tfoot", "th", "thead", 
-        "tr", "noscript, "area", "basefont", "bgsound", "br", "embed", 
-        "hr", "iframe", "image", "img", "input", "isindex", "noembed", 
+        """ Elements that should be children of other elements that have a
+        different insertion mode or elements that have no end tag;
+        here they are ignored
+        "caption", "col", "colgroup", "frame", "frameset", "head",
+        "option", "optgroup", "tbody", "td", "tfoot", "th", "thead",
+        "tr", "noscript, "area", "basefont", "bgsound", "br", "embed",
+        "hr", "iframe", "image", "img", "input", "isindex", "noembed",
         "noframes", "param", "select", "spacer", "table", "textarea", "wbr""
         """
         self.parser.parseError()
 
     def startTagNew(self, name, other):
-        """New HTML5 elements, "event-source", "section", "nav", 
+        """New HTML5 elements, "event-source", "section", "nav",
         "article", "aside", "header", "footer", "datagrid", "command"
         """
         raise NotImplementedError
 
     def endTagNew(self, name):
-        """New HTML5 elements, "event-source", "section", "nav", 
+        """New HTML5 elements, "event-source", "section", "nav",
         "article", "aside", "header", "footer", "datagrid", "command"
         """
-        raise NotImplementedError        
+        raise NotImplementedError
 
     def startTagOther(self, name, attributes):
         self.parser.reconstructActiveFormattingElements()
@@ -1008,7 +1016,7 @@ class InBody(InsertionMode):
                     pass
                 break
             else:
-                if (node not in formattingElements and 
+                if (node not in formattingElements and
                     node in specialElements | scopingElements):
                     self.parser.parseError()
 
@@ -1060,12 +1068,175 @@ class InTable(InsertionMode):
         self.startTagColgroup()
         self.parser.processStartTag(name, attributes)
 
-class InCaption(InsertionMode): pass
-class InColumnGroup(InsertionMode): pass
-class InTableBody(InsertionMode): pass
+    def startTagRowGroup(self, name, attributes={}):
+        # XXX need a better name... emit tokens...
+        assert False
+
+    def startTagImplyTbody(self, name, attributes):
+        self.startTagRowGroup("tbody")
+        # XXX
+        assert False
+
+    def startTagTable(self, name, attributes):
+        self.parser.parseError()
+        # XXX innerHTML
+        assert False
+
+    def processEndTag(self, name):
+        handlers = utils.MethodDispatcher([
+            ("table", self.endTagTable),
+            (("body", "caption", "col", "colgroup", "html", "tbody", "td",
+              "tfoot", "th", "thead", "tr"), self.endTagOther)
+        ])
+        # XXX Can we handle this through the anything else case??
+        handlers.setDefaultValue(self.processAnythingElse)
+        handlers[name](name)
+
+    def endTagTable(self, name):
+        # XXX no element in scope -> parse error, innerHTML case
+
+        self.generateImpliedEndTags()
+        if self.parser.openElements[-1].name == "table":
+            self.parser.parseError
+
+        while self.parser.openElements[-1].name != "table":
+            self.parser.openElements.pop()
+
+        self.parser.resetInsertionMode()
+
+    def endTagOther(self, name):
+        self.parser.parseError()
+
+    def processAnythingElse(self, name, attributes={}):
+        assert False
+
+
+class InCaption(InsertionMode):
+    # http://www.whatwg.org/specs/web-apps/current-work/#in-caption
+    # XXX ...
+
+    def processCharacter(data):
+        # XXX parse error?!
+        self.switchInsertionMode("inBody")
+        self.parser.processCharacter(data)
+
+    def processStartTag(self, name, attributes):
+        handlers = utils.MethodDispatcher([
+            (("caption", "col", "colgroup", "tbody", "td", "tfoot", "th",
+              "thead", "tr"), self.startTagTableElement)
+        ])
+        # XXX Can we handle this through the anything else case??
+        handlers.setDefaultValue(self.startTagOther)
+        handlers[name](name, attributes)
+
+    def startTagTableElement(self, name, attributes):
+        self.parser.parseError()
+        self.parser.processEndTag("caption")
+        # XXX innerHTML case
+        assert False
+
+    def startTagOther(self, name, attributes)
+        # XXX parse error?!
+        self.parser.switchInsertionMode("inBody")
+        self.parser.processStartTag(name, attributes)
+
+    def processEndTag(self, name):
+        handlers = utils.MethodDispatcher([
+            ("caption", self.endTagCaption),
+            ("table", self.endTagTable),
+            (("body", "col", "colgroup", "html", "tbody", "td", "tfoot", "th",
+              "thead", "tr"), self.endTagIgnore)
+        ])
+        # XXX Can we handle this through the anything else case??
+        handlers.setDefaultValue(self.endTagOther)
+        handlers[name](name)
+
+    def endTagCaption(self, name):
+        # XXX innerHTML case
+
+        # XXX this code is quite similar to endTagTable in "InTable"
+        self.generateImpliedEndTags()
+        if self.parser.openElements[-1].name == "caption":
+            self.parser.parseError
+
+        while self.parser.openElements[-1].name != "caption":
+            self.parser.openElements.pop()
+
+        # XXX clear list of active formatting elements
+        self.parser.switchInsertionMode("inTable")
+
+    def endTagTable(self, name):
+        self.parser.parseError()
+        self.parser.processEndTag("caption")
+        # XXX some innerHTML case...
+        assert False
+
+    def endTagIgnore(self, name):
+        self.parser.parseError()
+
+    def endTagOther(self, name)
+        # XXX parse error?!
+        self.parser.switchInsertionMode("inBody")
+        self.parser.processEndTag(name)
+
+
+class InColumnGroup(InsertionMode):
+    # http://www.whatwg.org/specs/web-apps/current-work/#in-column
+
+    def processComemnt(data):
+        assert False
+
+    def processStartTag(self, name, attributes):
+        handlers = utils.MethodDispatcher([
+            ("col", self.startTagCol)
+        ])
+        # XXX Can we handle this through the anything else case??
+        handlers.setDefaultValue(self.startTagOther)
+        handlers[name](name, attributes)
+
+    def startTagCol(self, name ,attributes):
+        self.parser.insertElement(name, attributes)
+        self.parser.openElements.pop()
+
+    def startTagOther(self, name, attributes):
+        assert False
+
+    def processEndTag(self, name):
+        handlers = utils.MethodDispatcher([
+            ("colgroup", self.endTagColgroup),
+            ("col", self.endTagCol)
+        ])
+        # XXX Can we handle this through the anything else case??
+        handlers.setDefaultValue(self.endTagOther)
+        handlers[name](name)
+
+    def endTagColGroup(self, name):
+        if self.parser.openElements[-1].name == "html":
+            # innerHTML case
+            self.parser.parseError()
+        else:
+            self.parser.openElements.pop()
+            self.parser.switchInsertionMode("inTable")
+
+    def endTagCol(self, name):
+        self.parser.parseError()
+
+    def endTagOther(self, name):
+        assert False
+
+
+class InTableBody(InsertionMode):
+    # http://www.whatwg.org/specs/web-apps/current-work/#in-table0
+    assert False
+
 class InRow(InsertionMode): pass
+
+
 class InCell(InsertionMode): pass
+
+
 class InSelect(InsertionMode):
+    # http://www.whatwg.org/specs/web-apps/current-work/#in-select
     # XXX character token ... always appended to the current node
 
     def processComment(self, data):
@@ -1136,7 +1307,7 @@ class InSelect(InsertionMode):
         while self.parser.elementInScope("select"):
             self.parser.openElements.pop()
 
-        # XXX reset insertion mode
+        self.parser.resetInsertionMode()
 
     def endTagTableElements(self, name):
         self.parser.parseError()
@@ -1144,6 +1315,7 @@ class InSelect(InsertionMode):
 
     def processAnythingElse(self, name, attributes={}):
         self.parser.parseError()
+
 
 class AfterBody(InsertionMode):
     def processComment(self, data):
@@ -1170,8 +1342,87 @@ class AfterBody(InsertionMode):
         self.parser.switchInsertionMode("inBody")
         self.parser.processEndTag(name)
 
-class InFrameset(InsertionMode): pass
-class AfterFrameset(InsertionMode): pass
+class InFrameset(InsertionMode):
+    # http://www.whatwg.org/specs/web-apps/current-work/#in-frameset
+    # XXX
+
+    # XXX AfterFrameset uses the exact same def...
+    def processCharacter(self, data):
+        if data in spaceCharacters:
+            # XXX append
+        else:
+            self.parser.parseError()
+
+    def processStartTag(self, name, attributes):
+        handlers = utils.MethodDispatcher([
+            ("frameset", self.startTagFrameset),
+            ("frame", self.startTagFrame),
+            ("noframes", self.startTagNoframes)
+        ])
+        handlers.setDefaultValue(self.tagOther)
+        handlers[name](name, attributes)
+
+    def startTagFrameset(self, name, attributes):
+        self.parser.insertElement(name, attributes)
+
+    def startTagFrame(self, name, attributes):
+        self.parser.insertElement(name, attributes)
+        self.parser.openElements.pop()
+
+    def startTagNoframes(self, name, attributes):
+        self.parser.switchInsertionMode("inBody")
+        self.parser.processStartTag(name, attributes)
+
+    def processEndTag(self, name):
+        handlers = utils.MethodDispatcher([("frameset", self.endTagFrameset)])
+        handlers.setDefaultValue(self.tagOther)
+        handlers[name](name)
+
+    def endTagFrameset(self, name):
+        if self.parser.openElements[-1].name == "html":
+            # innerHTML case
+            self.parser.parseError()
+        else:
+            self.parser.openElements.pop()
+        # XXX innerHTML case part two...
+
+    def tagOther(self, name, attributes={})
+        self.parser.parseError()
+
+
+class AfterFrameset(InsertionMode):
+    # http://www.whatwg.org/specs/web-apps/current-work/#after3
+    # XXX
+    def processCharacter(self, data):
+        if data in spaceCharacters:
+            # XXX append
+        else:
+            self.parser.parseError()
+
+    def processComment(self, data):
+        # XXX append comment
+
+    def processStartTag(self, name, attributes):
+        handlers = utils.MethodDispatcher([("noframes", self.startTagNoframes)])
+        handlers.setDefaultValue(self.tagOther)
+        handlers[name](name, attributes)
+
+    def startTagNoframes(self, name, attributes):
+        self.parser.switchInsertionMode("inBody")
+        self.processStartTag(self, name, attributes)
+
+    def processEndTag(self, name):
+        handlers = utils.MethodDispatcher([("html", self.endTagHtml)])
+        handlers.setDefaultValue(self.tagOther)
+        handlers[name](name)
+
+    def endTagHtml(self, name):
+        # XXX trailing end
+        assert False
+
+    def tagOther(self, name, attributes={}):
+        self.parser.parseError()
+
 
 class ParseError(Exception):
     """Error in parsed document"""
