@@ -20,6 +20,16 @@ class Node(object):
         self.childNodes = []
         self.attributes = {}
         self._flags = []
+    def __str__(self):
+        """Convert the current subtree to a pretty-printed representation"""
+        rv = self._printNode()
+        for node in self.childNodes:
+            rv += "  " + str(node)
+        return rv
+
+    def _printNode(self):
+        raise NotImplementedError
+
     def appendChild(self, node):
         if (isinstance(node, TextNode) and self.childNodes and
             isinstance(self.childNodes[-1], TextNode)):
@@ -36,22 +46,37 @@ class Document(Node):
     def __init__(self):
         Node.__init__(self, None, None)
 
+    def _printNode(self):
+        return "document\n"
+
 class DocumentType(Node):
     def __init__(self, name):
         Node.__init__(self, name, None)
+
+    def _printNode(self):
+        return " ".join(["<!DOCTYPE", name, ">\n"])
 
 class TextNode(Node):
     def __init__(self, value):
         Node.__init__(self, None, value)
 
+    def _printNode(self):
+        return "".join(["'",self.value, "'\n"])
+
 class Element(Node):
     def __init__(self, name):
         Node.__init__(self, name, None)
+
+    def _printNode(self):
+        return " ".join(["<"+self.name+">", str(self.attributes), "\n"])
 
 class CommentNode(Node):
     def __init__(self, data):
         Node.__init__(self, None, None, None)
         self.data = data
+    
+    def _printNode(self):
+        return "<!--" + self.value + "-->\n"
 
 class HTMLParser(object):
     """Main parser class"""
@@ -114,15 +139,9 @@ class HTMLParser(object):
         """This error is not an error"""
         pass
 
-    def switchInsertionMode(self, name):
-        """Switch between different insertion modes in the main phase"""
-        # XXX AT Arguably this should be on the main phase object itself
-        self.phase.insertionMode = self.phase.insertionModes[name](self)
-
     def switchPhase(self, name):
         """Switch between different phases of the parsing
         """
-        print name, self.phases["trailingEnd"]
         # Need to hang on to state between trailing end phase and main phase
         if (name == "trailingEnd" and
             isinstance(self.phase, self.phases["main"])):
@@ -133,6 +152,14 @@ class HTMLParser(object):
             self.phase = self.mainPhaseState
         else:
             self.phase = self.phases[name](self)
+
+    #XXX - almost everthing after this point should be moved into a 
+    #seperate treebuilder object
+
+    def switchInsertionMode(self, name):
+        """Switch between different insertion modes in the main phase"""
+        # XXX AT Arguably this should be on the main phase object itself
+        self.phase.insertionMode = self.phase.insertionModes[name](self)
 
     def elementInScope(self, target, tableVariant=False):
         for node in self.openElements[::-1]:
@@ -148,6 +175,9 @@ class HTMLParser(object):
 
     def reconstructActiveFormattingElements(self):
         afe = self.activeFormattingElements
+        #If there are no active formatting elements exit early
+        if not afe:
+            return
         entry = afe[-1]
         if entry == Marker or entry in self.openElements:
             return
@@ -192,7 +222,6 @@ class HTMLParser(object):
             if self.openElements:
                 self.openElements[-1].appendChild(element)
             self.openElements.append(element)
-            print name, self.openElements
         else:
             # XXX Haven't implemented this yet as spec is vaugely unclear
             raise NotImplementedError
@@ -358,7 +387,7 @@ class MainPhase(Phase):
                 self.parser.parseError()
             for attr, value in attributes.iteritems():
                 if attr not in self.parser.openElements[0].attributes:
-                    selfparser.openElements[0].attributes[attr] = value
+                    self.parser.openElements[0].attributes[attr] = value
         else:
             self.insertionMode.processStartTag(name, attributes)
 
@@ -596,7 +625,7 @@ class InBody(InsertionMode):
         # XXX Should this handle unknown elements as well?
         handlers=utils.MethodDispatcher([
             ("script",self.startTagScript),
-            (("base", "link", "meta", "style", "title"), startTagFromHead),
+            (("base", "link", "meta", "style", "title"), self.startTagFromHead),
             ("body", self.startTagBody),
             (("address", "blockquote", "center", "dir", "div", "dl",
               "fieldset", "listing", "menu", "ol", "p", "pre", "ul"),
@@ -608,7 +637,25 @@ class InBody(InsertionMode):
             ("a",self.startTagA),
             (("b", "big", "em", "font", "i", "nobr", "s", "small",
               "strike", "strong", "tt", "u"),self.startTagFormatting),
+            ("button", self.startTagButton),
+            (("marquee", "object"), self.startTagMarqueeObject),
+            ("xmp", self.startTagXMP),
+            ("table", self.startTagTable),
+            (("area", "basefont", "bgsound", "br", "embed", "img", 
+              "param", "spacer", "wbr"), self.startTagVoidFormatting),
+            ("hr", self.startTagHR),
+            ("image", self.startTagImage),
+            ("isindex", self.startTagIsIndex),
+            ("textarea", self.startTagTextarea),
+            (("iframe", "noembed", "noframes", "noscript"), self.startTagCDATA),
+            ("select", self.startTagSelect),
+            (("caption", "col", "colgroup", "frame", "frameset", "head", 
+              "option", "optgroup", "tbody", "td", "tfoot", "th", "thead", 
+              "tr"), self.startTagMisplaced),
+            (("event-source", "section", "nav", "article", "aside", "header", 
+              "footer", "datagrid", "command"), self.startTagNew)
         ])
+        handlers.setDefaultValue(self.startTagOther)
         handlers[name](name, attributes)
 
     def processEndTag(self, name):
@@ -621,8 +668,20 @@ class InBody(InsertionMode):
               "listing", "menu", "ol", "pre", "ul"), self.endTagBlock),
             ("form", self.endTagForm),
             (("dd", "dt", "li"), self.endTagListItem),
-            (headingElements, self.endTagHeading)
-        ])
+            (headingElements, self.endTagHeading),
+            (("a", "b", "big", "em", "font", "i", "nobr", "s", "small", 
+              "strike", "strong", "tt", "u"), self.endTagFormatting),
+            (("marquee", "object", "button"), self.endTagButtonMarqueeObject),
+            (("caption", "col", "colgroup", "frame", "frameset", "head", 
+              "option", "optgroup", "tbody", "td", "tfoot", "th", "thead", 
+              "tr", "area", "basefont", "bgsound", "br", "embed", "hr", 
+              "iframe", "image", "img", "input", "isindex", "noembed", 
+              "noframes", "param", "select", "spacer", "table", "textarea", 
+              "wbr", "noscript"),self.endTagMisplacedNone),
+            (("event-source", "section", "nav", "article", "aside", "header", 
+              "footer", "datagrid", "command"), self.endTagNew)
+            ])
+        handlers.setDefaultValue(self.endTagOther)
         handlers[name](name)
 
     def endTagP(self, name):
@@ -888,6 +947,70 @@ class InBody(InsertionMode):
         self.parser.processEndTag("p")
         self.parser.processStartTag("hr")
         self.parser.processEndTag("form")
+
+    def startTagTextarea(self, name, attributes):
+        raise NotImplementedError
+
+    def startTagCDATA(self, name, attributes):
+        """iframe, noembed noframes, noscript(if scripting enabled)"""
+        raise NotImplementedError
+
+    def startTagSelect(self, name, attributes):
+        self.parser.reconstructActiveFormattingElements()
+        self.parser.insertElement(name, attributes)
+        self.parser.switchInsertionMode("inSelect")
+
+    def startTagMisplaced(self, name, attributes):
+        """ Elements that should be children of other elements that have a 
+        different insertion mode; here they are ignored 
+        "caption", "col", "colgroup", "frame", "frameset", "head", 
+        "option", "optgroup", "tbody", "td", "tfoot", "th", "thead", 
+        "tr", "noscript"
+        """
+        self.parser.parseError()
+
+    def endTagMisplacedNone(self, name):
+        """ Elements that should be children of other elements that have a 
+        different insertion mode or elements that have no end tag; 
+        here they are ignored 
+        "caption", "col", "colgroup", "frame", "frameset", "head", 
+        "option", "optgroup", "tbody", "td", "tfoot", "th", "thead", 
+        "tr", "noscript, "area", "basefont", "bgsound", "br", "embed", 
+        "hr", "iframe", "image", "img", "input", "isindex", "noembed", 
+        "noframes", "param", "select", "spacer", "table", "textarea", "wbr""
+        """
+        self.parser.parseError()
+
+    def startTagNew(self, name, other):
+        """New HTML5 elements, "event-source", "section", "nav", 
+        "article", "aside", "header", "footer", "datagrid", "command"
+        """
+        raise NotImplementedError
+
+    def endTagNew(self, name):
+        """New HTML5 elements, "event-source", "section", "nav", 
+        "article", "aside", "header", "footer", "datagrid", "command"
+        """
+        raise NotImplementedError        
+
+    def startTagOther(self, name, attributes):
+        self.parser.reconstructActiveFormattingElements()
+        self.parser.insertElement(name, attributes)
+
+    def endTagOther(self, name):
+        #XXX This logic should be moved into the treebuilder
+        for node in self.parser.openElements[::-1]:
+            if node.name == name:
+                self.parser.generateImpliedEndTags()
+                if self.parser.openElements[-1].name != name:
+                    self.parser.parseError()
+                while self.openElements.pop() != node:
+                    pass
+                break
+            else:
+                if (node not in formattingElements and 
+                    node in specialElements | scopingElements):
+                    self.parser.parseError()
 
 class InTable(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-table

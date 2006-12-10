@@ -78,7 +78,8 @@ def test_tokenizer():
     for filename in glob.glob('tokenizer/*.test'):
         tests = simplejson.load(file(filename))
         for test in tests['tests']:
-            yield runTokenizerTest, test['description'], test['input'], test['output']
+            yield (runTokenizerTest, test['description'], test['input'], 
+                   test['output'])
 
 def runTokenizerTest(description, input, output):
     #XXX - move this out into the setup function
