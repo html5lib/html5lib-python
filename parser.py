@@ -442,15 +442,19 @@ class InsertionMode(object):
         self.parser = parser
         self.tokenizer = self.parser.tokenizer
 
-        #Some attributes only used in insertion modes that
-        #"collect all character data"
+        # Some attributes only used in insertion modes that
+        # "collect all character data"
         self.collectingCharacters = False
         self.characterBuffer = []
         self.collectionStartTag = None
 
+    # XXX we should ensure that classes don't overwrite this when they don't
+    # need to.
     def processComment(self, data):
         self.parser.openElements[-1].appendChild(CommentNode(data))
 
+    # XXX we should ensure that classes don't overwrite this when they don't
+    # need to.
     def processCharacter(self, data):
         if data in spaceCharacters:
             self.parser.openElements[-1].appendChild(TextNode(data))
@@ -1240,10 +1244,7 @@ class InSelect(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-select
     # XXX character token ... always appended to the current node
 
-    def processComment(self, data):
-        # XXX AT Perhaps this should be done in InsertionMode and then we can
-        # overwrite it when you don't need to do this...
-        self.parser.openElements[-1].appendChild(CommentNode(data))
+    # No need for processComment.
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
@@ -1319,8 +1320,7 @@ class InSelect(InsertionMode):
 
 
 class AfterBody(InsertionMode):
-    def processComment(self, data):
-        self.parser.openElements[-1].appendChild(CommentNode(data))
+    # No need for processComment
 
     def processStartTag(self, name, attributes):
         self.parser.parseError()
@@ -1347,13 +1347,8 @@ class InFrameset(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-frameset
     # XXX
 
-    # XXX AfterFrameset uses the exact same def...
-    def processCharacter(self, data):
-        if data in spaceCharacters:
-            # XXX append
-            pass
-        else:
-            self.parser.parseError()
+    # No need for processComment or processCharacter.
+    # XXX we do need processNonSpaceCharacter ...
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
@@ -1395,16 +1390,9 @@ class InFrameset(InsertionMode):
 class AfterFrameset(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#after3
     # XXX
-    def processCharacter(self, data):
-        if data in spaceCharacters:
-            assert False
-            # XXX append
-        else:
-            self.parser.parseError()
 
-    def processComment(self, data):
-        assert False
-        # XXX append comment
+    # No need for processComment or processCharacter.
+    # XXX we do need processNonSpaceCharacter ...
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([("noframes", self.startTagNoframes)])
