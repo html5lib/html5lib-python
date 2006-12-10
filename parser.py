@@ -1135,7 +1135,7 @@ class InCaption(InsertionMode):
         # XXX innerHTML case
         assert False
 
-    def startTagOther(self, name, attributes)
+    def startTagOther(self, name, attributes):
         # XXX parse error?!
         self.parser.switchInsertionMode("inBody")
         self.parser.processStartTag(name, attributes)
@@ -1174,7 +1174,7 @@ class InCaption(InsertionMode):
     def endTagIgnore(self, name):
         self.parser.parseError()
 
-    def endTagOther(self, name)
+    def endTagOther(self, name):
         # XXX parse error?!
         self.parser.switchInsertionMode("inBody")
         self.parser.processEndTag(name)
@@ -1227,7 +1227,8 @@ class InColumnGroup(InsertionMode):
 
 class InTableBody(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-table0
-    assert False
+    pass
+    #assert False
 
 class InRow(InsertionMode): pass
 
@@ -1350,6 +1351,7 @@ class InFrameset(InsertionMode):
     def processCharacter(self, data):
         if data in spaceCharacters:
             # XXX append
+            pass
         else:
             self.parser.parseError()
 
@@ -1386,7 +1388,7 @@ class InFrameset(InsertionMode):
             self.parser.openElements.pop()
         # XXX innerHTML case part two...
 
-    def tagOther(self, name, attributes={})
+    def tagOther(self, name, attributes={}):
         self.parser.parseError()
 
 
@@ -1395,11 +1397,13 @@ class AfterFrameset(InsertionMode):
     # XXX
     def processCharacter(self, data):
         if data in spaceCharacters:
+            assert False
             # XXX append
         else:
             self.parser.parseError()
 
     def processComment(self, data):
+        assert False
         # XXX append comment
 
     def processStartTag(self, name, attributes):
