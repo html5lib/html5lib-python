@@ -7,7 +7,7 @@ class HTMLInputStream(object):
     incorrect byte-sequences and also provides column and line tracking.
     """
     
-    def __init__(self, stream, encoding=None):
+    def __init__(self, source, encoding=None):
         """ Initialise the HTMLInputReader.
         
         The stream can either be a file-object, filename, url or string
@@ -18,6 +18,10 @@ class HTMLInputStream(object):
         element)
         """
         
+        # Position counters
+        self.line = 1
+        self.col = 0
+        
         # List of where new lines occur
         self.newLines = [0]
         
@@ -25,26 +29,25 @@ class HTMLInputStream(object):
         self.charEncoding = encoding
         
         # Original Stream
-        self.stream = self.openStream(stream)
+        self.rawStream = self.openStream(source)
         
         # Try to detect the encoding of the stream by looking for a BOM
-        encoding = self.detectEncoding()
+        detectedEncoding = self.detectEncoding()
         
         # If an encoding was specified or detected from the BOM don't allow
         # the encoding to be changed futher into the stream
-        if self.charEncoding or encoding:
+        if self.charEncoding or detectedEncoding:
             self.allowEncodingOverride = False
         else:
             self.allowEncodingOverride = True
-            self.characterError = False
         
         # If an encoding wasn't specified, use the encoding detected from the
         # BOM, if present, otherwise use the default encoding
         if not self.charEncoding:
-            self.charEncoding = encoding or "cp1252"
+            self.charEncoding = detectedEncoding or "cp1252"
         
         # Read bytes from stream decoding them into Unicode
-        unicodeStream = self.stream.read().decode(self.charEncoding, 'replace')
+        unicodeStream = self.rawStream.read().decode(self.charEncoding, 'replace')
         # Normalize new lines
         unicodeStream = unicodeStream.replace(u"\r\n", u"\n")
         unicodeStream = unicodeStream.replace(u"\r", u"\n")
@@ -52,35 +55,34 @@ class HTMLInputStream(object):
         unicodeStream = unicodeStream.replace(u"\x00", u"\uFFFD")
         
         # If encoding was determined from a BOM remove it from the stream
-        if encoding:
+        if detectedEncoding:
             unicodeStream = unicodeStream[1:]
-            
-        # Turn stream into a file-like object for access to characters
-        self.encodedStream = StringIO.StringIO(unicodeStream)
         
         # Loop through stream and find where new lines occur
         for i in xrange(len(unicodeStream)):
             if unicodeStream[i] == u"\n":
                 self.newLines.append(i)
+        
+        # Turn stream into a file-like object for access to characters
+        self.dataStream = StringIO.StringIO(unicodeStream)
     
-    def openStream(self, stream):
-        """ Opens stream first trying the native open function, if that
-        fails try to open as a URL and finally treating stream as a string.
+    def openStream(self, source):
+        """ Opens source so it can be used as a file object
         
         Returns a file-like object.
         """
-        # Already a file-like object?
-        if hasattr(stream, 'seek'):
-            return stream
-        
-        # Try opening stream normally
-        try:
-            return open(stream)
-        except: pass
-        
-        # Otherwise treat stream as a string and covert to a file-like object
-        import StringIO as StringIO
-        return StringIO.StringIO(str(stream))
+        # Already a file-like object
+        if hasattr(source, 'seek'):
+            stream = source
+        else:
+            # Try opening from file system
+            try:
+                return open(source)
+            except: pass
+            
+            # Otherwise treat source as a string and covert to a file-like object
+            stream = StringIO.StringIO(str(source))
+        return stream
     
     def detectEncoding(self):
         """ Attempts to detect the character encoding of the stream.
@@ -96,8 +98,8 @@ class HTMLInputStream(object):
         }
         
         # Go to beginning of file and read in 4 bytes
-        self.stream.seek(0)
-        string = self.stream.read(4)
+        self.rawStream.seek(0)
+        string = self.rawStream.read(4)
         
         # Try detecting the BOM using bytes from the string
         encoding = bomDict.get(string[:3])       # UTF-8
@@ -107,7 +109,7 @@ class HTMLInputStream(object):
                 encoding = bomDict.get(string)   # UTF-32
         
         # Go back to the beginning of the file
-        self.stream.seek(0)
+        self.rawStream.seek(0)
         
         return encoding
     
@@ -127,7 +129,7 @@ class HTMLInputStream(object):
         """ Returns (line, col) position in the stream
         """
         line = 0
-        tell = self.tell()
+        tell = self.dataStream.tell()
         for pos in self.newLines:
             if pos < tell:
                 line += 1
@@ -136,43 +138,31 @@ class HTMLInputStream(object):
         col = tell-self.newLines[line-1]-1
         return (line, col)
     
-    def seek(self, offset, whence=0):
-        self.encodedStream.seek(offset, whence)
-    
-    def tell(self):
-        return self.encodedStream.tell()
-    
-    def read(self, size=1, stopAt=None):
-        """ Read at most size characters from the stream stopping when
-        encountering a character in stopAt if supplied.
-        
-        stopAt can be any iterable object such as a string, list or tuple.
+    def read(self, size=1):
+        """ Read at most size characters from the stream
         """
+        char = self.dataStream.read(size)
+        return char
+    
+    def readMany(self, size):
+        """ Reads multiple characters from the stream returning a list
+        """
+        charStack = []
+        charStack.append(list(self.dataStream.read(size)))
         
-        # If stopAt not specified just return the characters asked for
-        if not stopAt:
-            return self.encodedStream.read(size)
-        else:
-            # Keep reading characters until we reach on that is in stopAt
-            charStack = [self.encodedStream.read(1)]
-            while charStack[-1] not in stopAt:
-                charStack.append(self.encodedStream.read(1))
-            return "".join(charStack)
+        if len(charStack) < size:
+            charStack.append(None)
+        
+        return charStack
     
     def readUntil(self, charList):
-        """ Returns a string of characters from the stream until a character
+        """ Returns a list of characters from the stream until a character
         in charList is found or EOF is reached
         """
-        return self.read(stopAt=charList)
-    
-    def lookAhead(self, amount):
-        """ Returns the amount of characters specified without moving
-        forward within the stream.
-        """
-        cp = self.encodedStream.tell()
-        string = self.read(amount)
-        self.seek(cp)
-        return string
+        charStack = [self.dataStream.read(1) or None]
+        while charStack[-1] and charStack[-1] not in charList:
+            charStack.append(self.dataStream.read(1) or None)
+        return charStack
 
 if __name__ == "__main__":
     try:
