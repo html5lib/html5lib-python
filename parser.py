@@ -1231,8 +1231,72 @@ class InColumnGroup(InsertionMode):
 
 class InTableBody(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-table0
-    pass
-    #assert False
+    
+    # helper methods
+    def clearStackToTableBodyContext(self):
+        while self.parser.openElements[:-1].name in ("tbody", "tfoot", "thead",
+          "html"):
+            self.parser.openElements.pop()
+            self.parser.parseError()
+    
+    # the rest
+    # XXX character tokens and all that ...
+    
+    def processStartTag(self, name, attributes):
+        handlers = utils.MethodDispatcher([
+            ("tr", self.startTagTr),
+            (("td", "th"), self.startTagTableCell),
+            (("caption", "col", "colgroup", "tbody", "tfoot", "thead"), self.startTagTableOther)
+        ])
+        handlers.setDefaultValue(self.startTagOther)
+        handlers[name](name, attributes)
+
+    def startTagTr(self, name="tr", attributes={}):
+        self.clearStackToTableBodyContext()
+        self.parser.insertElement(name, attributes)
+        self.parser.switchInsertionMode("inRow")
+    
+    def startTagTableCell(self, name, attributes):
+        self.parser.parseError()
+        self.startTagTr()
+        self.parser.processStartTag(name, attributes)
+        
+    def startTagTableOther(self, name, attributes):
+        # XXX
+        # could share code with endTagTable ...
+        assert False
+    
+    def startTagOther(self, name, attributes):
+        # XXX parse error?
+        self.parser.switchInsertionMode("inTable")
+        self.parser.processStartTag(name, attributes)
+    
+    def processEndTag(self, name):
+        handlers = utils.MethodDispatcher([
+            (("tbody", "tfoot", "thead"), self.endTagTableRowGroup),
+            ("table", self.endTagTable),
+            (("body", "caption", "col", "colgroup", "html", "td", "th",
+              "tr"), self.endTagIgnore)
+        ])
+        handlers.setDefaultValue(self.endTagOther)
+        handlers[name](name)
+    
+    def endTagTableRowGroup(self, name):
+        # XXX
+        assert False
+    
+    def endTagTable(self, name):
+        # XXX
+        assert False
+    
+    def endTagIgnore(self, name):
+        self.parser.parseError()
+    
+    def endTagOther(self, name):
+        # XXX parser error? prolly not, already done inTable...
+        self.parser.switchInsertionMode("inTable")
+        self.parser.processEndTag(name)
+
 
 class InRow(InsertionMode): pass
 
