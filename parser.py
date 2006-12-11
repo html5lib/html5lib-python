@@ -1302,12 +1302,66 @@ class InRow(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-row
     
     # helper methods (XXX unify this with other table helper methods)
-    def clearStackToTableBodyContext(self):
+    def clearStackToTableRowContext(self):
         while self.parser.openElements[:-1].name in ("tr", "html"):
             self.parser.openElements.pop()
             self.parser.parseError()
     
     # the rest
+    def processStartTag(self, name, attributes):
+        handlers = utils.MethodDispatcher([
+            (("td", "th"), self.startTagTableCell),
+            (("caption", "col", "colgroup", "tbody", "tfoot", "thead",
+              "tr"), self.startTagTableOther)
+        ])
+        handlers.setDefaultValue(self.startTagOther)
+        handlers[name](name, attributes)
+
+    def startTagTableCell(name, attributes):
+        self.clearStackToTableRowContext()
+        self.parser.insertElement(name, attributes)
+        self.parser.switchInsertionMode("inCell")
+        # XXX insert marker?!
+    
+    def startTagTableOther(name, attributes):
+        self.endTagTr()
+        # XXX check if it wasn't ignored... innerHTML case ... reprocess
+        # current. see also endTagTable
+    
+    def startTagOther(self, name):
+        self.parser.switchInsertionMode("inTable")
+        self.parser.processStartTag(self, name)
+    
+    def processEndTag(self, name):
+        handlers = utils.MethodDispatcher([
+            ("tr", self.endTagTr),
+            ("table", self.endTagTable),
+            (("tbody", "tfoot", "thead"), self.endTagTableRowGroup),
+            (("body", "caption", "col", "colgroup", "html", "td", "th"), \
+              self.endTagIgnore)
+        ])
+        handlers.setDefaultValue(self.endTagOther)
+        handlers[name](name)
+    
+    def endTagTr(self, name="tr"):
+        # XXX lots of checks
+        assert False
+    
+    def endTagTable(self, name):
+        self.endTagTr()
+        # XXX check if it wasn't ignored... innerHTML case ... reprocess
+        # current. see also startTagTableOther...
+    
+    def endTagTableRowGroup(self, name):
+        # XXX
+        assert False
+    
+    def endTagIgnore(self, name):
+        self.parser.parseError()
+    
+    def endTagOther(self, name):
+        self.parser.switchInsertionMode("inTable")
+        self.parser.processEndTag(name)
 
 class InCell(InsertionMode): pass
 
