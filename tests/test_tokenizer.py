@@ -1,11 +1,15 @@
 import sys
+import os
 import glob
 import StringIO
+import unittest
+import new
 
 import simplejson
 
 #Allow us to import the parent module
-sys.path.insert(0, "../")
+os.chdir(os.path.split(os.path.abspath(__file__))[0])
+sys.path.insert(0, os.path.abspath(os.pardir))
 
 import tokenizer
 
@@ -46,7 +50,7 @@ class TokenizerTestParser(object):
         """This error is not an error"""
         self.outputTokens.append(u"AtheistParseError")
 
-def concatanateCharacterTokens(tokens):
+def concatenateCharacterTokens(tokens):
     outputTokens = []
     for token in tokens:
         if not "ParseError" in token and token[0] == "Character":
@@ -63,7 +67,7 @@ def tokensMatch(expectedTokens, recievedTokens):
     """Test whether the test has passed or failed
 
     For brevity in the tests, the test has passed if the sequence of expected
-    tokens appears anywhere in the sequqnce of returned tokens.
+    tokens appears anywhere in the sequence of returned tokens.
     """
     return expectedTokens == recievedTokens
     for i, token in enumerate(recievedTokens):
@@ -74,37 +78,35 @@ def tokensMatch(expectedTokens, recievedTokens):
     return False
         
 
+class TestCase(unittest.TestCase):
+    def runTokenizerTest(self, input, output):
+        #XXX - move this out into the setup function
+        #concatenate all consecutive character tokens into a single token
+        output = concatenateCharacterTokens(output)
+        parser = TokenizerTestParser()
+        tokens = parser.parse(StringIO.StringIO(input))
+        tokens = concatenateCharacterTokens(tokens)
+        self.assertTrue(tokensMatch(tokens, output))
+
 def test_tokenizer():
     for filename in glob.glob('tokenizer/*.test'):
         tests = simplejson.load(file(filename))
         for test in tests['tests']:
-            yield (runTokenizerTest, test['description'], test['input'], 
-                   test['output'])
-
-def runTokenizerTest(description, input, output):
-    #XXX - move this out into the setup function
-    #concatanate all consecutive character tokens into a single token
-    output = concatanateCharacterTokens(output)
-    parser = TokenizerTestParser()
-    tokens = parser.parse(StringIO.StringIO(input))
-    tokens = concatanateCharacterTokens(tokens)
-    print "Got", tokens, "expected", output
-    assert tokensMatch(tokens, output)
+            yield (TestCase.runTokenizerTest, test['description'],
+                   test['input'], test['output'])
 
 def main():
     failed = 0
     tests = 0
     for func, desc, input, output in test_tokenizer():
         tests += 1
-        try:
-            func(desc, input, output)
-        except AssertionError:
-            print "Failed test %s"%(desc,)
-            parser = TokenizerTestParser()
-            tokens = parser.parse(StringIO.StringIO(input))
-            print "Got", tokens, "expected", output
-            failed +=1
-    print "Ran %i tests, failed %i"%(tests, failed)
+        testName = 'test%d' % tests
+        testFunc = lambda self, method=func, input=input, output=output: \
+            method(self, input, output)
+        testFunc.__doc__ = desc
+        instanceMethod = new.instancemethod(testFunc, None, TestCase)
+        setattr(TestCase, testName, instanceMethod)
+    unittest.main()
 
 if __name__ == "__main__":
     main()
