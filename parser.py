@@ -1298,8 +1298,16 @@ class InTableBody(InsertionMode):
         self.parser.processEndTag(name)
 
 
-class InRow(InsertionMode): pass
-
+class InRow(InsertionMode):
+    # http://www.whatwg.org/specs/web-apps/current-work/#in-row
+    
+    # helper methods (XXX unify this with other table helper methods)
+    def clearStackToTableBodyContext(self):
+        while self.parser.openElements[:-1].name in ("tr", "html"):
+            self.parser.openElements.pop()
+            self.parser.parseError()
+    
+    # the rest
 
 class InCell(InsertionMode): pass
 
