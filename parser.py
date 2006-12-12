@@ -660,6 +660,7 @@ class AfterHead(InsertionMode):
               self.startTagFromHead)
         ])
         handlers.setDefaultValue(self.startTagOther)
+        handlers[name](name, attributes)
 
     def startTagBody(self, name, attributes):
         self.parser.insertElement(name, attributes)
@@ -675,7 +676,7 @@ class AfterHead(InsertionMode):
         self.parser.processStartTag(name, attributes)
 
     def startTagOther(self, name, attributes):
-        self.anytingElse()
+        self.anythingElse()
         self.parser.processStartTag(name, attributes)
 
     def processEndTag(self, name):
@@ -683,7 +684,7 @@ class AfterHead(InsertionMode):
         self.parser.processEndTag(name)
 
     def anythingElse(self):
-        self.parser.insertElement("body", [])
+        self.parser.insertElement("body", {})
         self.parser.switchInsertionMode("inBody")
 
 
@@ -974,7 +975,7 @@ class InBody(InsertionMode):
         self.tokenizer.contentModelFlag = contentModelFlags["CDATA"]
 
     def startTagTable(self, name, attributes):
-        if self.parser.elementInScope(p):
+        if self.parser.elementInScope("p"):
             self.processEndTag("p")
         self.parser.insertElement(name, attributes)
         self.parser.switchInsertionMode("inTable")
@@ -1136,7 +1137,7 @@ class InTable(InsertionMode):
     def startTagRowGroup(self, name, attributes={}):
         self.clearStackToTableContext()
         self.parser.insertElement(name, attributes)
-        self.switchInsertionMode("inTableBody")
+        self.parser.switchInsertionMode("inTableBody")
 
     def startTagImplyTbody(self, name, attributes):
         self.startTagRowGroup("tbody")
@@ -1295,7 +1296,7 @@ class InTableBody(InsertionMode):
 
     # helper methods
     def clearStackToTableBodyContext(self):
-        while self.parser.openElements[:-1].name in ("tbody", "tfoot", "thead",
+        while self.parser.openElements[-1].name in ("tbody", "tfoot", "thead",
           "html"):
             self.parser.openElements.pop()
             self.parser.parseError()
@@ -1379,7 +1380,7 @@ class InRow(InsertionMode):
 
     # helper methods (XXX unify this with other table helper methods)
     def clearStackToTableRowContext(self):
-        while self.parser.openElements[:-1].name in ("tr", "html"):
+        while self.parser.openElements[-1].name in ("tr", "html"):
             self.parser.openElements.pop()
             self.parser.parseError()
 
@@ -1393,20 +1394,20 @@ class InRow(InsertionMode):
         handlers.setDefaultValue(self.startTagOther)
         handlers[name](name, attributes)
 
-    def startTagTableCell(name, attributes):
+    def startTagTableCell(self, name, attributes):
         self.clearStackToTableRowContext()
         self.parser.insertElement(name, attributes)
         self.parser.switchInsertionMode("inCell")
         self.parser.activeFormattingElements.append(Marker)
 
-    def startTagTableOther(name, attributes):
+    def startTagTableOther(self, name, attributes):
         self.endTagTr()
         # XXX check if it wasn't ignored... innerHTML case ... reprocess
         # current. see also endTagTable
 
-    def startTagOther(self, name):
+    def startTagOther(self, name, attributes):
         self.parser.switchInsertionMode("inTable")
-        self.parser.processStartTag(self, name)
+        self.parser.processStartTag(name, attributes)
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
