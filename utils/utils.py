@@ -14,7 +14,6 @@ class MethodDispatcher(dict):
     def __init__(self, items=()):
         _dictEntries = []
         for name,value in items:
-            print _dictEntries
             if type(name) in (list, tuple, frozenset, set):
                 for item in name:
                     _dictEntries.append((item, value))
