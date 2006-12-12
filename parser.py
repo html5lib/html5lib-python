@@ -1163,27 +1163,26 @@ class InCaption(InsertionMode):
     # XXX ...
 
     def processCharacter(data):
-        # XXX parse error?!
         self.switchInsertionMode("inBody")
         self.parser.processCharacter(data)
+        # XXX switch back to this insertion mode afterwards?!
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
             (("caption", "col", "colgroup", "tbody", "td", "tfoot", "th",
               "thead", "tr"), self.startTagTableElement)
         ])
-        # XXX Can we handle this through the anything else case??
         handlers.setDefaultValue(self.startTagOther)
         handlers[name](name, attributes)
 
     def startTagTableElement(self, name, attributes):
         self.parser.parseError()
         self.parser.processEndTag("caption")
-        # XXX innerHTML case
+        # XXX innerHTML case ... token ignored and such
         assert False
 
     def startTagOther(self, name, attributes):
-        # XXX parse error?!
+        # Parse error is thrown later on.
         self.parser.switchInsertionMode("inBody")
         self.parser.processStartTag(name, attributes)
 
@@ -1194,44 +1193,39 @@ class InCaption(InsertionMode):
             (("body", "col", "colgroup", "html", "tbody", "td", "tfoot", "th",
               "thead", "tr"), self.endTagIgnore)
         ])
-        # XXX Can we handle this through the anything else case??
         handlers.setDefaultValue(self.endTagOther)
         handlers[name](name)
 
     def endTagCaption(self, name):
-        # XXX innerHTML case
-
-        # XXX this code is quite similar to endTagTable in "InTable"
-        self.generateImpliedEndTags()
-        if self.parser.openElements[-1].name == "caption":
-            self.parser.parseError
-
-        while self.parser.openElements[-1].name != "caption":
-            self.parser.openElements.pop()
-
-        # XXX clear list of active formatting elements
-        self.parser.switchInsertionMode("inTable")
+        if self.parser.elementInScope(name, True):
+            # XXX this code is quite similar to endTagTable in "InTable"
+            self.generateImpliedEndTags()
+            if self.parser.openElements[-1].name == "caption":
+                self.parser.parseError()
+            while self.parser.openElements[-1].name != "caption":
+                self.parser.openElements.pop()
+            self.parser.clearActiveFormattingElements()
+            self.parser.switchInsertionMode("inTable")
+        else:
+            # innerHTML case
+            self.parser.parseError()
 
     def endTagTable(self, name):
         self.parser.parseError()
         self.parser.processEndTag("caption")
-        # XXX some innerHTML case...
+        # XXX check if the token wasn't ignored... innerHTML case
         assert False
 
     def endTagIgnore(self, name):
         self.parser.parseError()
 
     def endTagOther(self, name):
-        # XXX parse error?!
         self.parser.switchInsertionMode("inBody")
         self.parser.processEndTag(name)
 
 
 class InColumnGroup(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-column
-
-    def processComemnt(data):
-        assert False
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
@@ -1246,6 +1240,7 @@ class InColumnGroup(InsertionMode):
         self.parser.openElements.pop()
 
     def startTagOther(self, name, attributes):
+        # XXX
         assert False
 
     def processEndTag(self, name):
@@ -1269,6 +1264,7 @@ class InColumnGroup(InsertionMode):
         self.parser.parseError()
 
     def endTagOther(self, name):
+        # XXX
         assert False
 
 
@@ -1316,7 +1312,6 @@ class InTableBody(InsertionMode):
             self.parser.parseError()
 
     def startTagOther(self, name, attributes):
-        # XXX parse error?
         self.parser.switchInsertionMode("inTable")
         self.parser.processStartTag(name, attributes)
 
