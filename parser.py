@@ -61,14 +61,20 @@ class TextNode(Node):
         Node.__init__(self, None, value)
 
     def _printNode(self):
-        return "".join(["'",self.value, "'\n"])
+        return "".join(["  \"",self.value, "\"\n"])
 
 class Element(Node):
     def __init__(self, name):
         Node.__init__(self, name, None)
 
     def _printNode(self):
-        return " ".join(["<"+self.name+">", str(self.attributes), "\n"])
+        atts = self.attributes.keys()
+        atts.sort()
+        rv = "<"+self.name+">"
+        for attr in atts:
+            rv += "\n  " + str(attr) + str(self.attributes[key])
+        rv += "\n"
+        return rv
 
 class CommentNode(Node):
     def __init__(self, data):
@@ -231,8 +237,8 @@ class HTMLParser(object):
     def generateImpliedEndTags(self, exclude=None):
         while True:
             name = self.openElements[-1].name
-            if name in frozenset("dd", "dt", "li", "p", "td", "th",
-                                 "tr") and name != exclude:
+            if name in frozenset(("dd", "dt", "li", "p", "td", "th",
+                                 "tr")) and name != exclude:
                 self.phase.processEndTag(name)
             else:
                 break
@@ -294,7 +300,7 @@ class Phase(object):
     def processStartTag(self, tagname, attributes):
         self.parser.parseError()
 
-    def processEndTag(self, tagname, attributes):
+    def processEndTag(self, tagname):
         self.parser.parseError()
 
     def processComment(self, data):
@@ -319,6 +325,23 @@ class InitialPhase(Phase):
             pass
         else:
             self.parser.parseError()
+    #This is strictly not per-spec but in the case of missing doctype we
+    #choose to switch to the root element phase and reprocess the current token
+    def processStartTag(self, tagname, attributes):
+        self.parser.switchPhase("rootElement")
+        self.parser.processStartTag(tagname, attributes)
+
+    def processEndTag(self, tagname):
+        self.parser.switchPhase("rootElement")
+        self.parser.processEndTag(tagname)
+
+    def processComment(self, data):
+        self.parser.switchPhase("rootElement")
+        self.parser.processComment(data)
+
+    def processEOF(self):
+        self.parser.switchPhase("rootElement")
+        self.parser.processEOF()
 
 class RootElementPhase(Phase):
     def processDoctype(self, name, error):
@@ -344,7 +367,7 @@ class RootElementPhase(Phase):
     def processComment(self, data):
         self.parser.document.appendChild(CommentNode(data))
 
-    def processEOF(self, data):
+    def processEOF(self):
         self.createHTMLNode()
         self.parser.phase.processEOF()
 
@@ -492,7 +515,7 @@ class BeforeHead(InsertionMode):
 
     def createHeadNode(self, name, attributes):
         self.startTagHead("head", attributes)
-        self.parser.headPointer = self.openElements[-1]
+        self.parser.headPointer = self.parser.openElements[-1]
         self.parser.switchInsertionMode("inHead")
 
 class InHead(InsertionMode):
@@ -1039,8 +1062,10 @@ class InTable(InsertionMode):
 
      # processing methods
     def processCharacter(self, data):
-        # XXX
-        pass
+        if character in spaceCharacters:
+            self.parser.openElements[-1].appendChild(TextNode(character))
+        else:
+            raise NotImplementedError()
 
     def processComment(self, data):
         # XXX AT Perhaps this should be done in InsertionMode and then we can
@@ -1062,11 +1087,14 @@ class InTable(InsertionMode):
 
     def startTagCaption(self, name, attributes):
         self.clearStackToTableContext()
-        # XXX insert marker etc.
+        self.parser.activeFormattingElements.append(Marker)
+        self.parser.insertElement(name, attributes)
+        self.parser.switchInsertionMode("inCaption")
 
     def startTagColgroup(self, name="colgroup", attributes={}):
         self.clearStackToTableContext()
-        # XXX switch modes
+        self.parser.insertElement(name, attributes)
+        self.parser.switchInsertionMode("inColgroup")
 
     def startTagCol(self, name, attributes):
         self.startTagColgroup()
