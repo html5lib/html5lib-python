@@ -510,17 +510,18 @@ class InsertionMode(object):
 
 class BeforeHead(InsertionMode):
     def processNonSpaceCharacter(self, data):
-        self.startTagHead("head")
+        self.startTagHead()
         self.parser.processCharacter(data)
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
             ("head", self.startTagHead),
-            (("base", "link", "meta", "script", "style", "title"), self.startTagOther)
+            (("base", "link", "meta", "script", "style", "title"),
+              self.startTagOther)
         ])
         handlers.setDefaultValue(self.startTagOther)
         handlers[name](name, attributes)
-    
+
     def startTagHead(self, name="head", attributes={}):
         self.parser.insertElement(name, attributes)
         self.parser.headPointer = self.parser.openElements[-1]
