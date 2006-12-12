@@ -177,7 +177,9 @@ class HTMLParser(object):
         self.phase.insertionMode = self.phase.insertionModes[name](self)
 
     def elementInScope(self, target, tableVariant=False):
-        # AT use reverse instead of [::-1] when we can rely on Python 2.4
+        # AT Use reverse instead of [::-1] when we can rely on Python 2.4
+        # AT How about while True and simply set node to [-1] and set it to
+        # [-2] at the end...
         for node in self.openElements[::-1]:
             if node == target:
                 return True
@@ -1400,7 +1402,62 @@ class InRow(InsertionMode):
         self.parser.switchInsertionMode("inTable")
         self.parser.processEndTag(name)
 
-class InCell(InsertionMode): pass
+class InCell(InsertionMode):
+    # http://www.whatwg.org/specs/web-apps/current-work/#in-cell
+    
+    # helper
+    def closeCell(self, type="td"):
+        if self.parser.elementInScope(type, True):
+            self.endTagTableCell(type)
+            return
+        self.closeCell("th")
+        # AT We could use elif...
+    
+    # the rest
+    def processStartTag(self, name, attributes):
+        handlers = utils.MethodDispatcher([
+            (("caption", "col", "colgroup", "tbody", "td", "tfoot", "th",
+              "thead", "tr"), self.startTagTableOther)
+        ])
+        handlers.setDefaultValue(self.startTagOther)
+        handlers[name](name, attributes)
+
+    def self.startTagTableOther(self, name, attributes):
+        if self.parser.elementInScope("td") or \
+          self.parser.elementInScope("th"):
+            self.closeCell()
+            self.parser.processStartTag(name, attributes)
+        else:
+            self.parser.parseError()
+    
+    def startTagOther(self, name, attributes):
+        self.parser.switchInsertionMode("inBody")
+        self.parser.processStartTag(name, attributes)
+    
+    def processEndTag(self, name):
+        handlers = utils.MethodDispatcher([
+            (("td", "th"), self.endTagTableCell),
+            (("body", "caption", "col", "colgroup", "html"), self.endTagIgnore),
+            (("table", "tbody", "tfoot", "thead", "tr"), self.endTagImply)
+        ])
+        handlers.setDefaultValue(self.endTagOther)
+        handlers[name](name)
+    
+    def endTagTableCell(name):
+        if self.parser.elementInScope(name):
+            self.parser.generateImpliedEndTags()
+            node = self.parser.openElements[-1]
+            if node != name:
+                self.parser.parseError()
+                node = self.parser.openElements.pop()
+                while node != name
+                    node = self.parser.openElements.pop()
+            self.parser.clearActiveFormattingElements()
+            self.parser.switchInsertionMode("inRow")
+        else:
+            self.parser.parseError()
+
+
 
 
 class InSelect(InsertionMode):
