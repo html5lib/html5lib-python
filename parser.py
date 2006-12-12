@@ -1062,7 +1062,7 @@ class InBody(InsertionMode):
                 self.parser.generateImpliedEndTags()
                 if self.parser.openElements[-1].name != name:
                     self.parser.parseError()
-                while self.openElements.pop() != node:
+                while self.parser.openElements.pop() != node:
                     pass
                 break
             else:
