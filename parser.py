@@ -543,7 +543,7 @@ class InHead(InsertionMode):
                 self.parser.openElements[-1].append("already excecuted")
         # Ignore the rest of the script element handling
 
-    def processNonWhitespaceCharacter(self, data):
+    def processNonSpaceCharacter(self, data):
         if self.collectingCharacters:
            self.characterBuffer += data
         else:
@@ -570,7 +570,12 @@ class InHead(InsertionMode):
                     "html":self.endTagHTML}
         handlers.get(name, self.endTagOther)(name)
 
-    def appendToHead(element):
+    def startTagHead(self, name, attributes):
+        self.parser.insertElement(name, attributes)
+        self.parser.headPointer = self.parser.openElements[-1]
+        self.parser.switchInsertionMode('inHead')
+
+    def appendToHead(self, element):
         if self.headPointer is not None:
             self.parser.headPointer.appendChild(element)
         else:
@@ -743,8 +748,8 @@ class InBody(InsertionMode):
 
     def startTagFromHead(self, name, attributes):
         self.parser.parseError()
-        self.insertionModes["inHead"](self.parser).processStartTag(name,
-                                                                   attributes)
+        self.parser.insertionModes["inHead"](self.parser).processStartTag(name,
+                                                                          attributes)
     def startTagBody(self, name, attributes):
         self.parser.parseError()
         if len(self.parser.openElements)==1 or self.parser.openElements[1].name != "body":
@@ -874,11 +879,11 @@ class InBody(InsertionMode):
             if afeAElement in self.parser.activeFormattingElements:
                 self.parser.activeFormattingElements.remove(afeAElement)
         self.parser.reconstructActiveFormattingElements()
-        self.addFormattingElement(self, name, attributes)
+        self.addFormattingElement(name, attributes)
 
     def startTagFormatting(self, name, attributes):
         self.parser.reconstructActiveFormattingElements()
-        self.addFormattingElement(self, name, attributes)
+        self.addFormattingElement(name, attributes)
 
     def endTagFormatting(self, name):
         """The much-feared adoption agency algorithm"""
@@ -1452,7 +1457,7 @@ class InCell(InsertionMode):
             if node != name:
                 self.parser.parseError()
                 node = self.parser.openElements.pop()
-                while node != name
+                while node.name != name:
                     node = self.parser.openElements.pop()
             self.parser.clearActiveFormattingElements()
             self.parser.switchInsertionMode("inRow")
@@ -1542,7 +1547,7 @@ class InSelect(InsertionMode):
         if self.parser.elementInScope(name, True):
             if self.parser.openElements[-1].name != "select":
                 node = self.parser.openElements.pop()
-                while node != "select"
+                while node.name != "select":
                     node = self.parser.openElements.pop()
             self.parser.resetInsertionMode()
         else:
