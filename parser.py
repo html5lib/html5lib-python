@@ -1128,7 +1128,7 @@ class InTable(InsertionMode):
     def startTagOther(self, name, attributes):
         # XXX
         assert False
-    
+
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
             ("table", self.endTagTable),
@@ -1364,7 +1364,7 @@ class InRow(InsertionMode):
         self.clearStackToTableRowContext()
         self.parser.insertElement(name, attributes)
         self.parser.switchInsertionMode("inCell")
-        # XXX insert marker?!
+        self.parser.activeFormattingElements.append(Marker)
 
     def startTagTableOther(name, attributes):
         self.endTagTr()
@@ -1387,8 +1387,13 @@ class InRow(InsertionMode):
         handlers[name](name)
 
     def endTagTr(self, name="tr"):
-        # XXX lots of checks
-        assert False
+        if self.parser.elementInScope("tr", True):
+            self.clearStackToTableRowContext()
+            self.parser.openElements.pop()
+            self.parser.switchInsertionMode("inTableBody")
+        else:
+            # innerHTML case
+            self.parser.parseError()
 
     def endTagTable(self, name):
         self.endTagTr()
@@ -1396,8 +1401,12 @@ class InRow(InsertionMode):
         # current. see also startTagTableOther...
 
     def endTagTableRowGroup(self, name):
-        # XXX
-        assert False
+        if self.parser.elementInScope(name, True):
+            self.endTagTr()
+            self.parser.processEndTag(name)
+        else:
+            # innerHTML case
+            self.parser.parseError()
 
     def endTagIgnore(self, name):
         self.parser.parseError()
@@ -1419,7 +1428,7 @@ class InCell(InsertionMode):
 
     # the rest
     # XXX look into characters and comments
-    
+
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
             (("caption", "col", "colgroup", "tbody", "td", "tfoot", "th",
