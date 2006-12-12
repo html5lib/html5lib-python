@@ -26,6 +26,8 @@ def parseTestcase(testString):
             if currentList is output:
                 assert line[0] == "|"
                 currentList.append(line[2:])
+                # XXX the line might not start with a "|" if it's a
+                # continuation line, e.g. if a text node contained a linefeed
             else:
                 currentList.append(line)
         elif line == "#errors":
