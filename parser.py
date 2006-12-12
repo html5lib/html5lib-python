@@ -20,7 +20,7 @@ class Node(object):
         self.childNodes = []
         self.attributes = {}
         self._flags = []
-    
+
     def __str__(self):
         return self.name
 
@@ -48,7 +48,7 @@ class Document(Node):
 
     def __str__(self):
         return '#document'
-    
+
     def printTree(self):
         for line in Node.printTree(self, -1)[2:].split('\n'):
             print line
@@ -56,24 +56,24 @@ class Document(Node):
 class DocumentType(Node):
     def __init__(self, name):
         Node.__init__(self, name, None)
-    
+
     def __str__(self):
         return '<!DOCTYPE %s>' % self.name
 
 class TextNode(Node):
     def __init__(self, value):
         Node.__init__(self, None, value)
-    
+
     def __str__(self):
         return '"%s"' % self.value
 
 class Element(Node):
     def __init__(self, name):
         Node.__init__(self, name, None)
-    
+
     def __str__(self):
         return '<%s>' % self.name
-    
+
     def printTree(self, indent):
         tree = '\n|%s%s' % (' '*indent, str(self))
         attrs = self.attributes.items()
@@ -89,7 +89,7 @@ class CommentNode(Node):
     def __init__(self, data):
         Node.__init__(self, None, None)
         self.data = data
-    
+
     def __str__(self):
         return '<!-- %s -->' % self.data
 
@@ -1270,17 +1270,17 @@ class InColumnGroup(InsertionMode):
 
 class InTableBody(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-table0
-    
+
     # helper methods
     def clearStackToTableBodyContext(self):
         while self.parser.openElements[:-1].name in ("tbody", "tfoot", "thead",
           "html"):
             self.parser.openElements.pop()
             self.parser.parseError()
-    
+
     # the rest
     # XXX character tokens and all that ...
-    
+
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
             ("tr", self.startTagTr),
@@ -1294,22 +1294,22 @@ class InTableBody(InsertionMode):
         self.clearStackToTableBodyContext()
         self.parser.insertElement(name, attributes)
         self.parser.switchInsertionMode("inRow")
-    
+
     def startTagTableCell(self, name, attributes):
         self.parser.parseError()
         self.startTagTr()
         self.parser.processStartTag(name, attributes)
-        
+
     def startTagTableOther(self, name, attributes):
         # XXX
         # could share code with endTagTable ...
         assert False
-    
+
     def startTagOther(self, name, attributes):
         # XXX parse error?
         self.parser.switchInsertionMode("inTable")
         self.parser.processStartTag(name, attributes)
-    
+
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
             (("tbody", "tfoot", "thead"), self.endTagTableRowGroup),
@@ -1319,18 +1319,18 @@ class InTableBody(InsertionMode):
         ])
         handlers.setDefaultValue(self.endTagOther)
         handlers[name](name)
-    
+
     def endTagTableRowGroup(self, name):
         # XXX
         assert False
-    
+
     def endTagTable(self, name):
         # XXX
         assert False
-    
+
     def endTagIgnore(self, name):
         self.parser.parseError()
-    
+
     def endTagOther(self, name):
         # XXX parser error? prolly not, already done inTable...
         self.parser.switchInsertionMode("inTable")
@@ -1339,13 +1339,13 @@ class InTableBody(InsertionMode):
 
 class InRow(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-row
-    
+
     # helper methods (XXX unify this with other table helper methods)
     def clearStackToTableRowContext(self):
         while self.parser.openElements[:-1].name in ("tr", "html"):
             self.parser.openElements.pop()
             self.parser.parseError()
-    
+
     # the rest
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
@@ -1361,16 +1361,16 @@ class InRow(InsertionMode):
         self.parser.insertElement(name, attributes)
         self.parser.switchInsertionMode("inCell")
         # XXX insert marker?!
-    
+
     def startTagTableOther(name, attributes):
         self.endTagTr()
         # XXX check if it wasn't ignored... innerHTML case ... reprocess
         # current. see also endTagTable
-    
+
     def startTagOther(self, name):
         self.parser.switchInsertionMode("inTable")
         self.parser.processStartTag(self, name)
-    
+
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
             ("tr", self.endTagTr),
@@ -1381,30 +1381,30 @@ class InRow(InsertionMode):
         ])
         handlers.setDefaultValue(self.endTagOther)
         handlers[name](name)
-    
+
     def endTagTr(self, name="tr"):
         # XXX lots of checks
         assert False
-    
+
     def endTagTable(self, name):
         self.endTagTr()
         # XXX check if it wasn't ignored... innerHTML case ... reprocess
         # current. see also startTagTableOther...
-    
+
     def endTagTableRowGroup(self, name):
         # XXX
         assert False
-    
+
     def endTagIgnore(self, name):
         self.parser.parseError()
-    
+
     def endTagOther(self, name):
         self.parser.switchInsertionMode("inTable")
         self.parser.processEndTag(name)
 
 class InCell(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-cell
-    
+
     # helper
     def closeCell(self, type="td"):
         if self.parser.elementInScope(type, True):
@@ -1412,8 +1412,10 @@ class InCell(InsertionMode):
             return
         self.closeCell("th")
         # AT We could use elif...
-    
+
     # the rest
+    # XXX look into characters and comments
+    
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
             (("caption", "col", "colgroup", "tbody", "td", "tfoot", "th",
@@ -1428,12 +1430,13 @@ class InCell(InsertionMode):
             self.closeCell()
             self.parser.processStartTag(name, attributes)
         else:
+            # innerHTML case
             self.parser.parseError()
-    
+
     def startTagOther(self, name, attributes):
         self.parser.switchInsertionMode("inBody")
         self.parser.processStartTag(name, attributes)
-    
+
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
             (("td", "th"), self.endTagTableCell),
@@ -1442,8 +1445,8 @@ class InCell(InsertionMode):
         ])
         handlers.setDefaultValue(self.endTagOther)
         handlers[name](name)
-    
-    def endTagTableCell(name):
+
+    def endTagTableCell(self, name):
         if self.parser.elementInScope(name):
             self.parser.generateImpliedEndTags()
             node = self.parser.openElements[-1]
@@ -1457,7 +1460,20 @@ class InCell(InsertionMode):
         else:
             self.parser.parseError()
 
+    def endTagIgnore(self, name):
+        self.parser.parseError()
 
+    def endTagImply(self, name):
+        if self.parser.elementInScope(name):
+            self.closeCell()
+            self.parser.processEndTag(name)
+        else:
+            self.parser.parseError()
+            # sometimes innerHTML case
+
+    def endTagOther(self, name):
+        self.parser.switchInsertionMode("inBody")
+        self.parser.processEndTag(name)
 
 
 class InSelect(InsertionMode):
