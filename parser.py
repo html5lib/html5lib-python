@@ -237,8 +237,7 @@ class HTMLParser(object):
         return element
 
     def insertElement(self, name, attributes, parent=None):
-        # XXX dict() should not be needed
-        element = self.createElement(name, dict(attributes))
+        element = self.createElement(name, attributes)
         if parent is None:
             if self.openElements:
                 self.openElements[-1].appendChild(element)
@@ -249,7 +248,7 @@ class HTMLParser(object):
 
     def generateImpliedEndTags(self, exclude=None):
         name = self.openElements[-1].name
-        if name != exclude and name in frozenset(("dd", "dt", "li", "p", 
+        if name != exclude and name in frozenset(("dd", "dt", "li", "p",
                                                   "td", "th", "tr")):
             self.processEndTag(name)
             self.generateImpliedEndTags()
