@@ -473,7 +473,7 @@ class TrailingEndPhase(Phase):
     def processCharacter(self, data):
         self.parser.switchPhase("main")
         self.parser.processCharacter(data)
-        #Space characters do not actually cause us to switch phases
+        # XXX Space characters do not actually cause us to switch phases
         if data in spaceCharacters:
             self.parser.switchPhase("trailingEnd")
 
@@ -512,33 +512,29 @@ class InsertionMode(object):
 
 class BeforeHead(InsertionMode):
     def processNonSpaceCharacter(self, data):
-        self.createHeadNode("head", [])
+        self.startTagHead("head")
         self.parser.processCharacter(data)
 
     def processStartTag(self, name, attributes):
         handlers = {"head":self.startTagHead}
-        handlers.get(name, self.createHeadNode)(name, attributes)
+        # XXX what's the stuff below?
+        handlers.get(name, self.startTagHead)(name, attributes)
 
     def processEndTag(self, name):
         handlers = {"html":self.endTagHtml}
         handlers.get(name, self.endTagOther)(name)
 
-    def startTagHead(self, name, attributes):
+    def startTagHead(self, name, attributes={}):
         self.parser.insertElement(name, attributes)
         self.parser.headPointer = self.parser.openElements[-1]
-        self.parser.switchInsertionMode('inHead')
+        self.parser.switchInsertionMode("inHead")
 
     def endTagHtml(self, name):
-        self.startTagHead("head", [])
+        self.startTagHead("head")
         self.parser.processEndTag(name)
 
     def endTagOther(self, name):
         self.parser.parseError()
-
-    def createHeadNode(self, name, attributes):
-        self.startTagHead("head", attributes)
-        self.parser.headPointer = self.parser.openElements[-1]
-        self.parser.switchInsertionMode("inHead")
 
 class InHead(InsertionMode):
 
