@@ -1067,21 +1067,17 @@ class InTable(InsertionMode):
         while self.parser.openElements[-1].name not in ("table", "html"):
             self.parser.openElements.pop()
             self.parser.parseError()
-
         # When the current node is <html> it's an innerHTML case
 
 
-     # processing methods
+    # processing methods
+    # processComment is handled by InsertionMode
     def processCharacter(self, data):
         if character in spaceCharacters:
             self.parser.openElements[-1].appendChild(TextNode(character))
         else:
+            # XXX
             raise NotImplementedError()
-
-    def processComment(self, data):
-        # XXX AT Perhaps this should be done in InsertionMode and then we can
-        # overwrite it when you don't need to do this...
-        self.parser.openElements[-1].appendChild(CommentNode(data))
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
@@ -1092,8 +1088,7 @@ class InTable(InsertionMode):
             (("td", "th", "tr"), self.startTagImplyTbody),
             ("table", self.startTagTable)
         ])
-        # XXX Can we handle this through the anything else case??
-        handlers.setDefaultValue(self.processAnythingElse)
+        handlers.setDefaultValue(self.startTagOther)
         handlers[name](name, attributes)
 
     def startTagCaption(self, name, attributes):
@@ -1112,19 +1107,23 @@ class InTable(InsertionMode):
         self.parser.processStartTag(name, attributes)
 
     def startTagRowGroup(self, name, attributes={}):
-        # XXX need a better name... emit tokens...
-        assert False
+        self.clearStackToTableContext()
+        self.parser.insertElement(name, attributes)
+        self.switchInsertionMode("inTableBody")
 
     def startTagImplyTbody(self, name, attributes):
         self.startTagRowGroup("tbody")
-        # XXX
-        assert False
+        self.parser.processStartTag(name, attributes)
 
     def startTagTable(self, name, attributes):
         self.parser.parseError()
-        # XXX innerHTML
+        # XXX innerHTML how to check if the token wasn't ignored?
         assert False
 
+    def startTagOther(self, name, attributes):
+        # XXX
+        assert False
+    
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
             ("table", self.endTagTable),
@@ -1424,7 +1423,7 @@ class InCell(InsertionMode):
         handlers.setDefaultValue(self.startTagOther)
         handlers[name](name, attributes)
 
-    def self.startTagTableOther(self, name, attributes):
+    def startTagTableOther(self, name, attributes):
         if self.parser.elementInScope("td") or \
           self.parser.elementInScope("th"):
             self.closeCell()
