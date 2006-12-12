@@ -1449,7 +1449,7 @@ class InCell(InsertionMode):
     def endTagTableCell(self, name):
         if self.parser.elementInScope(name):
             self.parser.generateImpliedEndTags()
-            node = self.parser.openElements[-1]
+            node = self.parser.openElements[-1].name
             if node != name:
                 self.parser.parseError()
                 node = self.parser.openElements.pop()
@@ -1478,9 +1478,9 @@ class InCell(InsertionMode):
 
 class InSelect(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-select
-    # XXX character token ... always appended to the current node
 
     # No need for processComment.
+    # XXX character token ... always appended to the current node
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
@@ -1540,16 +1540,21 @@ class InSelect(InsertionMode):
             self.parser.parseError()
 
     def endTagSelect(self, name="select"):
-        # XXX innerHTML case ...
-
-        while self.parser.elementInScope("select"):
-            self.parser.openElements.pop()
-
-        self.parser.resetInsertionMode()
+        if self.parser.elementInScope(name, True):
+            if self.parser.openElements[-1].name != "select":
+                node = self.parser.openElements.pop()
+                while node != "select"
+                    node = self.parser.openElements.pop()
+            self.parser.resetInsertionMode()
+        else:
+            # innerHTML case
+            self.parser.parseError()
 
     def endTagTableElements(self, name):
         self.parser.parseError()
-        # XXX table elements in scope blah...
+        if self.parser.elementInScope(name, True):
+            self.endTagSelect()
+            self.parser.processEndTag(name)
 
     def processAnythingElse(self, name, attributes={}):
         self.parser.parseError()
@@ -1581,8 +1586,8 @@ class AfterBody(InsertionMode):
 
 class InFrameset(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-frameset
-    # XXX
 
+    # XXX
     # No need for processComment or processCharacter.
     # XXX we do need processNonSpaceCharacter ...
 
@@ -1617,7 +1622,9 @@ class InFrameset(InsertionMode):
             self.parser.parseError()
         else:
             self.parser.openElements.pop()
-        # XXX innerHTML case part two...
+        if not self.innerHTML and \
+          self.parser.openElements[-1].name == "frameset":
+            self.parser.switchInsertionMode("afterFrameset")
 
     def tagOther(self, name, attributes={}):
         self.parser.parseError()
