@@ -373,7 +373,6 @@ class RootElementPhase(Phase):
 
     def processStartTag(self, tagname, attributes):
         self.createHTMLNode()
-        # XXX doesn't this invoke itself?
         self.parser.phase.processStartTag(tagname, attributes)
 
     def processEndTag(self, name):
@@ -550,6 +549,7 @@ class InHead(InsertionMode):
     # XXX Are we sure to only recieve start and end tag tokens once we start
     # colleting characters?
 
+    # helper
     def finishCollectingCharacters(self, name, endTag=False):
         InsertionMode.finishCollectingCharacters(self,name)
         if self.parser.openElements[-1].name == "script":
@@ -559,6 +559,14 @@ class InHead(InsertionMode):
                 self.parser.openElements[-1].append("already excecuted")
         # Ignore the rest of the script element handling
 
+    def appendToHead(self, element):
+        if self.parser.headPointer is not None:
+            self.parser.headPointer.appendChild(element)
+        else:
+            assert self.parser.innerHTML
+            self.parser.openElements[-1].append(element)
+
+    # the real thing
     def processNonSpaceCharacter(self, data):
         if self.collectingCharacters:
            self.characterBuffer += data
@@ -571,32 +579,19 @@ class InHead(InsertionMode):
             self.finishCollectingCharacters(name)
 
         handlers = utils.MethodDispatcher([
-                ("title",self.startTagTitleStyle),
-                ("style",self.startTagTitleStyle),
-                ("script",self.startTagScript),
-                (("base", "link", "meta"),self.startTagBaseLinkMeta),
-                ("head",self.startTagHead)])
+            ("title", self.startTagTitleStyle),
+            ("style", self.startTagTitleStyle),
+            ("script", self.startTagScript),
+            (("base", "link", "meta"), self.startTagBaseLinkMeta),
+            ("head", self.startTagHead)
+        ])
         handlers.setDefaultValue(self.startTagOther)
         handlers[name](name, attributes)
-
-    def processEndTag(self, name):
-        if self.collectingCharacters:
-            self.finishCollectingCharacters(name, True)
-        handlers = {"head":self.endTagHead,
-                    "html":self.endTagHTML}
-        handlers.get(name, self.endTagOther)(name)
 
     def startTagHead(self, name, attributes):
         self.parser.insertElement(name, attributes)
         self.parser.headPointer = self.parser.openElements[-1]
-        self.parser.switchInsertionMode('inHead')
-
-    def appendToHead(self, element):
-        if self.parser.headPointer is not None:
-            self.parser.headPointer.appendChild(element)
-        else:
-            assert self.parser.innerHTML
-            self.parser.openElements[-1].append(element)
+        self.parser.switchInsertionMode("inHead")
 
     def startTagTitleStyle(self, name, attributes):
         cmFlags = {"title":"RCDATA", "style":"CDATA"}
@@ -618,6 +613,20 @@ class InHead(InsertionMode):
         element = self.createElement(name, attributes)
         self.appendToHead(element)
 
+    def startTagOther(self, name, attributes):
+        self.anythingElse()
+        self.parser.processStartTag(name, attributes)
+
+    def processEndTag(self, name):
+        if self.collectingCharacters:
+            self.finishCollectingCharacters(name, True)
+        handlers = utils.MethodDispatcher([
+            ("head", self.endTagHead),
+            ("html", self.endTagHtml)
+        ])
+        handlers.setDefaultValue(self.endTagOther)
+        handlers[name](name)
+
     def endTagHead(self, name):
         if self.parser.openElements[-1].name == "head":
             self.parser.openElements.pop()
@@ -625,13 +634,9 @@ class InHead(InsertionMode):
             self.parser.parseError()
         self.parser.switchInsertionMode("afterHead")
 
-    def endTagHTML(self, name):
+    def endTagHtml(self, name):
         self.anythingElse()
         self.parser.processEndTag(name)
-
-    def startTagOther(self, name, attributes):
-        self.anythingElse()
-        self.parser.processStartTag(name, attributes)
 
     def endTagOther(self, name):
         self.parser.parseError()
