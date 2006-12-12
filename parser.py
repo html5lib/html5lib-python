@@ -698,10 +698,10 @@ class InBody(InsertionMode):
         self.parser.openElements[-1].appendChild(TextNode(data))
 
     def processStartTag(self, name, attributes):
-        # XXX Should this handle unknown elements as well?
         handlers=utils.MethodDispatcher([
             ("script",self.startTagScript),
-            (("base", "link", "meta", "style", "title"), self.startTagFromHead),
+            (("base", "link", "meta", "style", "title"),
+              self.startTagFromHead),
             ("body", self.startTagBody),
             (("address", "blockquote", "center", "dir", "div", "dl",
               "fieldset", "listing", "menu", "ol", "p", "pre", "ul"),
@@ -710,16 +710,16 @@ class InBody(InsertionMode):
             (("li", "dd", "dt"), self.startTagListItem),
             ("plaintext",self.startTagPlaintext),
             (headingElements, self.startTagHeading),
-            ("a",self.startTagA),
-            (("b", "big", "em", "font", "i", "nobr", "s", "small",
-              "strike", "strong", "tt", "u"),self.startTagFormatting),
+            ("a", self.startTagA),
+            (("b", "big", "em", "font", "i", "nobr", "s", "small", "strike",
+              "strong", "tt", "u"),self.startTagFormatting),
             ("button", self.startTagButton),
             (("marquee", "object"), self.startTagMarqueeObject),
-            ("xmp", self.startTagXMP),
+            ("xmp", self.startTagXmp),
             ("table", self.startTagTable),
-            (("area", "basefont", "bgsound", "br", "embed", "img",
-              "param", "spacer", "wbr"), self.startTagVoidFormatting),
-            ("hr", self.startTagHR),
+            (("area", "basefont", "bgsound", "br", "embed", "img", "param",
+              "spacer", "wbr"), self.startTagVoidFormatting),
+            ("hr", self.startTagHr),
             ("image", self.startTagImage),
             ("isindex", self.startTagIsIndex),
             ("textarea", self.startTagTextarea),
@@ -971,8 +971,7 @@ class InBody(InsertionMode):
                 element = self.parser.openElements.pop()
             self.parser.clearActiveFormattingElements()
 
-    def startTagXMP(self, name, attributes):
-        # XXX startTagXMP -> startTagXmp
+    def startTagXmp(self, name, attributes):
         self.parser.reconstructActiveFormattingElements()
         self.parser.insertElement(name, attributes)
         self.tokenizer.contentModelFlag = contentModelFlags["CDATA"]
@@ -988,7 +987,7 @@ class InBody(InsertionMode):
         self.parser.insertElement(name, attributes)
         self.parser.openElements.pop()
 
-    def startTagHR(self, name, attributes):
+    def startTagHr(self, name, attributes):
         self.endTagP("p")
         self.parser.insertElement(name, attributes)
         self.parser.openElements.pop()
