@@ -1497,8 +1497,8 @@ class InCell(InsertionMode):
             self.closeCell()
             self.parser.processEndTag(name)
         else:
-            self.parser.parseError()
             # sometimes innerHTML case
+            self.parser.parseError()
 
     def endTagOther(self, name):
         self.parser.switchInsertionMode("inBody")
@@ -1681,8 +1681,7 @@ class AfterFrameset(InsertionMode):
         handlers[name](name)
 
     def endTagHtml(self, name):
-        # XXX trailing end
-        assert False
+        self.parser.switchPhase("trailingEnd")
 
     def tagOther(self, name, attributes={}):
         self.parser.parseError()
