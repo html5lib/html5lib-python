@@ -50,8 +50,10 @@ class Document(Node):
         return '#document'
 
     def printTree(self):
-        for line in Node.printTree(self, -1)[2:].split('\n'):
-            print line
+        tree = str(self)
+        for child in self.childNodes:
+            tree += child.printTree(2)
+        return tree
 
 class DocumentType(Node):
     def __init__(self, name):
@@ -181,7 +183,7 @@ class HTMLParser(object):
         # AT How about while True and simply set node to [-1] and set it to
         # [-2] at the end...
         for node in self.openElements[::-1]:
-            if node == target:
+            if node.name == target:
                 return True
             elif node.name == "table":
                 return False
@@ -246,13 +248,12 @@ class HTMLParser(object):
             raise NotImplementedError
 
     def generateImpliedEndTags(self, exclude=None):
-        while True:
-            name = self.openElements[-1].name
-            if name in frozenset(("dd", "dt", "li", "p", "td", "th",
-                                 "tr")) and name != exclude:
-                self.phase.processEndTag(name)
-            else:
-                break
+        name = self.openElements[-1].name
+        if name != exclude and name in frozenset(("dd", "dt", "li", "p", 
+                                                  "td", "th", "tr")):
+            self.processEndTag(name)
+            self.generateImpliedEndTags()
+
       # XXX AT:
       # name = self.openElements[-1].name
       # while name in frozenset(("dd", "dt", "li", "p", "td", "th", "tr")) and \
@@ -517,13 +518,17 @@ class BeforeHead(InsertionMode):
         handlers.get(name, self.createHeadNode)(name, attributes)
 
     def processEndTag(self, name):
-        handlers = {"html":self.createHeadNode}
+        handlers = {"html":self.endTagHtml}
         handlers.get(name, self.endTagOther)(name)
 
     def startTagHead(self, name, attributes):
         self.parser.insertElement(name, attributes)
         self.parser.headPointer = self.parser.openElements[-1]
         self.parser.switchInsertionMode('inHead')
+
+    def endTagHtml(self, name):
+        self.startTagHead("head", [])
+        self.parser.processEndTag(name)
 
     def endTagOther(self, name):
         self.parser.parseError()
@@ -580,17 +585,17 @@ class InHead(InsertionMode):
         self.parser.switchInsertionMode('inHead')
 
     def appendToHead(self, element):
-        if self.headPointer is not None:
+        if self.parser.headPointer is not None:
             self.parser.headPointer.appendChild(element)
         else:
             assert self.innerHTML
             self.parser.openElements[-1].append(element)
 
     def startTagTitleStyle(self, name, attributes):
-        stateFlags = {"title":"RCDATA", "style":"CDATA"}
+        cmFlags = {"title":"RCDATA", "style":"CDATA"}
         element = self.parser.createElement(name, attributes)
         self.appendToHead(element)
-        self.parser.tokenizer.state = self.parser.tokenizer.states[stateFlags[name]]
+        self.parser.tokenizer.contentModelFlag = contentModelFlags[cmFlags[name]]
         # We have to start collecting characters
         self.collectingCharacters = True
         self.collectionStartTag = name
@@ -600,7 +605,7 @@ class InHead(InsertionMode):
         element._flags.append("parser-inserted")
         # XXX Should this be moved to after we finish collecting characters
         self.appendToHead(element)
-        self.parser.tokenizer.state = self.parser.tokenizer.states["CDATA"]
+        self.parser.tokenizer.contentModelFlag = contentModelFlags["CDATA"]
 
     def startTagBaseLinkMeta(self, name, attributes):
         element = self.createElement(name, attributes)
@@ -746,17 +751,17 @@ class InBody(InsertionMode):
             self.parser.openElements.pop()
 
     def startTagScript(self, name, attributes):
-        self.insertionModes["inHead"](self.parser).processStartTag(name,
+        self.parser.phase.insertionModes["inHead"](self.parser).processStartTag(name,
                                                                    attributes)
 
     def startTagFromHead(self, name, attributes):
         self.parser.parseError()
-        self.parser.insertionModes["inHead"](self.parser).processStartTag(name,
+        self.parser.phase.insertionModes["inHead"](self.parser).processStartTag(name,
                                                                           attributes)
     def startTagBody(self, name, attributes):
         self.parser.parseError()
         if len(self.parser.openElements)==1 or self.parser.openElements[1].name != "body":
-            assert self.parser.innerHtml
+            assert self.parser.innerHTML
         else:
             for attr, value in attributes.iteritems():
                 if attr not in self.parser.openElements[1].attributes:
@@ -764,17 +769,17 @@ class InBody(InsertionMode):
 
     def endTagBody(self, name):
         if self.parser.openElements[1].name != "body":
-            assert self.innerHtml
+            assert self.innerHTML
             self.parser.parseError()
         else:
             if self.parser.openElements[-1].name != "body":
-                assert self.innerHtml
+                assert self.innerHTML
             self.parser.switchInsertionMode("afterBody")
 
-    def endTagHtml(self, name, attributes):
-        self.bodyEndTag(name)
-        if not self.parser.innerHtml:
-            self.endTagHtml(name)
+    def endTagHtml(self, name):
+        self.endTagBody(name)
+        if not self.parser.innerHTML:
+            self.parser.processEndTag(name)
 
     def startTagCloseP(self, name, attributes):
         if self.parser.elementInScope("p"):
