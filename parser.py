@@ -692,6 +692,9 @@ class AfterHead(InsertionMode):
 
 
 class InBody(InsertionMode):
+    # http://www.whatwg.org/specs/web-apps/current-work/#in-body
+    # the crazy phase
+    
     # helper
     def addFormattingElement(self, name, attributes):
         self.parser.insertElement(name, attributes)
@@ -741,16 +744,18 @@ class InBody(InsertionMode):
         handlers[name](name, attributes)
 
     def startTagScript(self, name, attributes):
-        self.parser.phase.insertionModes["inHead"](self.parser).processStartTag(name,
-                                                                   attributes)
+        self.parser.phase.insertionModes["inHead"](self.parser).\
+          processStartTag(name, attributes)
 
     def startTagFromHead(self, name, attributes):
         self.parser.parseError()
-        self.parser.phase.insertionModes["inHead"](self.parser).processStartTag(name,
-                                                                          attributes)
+        self.parser.phase.insertionModes["inHead"](self.parser).\
+          processStartTag(name, attributes)
+
     def startTagBody(self, name, attributes):
         self.parser.parseError()
-        if len(self.parser.openElements)==1 or self.parser.openElements[1].name != "body":
+        if len(self.parser.openElements) == 1 \
+          or self.parser.openElements[1].name != "body":
             assert self.parser.innerHTML
         else:
             for attr, value in attributes.iteritems():
@@ -810,7 +815,7 @@ class InBody(InsertionMode):
         afeAElement = self.parser.elementInActiveFormattingElements("a")
         if afeAElement:
             self.parser.parseError()
-            self.endTagA("a")
+            self.endTagFormatting("a")
             if afeAElement in self.parser.openElements:
                 self.parser.openElements.remove(afeAElement)
             if afeAElement in self.parser.activeFormattingElements:
