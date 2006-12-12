@@ -1305,9 +1305,15 @@ class InTableBody(InsertionMode):
         self.parser.processStartTag(name, attributes)
 
     def startTagTableOther(self, name, attributes):
-        # XXX
-        # could share code with endTagTable ...
-        assert False
+        # XXX AT Any ideas on how to share this with endTagTable?
+        if self.elementInScope("tbody", True) or \
+          self.elementInScope("thead", True) or \
+          self.elementInScope("tfoot", True):
+            self.clearStackToTableBodyContext()
+            self.endTagTableRowGroup(self.parser.openElements[-1])
+        else:
+            # innerHTML case
+            self.parser.parseError()
 
     def startTagOther(self, name, attributes):
         # XXX parse error?
@@ -1325,18 +1331,28 @@ class InTableBody(InsertionMode):
         handlers[name](name)
 
     def endTagTableRowGroup(self, name):
-        # XXX
-        assert False
+        if self.parser.elementInScope(name, True):
+            self.clearStackToTableBodyContext()
+            self.parser.openElements.pop()
+            self.parser.switchInsertionMode("inTable")
+        else:
+            self.parser.parseError()
 
     def endTagTable(self, name):
-        # XXX
-        assert False
+        # XXX AT Any ideas on how to share this with startTagTableOther?
+        if self.elementInScope("tbody", True) or \
+          self.elementInScope("thead", True) or \
+          self.elementInScope("tfoot", True):
+            self.clearStackToTableBodyContext()
+            self.endTagTableRowGroup(self.parser.openElements[-1])
+        else:
+            # innerHTML case
+            self.parser.parseError()
 
     def endTagIgnore(self, name):
         self.parser.parseError()
 
     def endTagOther(self, name):
-        # XXX parser error? prolly not, already done inTable...
         self.parser.switchInsertionMode("inTable")
         self.parser.processEndTag(name)
 
