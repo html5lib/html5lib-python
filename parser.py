@@ -388,7 +388,7 @@ class RootElementPhase(Phase):
         self.parser.phase.processEOF()
 
     def createHTMLNode(self):
-        self.parser.insertElement("html", [])
+        self.parser.insertElement("html", {})
         # Append the html element to the root node
         self.parser.document.appendChild(self.parser.openElements[-1])
         self.parser.switchPhase("main")
@@ -515,21 +515,31 @@ class BeforeHead(InsertionMode):
         self.parser.processCharacter(data)
 
     def processStartTag(self, name, attributes):
-        handlers = {"head":self.startTagHead}
-        # XXX what's the stuff below?
-        handlers.get(name, self.startTagHead)(name, attributes)
-
-    def processEndTag(self, name):
-        handlers = {"html":self.endTagHtml}
-        handlers.get(name, self.endTagOther)(name)
-
-    def startTagHead(self, name, attributes={}):
+        handlers = utils.MethodDispatcher([
+            ("head", self.startTagHead),
+            (("base", "link", "meta", "script", "style", "title"), self.startTagOther)
+        ])
+        handlers.setDefaultValue(self.startTagOther)
+        handlers[name](name, attributes)
+    
+    def startTagHead(self, name="head", attributes={}):
         self.parser.insertElement(name, attributes)
         self.parser.headPointer = self.parser.openElements[-1]
         self.parser.switchInsertionMode("inHead")
 
+    def startTagOther(self, name, attributes):
+        self.startTagHead()
+        self.parser.processStartTag(name, attributes)
+
+    def processEndTag(self, name):
+        handlers = utils.MethodDispatcher([
+            ("html", self.endTagHtml)
+        ])
+        handlers.setDefaultValue(self.endTagOther)
+        handlers[name](name)
+
     def endTagHtml(self, name):
-        self.startTagHead("head")
+        self.startTagHead()
         self.parser.processEndTag(name)
 
     def endTagOther(self, name):
