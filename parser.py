@@ -20,15 +20,15 @@ class Node(object):
         self.childNodes = []
         self.attributes = {}
         self._flags = []
+    
     def __str__(self):
-        """Convert the current subtree to a pretty-printed representation"""
-        rv = self._printNode()
-        for node in self.childNodes:
-            rv += "  " + str(node)
-        return rv
+        return self.name
 
-    def _printNode(self):
-        raise NotImplementedError
+    def printTree(self, indent=0):
+        tree = '\n|%s%s' % (' '*indent, str(self))
+        for child in self.childNodes:
+            tree += child.printTree(indent+2)
+        return tree
 
     def appendChild(self, node):
         if (isinstance(node, TextNode) and self.childNodes and
@@ -46,43 +46,52 @@ class Document(Node):
     def __init__(self):
         Node.__init__(self, None, None)
 
-    def _printNode(self):
-        return "document\n"
+    def __str__(self):
+        return '#document'
+    
+    def printTree(self):
+        for line in Node.printTree(self, -1)[2:].split('\n'):
+            print line
 
 class DocumentType(Node):
     def __init__(self, name):
         Node.__init__(self, name, None)
-
-    def _printNode(self):
-        return " ".join(["<!DOCTYPE", name, ">\n"])
+    
+    def __str__(self):
+        return '<!DOCTYPE %s>' % self.name
 
 class TextNode(Node):
     def __init__(self, value):
         Node.__init__(self, None, value)
-
-    def _printNode(self):
-        return "".join(["  \"",self.value, "\"\n"])
+    
+    def __str__(self):
+        return '"%s"' % self.value
 
 class Element(Node):
     def __init__(self, name):
         Node.__init__(self, name, None)
-
-    def _printNode(self):
-        atts = self.attributes.keys()
-        atts.sort()
-        rv = "<"+self.name+">"
-        for attr in atts:
-            rv += "\n  " + str(attr) + str(self.attributes[key])
-        rv += "\n"
-        return rv
+    
+    def __str__(self):
+        return '<%s>' % self.name
+    
+    def printTree(self, indent):
+        tree = '\n|%s%s' % (' '*indent, str(self))
+        attrs = self.attributes.items()
+        attrs.sort()
+        indent += 2
+        for attr, value in attrs:
+            tree += '\n|%s%s="%s"' % (' '*indent, attr, value)
+        for child in self.childNodes:
+            tree += child.printTree(indent)
+        return tree
 
 class CommentNode(Node):
     def __init__(self, data):
-        Node.__init__(self, None, None, None)
+        Node.__init__(self, None, None)
         self.data = data
-
-    def _printNode(self):
-        return "<!--" + self.value + "-->\n"
+    
+    def __str__(self):
+        return '<!-- %s -->' % self.data
 
 class HTMLParser(object):
     """Main parser class"""
