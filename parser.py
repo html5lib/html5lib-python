@@ -1135,16 +1135,16 @@ class InTable(InsertionMode):
         handlers[name](name)
 
     def endTagTable(self, name):
-        # XXX no element in scope -> parse error, innerHTML case
-
-        self.generateImpliedEndTags()
-        if self.parser.openElements[-1].name == "table":
-            self.parser.parseError
-
-        while self.parser.openElements[-1].name != "table":
-            self.parser.openElements.pop()
-
-        self.parser.resetInsertionMode()
+        if self.parser.elementInScope("table", True):
+            self.generateImpliedEndTags()
+            if self.parser.openElements[-1].name == "table":
+                self.parser.parseError()
+            while self.parser.openElements[-1].name != "table":
+                self.parser.openElements.pop()
+            self.parser.resetInsertionMode()
+        else:
+            self.parser.parseError()
+            # innerHTML case
 
     def endTagOther(self, name):
         self.parser.parseError()
