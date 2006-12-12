@@ -228,8 +228,8 @@ class HTMLParser(object):
         return False
 
     def createElement(self, name, attributes):
-        # Change this if we ever implement different node types for different
-        # elements
+        # XXX AT Change this if we ever implement different node types for
+        # different elements
         element = Element(name)
         element.attributes = attributes
         return element
@@ -255,7 +255,7 @@ class HTMLParser(object):
                 break
       # XXX AT:
       # name = self.openElements[-1].name
-      # while name in frozenset("dd", "dt", "li", "p", "td", "th", "tr") and \
+      # while name in frozenset(("dd", "dt", "li", "p", "td", "th", "tr")) and \
       #   name != exclude:
       #     self.phase.processEndTag(name)
       #     name = self.openElements[-1].name
@@ -281,11 +281,13 @@ class HTMLParser(object):
             if node == self.openElements[0]:
                 last = True
                 if node.name not in ['td', 'th']:
+                    # XXX
                     assert self.innerHTML
                     raise NotImplementedError
             # Check for conditions that should only happen in the innerHTML
             # case
             if node.name in ["select", "colgroup", "head", "frameset"]:
+                # XXX
                 assert self.innerHTML
             if node.name in newModes:
                 self.switchInsertionMode(newModes[node.name])
@@ -329,15 +331,16 @@ class InitialPhase(Phase):
         self.parser.document.appendChild(DocumentType(name))
         self.parser.switchPhase("rootElement")
 
-
     def processCharacter(self, data):
         if data in spaceCharacters:
             # XXX these should be appended to the Document node as Text node.
             pass
         else:
             self.parser.parseError()
-    #This is strictly not per-spec but in the case of missing doctype we
-    #choose to switch to the root element phase and reprocess the current token
+
+    # This is strictly not per-spec but in the case of missing doctype we
+    # choose to switch to the root element phase and reprocess the current
+    # token
     def processStartTag(self, tagname, attributes):
         self.parser.switchPhase("rootElement")
         self.parser.processStartTag(tagname, attributes)
@@ -347,6 +350,7 @@ class InitialPhase(Phase):
         self.parser.processEndTag(tagname)
 
     def processComment(self, data):
+        # XXX WRONG!
         self.parser.switchPhase("rootElement")
         self.parser.processComment(data)
 
@@ -710,7 +714,6 @@ class InBody(InsertionMode):
         handlers[name](name, attributes)
 
     def processEndTag(self, name):
-        # XXX Should this handle unknown elements?
         handlers = utils.MethodDispatcher([
             ("p",self.endTagP),
             ("body",self.endTagBody),
@@ -948,6 +951,7 @@ class InBody(InsertionMode):
             self.parser.clearActiveFormattingElements()
 
     def startTagXMP(self, name, attributes):
+        # XXX startTagXMP -> startTagXmp
         self.parser.reconstructActiveFormattingElements()
         self.parser.insertElement(name, attributes)
         self.tokenizer.contentModelFlag = contentModelFlags["CDATA"]
@@ -1049,7 +1053,8 @@ class InBody(InsertionMode):
         self.parser.insertElement(name, attributes)
 
     def endTagOther(self, name):
-        #XXX This logic should be moved into the treebuilder
+        # XXX This logic should be moved into the treebuilder
+        # AT should use reversed instead of [::-1] when Python 2.4 == True.
         for node in self.parser.openElements[::-1]:
             if node.name == name:
                 self.parser.generateImpliedEndTags()
