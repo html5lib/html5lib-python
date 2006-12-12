@@ -693,7 +693,7 @@ class AfterHead(InsertionMode):
 
 class InBody(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-body
-    # the crazy phase
+    # the crazy mode
     
     # helper
     def addFormattingElement(self, name, attributes):
@@ -1138,7 +1138,7 @@ class InTable(InsertionMode):
     def startTagColgroup(self, name="colgroup", attributes={}):
         self.clearStackToTableContext()
         self.parser.insertElement(name, attributes)
-        self.parser.switchInsertionMode("inColgroup")
+        self.parser.switchInsertionMode("inColumnGroup")
 
     def startTagCol(self, name, attributes):
         self.startTagColgroup()
@@ -1253,8 +1253,10 @@ class InCaption(InsertionMode):
         self.parser.parseError()
 
     def endTagOther(self, name):
+        # Handle it "as if" it was inBody. This means we have to switch back.
         self.parser.switchInsertionMode("inBody")
         self.parser.processEndTag(name)
+        self.parser.switchInsertionMode("inCaption")
 
 
 class InColumnGroup(InsertionMode):
@@ -1306,8 +1308,8 @@ class InTableBody(InsertionMode):
 
     # helper methods
     def clearStackToTableBodyContext(self):
-        while self.parser.openElements[-1].name in ("tbody", "tfoot", "thead",
-          "html"):
+        while self.parser.openElements[-1].name not in ("tbody", "tfoot",
+          "thead", "html"):
             self.parser.openElements.pop()
             self.parser.parseError()
 
@@ -1347,6 +1349,7 @@ class InTableBody(InsertionMode):
     def startTagOther(self, name, attributes):
         self.parser.switchInsertionMode("inTable")
         self.parser.processStartTag(name, attributes)
+        self.parser.switchInsertionMode("inTableBody")
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
@@ -1383,6 +1386,7 @@ class InTableBody(InsertionMode):
     def endTagOther(self, name):
         self.parser.switchInsertionMode("inTable")
         self.parser.processEndTag(name)
+        self.parser.switchInsertionMode("inTableBody")
 
 
 class InRow(InsertionMode):
@@ -1390,7 +1394,7 @@ class InRow(InsertionMode):
 
     # helper methods (XXX unify this with other table helper methods)
     def clearStackToTableRowContext(self):
-        while self.parser.openElements[-1].name in ("tr", "html"):
+        while self.parser.openElements[-1].name not in ("tr", "html"):
             self.parser.openElements.pop()
             self.parser.parseError()
 
@@ -1418,6 +1422,7 @@ class InRow(InsertionMode):
     def startTagOther(self, name, attributes):
         self.parser.switchInsertionMode("inTable")
         self.parser.processStartTag(name, attributes)
+        self.parser.switchInsertionMode("inRow")
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
@@ -1458,6 +1463,7 @@ class InRow(InsertionMode):
     def endTagOther(self, name):
         self.parser.switchInsertionMode("inTable")
         self.parser.processEndTag(name)
+        self.parser.switchInsertionMode("inRow")
 
 class InCell(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-cell
@@ -1493,6 +1499,7 @@ class InCell(InsertionMode):
     def startTagOther(self, name, attributes):
         self.parser.switchInsertionMode("inBody")
         self.parser.processStartTag(name, attributes)
+        self.parser.switchInsertionMode("inCell")
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
@@ -1531,6 +1538,7 @@ class InCell(InsertionMode):
     def endTagOther(self, name):
         self.parser.switchInsertionMode("inBody")
         self.parser.processEndTag(name)
+        self.parser.switchInsertionMode("inCell")
 
 
 class InSelect(InsertionMode):
