@@ -4,6 +4,7 @@ import glob
 import StringIO
 import unittest
 import new
+import traceback
 
 #Allow us to import the parent module
 os.chdir(os.path.split(os.path.abspath(__file__))[0])
@@ -90,6 +91,9 @@ def main():
         try:
             runParserTest(input, output, errors)
         except AssertionError:
+            failed += 1
+        except:
+            traceback.print_exc()
             failed += 1
 
     print "Ran %i tests, failed %i"%(tests, failed)
