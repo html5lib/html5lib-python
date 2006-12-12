@@ -692,14 +692,20 @@ class AfterHead(InsertionMode):
 
 
 class InBody(InsertionMode):
+    # helper
+    def addFormattingElement(self, name, attributes):
+        self.parser.insertElement(name, attributes)
+        self.parser.activeFormattingElements.append(
+            self.parser.openElements[-1])
 
+    # the real deal
     def processCharacter(self, data):
         self.parser.reconstructActiveFormattingElements()
         self.parser.openElements[-1].appendChild(TextNode(data))
 
     def processStartTag(self, name, attributes):
         handlers=utils.MethodDispatcher([
-            ("script",self.startTagScript),
+            ("script", self.startTagScript),
             (("base", "link", "meta", "style", "title"),
               self.startTagFromHead),
             ("body", self.startTagBody),
@@ -734,38 +740,6 @@ class InBody(InsertionMode):
         handlers.setDefaultValue(self.startTagOther)
         handlers[name](name, attributes)
 
-    def processEndTag(self, name):
-        handlers = utils.MethodDispatcher([
-            ("p",self.endTagP),
-            ("body",self.endTagBody),
-            ("html",self.endTagHtml),
-            (("address", "blockquote", "centre", "div", "dl", "fieldset",
-              "listing", "menu", "ol", "pre", "ul"), self.endTagBlock),
-            ("form", self.endTagForm),
-            (("dd", "dt", "li"), self.endTagListItem),
-            (headingElements, self.endTagHeading),
-            (("a", "b", "big", "em", "font", "i", "nobr", "s", "small",
-              "strike", "strong", "tt", "u"), self.endTagFormatting),
-            (("marquee", "object", "button"), self.endTagButtonMarqueeObject),
-            (("caption", "col", "colgroup", "frame", "frameset", "head",
-              "option", "optgroup", "tbody", "td", "tfoot", "th", "thead",
-              "tr", "area", "basefont", "bgsound", "br", "embed", "hr",
-              "iframe", "image", "img", "input", "isindex", "noembed",
-              "noframes", "param", "select", "spacer", "table", "textarea",
-              "wbr", "noscript"),self.endTagMisplacedNone),
-            (("event-source", "section", "nav", "article", "aside", "header",
-              "footer", "datagrid", "command"), self.endTagNew)
-            ])
-        handlers.setDefaultValue(self.endTagOther)
-        handlers[name](name)
-
-    def endTagP(self, name):
-        self.parser.generateImpliedEndTags("p")
-        if self.parser.openElements[-1].name != "p":
-           self.parser.parseError()
-        while self.parser.elementInScope("p"):
-            self.parser.openElements.pop()
-
     def startTagScript(self, name, attributes):
         self.parser.phase.insertionModes["inHead"](self.parser).processStartTag(name,
                                                                    attributes)
@@ -782,20 +756,6 @@ class InBody(InsertionMode):
             for attr, value in attributes.iteritems():
                 if attr not in self.parser.openElements[1].attributes:
                     self.parser.openElements[1].attributes[attr] = value
-
-    def endTagBody(self, name):
-        if self.parser.openElements[1].name != "body":
-            assert self.parser.innerHTML
-            self.parser.parseError()
-        else:
-            if self.parser.openElements[-1].name != "body":
-                assert self.parser.innerHTML
-            self.parser.switchInsertionMode("afterBody")
-
-    def endTagHtml(self, name):
-        self.endTagBody(name)
-        if not self.parser.innerHTML:
-            self.parser.processEndTag(name)
 
     def startTagCloseP(self, name, attributes):
         if self.parser.elementInScope("p"):
@@ -834,33 +794,6 @@ class InBody(InsertionMode):
         self.parser.insertElement(name, attributes)
         self.tokenizer.contentModelFlag = contentModelFlags["PLAINTEXT"]
 
-    def endTagBlock(self, name):
-        if self.parser.elementInScope(name):
-            self.parser.generateImpliedEndTags()
-            if self.parser.openElements[-1].name != name:
-                self.parser.parseError()
-
-        if self.parser.elementInScope(name):
-            node = self.parser.openElements.pop()
-            while node.name != name:
-                node = self.parser.openElements.pop()
-
-    def endTagForm(self, name):
-        self.endTagBlock(name)
-        self.parser.formPointer = None
-
-    def endTagListItem(self, name):
-        # AT Could merge this with the Block case
-        if self.parser.elementInScope(name):
-            self.parser.generateImpliedEndTags(name)
-            if self.parser.openElements[-1].name != name:
-                self.parser.parseError()
-
-        if self.parser.elementInScope(name):
-            node = self.parser.openElements.pop()
-            while node.name != name:
-                node = self.parser.openElements.pop()
-
     def startTagHeading(self, name, attributes):
         if self.parser.elementInScope("p"):
             self.endTagP("p")
@@ -872,26 +805,6 @@ class InBody(InsertionMode):
                     item = self.parser.openElements.pop()
                 break
         self.parser.insertElement(name, attributes)
-
-    def endTagHeading(self, name):
-        for item in headingElements:
-            if self.parser.elementInScope(item):
-                self.parser.generateImpliedEndTags()
-                break
-        if self.parser.openElements[-1].name != name:
-            self.parser.parseError()
-
-        for item in headingElements:
-            if self.parser.elementInScope(item):
-                item = self.parser.openElements.pop()
-                while item.name not in headingElements:
-                    item = self.parser.openElements.pop()
-                break
-
-    def addFormattingElement(self, name, attributes):
-        self.parser.insertElement(name, attributes)
-        self.parser.activeFormattingElements.append(
-            self.parser.openElements[-1])
 
     def startTagA(self, name, attributes):
         afeAElement = self.parser.elementInActiveFormattingElements("a")
@@ -909,41 +822,6 @@ class InBody(InsertionMode):
         self.parser.reconstructActiveFormattingElements()
         self.addFormattingElement(name, attributes)
 
-    def endTagFormatting(self, name):
-        """The much-feared adoption agency algorithm"""
-        afeElement = self.parser.elementInActiveFormattingElements(name)
-        if not afeElement or (afeElement in self.parser.openElements and
-                              not self.parser.elementInScope(afeElement)):
-            self.parser.parseError()
-            return
-        elif afeElement not in self.parser.activeFormattingElements:
-            self.parser.parseError()
-            self.parser.activeFormattingElements.remove(afeElement)
-            return
-
-        if afeElement != self.parser.openElements[-1]:
-            self.parser.parseError()
-
-        # XXX Start of the adoption agency algorithm proper
-        afeIndex = self.parser.openElements.index(afeElement)
-        furthestBlock = None
-        for element in self.parser.openElements[afeIndex:]:
-            if element.name in (specialElements | scopingElements):
-                furthestBlock = element
-                break
-        if furthestBlock is None:
-            element = self.parser.openElements.pop()
-            while element != afeElement:
-                element = self.parser.openElements.pop()
-            self.parser.activeFormattingElements.remove(element)
-            return
-        commonAncestor = self.parser.openElements[afeIndex-1]
-
-        if furthestBlock.parent:
-            furthestBlock.childNodes.remove(furthestBlock)
-        # XXX Need to finish this
-        raise NotImplementedError
-
     def startTagButton(self, name, attributes):
         if self.parser.elementInScope("button"):
             self.parser.parseError()
@@ -958,18 +836,6 @@ class InBody(InsertionMode):
         self.parser.reconstructActiveFormattingElements()
         self.parser.insertElement(name, attributes)
         self.parser.activeFormattingElements.append(Marker)
-
-    def endTagButtonMarqueeObject(self, name):
-        if self.parser.elementInScope(name):
-            self.parser.generateImpliedEndTags()
-        if self.parser.openElements[-1].name != name:
-            self.parser.parseError()
-
-        if self.parser.elementInScope(name):
-            element = self.parser.openElements.pop()
-            while element.name != name:
-                element = self.parser.openElements.pop()
-            self.parser.clearActiveFormattingElements()
 
     def startTagXmp(self, name, attributes):
         self.parser.reconstructActiveFormattingElements()
@@ -1044,6 +910,152 @@ class InBody(InsertionMode):
         """
         self.parser.parseError()
 
+    def startTagNew(self, name, other):
+        """New HTML5 elements, "event-source", "section", "nav",
+        "article", "aside", "header", "footer", "datagrid", "command"
+        """
+        raise NotImplementedError
+
+    def startTagOther(self, name, attributes):
+        self.parser.reconstructActiveFormattingElements()
+        self.parser.insertElement(name, attributes)
+
+
+    def processEndTag(self, name):
+        handlers = utils.MethodDispatcher([
+            ("p",self.endTagP),
+            ("body",self.endTagBody),
+            ("html",self.endTagHtml),
+            (("address", "blockquote", "centre", "div", "dl", "fieldset",
+              "listing", "menu", "ol", "pre", "ul"), self.endTagBlock),
+            ("form", self.endTagForm),
+            (("dd", "dt", "li"), self.endTagListItem),
+            (headingElements, self.endTagHeading),
+            (("a", "b", "big", "em", "font", "i", "nobr", "s", "small",
+              "strike", "strong", "tt", "u"), self.endTagFormatting),
+            (("marquee", "object", "button"), self.endTagButtonMarqueeObject),
+            (("caption", "col", "colgroup", "frame", "frameset", "head",
+              "option", "optgroup", "tbody", "td", "tfoot", "th", "thead",
+              "tr", "area", "basefont", "bgsound", "br", "embed", "hr",
+              "iframe", "image", "img", "input", "isindex", "noembed",
+              "noframes", "param", "select", "spacer", "table", "textarea",
+              "wbr", "noscript"),self.endTagMisplacedNone),
+            (("event-source", "section", "nav", "article", "aside", "header",
+              "footer", "datagrid", "command"), self.endTagNew)
+            ])
+        handlers.setDefaultValue(self.endTagOther)
+        handlers[name](name)
+
+    def endTagP(self, name):
+        self.parser.generateImpliedEndTags("p")
+        if self.parser.openElements[-1].name != "p":
+           self.parser.parseError()
+        while self.parser.elementInScope("p"):
+            self.parser.openElements.pop()
+
+    def endTagBody(self, name):
+        if self.parser.openElements[1].name != "body":
+            assert self.parser.innerHTML
+            self.parser.parseError()
+        else:
+            if self.parser.openElements[-1].name != "body":
+                assert self.parser.innerHTML
+            self.parser.switchInsertionMode("afterBody")
+
+    def endTagHtml(self, name):
+        self.endTagBody(name)
+        if not self.parser.innerHTML:
+            self.parser.processEndTag(name)
+
+    def endTagBlock(self, name):
+        if self.parser.elementInScope(name):
+            self.parser.generateImpliedEndTags()
+            if self.parser.openElements[-1].name != name:
+                self.parser.parseError()
+
+        if self.parser.elementInScope(name):
+            node = self.parser.openElements.pop()
+            while node.name != name:
+                node = self.parser.openElements.pop()
+
+    def endTagForm(self, name):
+        self.endTagBlock(name)
+        self.parser.formPointer = None
+
+    def endTagListItem(self, name):
+        # AT Could merge this with the Block case
+        if self.parser.elementInScope(name):
+            self.parser.generateImpliedEndTags(name)
+            if self.parser.openElements[-1].name != name:
+                self.parser.parseError()
+
+        if self.parser.elementInScope(name):
+            node = self.parser.openElements.pop()
+            while node.name != name:
+                node = self.parser.openElements.pop()
+
+    def endTagHeading(self, name):
+        for item in headingElements:
+            if self.parser.elementInScope(item):
+                self.parser.generateImpliedEndTags()
+                break
+        if self.parser.openElements[-1].name != name:
+            self.parser.parseError()
+
+        for item in headingElements:
+            if self.parser.elementInScope(item):
+                item = self.parser.openElements.pop()
+                while item.name not in headingElements:
+                    item = self.parser.openElements.pop()
+                break
+
+    def endTagFormatting(self, name):
+        """The much-feared adoption agency algorithm"""
+        afeElement = self.parser.elementInActiveFormattingElements(name)
+        if not afeElement or (afeElement in self.parser.openElements and
+                              not self.parser.elementInScope(afeElement)):
+            self.parser.parseError()
+            return
+        elif afeElement not in self.parser.activeFormattingElements:
+            self.parser.parseError()
+            self.parser.activeFormattingElements.remove(afeElement)
+            return
+
+        if afeElement != self.parser.openElements[-1]:
+            self.parser.parseError()
+
+        # XXX Start of the adoption agency algorithm proper
+        afeIndex = self.parser.openElements.index(afeElement)
+        furthestBlock = None
+        for element in self.parser.openElements[afeIndex:]:
+            if element.name in (specialElements | scopingElements):
+                furthestBlock = element
+                break
+        if furthestBlock is None:
+            element = self.parser.openElements.pop()
+            while element != afeElement:
+                element = self.parser.openElements.pop()
+            self.parser.activeFormattingElements.remove(element)
+            return
+        commonAncestor = self.parser.openElements[afeIndex-1]
+
+        if furthestBlock.parent:
+            furthestBlock.childNodes.remove(furthestBlock)
+        # XXX Need to finish this
+        raise NotImplementedError
+
+    def endTagButtonMarqueeObject(self, name):
+        if self.parser.elementInScope(name):
+            self.parser.generateImpliedEndTags()
+        if self.parser.openElements[-1].name != name:
+            self.parser.parseError()
+
+        if self.parser.elementInScope(name):
+            element = self.parser.openElements.pop()
+            while element.name != name:
+                element = self.parser.openElements.pop()
+            self.parser.clearActiveFormattingElements()
+
     def endTagMisplacedNone(self, name):
         """ Elements that should be children of other elements that have a
         different insertion mode or elements that have no end tag;
@@ -1056,21 +1068,11 @@ class InBody(InsertionMode):
         """
         self.parser.parseError()
 
-    def startTagNew(self, name, other):
-        """New HTML5 elements, "event-source", "section", "nav",
-        "article", "aside", "header", "footer", "datagrid", "command"
-        """
-        raise NotImplementedError
-
     def endTagNew(self, name):
         """New HTML5 elements, "event-source", "section", "nav",
         "article", "aside", "header", "footer", "datagrid", "command"
         """
         raise NotImplementedError
-
-    def startTagOther(self, name, attributes):
-        self.parser.reconstructActiveFormattingElements()
-        self.parser.insertElement(name, attributes)
 
     def endTagOther(self, name):
         # XXX This logic should be moved into the treebuilder
