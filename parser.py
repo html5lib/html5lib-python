@@ -217,7 +217,7 @@ class HTMLParser(object):
             entry = self.activeFormattingElements.pop()
 
     def elementInActiveFormattingElements(self, name):
-        """Check if an element eists between the end of the active
+        """Check if an element exists between the end of the active
         formatting elements and the last marker. If it does, return it, else
         return false"""
 
@@ -1018,10 +1018,10 @@ class InBody(InsertionMode):
         """The much-feared adoption agency algorithm"""
         afeElement = self.parser.elementInActiveFormattingElements(name)
         if not afeElement or (afeElement in self.parser.openElements and
-                              not self.parser.elementInScope(afeElement)):
+                              not self.parser.elementInScope(afeElement.name)):
             self.parser.parseError()
             return
-        elif afeElement not in self.parser.activeFormattingElements:
+        elif afeElement not in self.parser.openElements:
             self.parser.parseError()
             self.parser.activeFormattingElements.remove(afeElement)
             return
@@ -1030,6 +1030,7 @@ class InBody(InsertionMode):
             self.parser.parseError()
 
         # XXX Start of the adoption agency algorithm proper
+        print afeElement
         afeIndex = self.parser.openElements.index(afeElement)
         furthestBlock = None
         for element in self.parser.openElements[afeIndex:]:
