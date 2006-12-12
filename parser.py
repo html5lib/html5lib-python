@@ -222,10 +222,12 @@ class HTMLParser(object):
         return false"""
 
         for item in self.activeFormattingElements[::-1]:
-            if item.name == name:
-                return item
-            elif item == Marker:
+            # Check for Marker first because if it's a Marker it doesn't have a
+            # name attribute.
+            if item == Marker:
                 break
+            elif item.name == name:
+                return item
         return False
 
     def createElement(self, name, attributes):
