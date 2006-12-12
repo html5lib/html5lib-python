@@ -588,7 +588,7 @@ class InHead(InsertionMode):
         if self.parser.headPointer is not None:
             self.parser.headPointer.appendChild(element)
         else:
-            assert self.innerHTML
+            assert self.parser.innerHTML
             self.parser.openElements[-1].append(element)
 
     def startTagTitleStyle(self, name, attributes):
@@ -769,11 +769,11 @@ class InBody(InsertionMode):
 
     def endTagBody(self, name):
         if self.parser.openElements[1].name != "body":
-            assert self.innerHTML
+            assert self.parser.innerHTML
             self.parser.parseError()
         else:
             if self.parser.openElements[-1].name != "body":
-                assert self.innerHTML
+                assert self.parser.innerHTML
             self.parser.switchInsertionMode("afterBody")
 
     def endTagHtml(self, name):
@@ -1656,7 +1656,7 @@ class InFrameset(InsertionMode):
             self.parser.parseError()
         else:
             self.parser.openElements.pop()
-        if not self.innerHTML and \
+        if not self.parser.innerHTML and \
           self.parser.openElements[-1].name == "frameset":
             self.parser.switchInsertionMode("afterFrameset")
 
