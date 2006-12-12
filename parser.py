@@ -78,8 +78,7 @@ class Element(Node):
 
     def printTree(self, indent):
         tree = '\n|%s%s' % (' '*indent, str(self))
-        attrs = self.attributes.items()
-        attrs.sort()
+        attrs = self.attributes
         indent += 2
         for attr, value in attrs:
             tree += '\n|%s%s="%s"' % (' '*indent, attr, value)
