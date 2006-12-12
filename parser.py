@@ -251,6 +251,8 @@ class HTMLParser(object):
         if name != exclude and name in frozenset(("dd", "dt", "li", "p",
                                                   "td", "th", "tr")):
             self.processEndTag(name)
+            # XXX as opposed to the method proposed below, this seems to break
+            # when an exclude paramter is passed...
             self.generateImpliedEndTags()
 
       # XXX AT:
@@ -326,7 +328,6 @@ class Phase(object):
         self.parser.parseError()
 
 class InitialPhase(Phase):
-    # XXX We have to handle also the no doctype/whitespace case here.
     def processDoctype(self, name, error):
         self.parser.document.appendChild(DocumentType(name))
         self.parser.switchPhase("rootElement")
@@ -336,6 +337,7 @@ class InitialPhase(Phase):
             # XXX these should be appended to the Document node as Text node.
             pass
         else:
+            # XXX
             self.parser.parseError()
 
     # This is strictly not per-spec but in the case of missing doctype we
@@ -419,11 +421,12 @@ class MainPhase(Phase):
 
     def processEOF(self):
         self.parser.generateImpliedEndTags()
-        if ((self.parser.innerHTML == False or
-          len(self.parser.openElements) > 1)
-          and self.parser.openElements[-1].name != "body"):
+        if (self.parser.innerHTML == False \
+          or len(self.parser.openElements) > 1) \
+          and self.parser.openElements[-1].name != "body":
             self.parser.parseError()
         # Stop parsing
+        # XXX Does stop parsing happen here or not?!
 
     def processStartTag(self, name, attributes):
         if name == "html":
