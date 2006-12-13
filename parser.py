@@ -582,8 +582,7 @@ class InHead(InsertionMode):
             self.finishCollectingCharacters(name)
 
         handlers = utils.MethodDispatcher([
-            ("title", self.startTagTitleStyle),
-            ("style", self.startTagTitleStyle),
+            (("title", "style"), self.startTagTitleStyle),
             ("script", self.startTagScript),
             (("base", "link", "meta"), self.startTagBaseLinkMeta),
             ("head", self.startTagHead)
@@ -600,7 +599,8 @@ class InHead(InsertionMode):
         cmFlags = {"title":"RCDATA", "style":"CDATA"}
         element = self.parser.createElement(name, attributes)
         self.appendToHead(element)
-        self.parser.tokenizer.contentModelFlag = contentModelFlags[cmFlags[name]]
+        self.parser.tokenizer.contentModelFlag =\
+          contentModelFlags[cmFlags[name]]
         # We have to start collecting characters
         self.collectingCharacters = True
         self.collectionStartTag = name
