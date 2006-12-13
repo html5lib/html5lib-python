@@ -435,8 +435,11 @@ class HTMLTokenizer(object):
             # the stack.
             self.characterQueue.extend(charStack)
 
+            # XXX need to check if this can be done differently. Perhaps
+            # integrate switching the content model flag here instead of when
+            # we emit the token as well...
             if not self.currentToken.name == "".join(charStack[:-1]).lower() \
-              and not charStack[-1] in (spaceCharacters |
+              or charStack[-1] not in (spaceCharacters |
               frozenset((u">", u"/", u"<", EOF))):
                 self.parser.parseError()
                 self.parser.processCharacter(u"<")

@@ -344,7 +344,7 @@ class Phase(object):
 class InitialPhase(Phase):
     # XXX This phase deals with error handling as well which is currently not
     # in the specification.
-    
+
     def processDoctype(self, name, error):
         self.parser.document.appendChild(DocumentType(name))
         self.parser.switchPhase("rootElement")
@@ -602,12 +602,14 @@ class InHead(InsertionMode):
     def startTagScript(self, name, attributes):
         element = self.parser.createElement(name, attributes)
         element._flags.append("parser-inserted")
-        
+
         # XXX in theory we should check if we're actually in the InHead state
         # here and if the headElementPointer is not zero but it seems to work
         # without that being the case.
         self.parser.openElements[-1].appendChild(element)
         self.parser.openElements.append(element)
+
+        # XXX AT we could use self.parser.insertElement(name, attributes) ...
         self.parser.tokenizer.contentModelFlag = contentModelFlags["CDATA"]
 
     def startTagBaseLinkMeta(self, name, attributes):
@@ -697,7 +699,7 @@ class AfterHead(InsertionMode):
 class InBody(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-body
     # the crazy mode
-    
+
     # helper
     def addFormattingElement(self, name, attributes):
         self.parser.insertElement(name, attributes)
@@ -735,7 +737,7 @@ class InBody(InsertionMode):
             ("image", self.startTagImage),
             ("isindex", self.startTagIsIndex),
             ("textarea", self.startTagTextarea),
-            (("iframe", "noembed", "noframes", "noscript"), self.startTagCDATA),
+            (("iframe", "noembed", "noframes", "noscript"), self.startTagCdata),
             ("select", self.startTagSelect),
             (("caption", "col", "colgroup", "frame", "frameset", "head",
               "option", "optgroup", "tbody", "td", "tfoot", "th", "thead",
@@ -898,11 +900,14 @@ class InBody(InsertionMode):
         self.parser.processEndTag("form")
 
     def startTagTextarea(self, name, attributes):
-        raise NotImplementedError
+        # XXX Form element pointer checking here as well...
+        self.parser.insertElement(name, attributes)
+        self.parser.tokenizer.contentModelFlag = contentModelFlags["RCDATA"]
 
-    def startTagCDATA(self, name, attributes):
+    def startTagCdata(self, name, attributes):
         """iframe, noembed noframes, noscript(if scripting enabled)"""
-        raise NotImplementedError
+        self.parser.insertElement(name, attributes)
+        self.parser.tokenizer.contentModelFlag = contentModelFlags["CDATA"]
 
     def startTagSelect(self, name, attributes):
         self.parser.reconstructActiveFormattingElements()
@@ -945,9 +950,10 @@ class InBody(InsertionMode):
             (("caption", "col", "colgroup", "frame", "frameset", "head",
               "option", "optgroup", "tbody", "td", "tfoot", "th", "thead",
               "tr", "area", "basefont", "bgsound", "br", "embed", "hr",
-              "iframe", "image", "img", "input", "isindex", "noembed",
-              "noframes", "param", "select", "spacer", "table", "textarea",
-              "wbr", "noscript"),self.endTagMisplacedNone),
+              "image", "img", "input", "isindex", "param", "select", "spacer",
+              "table",  "wbr"),self.endTagMisplacedNone),
+            (("noframes", "noscript", "noembed", "textarea", "xmp", "iframe"),
+              self.endTagCdataTextAreaXmp),
             (("event-source", "section", "nav", "article", "aside", "header",
               "footer", "datagrid", "command"), self.endTagNew)
             ])
@@ -1076,6 +1082,12 @@ class InBody(InsertionMode):
         "noframes", "param", "select", "spacer", "table", "textarea", "wbr""
         """
         self.parser.parseError()
+
+    def endTagCdataTextAreaXmp(self, name):
+        if self.parser.openElements[-1].name == name:
+            self.parser.openElements.pop()
+        else:
+            self.parser.parseError()
 
     def endTagNew(self, name):
         """New HTML5 elements, "event-source", "section", "nav",
@@ -1548,7 +1560,7 @@ class InSelect(InsertionMode):
     # XXX character token ... always appended to the current node
     def processNonSpaceCharacter(self, data):
         self.parser.openElements[-1].appendChild(TextNode(data))
-    
+
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
             ("option", self.startTagOption),
