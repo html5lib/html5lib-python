@@ -318,6 +318,7 @@ class HTMLTokenizer(object):
             # If an end tag has attributes it's a parse error.
             if token.attributes:
                 self.parser.parseError()
+            self.contentModelFlag = contentModelFlags["PCDATA"]
             self.parser.processEndTag(token.name)
         elif isinstance(token, CommentToken):
             self.parser.processComment(token.data)
@@ -360,7 +361,7 @@ class HTMLTokenizer(object):
           (contentModelFlags["PCDATA"], contentModelFlags["RCDATA"]))):
             self.changeState("entityData")
         elif (data == u"<" and
-          self.contentModelFlag != contentModelFlags['PLAINTEXT']):
+          self.contentModelFlag != contentModelFlags["PLAINTEXT"]):
             self.changeState("tagOpen")
         elif data == EOF:
             self.parser.processEOF()
