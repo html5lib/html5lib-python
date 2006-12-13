@@ -8,8 +8,6 @@ from constants import entitiesWindows1252, entities, voidElements
 from constants import asciiLowercase, asciiUppercase, asciiLetters
 from constants import digits, hexDigits
 
-# Data representing the end of the input stream. Needs to be a string for
-# comparing: "x in string" etc...
 EOF = None
 
 # Token objects used to hold token data when tokens are in the

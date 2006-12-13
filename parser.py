@@ -80,7 +80,6 @@ class Element(Node):
         tree = '\n|%s%s' % (' '*indent, str(self))
         indent += 2
         if self.attributes:
-            # XXX need more than 1 value to unpack??
             for name, value in self.attributes.iteritems():
                 tree += '\n|%s%s="%s"' % (' '*indent, name, value)
         for child in self.childNodes:
