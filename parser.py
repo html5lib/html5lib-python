@@ -1367,9 +1367,7 @@ class InTableBody(InsertionMode):
             self.parser.parseError()
 
     def startTagOther(self, name, attributes):
-        self.parser.switchInsertionMode("inTable")
-        self.parser.processStartTag(name, attributes)
-        self.parser.switchInsertionMode("inTableBody")
+        InTable(self.parser).processStartTag(name, attributes)
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
@@ -1404,9 +1402,7 @@ class InTableBody(InsertionMode):
         self.parser.parseError()
 
     def endTagOther(self, name):
-        self.parser.switchInsertionMode("inTable")
-        self.parser.processEndTag(name)
-        self.parser.switchInsertionMode("inTableBody")
+        InTable(self.parser).processEndTag(name)
 
 
 class InRow(InsertionMode):
