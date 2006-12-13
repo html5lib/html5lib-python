@@ -1513,8 +1513,7 @@ class InCell(InsertionMode):
     def endTagTableCell(self, name):
         if self.parser.elementInScope(name):
             self.parser.generateImpliedEndTags()
-            node = self.parser.openElements[-1].name
-            if node != name:
+            if self.parser.openElements[-1].name != name:
                 self.parser.parseError()
                 node = self.parser.openElements.pop()
                 while node.name != name:
