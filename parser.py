@@ -602,7 +602,11 @@ class InHead(InsertionMode):
     def startTagScript(self, name, attributes):
         element = self.parser.createElement(name, attributes)
         element._flags.append("parser-inserted")
-        self.appendToHead(element)
+        
+        # XXX in theory we should check if we're actually in the InHead state
+        # here and if the headElementPointer is not zero but it seems to work
+        # without that being the case.
+        self.parser.openElements[-1].appendChild(element)
         self.parser.openElements.append(element)
         self.parser.tokenizer.contentModelFlag = contentModelFlags["CDATA"]
 
