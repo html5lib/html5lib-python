@@ -344,7 +344,7 @@ class InitialPhase(Phase):
         self.parser.processEndTag(name)
 
     def processComment(self, data):
-        self.parser.document.appendChild(Comment(data))
+        self.parser.document.appendChild(CommentNode(data))
 
     def processEOF(self):
         self.parser.switchPhase("rootElement")
@@ -603,7 +603,7 @@ class InHead(InsertionMode):
         self.parser.tokenizer.contentModelFlag = contentModelFlags["CDATA"]
 
     def startTagBaseLinkMeta(self, name, attributes):
-        element = self.createElement(name, attributes)
+        element = self.parser.createElement(name, attributes)
         self.appendToHead(element)
 
     def startTagOther(self, name, attributes):
@@ -1467,7 +1467,9 @@ class InCell(InsertionMode):
 
     # the rest
     # XXX look into characters and comments
-
+    def processNonSpaceCharacter(self, data):
+        InBody(self.parser).processCharacter(data)
+    
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
             (("caption", "col", "colgroup", "tbody", "td", "tfoot", "th",
@@ -1524,9 +1526,7 @@ class InCell(InsertionMode):
             self.parser.parseError()
 
     def endTagOther(self, name):
-        self.parser.switchInsertionMode("inBody")
-        self.parser.processEndTag(name)
-        self.parser.switchInsertionMode("inCell")
+        InBody(self.parser).processEndTag(name)
 
 
 class InSelect(InsertionMode):
@@ -1696,8 +1696,7 @@ class AfterFrameset(InsertionMode):
         handlers[name](name, attributes)
 
     def startTagNoframes(self, name, attributes):
-        self.parser.switchInsertionMode("inBody")
-        self.processStartTag(name, attributes)
+        InBody(self.parser).processStartTag(name, attributes)
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([("html", self.endTagHtml)])
