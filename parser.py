@@ -515,14 +515,6 @@ class InsertionMode(object):
         else:
             self.processNonSpaceCharacter(data)
 
-    def finishCollectingCharacters(self, name, endTag=False):
-        self.parser.openElements[-1].appendChild(TextNode(
-            "".join(self.characterBuffer)))
-        self.characterBuffer = []
-        self.collectingCharacters == False
-        if not self.collectionStartTag == name or not endTag:
-            self.parser.parseError()
-
 class BeforeHead(InsertionMode):
     def processNonSpaceCharacter(self, data):
         self.startTagHead()
@@ -566,16 +558,6 @@ class InHead(InsertionMode):
     # colleting characters?
 
     # helper
-    def finishCollectingCharacters(self, name, endTag=False):
-        InsertionMode.finishCollectingCharacters(self,name)
-        if self.parser.openElements[-1].name == "script":
-            # XXX append() -> appendChild() ?
-            if not endTag or not name == "script":
-                self.parser.openElements[-1].append("already excecuted")
-            if self.parser.innerHTML:
-                self.parser.openElements[-1].append("already excecuted")
-        # Ignore the rest of the script element handling
-
     def appendToHead(self, element):
         if self.parser.headPointer is not None:
             self.parser.headPointer.appendChild(element)
@@ -600,9 +582,6 @@ class InHead(InsertionMode):
         """
 
     def processStartTag(self, name, attributes):
-        if self.collectingCharacters:
-            self.finishCollectingCharacters(name)
-
         handlers = utils.MethodDispatcher([
             (("title", "style"), self.startTagTitleStyle),
             ("script", self.startTagScript),
@@ -641,8 +620,6 @@ class InHead(InsertionMode):
         self.parser.processStartTag(name, attributes)
 
     def processEndTag(self, name):
-        if self.collectingCharacters:
-            self.finishCollectingCharacters(name, True)
         handlers = utils.MethodDispatcher([
             ("head", self.endTagHead),
             ("html", self.endTagHtml),
@@ -663,7 +640,10 @@ class InHead(InsertionMode):
         self.parser.processEndTag(name)
 
     def endTagTitleStyleScript(self, name):
-        self.parser.openElements.pop()
+        if self.parser.openElements[-1] == name:
+            self.parser.openElements.pop()
+        else:
+            self.parser.parseError()
     
     def endTagOther(self, name):
         self.parser.parseError()
