@@ -546,6 +546,7 @@ class InHead(InsertionMode):
     def finishCollectingCharacters(self, name, endTag=False):
         InsertionMode.finishCollectingCharacters(self,name)
         if self.parser.openElements[-1].name == "script":
+            # XXX append() -> appendChild() ?
             if not endTag or not name == "script":
                 self.parser.openElements[-1].append("already excecuted")
             if self.parser.innerHTML:
@@ -557,7 +558,7 @@ class InHead(InsertionMode):
             self.parser.headPointer.appendChild(element)
         else:
             assert self.parser.innerHTML
-            self.parser.openElements[-1].append(element)
+            self.parser.openElements[-1].appendChild(element)
 
     # the real thing
     def processNonSpaceCharacter(self, data):
@@ -1100,12 +1101,8 @@ class InTable(InsertionMode):
 
     # processing methods
     # processComment is handled by InsertionMode
-    def processCharacter(self, data):
-        if character in spaceCharacters:
-            self.parser.openElements[-1].appendChild(TextNode(character))
-        else:
-            # XXX
-            raise NotImplementedError()
+    def processNonSpaceCharacter(self, data):
+        raise NotImplementedError()
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
@@ -1305,6 +1302,8 @@ class InTableBody(InsertionMode):
 
     # the rest
     # XXX character tokens and all that ...
+    def processNonSpaceCharacter(self,data):
+        InTable(self.parser).processCharacter(data)
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
@@ -1469,7 +1468,7 @@ class InCell(InsertionMode):
     # XXX look into characters and comments
     def processNonSpaceCharacter(self, data):
         InBody(self.parser).processCharacter(data)
-    
+
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
             (("caption", "col", "colgroup", "tbody", "td", "tfoot", "th",
@@ -1520,7 +1519,8 @@ class InCell(InsertionMode):
     def endTagImply(self, name):
         if self.parser.elementInScope(name):
             self.closeCell()
-            self.parser.processEndTag(name)
+            # XXX something is wrong here!!!
+            #self.parser.processEndTag(name)
         else:
             # sometimes innerHTML case
             self.parser.parseError()
@@ -1534,7 +1534,9 @@ class InSelect(InsertionMode):
 
     # No need for processComment.
     # XXX character token ... always appended to the current node
-
+    def processNonSpaceCharacter(self, data):
+        self.parser.openElements[-1].appendChild(TextNode(data))
+    
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
             ("option", self.startTagOption),

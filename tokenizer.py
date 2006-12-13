@@ -8,8 +8,9 @@ import string
 from constants import contentModelFlags, spaceCharacters
 from constants import entitiesWindows1252, entities, voidElements
 
-# Data representing the end of the input stream
-EOF = None
+# Data representing the end of the input stream. Needs to be a string for
+# comparing: "x in string" etc...
+EOF = u"\x00"
 
 # Token objects used to hold token data when tokens are in the
 # process of being constructed
