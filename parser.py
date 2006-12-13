@@ -1450,7 +1450,6 @@ class InRow(InsertionMode):
 
     def endTagTr(self, name="tr"):
         if self.parser.elementInScope("tr", True):
-            print "end tag tr"
             self.clearStackToTableRowContext()
             self.parser.openElements.pop()
             self.parser.switchInsertionMode("inTableBody")
@@ -1524,13 +1523,16 @@ class InCell(InsertionMode):
         handlers[name](name)
 
     def endTagTableCell(self, name):
-        if self.parser.elementInScope(name):
+        if self.parser.elementInScope(name, True):
             self.parser.generateImpliedEndTags(name)
             if self.parser.openElements[-1].name != name:
                 self.parser.parseError()
-                node = self.parser.openElements.pop()
-                while node.name != name:
+                while True:
                     node = self.parser.openElements.pop()
+                    if node.name == name:
+                        break
+            else:
+                self.parser.openElements.pop()
             self.parser.clearActiveFormattingElements()
             self.parser.switchInsertionMode("inRow")
         else:
