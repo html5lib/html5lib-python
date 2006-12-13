@@ -78,10 +78,11 @@ class Element(Node):
 
     def printTree(self, indent):
         tree = '\n|%s%s' % (' '*indent, str(self))
-        attrs = self.attributes
         indent += 2
-        for attr, value in attrs:
-            tree += '\n|%s%s="%s"' % (' '*indent, attr, value)
+        if self.attributes:
+            # XXX need more than 1 value to unpack??
+            for name, value in self.attributes:
+                tree += '\n|%s%s="%s"' % (' '*indent, name, value)
         for child in self.childNodes:
             tree += child.printTree(indent)
         return tree
@@ -193,6 +194,25 @@ class HTMLParser(object):
         assert False # We should never reach this point
 
     def reconstructActiveFormattingElements(self):
+        if not self.activeFormattingElements:
+            return
+        i = -1
+        entry = self.activeFormattingElements[i]
+        if entry == Marker or entry in self.openElements:
+            return
+        while entry != Marker and entry not in self.openElements:
+            i -= 1
+            entry = self.activeFormattingElements[i]
+        while True and i < -1:
+            # XXX why clone?
+            i += 1
+            clone = self.activeFormattingElements[i].cloneNode()
+            self.openElements[-1].appendChild(clone)
+            self.openElements.append(clone)
+            self.activeFormattingElements[i] = clone
+            if clone == self.activeFormattingElements[-1]:
+                break
+        """
         afe = self.activeFormattingElements
         # If there are no active formatting elements exit early
         if not afe:
@@ -212,6 +232,7 @@ class HTMLParser(object):
             self.openElements[-1].appendChild(clone)
             self.openElements.append(clone)
             afe[i] = clone
+        """
 
     def clearActiveFormattingElements(self):
         entry = self.activeFormattingElements.pop()
