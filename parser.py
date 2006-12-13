@@ -562,7 +562,7 @@ class InHead(InsertionMode):
 
     # the real thing
     def processNonSpaceCharacter(self, data):
-        if self.parser.openElements[-1] in ("title", "style", "script"):
+        if self.parser.openElements[-1].name in ("title", "style", "script"):
             self.parser.openElements[-1].appendChild(TextNode(data))
         else:
             self.endTagHead("head")
@@ -635,7 +635,7 @@ class InHead(InsertionMode):
         self.parser.processEndTag(name)
 
     def endTagTitleStyleScript(self, name):
-        if self.parser.openElements[-1] == name:
+        if self.parser.openElements[-1].name == name:
             self.parser.openElements.pop()
         else:
             self.parser.parseError()
