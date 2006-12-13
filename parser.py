@@ -552,10 +552,6 @@ class BeforeHead(InsertionMode):
         self.parser.parseError()
 
 class InHead(InsertionMode):
-
-    # XXX Are we sure to only recieve start and end tag tokens once we start
-    # colleting characters?
-
     # helper
     def appendToHead(self, element):
         if self.parser.headPointer is not None:
@@ -643,7 +639,7 @@ class InHead(InsertionMode):
             self.parser.openElements.pop()
         else:
             self.parser.parseError()
-    
+
     def endTagOther(self, name):
         self.parser.parseError()
 
