@@ -1118,6 +1118,7 @@ class InBody(InsertionMode):
 
 class InTable(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-table
+    # XXX Need some idea of how to address the "anything else" case here...
 
     # helper methods
     def clearStackToTableContext(self):
@@ -1182,10 +1183,9 @@ class InTable(InsertionMode):
         handlers = utils.MethodDispatcher([
             ("table", self.endTagTable),
             (("body", "caption", "col", "colgroup", "html", "tbody", "td",
-              "tfoot", "th", "thead", "tr"), self.endTagOther)
+              "tfoot", "th", "thead", "tr"), self.endTagIgnore)
         ])
-        # XXX Can we handle this through the anything else case??
-        handlers.setDefaultValue(self.processAnythingElse)
+        handlers.setDefaultValue(self.endTagOther)
         handlers[name](name)
 
     def endTagTable(self, name):
@@ -1201,10 +1201,11 @@ class InTable(InsertionMode):
             self.parser.parseError()
             # innerHTML case
 
-    def endTagOther(self, name):
+    def endTagIgnore(self, name):
         self.parser.parseError()
 
-    def processAnythingElse(self, name, attributes={}):
+    def endTagOther(self, name, attributes={}):
+        # XXX
         assert False
 
 
