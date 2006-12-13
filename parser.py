@@ -81,7 +81,7 @@ class Element(Node):
         indent += 2
         if self.attributes:
             # XXX need more than 1 value to unpack??
-            for name, value in self.attributes:
+            for name, value in self.attributes.iteritems():
                 tree += '\n|%s%s="%s"' % (' '*indent, name, value)
         for child in self.childNodes:
             tree += child.printTree(indent)
@@ -588,7 +588,7 @@ class InHead(InsertionMode):
         if self.parser.openElements[-1] in ("title", "style", "script"):
             self.parser.openElements[-1].appendChild(TextNode(data))
         else:
-            self.endTagHead()
+            self.endTagHead("head")
             self.parser.switchInsertionMode("afterHead")
             self.parser.processCharacter(data)
         """
