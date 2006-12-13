@@ -1672,10 +1672,9 @@ class AfterBody(InsertionMode):
 class InFrameset(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-frameset
 
-    # XXX
-    # No need for processComment or processCharacter.
-    # XXX we do need processNonSpaceCharacter ...
-
+    def processNonSpaceCharacter(self, data):
+        self.parser.parseError()
+    
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
             ("frameset", self.startTagFrameset),
@@ -1717,10 +1716,8 @@ class InFrameset(InsertionMode):
 
 class AfterFrameset(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#after3
-    # XXX
-
-    # No need for processComment or processCharacter.
-    # XXX we do need processNonSpaceCharacter ...
+    def processNonSpaceCharacter(self, data):
+        self.parser.parseError()
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([("noframes", self.startTagNoframes)])
