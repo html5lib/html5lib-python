@@ -1394,7 +1394,8 @@ class InTableBody(InsertionMode):
           self.parser.elementInScope("thead", True) or \
           self.parser.elementInScope("tfoot", True):
             self.clearStackToTableBodyContext()
-            self.endTagTableRowGroup(self.parser.openElements[-1])
+            self.endTagTableRowGroup(self.parser.openElements[-1].name)
+            self.parser.processEndTag(name)
         else:
             # innerHTML case
             self.parser.parseError()
