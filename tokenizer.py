@@ -3,10 +3,10 @@ try:
 except:
     pass
 
-import string
-
 from constants import contentModelFlags, spaceCharacters
 from constants import entitiesWindows1252, entities, voidElements
+from constants import asciiLowercase, asciiUppercase, asciiLetters
+from constants import digits, hexDigits
 
 # Data representing the end of the input stream. Needs to be a string for
 # comparing: "x in string" etc...
@@ -173,10 +173,10 @@ class HTMLTokenizer(object):
         If not present self.parser.parseError() is invoked.
         """
 
-        allowed = string.digits
+        allowed = digits
         radix = 10
         if isHex:
-            allowed = string.hexdigits
+            allowed = hexDigits
             radix = 16
 
         char = u"\uFFFD"
@@ -232,11 +232,11 @@ class HTMLTokenizer(object):
                 self.parser.parseError()
             else:
                 if charStack[1].lower() == u"x" \
-                  and charStack[2] in string.hexdigits:
+                  and charStack[2] in hexDigits:
                     # Hexadecimal entity detected.
                     self.characterQueue.append(charStack[2])
                     char = self.consumeNumberEntity(True)
-                elif charStack[1] in string.digits:
+                elif charStack[1] in digits:
                     # Decimal entity detected.
                     self.characterQueue.extend(charStack[1:])
                     char = self.consumeNumberEntity(False)
@@ -397,7 +397,7 @@ class HTMLTokenizer(object):
                 self.changeState("markupDeclarationOpen")
             elif data == u"/":
                 self.changeState("closeTagOpen")
-            elif data in string.ascii_letters:
+            elif data in asciiLetters:
                 self.currentToken = StartTagToken(data.lower())
                 self.changeState("tagName")
             elif data == u">":
@@ -451,7 +451,7 @@ class HTMLTokenizer(object):
 
         if self.contentModelFlag != contentModelFlags["PLAINTEXT"]:
             data = self.consumeChar()
-            if data in string.ascii_letters:
+            if data in asciiLetters:
                 self.currentToken = EndTagToken(data)
                 self.changeState("tagName")
             elif data == u">":
@@ -475,7 +475,7 @@ class HTMLTokenizer(object):
             self.changeState("beforeAttributeName")
         elif data == u">":
             self.emitCurrentToken()
-        elif data in string.ascii_uppercase:
+        elif data in asciiUppercase:
             self.currentToken.name += data.lower()
         elif data == u"<" or data == EOF:
             self.emitCurrentTokenWithParseError(data)
@@ -492,7 +492,7 @@ class HTMLTokenizer(object):
             pass
         elif data == u">":
             self.emitCurrentToken()
-        elif data in string.ascii_uppercase:
+        elif data in asciiUppercase:
             self.currentToken.attributes.append([data.lower(), ""])
             self.changeState("attributeName")
         elif data == u"/":
@@ -513,7 +513,7 @@ class HTMLTokenizer(object):
             self.changeState("beforeAttributeValue")
         elif data == u">":
             self.emitCurrentToken()
-        elif data in string.ascii_uppercase:
+        elif data in asciiUppercase:
             self.currentToken.attributes[-1][0] += data.lower()
             leavingThisState = False
         elif data == u"/":
@@ -542,7 +542,7 @@ class HTMLTokenizer(object):
             self.changeState("beforeAttributeValue")
         elif data == u">":
             self.emitCurrentToken()
-        elif data in string.ascii_uppercase:
+        elif data in asciiUppercase:
             self.currentToken.attributes.append(data.lower(), "")
             self.changeState("attributeName")
         elif data == u"/":
@@ -686,7 +686,7 @@ class HTMLTokenizer(object):
         data = self.consumeChar()
         if data in spaceCharacters:
             pass
-        elif data in string.ascii_lowercase:
+        elif data in asciiLowercase:
             self.currentToken = DoctypeToken(data.upper())
             self.changeState("doctypeName")
         elif data == u">":
@@ -713,7 +713,7 @@ class HTMLTokenizer(object):
         else:
             # We can't just uppercase everything that arrives here. For
             # instance, non-ASCII characters.
-            if data in string.ascii_lowercase:
+            if data in asciiLowercase:
                 data = data.upper()
             self.currentToken.name += data
             needsDoctypeCheck = True
