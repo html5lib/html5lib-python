@@ -272,9 +272,9 @@ class HTMLParser(object):
     def generateImpliedEndTags(self, exclude=None):
         name = self.openElements[-1].name
         if (name in frozenset(("dd", "dt", "li", "p", "td", "th", "tr"))
-            and name != exclude):
+          and name != exclude):
             self.phase.processEndTag(name)
-            self.generateImpliedEndTags()
+            self.generateImpliedEndTags(exclude)
 
     def resetInsertionMode(self):
         last = False
@@ -1450,6 +1450,7 @@ class InRow(InsertionMode):
 
     def endTagTr(self, name="tr"):
         if self.parser.elementInScope("tr", True):
+            print "end tag tr"
             self.clearStackToTableRowContext()
             self.parser.openElements.pop()
             self.parser.switchInsertionMode("inTableBody")
@@ -1474,9 +1475,7 @@ class InRow(InsertionMode):
         self.parser.parseError()
 
     def endTagOther(self, name):
-        self.parser.switchInsertionMode("inTable")
-        self.parser.processEndTag(name)
-        self.parser.switchInsertionMode("inRow")
+        InTable(self.parser).processEndTag(name)
 
 class InCell(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-cell
