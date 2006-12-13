@@ -1190,11 +1190,12 @@ class InTable(InsertionMode):
 
     def endTagTable(self, name):
         if self.parser.elementInScope("table", True):
-            self.generateImpliedEndTags()
+            self.parser.generateImpliedEndTags()
             if self.parser.openElements[-1].name == "table":
                 self.parser.parseError()
             while self.parser.openElements[-1].name != "table":
                 self.parser.openElements.pop()
+            self.parser.openElements.pop()
             self.parser.resetInsertionMode()
         else:
             self.parser.parseError()
@@ -1388,10 +1389,9 @@ class InTableBody(InsertionMode):
             self.parser.parseError()
 
     def endTagTable(self, name):
-        # XXX AT Any ideas on how to share this with startTagTableOther?
-        if self.elementInScope("tbody", True) or \
-          self.elementInScope("thead", True) or \
-          self.elementInScope("tfoot", True):
+        if self.parser.elementInScope("tbody", True) or \
+          self.parser.elementInScope("thead", True) or \
+          self.parser.elementInScope("tfoot", True):
             self.clearStackToTableBodyContext()
             self.endTagTableRowGroup(self.parser.openElements[-1])
         else:
@@ -1551,7 +1551,7 @@ class InCell(InsertionMode):
         self.parser.parseError()
 
     def endTagImply(self, name):
-        if self.parser.elementInScope(name):
+        if self.parser.elementInScope(name, True):
             self.closeCell()
             # XXX The thing below still causes issues ...:
             self.parser.processEndTag(name)
