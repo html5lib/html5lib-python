@@ -585,9 +585,10 @@ class InHead(InsertionMode):
 
     # the real thing
     def processNonSpaceCharacter(self, data):
-        if self.parser.headPointer is not None:
+        if self.parser.openElements[-1] in ("title", "style", "script"):
             self.parser.openElements[-1].appendChild(TextNode(data))
         else:
+            self.endTagHead()
             self.parser.switchInsertionMode("afterHead")
             self.parser.processCharacter(data)
         """
