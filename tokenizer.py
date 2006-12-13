@@ -436,8 +436,8 @@ class HTMLTokenizer(object):
             self.characterQueue.extend(charStack)
 
             if not self.currentToken.name == "".join(charStack[:-1]).lower() \
-              and charStack[-1] in (spaceCharacters | 
-                                    frozenset((u">", u"/", u"<", EOF))):
+              and not charStack[-1] in (spaceCharacters |
+              frozenset((u">", u"/", u"<", EOF))):
                 self.parser.parseError()
                 self.parser.processCharacter(u"<")
                 self.parser.processCharacter(u"/")
