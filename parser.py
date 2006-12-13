@@ -1511,8 +1511,8 @@ class InCell(InsertionMode):
         handlers[name](name, attributes)
 
     def startTagTableOther(self, name, attributes):
-        if self.parser.elementInScope("td") or \
-          self.parser.elementInScope("th"):
+        if self.parser.elementInScope("td", True) or \
+          self.parser.elementInScope("th", True):
             self.closeCell()
             self.parser.processStartTag(name, attributes)
         else:
@@ -1520,9 +1520,7 @@ class InCell(InsertionMode):
             self.parser.parseError()
 
     def startTagOther(self, name, attributes):
-        self.parser.switchInsertionMode("inBody")
-        self.parser.processStartTag(name, attributes)
-        self.parser.switchInsertionMode("inCell")
+        InBody(self.parser).processStartTag(name, attributes)
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
