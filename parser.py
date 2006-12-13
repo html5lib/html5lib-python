@@ -249,19 +249,10 @@ class HTMLParser(object):
 
     def generateImpliedEndTags(self, exclude=None):
         name = self.openElements[-1].name
-        if name != exclude and name in frozenset(("dd", "dt", "li", "p",
-                                                  "td", "th", "tr")):
-            self.processEndTag(name)
-            # XXX as opposed to the method proposed below, this seems to break
-            # when an exclude paramter is passed...
-            self.generateImpliedEndTags()
-
-      # XXX AT:
-      # name = self.openElements[-1].name
-      # while name in frozenset(("dd", "dt", "li", "p", "td", "th", "tr")) and \
-      #   name != exclude:
-      #     self.phase.processEndTag(name)
-      #     name = self.openElements[-1].name
+        while name in frozenset(("dd", "dt", "li", "p", "td", "th", "tr")) \
+          and name != exclude:
+            self.phase.processEndTag(name)
+            name = self.openElements[-1].name
 
     def resetInsertionMode(self):
         last = False
@@ -329,33 +320,31 @@ class Phase(object):
         self.parser.parseError()
 
 class InitialPhase(Phase):
+    # XXX This phase deals with error handling as well which is currently not
+    # in the specification.
+    
     def processDoctype(self, name, error):
         self.parser.document.appendChild(DocumentType(name))
         self.parser.switchPhase("rootElement")
 
     def processCharacter(self, data):
         if data in spaceCharacters:
-            # XXX these should be appended to the Document node as Text node.
-            pass
+            self.parser.document.appendChild(TextNode(data))
         else:
-            # XXX
             self.parser.parseError()
+            self.parser.switchPhase("rootElement")
+            self.parser.processCharacter(data)
 
-    # This is strictly not per-spec but in the case of missing doctype we
-    # choose to switch to the root element phase and reprocess the current
-    # token
-    def processStartTag(self, tagname, attributes):
+    def processStartTag(self, name, attributes):
         self.parser.switchPhase("rootElement")
-        self.parser.processStartTag(tagname, attributes)
+        self.parser.processStartTag(name, attributes)
 
-    def processEndTag(self, tagname):
+    def processEndTag(self, name):
         self.parser.switchPhase("rootElement")
-        self.parser.processEndTag(tagname)
+        self.parser.processEndTag(name)
 
     def processComment(self, data):
-        # XXX WRONG!
-        self.parser.switchPhase("rootElement")
-        self.parser.processComment(data)
+        self.parser.document.appendChild(Comment(data))
 
     def processEOF(self):
         self.parser.switchPhase("rootElement")
@@ -366,7 +355,6 @@ class RootElementPhase(Phase):
         self.parser.parseError()
 
     def processCharacter(self, data):
-        # XXX This doesn't put characters together in a single text node.
         if data in spaceCharacters:
             self.parser.document.appendChild(TextNode(data))
         else:
@@ -382,6 +370,7 @@ class RootElementPhase(Phase):
         self.parser.phase.processEndTag(name)
 
     def processComment(self, data):
+        # XXX Can this even occur?
         self.parser.document.appendChild(CommentNode(data))
 
     def processEOF(self):
@@ -426,7 +415,8 @@ class MainPhase(Phase):
           and self.parser.openElements[-1].name != "body":
             self.parser.parseError()
         # Stop parsing
-        # XXX Does stop parsing happen here or not?!
+        # XXX When the specification is changed this is likely to be handled
+        # differently...
 
     def processStartTag(self, name, attributes):
         if name == "html":
@@ -1469,12 +1459,11 @@ class InCell(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-cell
 
     # helper
-    def closeCell(self, type="td"):
-        if self.parser.elementInScope(type, True):
-            self.endTagTableCell(type)
-            return
-        self.closeCell("th")
-        # AT We could use elif...
+    def closeCell(self):
+        if self.parser.elementInScope("td", True):
+            self.endTagTableCell("td")
+        elif self.parser.elementInScope("th", True):
+            self.endTagTableCell("th")
 
     # the rest
     # XXX look into characters and comments
@@ -1512,7 +1501,7 @@ class InCell(InsertionMode):
 
     def endTagTableCell(self, name):
         if self.parser.elementInScope(name):
-            self.parser.generateImpliedEndTags()
+            self.parser.generateImpliedEndTags(name)
             if self.parser.openElements[-1].name != name:
                 self.parser.parseError()
                 node = self.parser.openElements.pop()
@@ -1708,7 +1697,7 @@ class AfterFrameset(InsertionMode):
 
     def startTagNoframes(self, name, attributes):
         self.parser.switchInsertionMode("inBody")
-        self.processStartTag(self, name, attributes)
+        self.processStartTag(name, attributes)
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([("html", self.endTagHtml)])
