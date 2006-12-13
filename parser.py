@@ -271,10 +271,10 @@ class HTMLParser(object):
 
     def generateImpliedEndTags(self, exclude=None):
         name = self.openElements[-1].name
-        while name in frozenset(("dd", "dt", "li", "p", "td", "th", "tr")) \
-          and name != exclude:
+        if (name in frozenset(("dd", "dt", "li", "p", "td", "th", "tr"))
+            and name != exclude):
             self.phase.processEndTag(name)
-            name = self.openElements[-1].name
+            self.generateImpliedEndTags()
 
     def resetInsertionMode(self):
         last = False

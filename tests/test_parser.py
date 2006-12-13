@@ -72,7 +72,7 @@ def runParserTest(input, output, errors):
     try:
         #Need a check on the number of parse errors here
         assert output == convertTreeDump(document.printTree())
-    except AssertionError:
+    except:
         print "input"
         print input
         print "expected output"
@@ -93,6 +93,7 @@ def main():
         except AssertionError:
             failed += 1
         except:
+            print input
             traceback.print_exc()
             failed += 1
 
