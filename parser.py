@@ -98,7 +98,7 @@ class HTMLParser(object):
     """Main parser class"""
 
     def __init__(self, strict = False):
-        #Raise an exception on the first error encountered
+        # Raise an exception on the first error encountered
         self.strict = strict
 
         self.openElements = []
@@ -1025,19 +1025,24 @@ class InBody(InsertionMode):
 
     def endTagFormatting(self, name):
         """The much-feared adoption agency algorithm"""
+        # Step 1 paragraph 1
         afeElement = self.parser.elementInActiveFormattingElements(name)
         if not afeElement or (afeElement in self.parser.openElements and
                               not self.parser.elementInScope(afeElement.name)):
             self.parser.parseError()
             return
+        
+        # Step 1 paragraph 2
         elif afeElement not in self.parser.openElements:
             self.parser.parseError()
             self.parser.activeFormattingElements.remove(afeElement)
             return
 
+        # Step 1 paragraph 3
         if afeElement != self.parser.openElements[-1]:
             self.parser.parseError()
 
+        # Step 2
         # XXX Start of the adoption agency algorithm proper
         print afeElement
         afeIndex = self.parser.openElements.index(afeElement)
@@ -1428,14 +1433,15 @@ class InRow(InsertionMode):
         self.parser.activeFormattingElements.append(Marker)
 
     def startTagTableOther(self, name, attributes):
-        self.endTagTr()
-        # XXX check if it wasn't ignored... innerHTML case ... reprocess
-        # current. see also endTagTable
+        if not self.parser.elementInScope("tr", True):
+            # XXX better solution?
+            # innerHTML case
+            self.parser.processStartTag(name, attributes)
+        else:
+            self.endTagTr()
 
     def startTagOther(self, name, attributes):
-        self.parser.switchInsertionMode("inTable")
-        self.parser.processStartTag(name, attributes)
-        self.parser.switchInsertionMode("inRow")
+        InTable(self.parser).processStartTag(name, attributes)
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
@@ -1458,9 +1464,12 @@ class InRow(InsertionMode):
             self.parser.parseError()
 
     def endTagTable(self, name):
-        self.endTagTr()
-        # XXX check if it wasn't ignored... innerHTML case ... reprocess
-        # current. see also startTagTableOther...
+        if not self.parser.elementInScope("tr", True):
+            # XXX better solution?
+            # innerHTML case
+            self.parser.processStartTag(name, attributes)
+        else:
+            self.endTagTr()
 
     def endTagTableRowGroup(self, name):
         if self.parser.elementInScope(name, True):
@@ -1544,8 +1553,8 @@ class InCell(InsertionMode):
     def endTagImply(self, name):
         if self.parser.elementInScope(name):
             self.closeCell()
-            # XXX something is wrong here!!!
-            #self.parser.processEndTag(name)
+            # XXX The thing below still causes issues ...:
+            self.parser.processEndTag(name)
         else:
             # sometimes innerHTML case
             self.parser.parseError()
