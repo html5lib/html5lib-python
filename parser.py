@@ -585,11 +585,18 @@ class InHead(InsertionMode):
 
     # the real thing
     def processNonSpaceCharacter(self, data):
+        if self.parser.headPointer is not None:
+            self.parser.openElements[-1].appendChild(TextNode(data))
+        else:
+            self.parser.switchInsertionMode("afterHead")
+            self.parser.processCharacter(data)
+        """
         if self.collectingCharacters:
            self.characterBuffer += data
         else:
             self.anythingElse()
             self.parser.processCharacter(data)
+        """
 
     def processStartTag(self, name, attributes):
         if self.collectingCharacters:
@@ -613,17 +620,15 @@ class InHead(InsertionMode):
         cmFlags = {"title":"RCDATA", "style":"CDATA"}
         element = self.parser.createElement(name, attributes)
         self.appendToHead(element)
+        self.parser.openElements.append(element)
         self.parser.tokenizer.contentModelFlag =\
           contentModelFlags[cmFlags[name]]
-        # We have to start collecting characters
-        self.collectingCharacters = True
-        self.collectionStartTag = name
 
     def startTagScript(self, name, attributes):
         element = self.parser.createElement(name, attributes)
         element._flags.append("parser-inserted")
-        # XXX Should this be moved to after we finish collecting characters
         self.appendToHead(element)
+        self.parser.openElements.append(element)
         self.parser.tokenizer.contentModelFlag = contentModelFlags["CDATA"]
 
     def startTagBaseLinkMeta(self, name, attributes):
@@ -639,7 +644,8 @@ class InHead(InsertionMode):
             self.finishCollectingCharacters(name, True)
         handlers = utils.MethodDispatcher([
             ("head", self.endTagHead),
-            ("html", self.endTagHtml)
+            ("html", self.endTagHtml),
+            (("title", "style", "script"), self.endTagTitleStyleScript)
         ])
         handlers.setDefaultValue(self.endTagOther)
         handlers[name](name)
@@ -655,6 +661,9 @@ class InHead(InsertionMode):
         self.anythingElse()
         self.parser.processEndTag(name)
 
+    def endTagTitleStyleScript(self, name):
+        self.parser.openElements.pop()
+    
     def endTagOther(self, name):
         self.parser.parseError()
 
