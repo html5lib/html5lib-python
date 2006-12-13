@@ -111,11 +111,11 @@ spaceCharacters = frozenset((
     u" "
 ))
 
-asciiLowercase = frozenset([char for char in string.ascii_lowercase])
-asciiUppercase = frozenset([char for char in string.ascii_uppercase])
-asciiLetters = asciiLowercase | asciiUppercase
-digits = frozenset([char for char in string.digits])
-hexDigits = frozenset([char for char in string.hexdigits])
+asciiLowercase = frozenset(string.ascii_lowercase)
+asciiUppercase = frozenset(string.ascii_uppercase)
+asciiLetters = frozenset(string.ascii_letters)
+digits = frozenset(string.digits)
+hexDigits = frozenset(string.hexdigits)
 
 headingElements = frozenset((
     "h1",
