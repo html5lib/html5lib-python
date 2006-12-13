@@ -86,7 +86,12 @@ class TestCase(unittest.TestCase):
         parser = TokenizerTestParser()
         tokens = parser.parse(StringIO.StringIO(input))
         tokens = concatenateCharacterTokens(tokens)
-        self.assertTrue(tokensMatch(tokens, output))
+        self.__doc__ = "\t %s"%str(output)
+        try:
+            self.assertTrue(tokensMatch(tokens, output))
+        except AssertionError:
+            print str(tokens)
+            raise
 
 def test_tokenizer():
     for filename in glob.glob('tokenizer/*.test'):
@@ -103,7 +108,7 @@ def main():
         testName = 'test%d' % tests
         testFunc = lambda self, method=func, input=input, output=output: \
             method(self, input, output)
-        testFunc.__doc__ = desc
+        testFunc.__doc__ = "\t".join([desc, str(input), str(output)]) 
         instanceMethod = new.instancemethod(testFunc, None, TestCase)
         setattr(TestCase, testName, instanceMethod)
     unittest.main()
