@@ -198,6 +198,8 @@ class HTMLParser(object):
         if not afe:
             return
         entry = afe[-1]
+        # XXX I've no idea if declaring this "i" here helps...
+        i = 0
         if entry == Marker or entry in self.openElements:
             return
         for i, entry in zip(xrange(0, len(afe)-1, -1), afe[:-1:-1]):
@@ -205,7 +207,7 @@ class HTMLParser(object):
                 break
         for j in xrange(i,len(afe)-2):
             entry = afe[j+1]
-            # Is this clone strictly necessary?
+            # XXX Is this clone strictly necessary?
             clone = entry.cloneNode()
             self.openElements[-1].appendChild(clone)
             self.openElements.append(clone)
@@ -1568,7 +1570,7 @@ class InSelect(InsertionMode):
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
             ("option", self.endTagOption),
-            ("optgroup", self.endTagOptgroup)
+            ("optgroup", self.endTagOptgroup),
             ("select", self.endTagSelect),
             (("caption", "table", "tbody", "tfoot", "thead", "tr", "td",
               "th"), self.endTagTableElements)
