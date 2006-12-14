@@ -950,7 +950,7 @@ class InBody(InsertionMode):
             ("p",self.endTagP),
             ("body",self.endTagBody),
             ("html",self.endTagHtml),
-            (("address", "blockquote", "centre", "div", "dl", "fieldset",
+            (("address", "blockquote", "center", "div", "dl", "fieldset",
               "listing", "menu", "ol", "pre", "ul"), self.endTagBlock),
             ("form", self.endTagForm),
             (("dd", "dt", "li"), self.endTagListItem),
@@ -993,12 +993,12 @@ class InBody(InsertionMode):
             self.parser.processEndTag(name)
 
     def endTagBlock(self, name):
-        if self.parser.elementInScope(name):
+        inScope = self.parser.elementInScope(name)
+        if inScope:
             self.parser.generateImpliedEndTags()
-            if self.parser.openElements[-1].name != name:
-                self.parser.parseError()
-
-        if self.parser.elementInScope(name):
+        if self.parser.openElements[-1].name != name:
+             self.parser.parseError()
+        if inScope:
             node = self.parser.openElements.pop()
             while node.name != name:
                 node = self.parser.openElements.pop()
@@ -1042,7 +1042,7 @@ class InBody(InsertionMode):
             # Step 1 paragraph 1
             afeElement = self.parser.elementInActiveFormattingElements(name)
             if not afeElement or (afeElement in self.parser.openElements and
-                                  not self.parser.elementInScope(afeElement.name)):
+              not self.parser.elementInScope(afeElement.name)):
                 self.parser.parseError()
                 return
 
@@ -1203,6 +1203,7 @@ class InBody(InsertionMode):
                 if (node not in formattingElements and
                     node in specialElements | scopingElements):
                     self.parser.parseError()
+                    break
 
 class InTable(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-table
@@ -1359,10 +1360,7 @@ class InCaption(InsertionMode):
         self.parser.parseError()
 
     def endTagOther(self, name):
-        # Handle it "as if" it was inBody. This means we have to switch back.
-        self.parser.switchInsertionMode("inBody")
-        self.parser.processEndTag(name)
-        self.parser.switchInsertionMode("inCaption")
+        InBody(self.parser).processEndTag(name)
 
 
 class InColumnGroup(InsertionMode):
