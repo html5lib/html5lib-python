@@ -1200,8 +1200,7 @@ class InBody(InsertionMode):
                     pass
                 break
             else:
-                if node not in formattingElements \
-                  or node in specialElements | scopingElements:
+                if node in specialElements | scopingElements:
                     self.parser.parseError()
                     break
 
