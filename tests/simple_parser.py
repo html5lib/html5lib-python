@@ -1,6 +1,8 @@
+
 from test_parser import *
-import sys
-os.chdir("..")
+import sys, os
+os.chdir(os.path.split(os.path.abspath(__file__))[0])
+sys.path.insert(0, os.path.abspath(os.pardir))
 import parser
 
 if __name__ == "__main__":
