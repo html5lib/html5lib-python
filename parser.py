@@ -1088,7 +1088,7 @@ class InBody(InsertionMode):
                     tmpNode = node
                     node = self.parser.openElements[
                         self.parser.openElements.index(node)-1]
-                    self.openElements.remove(tmpNode)
+                    self.parser.openElements.remove(tmpNode)
                 # Step 7.3
                 if node == afeElement:
                     break
@@ -1102,7 +1102,8 @@ class InBody(InsertionMode):
                 # Step 7.5
                 if node.childNodes:
                     clone = node.cloneNode()
-                    #Replace node with clone
+                    # Replace node with clone
+                    # XXX "object doesn't support item assignment" ...
                     self.parser.activeFormattingElements.index[
                       self.parser.activeFormattingElements.index(node)] = clone
                     self.parser.openElements[
