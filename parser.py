@@ -588,8 +588,7 @@ class InHead(InsertionMode):
         if self.parser.openElements[-1].name in ("title", "style", "script"):
             self.parser.openElements[-1].appendChild(TextNode(data))
         else:
-            self.endTagHead("head")
-            self.parser.switchInsertionMode("afterHead")
+            self.anythingElse()
             self.parser.processCharacter(data)
 
     def processStartTag(self, name, attributes):
@@ -802,17 +801,21 @@ class InBody(InsertionMode):
             self.handlePEndTag("p")
         stopNames = {"li":("li"), "dd":("dd", "dt"), "dt":("dd", "dt")}
         stopName = stopNames[name]
+        # AT Use reversed in Python 2.4...
         for i, node in enumerate(self.parser.openElements[::-1]):
             if node.name in stopName:
                 for j in range(i+1):
                     self.parser.openElements.pop()
                     break
+                break
+
             # Phrasing elements are all non special, non scoping, non
             # formatting elements
-            elif (node.name in (specialElements | scopingElements)
-                  and node.name not in ("address", "div")):
+            if (node.name in (specialElements | scopingElements)
+              and node.name not in ("address", "div")):
                 break
-            self.parser.insertElement(name, attributes)
+        # Always insert an <li> element.
+        self.parser.insertElement(name, attributes)
 
     def startTagPlaintext(self, name, attributes):
         if self.parser.elementInScope("p"):
@@ -1077,7 +1080,7 @@ class InBody(InsertionMode):
                 self.parser.activeFormattingElements.remove(element)
                 return
             commonAncestor = self.parser.openElements[afeIndex-1]
-            
+
             #Step 5
             print furthestBlock, furthestBlock.parent
             if furthestBlock.parent:
