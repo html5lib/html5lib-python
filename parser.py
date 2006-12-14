@@ -799,7 +799,6 @@ class InBody(InsertionMode):
             if node.name in stopName:
                 for j in range(i+1):
                     self.parser.openElements.pop()
-                    break
                 break
 
             # Phrasing elements are all non special, non scoping, non
