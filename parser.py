@@ -524,12 +524,6 @@ class InsertionMode(object):
         self.parser = parser
         self.tokenizer = self.parser.tokenizer
 
-        # Some attributes only used in insertion modes that
-        # "collect all character data"
-        self.collectingCharacters = False
-        self.characterBuffer = []
-        self.collectionStartTag = None
-
     # XXX we should ensure that classes don't overwrite this when they don't
     # need to.
     def processComment(self, data):
@@ -597,13 +591,6 @@ class InHead(InsertionMode):
             self.endTagHead("head")
             self.parser.switchInsertionMode("afterHead")
             self.parser.processCharacter(data)
-        """
-        if self.collectingCharacters:
-           self.characterBuffer += data
-        else:
-            self.anythingElse()
-            self.parser.processCharacter(data)
-        """
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
