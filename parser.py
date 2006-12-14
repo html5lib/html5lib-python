@@ -208,13 +208,24 @@ class HTMLParser(object):
         assert False # We should never reach this point
 
     def reconstructActiveFormattingElements(self):
+        # This covers the ", if any" case mentioned often in the drafts, before
+        # you have to reconstruct the active formatting elements.
         if not self.activeFormattingElements:
             return
+
+        # We start with the last element. So i is -1.
         i = -1
         entry = self.activeFormattingElements[i]
+
+        # Step 1
         if entry == Marker or entry in self.openElements:
             return
-        while entry != Marker and entry not in self.openElements:
+
+        # Step 2 is covered above. When we assign entry to the last element.
+        # Step 3 and 4.
+        # XXX The specification says "and entry _not_ in" but that doesn't
+        # work. This seems to give correct results too...
+        while entry != Marker and entry in self.openElements:
             i -= 1
             entry = self.activeFormattingElements[i]
         # XXX We never seem to reach this step....
@@ -223,7 +234,7 @@ class HTMLParser(object):
             # XXX why clone?
             i += 1
             clone = self.activeFormattingElements[i].cloneNode()
-            print "XXX", clone.value, clone.parent
+            print "XXX", clone.name, clone.value, clone.parent
             self.openElements[-1].appendChild(clone)
             self.openElements.append(clone)
             self.activeFormattingElements[i] = clone
@@ -1094,7 +1105,6 @@ class InBody(InsertionMode):
 
             #Step 7
             lastNode = node = furthestBlock
-            print "Adoption agency step 7"
             while True:
                 # AT replace this with a function and recursion?
                 # Node is element before node in open elements
