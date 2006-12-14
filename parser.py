@@ -460,14 +460,7 @@ class MainPhase(Phase):
         self.parser.parseError()
 
     def processEOF(self):
-        self.parser.generateImpliedEndTags()
-        if (self.parser.innerHTML == False \
-          or len(self.parser.openElements) > 1) \
-          and self.parser.openElements[-1].name != "body":
-            self.parser.parseError()
-        # Stop parsing
-        # XXX When the specification is changed this is likely to be handled
-        # differently...
+        self.insertionMode.processEOF()
 
     def processStartTag(self, name, attributes):
         if name == "html":
@@ -524,6 +517,16 @@ class InsertionMode(object):
         self.parser = parser
         self.tokenizer = self.parser.tokenizer
 
+    def processEOF(self):
+        self.parser.generateImpliedEndTags()
+        if (self.parser.innerHTML == False \
+          or len(self.parser.openElements) > 1) \
+          and self.parser.openElements[-1].name != "body":
+            self.parser.parseError()
+        # Stop parsing
+        # XXX When the specification is changed this is likely to be handled
+        # differently...
+
     # XXX we should ensure that classes don't overwrite this when they don't
     # need to.
     def processComment(self, data):
@@ -538,6 +541,10 @@ class InsertionMode(object):
             self.processNonSpaceCharacter(data)
 
 class BeforeHead(InsertionMode):
+    def processEOF(self):
+        self.startTagHead()
+        self.parser.processEOF()
+
     def processNonSpaceCharacter(self, data):
         self.startTagHead()
         self.parser.processCharacter(data)
@@ -584,6 +591,10 @@ class InHead(InsertionMode):
             self.parser.openElements[-1].appendChild(element)
 
     # the real thing
+    def processEOF(self):
+        self.anythingElse()
+        self.parser.processEOF()
+
     def processNonSpaceCharacter(self, data):
         if self.parser.openElements[-1].name in ("title", "style", "script"):
             self.parser.openElements[-1].appendChild(TextNode(data))
@@ -671,6 +682,10 @@ class InHead(InsertionMode):
             self.parser.switchInsertionMode("afterHead")
 
 class AfterHead(InsertionMode):
+    def processEOF(self):
+        self.anythingElse()
+        self.parser.processEOF()
+
     def processNonSpaceCharacter(self, data):
         self.anythingElse()
         self.parser.processCharacter(data)
