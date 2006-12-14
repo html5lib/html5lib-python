@@ -93,7 +93,7 @@ def main():
         except AssertionError:
             failed += 1
         except:
-            sys.stdout.write("XXX\n")
+            sys.stdout.write("ERROR\n")
             sys.stdout.write(input+"\n")
             sys.stderr = sys.stdout
             traceback.print_exc()

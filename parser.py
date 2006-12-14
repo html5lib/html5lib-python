@@ -208,10 +208,13 @@ class HTMLParser(object):
         while entry != Marker and entry not in self.openElements:
             i -= 1
             entry = self.activeFormattingElements[i]
-        while True and i < -1:
+        # XXX We never seem to reach this step....
+        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        while True:
             # XXX why clone?
             i += 1
             clone = self.activeFormattingElements[i].cloneNode()
+            print "XXX", clone.value, clone.parent
             self.openElements[-1].appendChild(clone)
             self.openElements.append(clone)
             self.activeFormattingElements[i] = clone
@@ -241,7 +244,7 @@ class HTMLParser(object):
 
     def clearActiveFormattingElements(self):
         entry = self.activeFormattingElements.pop()
-        while self.activeFormattingElements and not entry == Marker:
+        while self.activeFormattingElements and entry != Marker:
             entry = self.activeFormattingElements.pop()
 
     def elementInActiveFormattingElements(self, name):
