@@ -1031,9 +1031,8 @@ class InBody(InsertionMode):
 
     def endTagFormatting(self, name):
         """The much-feared adoption agency algorithm"""
-        raise NotImplementedError
-        #XXX I don't like while True + break... too much
-        #possibility of infinite loops
+        # XXX I don't like while True + break... too much
+        # possibility of infinite loops
         while True:
             # Step 1 paragraph 1
             afeElement = self.parser.elementInActiveFormattingElements(name)
@@ -1081,67 +1080,69 @@ class InBody(InsertionMode):
             lastNode = node = furthestBlock
             print "Adoption agency step 7"
             while True:
-                #AT: replace this with a function and recursion?
-                #Node is element before node in open elements
-                print node, self.parser.openElements
+                # AT replace this with a function and recursion?
+                # Node is element before node in open elements
                 node = self.parser.openElements[
                     self.parser.openElements.index(node)-1]
                 while node not in self.parser.activeFormattingElements:
-                    self.openElements.remove(node)
+                    tmpNode = node
                     node = self.parser.openElements[
                         self.parser.openElements.index(node)-1]
-                #step 7.3
+                    self.openElements.remove(tmpNode)
+                # Step 7.3
                 if node == afeElement:
                     break
-                #7.4
+                # Step 7.4
                 elif lastNode == furthestBlock:
-                    #XXX should this be index(node) or index(node)+1
-                    bookmark = self.parser.activeFormattingElements.index(node)+1
-                #7.5
+                    # XXX should this be index(node) or index(node)+1
+                    # Anne: I think +1 is ok. Given x = [2,3,4,5]
+                    # x.index(3) gives 1 and then x[1 +1] gives 4...
+                    bookmark = self.parser.activeFormattingElements.\
+                      index(node) + 1
+                # Step 7.5
                 if node.childNodes:
                     clone = node.cloneNode()
                     #Replace node with clone
                     self.parser.activeFormattingElements.index[
-                        self.parser.activeFormattingElements.index(node)] = clone
+                      self.parser.activeFormattingElements.index(node)] = clone
                     self.parser.openElements[
-                        self.parser.openElements.index(node)] = clone
+                      self.parser.openElements.index(node)] = clone
                     node = clone
-                #7.6
-                #Remove lastNode from its parents, if any
+                # Step 7.6
+                # Remove lastNode from its parents, if any
                 if lastNode.parent:
                     lastNode.parent.childNodes.remove(lastNode)
                 node.appendChild(lastNode)
-                #7.8
+                # Step 7.7
                 lastNode = node
-                #End of inner loop
-                #Step 8
-                if lastNode.parent:
-                    lastNode.parent.childNodes.remove(lastNode)
-                commonAncestor.appendChild(lastNode)
+                # End of inner loop
 
-                #Step 9
-                clone = afeElement.cloneNode()
+            #Step 8
+            if lastNode.parent:
+                lastNode.parent.childNodes.remove(lastNode)
+            commonAncestor.appendChild(lastNode)
 
-                #Step 10
-                for node in furthestBlock.childNodes:
-                    clone.appendChild(node)
-                    #XXX presumably this is needed so nodes don't have multiple
-                    #parents
-                    furthestBlock.childNodes.remove(node)
+            #Step 9
+            clone = afeElement.cloneNode()
 
-                #Step 11
-                furthestBlock.childNodes.append(clone)
+            #Step 10
+            for node in furthestBlock.childNodes:
+                clone.appendChild(node)
+                # XXX presumably this is needed so nodes don't have multiple
+                # parents
+                furthestBlock.childNodes.remove(node)
 
-                #Step 12
-                self.parser.activeFormattingElements.remove(afeElement)
-                self.parser.activeFormattingElements.insert(bookmark, clone)
+            # Step 11
+            furthestBlock.childNodes.append(clone)
 
-                #Step 13
-                self.parser.openElements.remove(afeElement)
-                self.parser.openElements.insert(
-                    self.parser.openElements.index(furthestBlock)+1, clone)
+            # Step 12
+            self.parser.activeFormattingElements.remove(afeElement)
+            self.parser.activeFormattingElements.insert(bookmark, clone)
 
-        raise NotImplementedError
+            # Step 13
+            self.parser.openElements.remove(afeElement)
+            self.parser.openElements.insert(
+              self.parser.openElements.index(furthestBlock)+1, clone)
 
     def endTagButtonMarqueeObject(self, name):
         if self.parser.elementInScope(name):
