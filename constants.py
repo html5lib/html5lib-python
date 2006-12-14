@@ -5,6 +5,8 @@ try:
 except:
     pass
 
+EOF = None
+
 contentModelFlags = {
     "PCDATA":0,
     "RCDATA":1,

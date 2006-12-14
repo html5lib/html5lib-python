@@ -81,8 +81,8 @@ class TestCase(unittest.TestCase):
         parser = TokenizerTestParser()
         tokens = parser.parse(StringIO.StringIO(input))
         tokens = concatenateCharacterTokens(tokens)
-        errorMsg = "\n".join(["\n\nExpected:", str(tokens), "\nRecieved:", 
-                             str(output)])
+        errorMsg = "\n".join(["\n\nExpected:", str(output), "\nRecieved:", 
+                             str(tokens)])
         self.assertTrue(tokensMatch(tokens, output), errorMsg)
 
 

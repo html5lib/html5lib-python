@@ -1,5 +1,7 @@
 import codecs, StringIO
 
+from constants import EOF
+
 class HTMLInputStream(object):
     """ Provides a unicode stream of characters to the HTMLTokenizer.
     
@@ -48,11 +50,8 @@ class HTMLInputStream(object):
         
         # Read bytes from stream decoding them into Unicode
         unicodeStream = self.rawStream.read().decode(self.charEncoding, 'replace')
-        # Normalize new lines
-        unicodeStream = unicodeStream.replace(u"\r\n", u"\n")
-        unicodeStream = unicodeStream.replace(u"\r", u"\n")
-        # Replace null bytes
-        unicodeStream = unicodeStream.replace(u"\x00", u"\uFFFD")
+        
+        unicodeStream = self.normalizeStream(unicodeStream)
         
         # If encoding was determined from a BOM remove it from the stream
         if detectedEncoding:
@@ -113,6 +112,21 @@ class HTMLInputStream(object):
         
         return encoding
     
+    def normalizeStream(self, stream):
+        # Count U+FFFD replacement characters in case we need to switch encoding
+        if self.charEncoding == "cp1252" and stream.count(u"\uFFFD"):
+            self.incompatibleEncoding = True
+        else:
+            self.incompatibleEncoding = False
+        
+        # Normalize new lines
+        stream = stream.replace(u"\r\n", u"\n")
+        stream = stream.replace(u"\r", u"\n")
+        # Replace null bytes
+        stream = stream.replace(u"\x00", u"\uFFFD")
+        
+        return stream
+    
     def declareEncoding(self, encoding):
         """Report the encoding declared by the meta element
         
@@ -123,7 +137,22 @@ class HTMLInputStream(object):
         and non-US-ASCII characters have been seen, return True indicating
         parsing will have to begin again.
         """
-        pass
+        # Only change encoding if we are using the default encoding
+        if self.allowEncodingOverride:
+            self.charEncoding = encoding
+            # If there was incompatible characters found in the first encoding
+            # we have to reencode the entire stream and start again
+            if self.incompatibleEncoding:
+                self.reset()
+                self.dataStream = StringIO.StringIO(self.normalizeStream(
+                    self.dataStream.read(-1).decode(self.charEncoding, 'replace')
+                  ))
+                return True
+            else:
+                # Just decode the bytes from now on
+                self.dataStream = codecs.EncodedFile(self.dataStream,
+                  self.charEncoding, 'replace')
+        return False
     
     def position(self):
         """ Returns (line, col) position in the stream
@@ -138,35 +167,50 @@ class HTMLInputStream(object):
         col = tell-self.newLines[line-1]-1
         return (line, col)
     
-    def read(self, size=1):
-        """ Read at most size characters from the stream
+    def reset(self):
+        """ Resets the position in the stream back to the start
         """
-        char = self.dataStream.read(size)
-        return char
+        self.dataStream.seek(0)
+
+    def read(self, size=1):
+        """ Reads size characters from the stream or EOF if EOF is reached.
+        """
+        return self.dataStream.read(size) or EOF
     
     def readMany(self, size):
-        """ Reads multiple characters from the stream returning a list
+        """ Returns a list of size characters from the stream
+        and adds an EOF marker if the EOF is reached.
         """
-        charStack = []
-        charStack.append(list(self.dataStream.read(size)))
-        
+        charStack = list(self.dataStream.read(size)) or EOF
         if len(charStack) < size:
-            charStack.append(None)
-        
+            charStack.append(EOF)
         return charStack
     
     def readUntil(self, charList):
         """ Returns a list of characters from the stream until a character
         in charList is found or EOF is reached
         """
-        charStack = [self.dataStream.read(1) or None]
-        while charStack[-1] and charStack[-1] not in charList:
-            charStack.append(self.dataStream.read(1) or None)
+        charList = set(charList)
+        charList.add(EOF)
+        
+        charStack = [self.read(1)]
+        while charStack[-1] not in charList:
+            charStack.append(self.read(1))
+        
+        return charStack
+    
+    def readWhile(self, charList):
+        """ Returns a list of characters from the stream until a character
+        not in charList is found or EOF is reached
+        """
+        charStack = [self.read(1)]
+        while charStack[-1] in charList:
+            charStack.append(self.read(1))
+        
         return charStack
 
 if __name__ == "__main__":
     try:
-        # Hard coded file name for now, this will need to be fixed later
         stream = HTMLInputStream("tests/utf-8-bom.html")
         
         c = stream.read(1)
