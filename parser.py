@@ -1031,8 +1031,8 @@ class InBody(InsertionMode):
 
     def endTagFormatting(self, name):
         """The much-feared adoption agency algorithm"""
-        raise NotImplementedError 
-        #XXX I don't like while True + break... too much 
+        raise NotImplementedError
+        #XXX I don't like while True + break... too much
         #possibility of infinite loops
         while True:
             # Step 1 paragraph 1
@@ -1073,7 +1073,7 @@ class InBody(InsertionMode):
 
             #The bookmark is supposed to help us identify where to reinsert nodes
             #in step 12. We have to ensure that we reinsert nodes after the node
-            #before the active formatting element. Note the bookmnark can move 
+            #before the active formatting element. Note the bookmnark can move
             #in step 7.4
             bookmark = self.parser.activeFormattingElements.index(afeElement)
 
@@ -1125,7 +1125,7 @@ class InBody(InsertionMode):
                 #Step 10
                 for node in furthestBlock.childNodes:
                     clone.appendChild(node)
-                    #XXX presumably this is needed so nodes don't have multiple 
+                    #XXX presumably this is needed so nodes don't have multiple
                     #parents
                     furthestBlock.childNodes.remove(node)
 
@@ -1564,9 +1564,11 @@ class InCell(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-cell
 
     # helper
-    def closeCell(self, name):
-        if self.parser.elementInScope(name, True):
-            self.endTagTableCell(name)
+    def closeCell(self):
+        if self.parser.elementInScope("td", True):
+            self.endTagTableCell("td")
+        elif self.parser.elementInScope("th", True):
+            self.endTagTableCell("th")
 
     # the rest
     # XXX look into characters and comments
@@ -1584,7 +1586,7 @@ class InCell(InsertionMode):
     def startTagTableOther(self, name, attributes):
         if self.parser.elementInScope("td", True) or \
           self.parser.elementInScope("th", True):
-            self.closeCell(name)
+            self.closeCell()
             self.parser.processStartTag(name, attributes)
         else:
             # innerHTML case
@@ -1623,7 +1625,7 @@ class InCell(InsertionMode):
 
     def endTagImply(self, name):
         if self.parser.elementInScope(name, True):
-            self.closeCell(name)
+            self.closeCell()
             # XXX The thing below still causes issues ...:
             self.parser.processEndTag(name)
         else:
@@ -1749,7 +1751,7 @@ class InFrameset(InsertionMode):
 
     def processNonSpaceCharacter(self, data):
         self.parser.parseError()
-    
+
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
             ("frameset", self.startTagFrameset),
