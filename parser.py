@@ -1059,6 +1059,7 @@ class InBody(InsertionMode):
                 if element.name in (specialElements | scopingElements):
                     furthestBlock = element
                     break
+            #Step 3
             if furthestBlock is None:
                 element = self.parser.openElements.pop()
                 while element != afeElement:
@@ -1066,13 +1067,15 @@ class InBody(InsertionMode):
                 self.parser.activeFormattingElements.remove(element)
                 return
             commonAncestor = self.parser.openElements[afeIndex-1]
-
+            
+            #Step 5
             if furthestBlock.parent:
                 furthestBlock.childNodes.remove(furthestBlock)
 
+            #Step 6
             #The bookmark is supposed to help us identify where to reinsert nodes
             #in step 12. We have to ensure that we reinsert nodes after the node
-            #before the active formatting element. Note the bookmnark can move
+            #before the active formatting element. Note the bookmark can move
             #in step 7.4
             bookmark = self.parser.activeFormattingElements.index(afeElement)
 
@@ -1103,8 +1106,7 @@ class InBody(InsertionMode):
                 if node.childNodes:
                     clone = node.cloneNode()
                     # Replace node with clone
-                    # XXX "object doesn't support item assignment" ...
-                    self.parser.activeFormattingElements.index[
+                    self.parser.activeFormattingElements[
                       self.parser.activeFormattingElements.index(node)] = clone
                     self.parser.openElements[
                       self.parser.openElements.index(node)] = clone
