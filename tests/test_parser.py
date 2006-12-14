@@ -73,13 +73,13 @@ def runParserTest(input, output, errors):
         #Need a check on the number of parse errors here
         assert output == convertTreeDump(document.printTree())
     except:
-        sys.stderr.write("input\n")
-        sys.stderr.write(input+"\n")
-        sys.stderr.write("expected output\n")
-        sys.stderr.write(output+"\n")
-        sys.stderr.write("received\n")
-        sys.stderr.write(convertTreeDump(document.printTree())+"\n")
-        sys.stderr.write("\n")
+        sys.stdout.write("input\n")
+        sys.stdout.write(input+"\n")
+        sys.stdout.write("expected output\n")
+        sys.stdout.write(output+"\n")
+        sys.stdout.write("received\n")
+        sys.stdout.write(convertTreeDump(document.printTree())+"\n")
+        sys.stdout.write("\n")
         raise
 
 def main():
@@ -93,10 +93,12 @@ def main():
         except AssertionError:
             failed += 1
         except:
-            sys.stderr.write("XXX\n")
-            sys.stderr.write(input+"\n")
+            sys.stdout.write("XXX\n")
+            sys.stdout.write(input+"\n")
+            sys.stderr = sys.stdout
             traceback.print_exc()
-            sys.stderr.write("\n")
+            sys.stderr = sys.__stderr__
+            sys.stdout.write("\n")
             failed += 1
 
     print "Ran %i tests, failed %i"%(tests, failed)
