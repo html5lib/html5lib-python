@@ -267,8 +267,7 @@ class HTMLParser(object):
     def insertElement(self, name, attributes, parent=None):
         element = self.createElement(name, attributes)
         if parent is None:
-            if self.openElements:
-                self.openElements[-1].appendChild(element)
+            self.openElements[-1].appendChild(element)
             self.openElements.append(element)
         else:
             # XXX Haven't implemented this yet as spec is vaugely unclear
@@ -378,6 +377,14 @@ class InitialPhase(Phase):
         self.parser.processEOF()
 
 class RootElementPhase(Phase):
+    # helper methods
+    def insertHtmlElement(self):
+        element = self.parser.createElement("html", {})
+        self.parser.openElements.append(element)
+        self.parser.document.appendChild(element)
+        self.parser.switchPhase("main")
+
+    # other
     def processDoctype(self, name, error):
         self.parser.parseError()
 
@@ -385,15 +392,15 @@ class RootElementPhase(Phase):
         if data in spaceCharacters:
             self.parser.document.appendChild(TextNode(data))
         else:
-            self.createHTMLNode()
+            self.insertHtmlElement()
             self.parser.phase.processCharacter(data)
 
     def processStartTag(self, tagname, attributes):
-        self.createHTMLNode()
+        self.insertHtmlElement()
         self.parser.phase.processStartTag(tagname, attributes)
 
     def processEndTag(self, name):
-        self.createHTMLNode()
+        self.insertHtmlElement()
         self.parser.phase.processEndTag(name)
 
     def processComment(self, data):
@@ -401,15 +408,8 @@ class RootElementPhase(Phase):
         self.parser.document.appendChild(CommentNode(data))
 
     def processEOF(self):
-        self.createHTMLNode()
+        self.insertHtmlElement()
         self.parser.phase.processEOF()
-
-    def createHTMLNode(self):
-        self.parser.insertElement("html", {})
-        # Append the html element to the root node
-        self.parser.document.appendChild(self.parser.openElements[-1])
-        self.parser.switchPhase("main")
-
 
 class MainPhase(Phase):
     def __init__(self, parser):
