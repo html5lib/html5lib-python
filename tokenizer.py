@@ -317,7 +317,6 @@ class HTMLTokenizer(object):
             # If an end tag has attributes it's a parse error.
             if token.attributes:
                 self.parser.parseError()
-            self.contentModelFlag = contentModelFlags["PCDATA"]
             self.parser.processEndTag(token.name)
         elif isinstance(token, CommentToken):
             self.parser.processComment(token.data)
@@ -438,9 +437,11 @@ class HTMLTokenizer(object):
             # XXX need to check if this can be done differently. Perhaps
             # integrate switching the content model flag here instead of when
             # we emit the token as well...
-            if not self.currentToken.name == "".join(charStack[:-1]).lower() \
-              or charStack[-1] not in (spaceCharacters |
+            if self.currentToken.name == "".join(charStack[:-1]).lower() \
+              and charStack[-1] in (spaceCharacters |
               frozenset((u">", u"/", u"<", EOF))):
+                self.contentModelFlag = contentModelFlags["PCDATA"]
+            else:
                 self.parser.parseError()
                 self.parser.processCharacter(u"<")
                 self.parser.processCharacter(u"/")
@@ -450,7 +451,7 @@ class HTMLTokenizer(object):
                 # method to be walked through.
                 return True
 
-        if self.contentModelFlag != contentModelFlags["PLAINTEXT"]:
+        if self.contentModelFlag == contentModelFlags["PCDATA"]:
             data = self.consumeChar()
             if data in asciiLetters:
                 self.currentToken = EndTagToken(data)
