@@ -7,12 +7,6 @@ import new
 
 import simplejson
 
-#Allow us to import the parent module
-os.chdir(os.path.split(os.path.abspath(__file__))[0])
-sys.path.insert(0, os.path.abspath(os.pardir))
-
-import tokenizer
-
 class TokenizerTestParser(object):
     def parse(self, stream, innerHTML=False):
         """Stream should be a stream of unicode bytes. Character encoding
@@ -20,6 +14,7 @@ class TokenizerTestParser(object):
 
         self.outputTokens = []        
 
+        import tokenizer
         self.tokenizer = tokenizer.HTMLTokenizer(self)
         self.tokenizer.tokenize(stream)
         
@@ -86,12 +81,10 @@ class TestCase(unittest.TestCase):
         parser = TokenizerTestParser()
         tokens = parser.parse(StringIO.StringIO(input))
         tokens = concatenateCharacterTokens(tokens)
-        self.__doc__ = "\t %s"%str(output)
-        try:
-            self.assertTrue(tokensMatch(tokens, output))
-        except AssertionError:
-            print str(tokens)
-            raise
+        errorMsg = "\n".join(["\n\nExpected:", str(tokens), "\nRecieved:", 
+                             str(output)])
+        self.assertTrue(tokensMatch(tokens, output), errorMsg)
+
 
 def test_tokenizer():
     for filename in glob.glob('tokenizer/*.test'):
@@ -100,8 +93,7 @@ def test_tokenizer():
             yield (TestCase.runTokenizerTest, test['description'],
                    test['input'], test['output'])
 
-def main():
-    failed = 0
+def buildTestSuite():
     tests = 0
     for func, desc, input, output in test_tokenizer():
         tests += 1
@@ -111,7 +103,15 @@ def main():
         testFunc.__doc__ = "\t".join([desc, str(input), str(output)]) 
         instanceMethod = new.instancemethod(testFunc, None, TestCase)
         setattr(TestCase, testName, instanceMethod)
+    return unittest.TestLoader().loadTestsFromTestCase(TestCase)
+
+def main():
+    buildTestSuite()
     unittest.main()
 
 if __name__ == "__main__":
+    #Allow us to import the parent module
+    os.chdir(os.path.split(os.path.abspath(__file__))[0])
+    sys.path.insert(0, os.path.abspath(os.pardir))
+
     main()
