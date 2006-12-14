@@ -592,6 +592,8 @@ class InHead(InsertionMode):
 
     # the real thing
     def processEOF(self):
+        if self.parser.openElements[-1].name in ("title", "style", "script"):
+            self.parser.openElements.pop()
         self.anythingElse()
         self.parser.processEOF()
 
