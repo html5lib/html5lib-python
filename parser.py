@@ -45,7 +45,7 @@ class Node(object):
         try:
             self.childNodes.remove(node)
         except:
-            print node, node.parent, self, self.childNodes
+            # XXX
             raise
         node.parent = None
 
@@ -228,39 +228,15 @@ class HTMLParser(object):
         while entry != Marker and entry in self.openElements:
             i -= 1
             entry = self.activeFormattingElements[i]
-        # XXX We never seem to reach this step....
-        print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         while True:
             # XXX why clone?
             i += 1
             clone = self.activeFormattingElements[i].cloneNode()
-            print "XXX", clone.name, clone.value, clone.parent
             self.openElements[-1].appendChild(clone)
             self.openElements.append(clone)
             self.activeFormattingElements[i] = clone
             if clone == self.activeFormattingElements[-1]:
                 break
-        """
-        afe = self.activeFormattingElements
-        # If there are no active formatting elements exit early
-        if not afe:
-            return
-        entry = afe[-1]
-        # XXX I've no idea if declaring this "i" here helps...
-        i = 0
-        if entry == Marker or entry in self.openElements:
-            return
-        for i, entry in zip(xrange(0, len(afe)-1, -1), afe[:-1:-1]):
-            if entry == Marker or entry in self.openElements:
-                break
-        for j in xrange(i,len(afe)-2):
-            entry = afe[j+1]
-            # XXX Is this clone strictly necessary?
-            clone = entry.cloneNode()
-            self.openElements[-1].appendChild(clone)
-            self.openElements.append(clone)
-            afe[i] = clone
-        """
 
     def clearActiveFormattingElements(self):
         entry = self.activeFormattingElements.pop()
@@ -1089,7 +1065,8 @@ class InBody(InsertionMode):
                 if element.name in (specialElements | scopingElements):
                     furthestBlock = element
                     break
-            #Step 3
+
+            # Step 3
             if furthestBlock is None:
                 element = self.parser.openElements.pop()
                 while element != afeElement:
@@ -1098,19 +1075,18 @@ class InBody(InsertionMode):
                 return
             commonAncestor = self.parser.openElements[afeIndex-1]
 
-            #Step 5
-            print furthestBlock, furthestBlock.parent
+            # Step 5
             if furthestBlock.parent:
                 furthestBlock.parent.removeChild(furthestBlock)
 
-            #Step 6
-            #The bookmark is supposed to help us identify where to reinsert nodes
-            #in step 12. We have to ensure that we reinsert nodes after the node
-            #before the active formatting element. Note the bookmark can move
-            #in step 7.4
+            # Step 6
+            # The bookmark is supposed to help us identify where to reinsert
+            # nodes in step 12. We have to ensure that we reinsert nodes after
+            # the node before the active formatting element. Note the bookmark
+            # can move in step 7.4
             bookmark = self.parser.activeFormattingElements.index(afeElement)
 
-            #Step 7
+            # Step 7
             lastNode = node = furthestBlock
             while True:
                 # AT replace this with a function and recursion?
@@ -1126,7 +1102,7 @@ class InBody(InsertionMode):
                 if node == afeElement:
                     break
                 # Step 7.4
-                elif lastNode == furthestBlock:
+                if lastNode == furthestBlock:
                     # XXX should this be index(node) or index(node)+1
                     # Anne: I think +1 is ok. Given x = [2,3,4,5]
                     # x.index(3) gives 1 and then x[1 +1] gives 4...
@@ -1150,7 +1126,7 @@ class InBody(InsertionMode):
                 lastNode = node
                 # End of inner loop
 
-            #Step 8
+            # Step 8
             if lastNode.parent:
                 lastNode.parent.removeChild(lastNode)
             commonAncestor.appendChild(lastNode)
