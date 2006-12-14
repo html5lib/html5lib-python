@@ -1200,7 +1200,7 @@ class InBody(InsertionMode):
                     pass
                 break
             else:
-                if node in specialElements | scopingElements:
+                if node.name in specialElements | scopingElements:
                     self.parser.parseError()
                     break
 
