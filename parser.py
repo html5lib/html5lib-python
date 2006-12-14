@@ -13,16 +13,19 @@ Marker = None
 
 #Really crappy basic implementation of a DOM-core like thing
 class Node(object):
-    def __init__(self, name, value):
+    def __init__(self, name):
         self.name = name
         self.parent = None
-        self.value = value
+        self.value = None
         self.childNodes = []
         self.attributes = {}
         self._flags = []
 
     def __str__(self):
         return self.name
+
+    def __repr__(self):
+        return "<%s %s>"%(self.__class__, self.name)
 
     def printTree(self, indent=0):
         tree = '\n|%s%s' % (' '*indent, str(self))
@@ -38,13 +41,15 @@ class Node(object):
             self.childNodes.append(node)
 
     def cloneNode(self):
-        newNode = type(self)(self.name, self.value)
+        newNode = type(self)(self.name)
         for attr, value in self.attributes.iteritems():
             newNode.attributes[attr] = value
+        newNode.value = self.value
+        return newNode
 
 class Document(Node):
     def __init__(self):
-        Node.__init__(self, None, None)
+        Node.__init__(self, None)
 
     def __str__(self):
         return '#document'
@@ -57,21 +62,22 @@ class Document(Node):
 
 class DocumentType(Node):
     def __init__(self, name):
-        Node.__init__(self, name, None)
+        Node.__init__(self, name)
 
     def __str__(self):
         return '<!DOCTYPE %s>' % self.name
 
 class TextNode(Node):
     def __init__(self, value):
-        Node.__init__(self, None, value)
+        Node.__init__(self, None)
+        self.value = value
 
     def __str__(self):
         return '"%s"' % self.value
 
 class Element(Node):
     def __init__(self, name):
-        Node.__init__(self, name, None)
+        Node.__init__(self, name)
 
     def __str__(self):
         return '<%s>' % self.name
@@ -88,7 +94,7 @@ class Element(Node):
 
 class CommentNode(Node):
     def __init__(self, data):
-        Node.__init__(self, None, None)
+        Node.__init__(self, None)
         self.data = data
 
     def __str__(self):
@@ -273,7 +279,7 @@ class HTMLParser(object):
         name = self.openElements[-1].name
         if (name in frozenset(("dd", "dt", "li", "p", "td", "th", "tr"))
           and name != exclude):
-            self.phase.processEndTag(name)
+            self.processEndTag(name)
             self.generateImpliedEndTags(exclude)
 
     def resetInsertionMode(self):
@@ -1025,43 +1031,116 @@ class InBody(InsertionMode):
 
     def endTagFormatting(self, name):
         """The much-feared adoption agency algorithm"""
-        # Step 1 paragraph 1
-        afeElement = self.parser.elementInActiveFormattingElements(name)
-        if not afeElement or (afeElement in self.parser.openElements and
-                              not self.parser.elementInScope(afeElement.name)):
-            self.parser.parseError()
-            return
-        
-        # Step 1 paragraph 2
-        elif afeElement not in self.parser.openElements:
-            self.parser.parseError()
-            self.parser.activeFormattingElements.remove(afeElement)
-            return
+        raise NotImplementedError 
+        #XXX I don't like while True + break... too much 
+        #possibility of infinite loops
+        while True:
+            # Step 1 paragraph 1
+            afeElement = self.parser.elementInActiveFormattingElements(name)
+            if not afeElement or (afeElement in self.parser.openElements and
+                                  not self.parser.elementInScope(afeElement.name)):
+                self.parser.parseError()
+                return
 
-        # Step 1 paragraph 3
-        if afeElement != self.parser.openElements[-1]:
-            self.parser.parseError()
+            # Step 1 paragraph 2
+            elif afeElement not in self.parser.openElements:
+                self.parser.parseError()
+                self.parser.activeFormattingElements.remove(afeElement)
+                return
 
-        # Step 2
-        # XXX Start of the adoption agency algorithm proper
-        print afeElement
-        afeIndex = self.parser.openElements.index(afeElement)
-        furthestBlock = None
-        for element in self.parser.openElements[afeIndex:]:
-            if element.name in (specialElements | scopingElements):
-                furthestBlock = element
-                break
-        if furthestBlock is None:
-            element = self.parser.openElements.pop()
-            while element != afeElement:
+            # Step 1 paragraph 3
+            if afeElement != self.parser.openElements[-1]:
+                self.parser.parseError()
+
+            # Step 2
+            # XXX Start of the adoption agency algorithm proper
+            afeIndex = self.parser.openElements.index(afeElement)
+            furthestBlock = None
+            for element in self.parser.openElements[afeIndex:]:
+                if element.name in (specialElements | scopingElements):
+                    furthestBlock = element
+                    break
+            if furthestBlock is None:
                 element = self.parser.openElements.pop()
-            self.parser.activeFormattingElements.remove(element)
-            return
-        commonAncestor = self.parser.openElements[afeIndex-1]
+                while element != afeElement:
+                    element = self.parser.openElements.pop()
+                self.parser.activeFormattingElements.remove(element)
+                return
+            commonAncestor = self.parser.openElements[afeIndex-1]
 
-        if furthestBlock.parent:
-            furthestBlock.childNodes.remove(furthestBlock)
-        # XXX Need to finish this
+            if furthestBlock.parent:
+                furthestBlock.childNodes.remove(furthestBlock)
+
+            #The bookmark is supposed to help us identify where to reinsert nodes
+            #in step 12. We have to ensure that we reinsert nodes after the node
+            #before the active formatting element. Note the bookmnark can move 
+            #in step 7.4
+            bookmark = self.parser.activeFormattingElements.index(afeElement)
+
+            #Step 7
+            lastNode = node = furthestBlock
+            print "Adoption agency step 7"
+            while True:
+                #AT: replace this with a function and recursion?
+                #Node is element before node in open elements
+                print node, self.parser.openElements
+                node = self.parser.openElements[
+                    self.parser.openElements.index(node)-1]
+                while node not in self.parser.activeFormattingElements:
+                    self.openElements.remove(node)
+                    node = self.parser.openElements[
+                        self.parser.openElements.index(node)-1]
+                #step 7.3
+                if node == afeElement:
+                    break
+                #7.4
+                elif lastNode == furthestBlock:
+                    #XXX should this be index(node) or index(node)+1
+                    bookmark = self.parser.activeFormattingElements.index(node)+1
+                #7.5
+                if node.childNodes:
+                    clone = node.cloneNode()
+                    #Replace node with clone
+                    self.parser.activeFormattingElements.index[
+                        self.parser.activeFormattingElements.index(node)] = clone
+                    self.parser.openElements[
+                        self.parser.openElements.index(node)] = clone
+                    node = clone
+                #7.6
+                #Remove lastNode from its parents, if any
+                if lastNode.parent:
+                    lastNode.parent.childNodes.remove(lastNode)
+                node.appendChild(lastNode)
+                #7.8
+                lastNode = node
+                #End of inner loop
+                #Step 8
+                if lastNode.parent:
+                    lastNode.parent.childNodes.remove(lastNode)
+                commonAncestor.appendChild(lastNode)
+
+                #Step 9
+                clone = afeElement.cloneNode()
+
+                #Step 10
+                for node in furthestBlock.childNodes:
+                    clone.appendChild(node)
+                    #XXX presumably this is needed so nodes don't have multiple 
+                    #parents
+                    furthestBlock.childNodes.remove(node)
+
+                #Step 11
+                furthestBlock.childNodes.append(clone)
+
+                #Step 12
+                self.parser.activeFormattingElements.remove(afeElement)
+                self.parser.activeFormattingElements.insert(bookmark, clone)
+
+                #Step 13
+                self.parser.openElements.remove(afeElement)
+                self.parser.openElements.insert(
+                    self.parser.openElements.index(furthestBlock)+1, clone)
+
         raise NotImplementedError
 
     def endTagButtonMarqueeObject(self, name):
@@ -1462,12 +1541,10 @@ class InRow(InsertionMode):
             self.parser.parseError()
 
     def endTagTable(self, name):
-        if not self.parser.elementInScope("tr", True):
-            # XXX better solution?
-            # innerHTML case
-            self.parser.processStartTag(name, attributes)
-        else:
-            self.endTagTr()
+        self.endTagTr("tr")
+        #Reprocess the current tag if the tr end tag was ignored
+        if self.parser.innerHTML:
+            self.parser.processEndTag(name)
 
     def endTagTableRowGroup(self, name):
         if self.parser.elementInScope(name, True):
@@ -1487,11 +1564,9 @@ class InCell(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-cell
 
     # helper
-    def closeCell(self):
-        if self.parser.elementInScope("td", True):
-            self.endTagTableCell("td")
-        elif self.parser.elementInScope("th", True):
-            self.endTagTableCell("th")
+    def closeCell(self, name):
+        if self.parser.elementInScope(name, True):
+            self.endTagTableCell(name)
 
     # the rest
     # XXX look into characters and comments
@@ -1509,7 +1584,7 @@ class InCell(InsertionMode):
     def startTagTableOther(self, name, attributes):
         if self.parser.elementInScope("td", True) or \
           self.parser.elementInScope("th", True):
-            self.closeCell()
+            self.closeCell(name)
             self.parser.processStartTag(name, attributes)
         else:
             # innerHTML case
@@ -1548,7 +1623,7 @@ class InCell(InsertionMode):
 
     def endTagImply(self, name):
         if self.parser.elementInScope(name, True):
-            self.closeCell()
+            self.closeCell(name)
             # XXX The thing below still causes issues ...:
             self.parser.processEndTag(name)
         else:
