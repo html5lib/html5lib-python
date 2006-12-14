@@ -39,6 +39,15 @@ class Node(object):
             self.childNodes[-1].value += node.value
         else:
             self.childNodes.append(node)
+        node.parent = self
+
+    def removeChild(self, node):
+        try:
+            self.childNodes.remove(node)
+        except:
+            print node, node.parent, self, self.childNodes
+            raise
+        node.parent = None
 
     def cloneNode(self):
         newNode = type(self)(self.name)
@@ -1072,8 +1081,9 @@ class InBody(InsertionMode):
             commonAncestor = self.parser.openElements[afeIndex-1]
             
             #Step 5
+            print furthestBlock, furthestBlock.parent
             if furthestBlock.parent:
-                furthestBlock.childNodes.remove(furthestBlock)
+                furthestBlock.parent.removeChild(furthestBlock)
 
             #Step 6
             #The bookmark is supposed to help us identify where to reinsert nodes
@@ -1117,7 +1127,7 @@ class InBody(InsertionMode):
                 # Step 7.6
                 # Remove lastNode from its parents, if any
                 if lastNode.parent:
-                    lastNode.parent.childNodes.remove(lastNode)
+                    lastNode.parent.removeChild(lastNode)
                 node.appendChild(lastNode)
                 # Step 7.7
                 lastNode = node
@@ -1125,7 +1135,7 @@ class InBody(InsertionMode):
 
             #Step 8
             if lastNode.parent:
-                lastNode.parent.childNodes.remove(lastNode)
+                lastNode.parent.removeChild(lastNode)
             commonAncestor.appendChild(lastNode)
 
             #Step 9
@@ -1136,7 +1146,7 @@ class InBody(InsertionMode):
                 clone.appendChild(node)
                 # XXX presumably this is needed so nodes don't have multiple
                 # parents
-                furthestBlock.childNodes.remove(node)
+                furthestBlock.removeChild(node)
 
             # Step 11
             furthestBlock.childNodes.append(clone)
