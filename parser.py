@@ -306,7 +306,7 @@ class HTMLParser(object):
                     raise NotImplementedError
             # Check for conditions that should only happen in the innerHTML
             # case
-            if node.name in ["select", "colgroup", "head", "frameset"]:
+            if node.name in ("select", "colgroup", "head", "frameset"):
                 # XXX
                 assert self.innerHTML
             if node.name in newModes:
@@ -1061,7 +1061,7 @@ class InBody(InsertionMode):
             afeIndex = self.parser.openElements.index(afeElement)
             furthestBlock = None
             for element in self.parser.openElements[afeIndex:]:
-                if element.name in (specialElements | scopingElements):
+                if element.name in specialElements | scopingElements:
                     furthestBlock = element
                     break
 
