@@ -1772,8 +1772,7 @@ class InFrameset(InsertionMode):
         self.parser.openElements.pop()
 
     def startTagNoframes(self, name, attributes):
-        self.parser.switchInsertionMode("inBody")
-        self.parser.processStartTag(name, attributes)
+        InBody(self.parser).processStartTag(name, attributes)
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([("frameset", self.endTagFrameset)])
