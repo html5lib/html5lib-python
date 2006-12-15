@@ -1130,15 +1130,12 @@ class InBody(InsertionMode):
                 lastNode.parent.removeChild(lastNode)
             commonAncestor.appendChild(lastNode)
 
-            #Step 9
+            # Step 9
             clone = afeElement.cloneNode()
 
-            #Step 10
-            for node in furthestBlock.childNodes:
-                clone.appendChild(node)
-                # XXX presumably this is needed so nodes don't have multiple
-                # parents
-                furthestBlock.removeChild(node)
+            # Step 10
+            clone.childNodes.extend(furthestBlock.childNodes)
+            furthestBlock.childNodes = []
 
             # Step 11
             furthestBlock.childNodes.append(clone)
@@ -1150,7 +1147,7 @@ class InBody(InsertionMode):
             # Step 13
             self.parser.openElements.remove(afeElement)
             self.parser.openElements.insert(
-              self.parser.openElements.index(furthestBlock)+1, clone)
+              self.parser.openElements.index(furthestBlock) + 1, clone)
 
     def endTagButtonMarqueeObject(self, name):
         if self.parser.elementInScope(name):
