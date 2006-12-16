@@ -1576,12 +1576,10 @@ class InRow(InsertionMode):
         self.parser.activeFormattingElements.append(Marker)
 
     def startTagTableOther(self, name, attributes):
-        if not self.parser.elementInScope("tr", True):
-            # XXX better solution?
+        self.endTagTr()
+        if self.parser.innerHTML:
             # innerHTML case
-            self.parser.processStartTag(name, attributes)
-        else:
-            self.endTagTr()
+            self.parser.processEndTag(name)
 
     def startTagOther(self, name, attributes):
         InTable(self.parser).processStartTag(name, attributes)
@@ -1637,7 +1635,6 @@ class InCell(InsertionMode):
             self.endTagTableCell("th")
 
     # the rest
-    # XXX look into characters and comments
     def processNonSpaceCharacter(self, data):
         InBody(self.parser).processCharacter(data)
 
@@ -1692,7 +1689,6 @@ class InCell(InsertionMode):
     def endTagImply(self, name):
         if self.parser.elementInScope(name, True):
             self.closeCell()
-            # XXX The thing below still causes issues ...:
             self.parser.processEndTag(name)
         else:
             # sometimes innerHTML case
