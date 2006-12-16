@@ -1259,18 +1259,15 @@ class InTable(InsertionMode):
             self.parser.parseError()
         # When the current node is <html> it's an innerHTML case
 
-
     # processing methods
     # processComment is handled by InsertionMode
     def processNonSpaceCharacter(self, data):
         self.parser.parseError()
-        #Make all the special element rearranging voodoo kick in
+        # Make all the special element rearranging voodoo kick in
         self.parser.insertFromTable = True
-        #Create a local insertion mode so we can act like we are in body mode
-        mode = InBody(self.parser)
-        mode.processCharacter(data)
+        # Process the character in the "in body" mode
+        InBody(self.parser).processCharacter(data)
         self.parser.insertFromTable = False
-        
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
@@ -1316,11 +1313,10 @@ class InTable(InsertionMode):
 
     def startTagOther(self, name, attributes):
         self.parser.parseError()
-        #Make all the special element rearranging voodoo kick in
+        # Make all the special element rearranging voodoo kick in
         self.parser.insertFromTable = True
-        #Create a local insertion mode so we can act like we are in body mode
-        mode = InBody(self.parser)
-        mode.processStartTag(name, attributes)
+        # Process the start tag in the "in body" mode
+        InBody(self.parser).processStartTag(name, attributes)
         self.parser.insertFromTable = False
 
     def processEndTag(self, name):
@@ -1349,11 +1345,10 @@ class InTable(InsertionMode):
         self.parser.parseError()
 
     def endTagOther(self, name, attributes={}):
-        #Make all the special element rearranging voodoo kick in
+        # Make all the special element rearranging voodoo kick in
         self.parser.insertFromTable = True
-        #Create a local insertion mode so we can act like we are in body mode
-        mode = InBody(self.parser)
-        mode.processEndTag(name)
+        # Process the end tag in the "in body" mode
+        InBody(self.parser).processEndTag(name)
         self.parser.insertFromTable = False
 
 
@@ -1362,9 +1357,7 @@ class InCaption(InsertionMode):
     # XXX ...
 
     def processCharacter(data):
-        self.switchInsertionMode("inBody")
-        self.parser.processCharacter(data)
-        # XXX switch back to this insertion mode afterwards?!
+        InBody(self.parser).processCharacter(data)
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
@@ -1377,13 +1370,15 @@ class InCaption(InsertionMode):
     def startTagTableElement(self, name, attributes):
         self.parser.parseError()
         self.parser.processEndTag("caption")
-        # XXX innerHTML case ... token ignored and such
-        assert False
+        if self.parser.innerHTML:
+            # innerHTML case
+            # XXX how do we know the tag is _always_ ignored in the innerHTML
+            # case and therefore has to be processed again? I'm not sure this
+            # strategy makes sense...
+            self.parser.processStartTag(name, attributes)
 
     def startTagOther(self, name, attributes):
-        # Parse error is thrown later on.
-        self.parser.switchInsertionMode("inBody")
-        self.parser.processStartTag(name, attributes)
+        InBody(self.parser).processStartTag(name, attributes)
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
@@ -1412,8 +1407,9 @@ class InCaption(InsertionMode):
     def endTagTable(self, name):
         self.parser.parseError()
         self.parser.processEndTag("caption")
-        # XXX check if the token wasn't ignored... innerHTML case
-        assert False
+        if self.parser.innerHTML:
+            # innerHTML case
+            self.parser.processStartTag(name, attributes)
 
     def endTagIgnore(self, name):
         self.parser.parseError()
@@ -1477,7 +1473,6 @@ class InTableBody(InsertionMode):
             self.parser.parseError()
 
     # the rest
-    # XXX character tokens and all that ...
     def processNonSpaceCharacter(self,data):
         InTable(self.parser).processCharacter(data)
 
