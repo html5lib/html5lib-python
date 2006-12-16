@@ -105,17 +105,20 @@ specialElements = frozenset((
     "wbr"
 ))
 
-tableInsertModeElements = frozenset((
-    # XXX jgraham has this list...
-    "table"
-))
-
 spaceCharacters = frozenset((
     u"\t",
     u"\n",
     u"\u000B",
     u"\u000C",
     u" "
+))
+
+tableInsertModeElements = frozenset((
+        u"table",
+        u"tbody",
+        u"tfoot", 
+        u"thead", 
+        u"tr"
 ))
 
 asciiLowercase = frozenset(string.ascii_lowercase)
