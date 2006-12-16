@@ -274,27 +274,30 @@ class HTMLParser(object):
 
     def insertElement(self, name, attributes):
         element = self.createElement(name, attributes)
-        if not(self.insertFromTable):
+        if (not(self.insertFromTable) or (self.insertFromTable and 
+                                          self.openElements[-1].name not in 
+                                          tableInsertModeElements)):
             self.openElements[-1].appendChild(element)
             self.openElements.append(element)
         else:
             #We should be in the InTable mode. This means we want to do 
             #special magic element rearranging
-            assert(self.openElements[-1].name) in tableInsertModeElements
             self.insertMisnestedNodeFromTable(element)
+            self.openElements.append(element)
 
     def insertText(self, data, parent=None):
         node = TextNode(data)
-        if parent is None and not(self.insertFromTable):
-            parent = self.openElements[-1]
-        elif (self.insertFromTable):
-            #This is almost certianly wrong
+        if parent is None: parent = self.openElements[-1]
+        if (not(self.insertFromTable) or (self.insertFromTable and 
+                                          self.openElements[-1].name not in 
+                                          tableInsertModeElements)):
+            parent.appendChild(node)
+        else:
+            #We should be in the InTable mode. This means we want to do 
+            #special magic element rearranging
             self.insertMisnestedNodeFromTable(node)
-            return
-        parent.appendChild(node)
 
     def insertMisnestedNodeFromTable(self, element):
-
         if self.openElements[-1] not in tableInsertModeElements:
             self.openElements[-1].appendChild(element)
         #The foster parent element is the one which comes before the most
