@@ -3,7 +3,7 @@ import tokenizer
 from utils import utils
 from constants import contentModelFlags, spaceCharacters
 from constants import scopingElements, formattingElements, specialElements
-from constants import headingElements
+from constants import headingElements, tableInsertModeElements
 
 """The scope markers are inserted when entering buttons, object
 elements, marquees, table cells, and table captions, and are used to
@@ -33,12 +33,16 @@ class Node(object):
             tree += child.printTree(indent+2)
         return tree
 
-    def appendChild(self, node):
+    def appendChild(self, node, index=None):
         if (isinstance(node, TextNode) and self.childNodes and
             isinstance(self.childNodes[-1], TextNode)):
             self.childNodes[-1].value += node.value
         else:
             self.childNodes.append(node)
+        node.parent = self
+
+    def insertBefore(self, node, refNode):
+        self.childNodes.insert(self.childNodes.index(refNode), node)
         node.parent = self
 
     def removeChild(self, node):
@@ -138,6 +142,10 @@ class HTMLParser(object):
 
         #The parsing phase we are currently in
         self.phase = InitialPhase(self)
+
+        #Flag indicationg special insertion mode from elements misnested inside
+        #a table
+        self.insertFromTable = False
 
         self.tokenizer = tokenizer.HTMLTokenizer(self)
         self.tokenizer.tokenize(stream)
@@ -264,14 +272,49 @@ class HTMLParser(object):
         element.attributes = attributes
         return element
 
-    def insertElement(self, name, attributes, parent=None):
+    def insertElement(self, name, attributes):
         element = self.createElement(name, attributes)
-        if parent is None:
+        if not(self.insertFromTable):
             self.openElements[-1].appendChild(element)
             self.openElements.append(element)
         else:
-            # XXX Haven't implemented this yet as spec is vaugely unclear
-            raise NotImplementedError
+            #We should be in the InTable mode. This means we want to do 
+            #special magic element rearranging
+            assert(self.openElements[-1].name) in tableInsertModeElements
+            self.insertMisnestedNodeFromTable(element)
+
+    def insertText(self, data, parent=None):
+        node = TextNode(data)
+        if parent is None and not(self.insertFromTable):
+            parent = self.openElements[-1]
+        elif (self.insertFromTable):
+            #This is almost certianly wrong
+            self.insertMisnestedNodeFromTable(node)
+            return
+        parent.appendChild(node)
+
+    def insertMisnestedNodeFromTable(self, element):
+
+        if self.openElements[-1] not in tableInsertModeElements:
+            self.openElements[-1].appendChild(element)
+        #The foster parent element is the one which comes before the most
+        #recently opened table element
+        #XXX - this is really inelegant
+        lastTable = self.openElements[-1]
+        for fosterParent in self.openElements[-2::-1]:
+            if lastTable.name == u"table":
+                break
+            lastTable = fosterParent
+        print lastTable, fosterParent, "\n"
+        #If the last table element in the stack of open elements is a 
+        #child of this foster parent element, then the new node must be 
+        #inserted immediately before the last table element in the stack 
+        #of open elements in this foster parent element
+        if lastTable in fosterParent.childNodes:
+            #XXX - do we need to change the stack of open elements here?
+            fosterParent.insertBefore(element, lastTable)
+        else:
+            fosterParent.appendChild(element)
 
     def generateImpliedEndTags(self, exclude=None):
         name = self.openElements[-1].name
@@ -355,7 +398,7 @@ class InitialPhase(Phase):
 
     def processCharacter(self, data):
         if data in spaceCharacters:
-            self.parser.document.appendChild(TextNode(data))
+            self.parser.insertText(data, self.parser.document)
         else:
             self.parser.parseError()
             self.parser.switchPhase("rootElement")
@@ -390,7 +433,7 @@ class RootElementPhase(Phase):
 
     def processCharacter(self, data):
         if data in spaceCharacters:
-            self.parser.document.appendChild(TextNode(data))
+            self.parser.insertText(data, self.parser.document)
         else:
             self.insertHtmlElement()
             self.parser.phase.processCharacter(data)
@@ -512,7 +555,7 @@ class InsertionMode(object):
     # need to.
     def processCharacter(self, data):
         if data in spaceCharacters:
-            self.parser.openElements[-1].appendChild(TextNode(data))
+            self.parser.insertText(data)
         else:
             self.processNonSpaceCharacter(data)
 
@@ -575,7 +618,7 @@ class InHead(InsertionMode):
 
     def processNonSpaceCharacter(self, data):
         if self.parser.openElements[-1].name in ("title", "style", "script"):
-            self.parser.openElements[-1].appendChild(TextNode(data))
+            self.parser.insertText(data)
         else:
             self.anythingElse()
             self.parser.processCharacter(data)
@@ -717,7 +760,7 @@ class InBody(InsertionMode):
     # the real deal
     def processCharacter(self, data):
         self.parser.reconstructActiveFormattingElements()
-        self.parser.openElements[-1].appendChild(TextNode(data))
+        self.parser.insertText(data)
 
     def processStartTag(self, name, attributes):
         handlers=utils.MethodDispatcher([
@@ -984,7 +1027,7 @@ class InBody(InsertionMode):
             self.parser.parseError()
         else:
             if self.parser.openElements[-1].name != "body":
-                assert self.parser.innerHTML
+                self.parser.parseError()
             self.parser.switchInsertionMode("afterBody")
 
     def endTagHtml(self, name):
@@ -1217,7 +1260,14 @@ class InTable(InsertionMode):
     # processing methods
     # processComment is handled by InsertionMode
     def processNonSpaceCharacter(self, data):
-        raise NotImplementedError()
+        self.parser.parseError()
+        #Make all the special element rearranging voodoo kick in
+        self.parser.insertFromTable = True
+        #Create a local insertion mode so we can act like we are in body mode
+        mode = InBody(self.parser)
+        mode.processCharacter(data)
+        self.parser.insertFromTable = False
+        
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
@@ -1257,12 +1307,18 @@ class InTable(InsertionMode):
 
     def startTagTable(self, name, attributes):
         self.parser.parseError()
-        # XXX innerHTML how to check if the token wasn't ignored?
-        assert False
+        self.parser.processEndTag("table")
+        if not self.parser.innerHTML:
+            self.parser.processStartTag(name, attributes)
 
     def startTagOther(self, name, attributes):
-        # XXX
-        assert False
+        self.parser.parseError()
+        #Make all the special element rearranging voodoo kick in
+        self.parser.insertFromTable = True
+        #Create a local insertion mode so we can act like we are in body mode
+        mode = InBody(self.parser)
+        mode.processStartTag(name, attributes)
+        self.parser.insertFromTable = False
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
@@ -1290,8 +1346,12 @@ class InTable(InsertionMode):
         self.parser.parseError()
 
     def endTagOther(self, name, attributes={}):
-        # XXX
-        assert False
+        #Make all the special element rearranging voodoo kick in
+        self.parser.insertFromTable = True
+        #Create a local insertion mode so we can act like we are in body mode
+        mode = InBody(self.parser)
+        mode.processEndTag(name)
+        self.parser.insertFromTable = False
 
 
 class InCaption(InsertionMode):
@@ -1645,7 +1705,7 @@ class InSelect(InsertionMode):
     # No need for processComment.
     # XXX character token ... always appended to the current node
     def processNonSpaceCharacter(self, data):
-        self.parser.openElements[-1].appendChild(TextNode(data))
+        self.parser.insertText(data)
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
