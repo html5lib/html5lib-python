@@ -1419,6 +1419,12 @@ class InCaption(InsertionMode):
 class InColumnGroup(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-column
 
+    def processNonSpaceCharacter(self, data):
+        self.endTagColgroup()
+        # XXX
+        if not self.parser.innerHTML:
+            self.parser.processCharacter(data)
+
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
             ("col", self.startTagCol)
@@ -1432,8 +1438,10 @@ class InColumnGroup(InsertionMode):
         self.parser.openElements.pop()
 
     def startTagOther(self, name, attributes):
-        # XXX
-        assert False
+        self.endTagColgroup()
+        # XXX how can be sure it's always ignored?
+        if not self.parser.innerHTML:
+            self.parser.processStartTag(name, attributes)
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
@@ -1444,7 +1452,7 @@ class InColumnGroup(InsertionMode):
         handlers.setDefaultValue(self.endTagOther)
         handlers[name](name)
 
-    def endTagColGroup(self, name):
+    def endTagColgroup(self, name="colgroup"):
         if self.parser.openElements[-1].name == "html":
             # innerHTML case
             self.parser.parseError()
@@ -1456,8 +1464,10 @@ class InColumnGroup(InsertionMode):
         self.parser.parseError()
 
     def endTagOther(self, name):
-        # XXX
-        assert False
+        self.endTagColgroup()
+        # XXX how can be sure it's always ignored?
+        if not self.parser.innerHTML:
+            self.parser.processEndTag(name)
 
 
 class InTableBody(InsertionMode):
@@ -1495,11 +1505,12 @@ class InTableBody(InsertionMode):
 
     def startTagTableOther(self, name, attributes):
         # XXX AT Any ideas on how to share this with endTagTable?
-        if self.elementInScope("tbody", True) or \
-          self.elementInScope("thead", True) or \
-          self.elementInScope("tfoot", True):
+        if self.parser.elementInScope("tbody", True) or \
+          self.parser.elementInScope("thead", True) or \
+          self.parser.elementInScope("tfoot", True):
             self.clearStackToTableBodyContext()
-            self.endTagTableRowGroup(self.parser.openElements[-1])
+            self.endTagTableRowGroup(self.parser.openElements[-1].name)
+            self.parser.processStartTag(name, attributes)
         else:
             # innerHTML case
             self.parser.parseError()
