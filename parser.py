@@ -44,7 +44,6 @@ class Node(object):
 
     def insertBefore(self, node, refNode):
         index = self.childNodes.index(refNode)
-        print self.childNodes[index]
         if (isinstance(node, TextNode) and
           isinstance(self.childNodes[index - 1], TextNode)):
             self.childNodes[index - 1].value += node.value
@@ -454,6 +453,7 @@ class RootElementPhase(Phase):
         self.parser.phase.processEndTag(name)
 
     def processComment(self, data):
+        assert False
         # XXX Can this even occur?
         self.parser.document.appendChild(CommentNode(data))
 
@@ -1030,12 +1030,12 @@ class InBody(InsertionMode):
 
     def endTagBody(self, name):
         if self.parser.openElements[1].name != "body":
-            assert self.parser.innerHTML
+            # innerHTML case
             self.parser.parseError()
-        else:
-            if self.parser.openElements[-1].name != "body":
-                self.parser.parseError()
-            self.parser.switchInsertionMode("afterBody")
+            return
+        if self.parser.openElements[-1].name != "body":
+            self.parser.parseError()
+        self.parser.switchInsertionMode("afterBody")
 
     def endTagHtml(self, name):
         self.endTagBody(name)
@@ -1795,7 +1795,10 @@ class InSelect(InsertionMode):
 
 
 class AfterBody(InsertionMode):
-    # No need for processComment
+    def processComment(self, data):
+        # This is needed because data is to be appended to the <html> element
+        # here and not to whatever is currently open.
+        self.parser.openElements[0].appendChild(CommentNode(data))
 
     def processStartTag(self, name, attributes):
         self.parser.parseError()
