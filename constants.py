@@ -114,11 +114,11 @@ spaceCharacters = frozenset((
 ))
 
 tableInsertModeElements = frozenset((
-        u"table",
-        u"tbody",
-        u"tfoot", 
-        u"thead", 
-        u"tr"
+    "table",
+    "tbody",
+    "tfoot", 
+    "thead", 
+    "tr"
 ))
 
 asciiLowercase = frozenset(string.ascii_lowercase)
