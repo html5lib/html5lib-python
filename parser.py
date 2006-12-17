@@ -1368,11 +1368,10 @@ class InCaption(InsertionMode):
     def startTagTableElement(self, name, attributes):
         self.parser.parseError()
         self.parser.processEndTag("caption")
-        if self.parser.innerHTML:
-            # innerHTML case
-            # XXX how do we know the tag is _always_ ignored in the innerHTML
-            # case and therefore has to be processed again? I'm not sure this
-            # strategy makes sense...
+        # XXX how do we know the tag is _always_ ignored in the innerHTML
+        # case and therefore shouldn't be processed again? I'm not sure this
+        # strategy makes sense...
+        if not self.parser.innerHTML:
             self.parser.processStartTag(name, attributes)
 
     def startTagOther(self, name, attributes):
@@ -1405,8 +1404,8 @@ class InCaption(InsertionMode):
     def endTagTable(self, name):
         self.parser.parseError()
         self.parser.processEndTag("caption")
-        if self.parser.innerHTML:
-            # innerHTML case
+        # XXX ...
+        if not self.parser.innerHTML:
             self.parser.processStartTag(name, attributes)
 
     def endTagIgnore(self, name):
@@ -1581,8 +1580,8 @@ class InRow(InsertionMode):
 
     def startTagTableOther(self, name, attributes):
         self.endTagTr()
-        if self.parser.innerHTML:
-            # innerHTML case
+        # XXX how are we sure it's always ignored in the innerHTML case?
+        if not self.parser.innerHTML:
             self.parser.processEndTag(name)
 
     def startTagOther(self, name, attributes):
@@ -1610,8 +1609,9 @@ class InRow(InsertionMode):
 
     def endTagTable(self, name):
         self.endTagTr("tr")
-        #Reprocess the current tag if the tr end tag was ignored
-        if self.parser.innerHTML:
+        # Reprocess the current tag if the tr end tag was not ignored
+        # XXX how are we sure it's always ignored in the innerHTML case?
+        if not self.parser.innerHTML:
             self.parser.processEndTag(name)
 
     def endTagTableRowGroup(self, name):
