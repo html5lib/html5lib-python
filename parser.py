@@ -4,6 +4,7 @@ from utils import utils
 from constants import contentModelFlags, spaceCharacters
 from constants import scopingElements, formattingElements, specialElements
 from constants import headingElements, tableInsertModeElements
+import inspect
 
 """The scope markers are inserted when entering buttons, object
 elements, marquees, table cells, and table captions, and are used to
@@ -298,8 +299,6 @@ class HTMLParser(object):
             self.insertMisnestedNodeFromTable(node)
 
     def insertMisnestedNodeFromTable(self, element):
-        if self.openElements[-1] not in tableInsertModeElements:
-            self.openElements[-1].appendChild(element)
         #The foster parent element is the one which comes before the most
         #recently opened table element
         #XXX - this is really inelegant
@@ -308,7 +307,6 @@ class HTMLParser(object):
             if lastTable.name == u"table":
                 break
             lastTable = fosterParent
-        print lastTable, fosterParent, "\n"
         #If the last table element in the stack of open elements is a 
         #child of this foster parent element, then the new node must be 
         #inserted immediately before the last table element in the stack 
