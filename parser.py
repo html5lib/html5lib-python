@@ -36,14 +36,20 @@ class Node(object):
 
     def appendChild(self, node, index=None):
         if (isinstance(node, TextNode) and self.childNodes and
-            isinstance(self.childNodes[-1], TextNode)):
+          isinstance(self.childNodes[-1], TextNode)):
             self.childNodes[-1].value += node.value
         else:
             self.childNodes.append(node)
         node.parent = self
 
     def insertBefore(self, node, refNode):
-        self.childNodes.insert(self.childNodes.index(refNode), node)
+        index = self.childNodes.index(refNode)
+        print self.childNodes[index]
+        if (isinstance(node, TextNode) and
+          isinstance(self.childNodes[index - 1], TextNode)):
+            self.childNodes[index - 1].value += node.value
+        else:
+            self.childNodes.insert(index, node)
         node.parent = self
 
     def removeChild(self, node):
