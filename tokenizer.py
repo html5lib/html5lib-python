@@ -435,12 +435,12 @@ class HTMLTokenizer(object):
             # the stack.
             self.characterQueue.extend(charStack)
 
-            # XXX need to check if this can be done differently. Perhaps
-            # integrate switching the content model flag here instead of when
-            # we emit the token as well...
             if self.currentToken.name == "".join(charStack[:-1]).lower() \
               and charStack[-1] in (spaceCharacters |
               frozenset((u">", u"/", u"<", EOF))):
+                # Because the characters are correct we can safely switch to
+                # PCDATA mode now. This also means we don't have to do it when
+                # emitting the end tag token.
                 self.contentModelFlag = contentModelFlags["PCDATA"]
             else:
                 self.parser.parseError()
