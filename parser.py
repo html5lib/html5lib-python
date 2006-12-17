@@ -1582,7 +1582,7 @@ class InRow(InsertionMode):
         self.endTagTr()
         # XXX how are we sure it's always ignored in the innerHTML case?
         if not self.parser.innerHTML:
-            self.parser.processEndTag(name)
+            self.parser.processStartTag(name, attributes)
 
     def startTagOther(self, name, attributes):
         InTable(self.parser).processStartTag(name, attributes)
@@ -1592,7 +1592,7 @@ class InRow(InsertionMode):
             ("tr", self.endTagTr),
             ("table", self.endTagTable),
             (("tbody", "tfoot", "thead"), self.endTagTableRowGroup),
-            (("body", "caption", "col", "colgroup", "html", "td", "th"), \
+            (("body", "caption", "col", "colgroup", "html", "td", "th"),
               self.endTagIgnore)
         ])
         handlers.setDefaultValue(self.endTagOther)
