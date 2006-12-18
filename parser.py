@@ -44,7 +44,7 @@ class Node(object):
 
     def insertBefore(self, node, refNode):
         index = self.childNodes.index(refNode)
-        if (isinstance(node, TextNode) and
+        if (isinstance(node, TextNode) and index > 0 and
           isinstance(self.childNodes[index - 1], TextNode)):
             self.childNodes[index - 1].value += node.value
         else:
@@ -293,7 +293,8 @@ class HTMLParser(object):
 
     def insertText(self, data, parent=None):
         node = TextNode(data)
-        if parent is None: parent = self.openElements[-1]
+        if parent is None: 
+            parent = self.openElements[-1]
         if (not(self.insertFromTable) or (self.insertFromTable and 
                                           self.openElements[-1].name not in 
                                           tableInsertModeElements)):
@@ -307,20 +308,27 @@ class HTMLParser(object):
         #The foster parent element is the one which comes before the most
         #recently opened table element
         #XXX - this is really inelegant
-        lastTable = self.openElements[-1]
-        for fosterParent in self.openElements[-2::-1]:
-            if lastTable.name == u"table":
+        lastTable=None
+        for elm in self.openElements[::-1]:
+            if elm.name == u"table":
+                lastTable = elm
                 break
-            lastTable = fosterParent
-        #If the last table element in the stack of open elements is a 
-        #child of this foster parent element, then the new node must be 
-        #inserted immediately before the last table element in the stack 
-        #of open elements in this foster parent element
-        if lastTable in fosterParent.childNodes:
-            #XXX - do we need to change the stack of open elements here?
-            fosterParent.insertBefore(element, lastTable)
+        if lastTable:
+            #XXX - we should really check that this parent is actually a 
+            #node here
+            if lastTable.parent:
+                fosterParent = lastTable.parent
+                fosterParent.insertBefore(element, lastTable)
+            else:
+                fosterParent = self.openElements[
+                    self.openElements.index(lastTable) - 1]
+                fosterParent.appendChild(element)
         else:
+            assert self.innerHTML
+            fosterParent = self.openElements[0]
             fosterParent.appendChild(element)
+        import sys
+        sys.stderr.write(repr(fosterParent))
 
     def generateImpliedEndTags(self, exclude=None):
         name = self.openElements[-1].name
