@@ -153,8 +153,26 @@ class HTMLParser(object):
         #a table
         self.insertFromTable = False
 
-        self.tokenizer = tokenizer.HTMLTokenizer(self)
-        self.tokenizer.tokenize(stream)
+        self.tokenizer = tokenizer.HTMLTokenizer(stream)
+        
+        # XXX This is temporary for the moment so there isn't any other
+        # changes needed for the parser to work with the iterable tokenizer
+        for token in self.tokenizer:
+            tokenClass = token.__class__.__name__
+            method = getattr(self, 'process%s' % tokenClass, None)
+            if tokenClass in ('Character', 'Comment'):
+                method(token.data)
+            elif tokenClass in ('Doctype', 'StartTag'):
+                method(token.name, token.data)
+            elif tokenClass == 'EndTag':
+                method(token.name)
+            elif tokenClass == 'ParseError':
+                self.parseError()
+            else:
+                self.atheistParseError()
+        
+        # When the loop finishes it's EOF
+        self.processEOF()
 
         return self.document
 

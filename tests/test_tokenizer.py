@@ -7,41 +7,45 @@ import new
 
 import simplejson
 
+#Allow us to import the parent module
+os.chdir(os.path.split(os.path.abspath(__file__))[0])
+sys.path.insert(0, os.path.abspath(os.pardir))
+
+from tokenizer import HTMLTokenizer
+
 class TokenizerTestParser(object):
     def parse(self, stream, innerHTML=False):
-        """Stream should be a stream of unicode bytes. Character encoding
-        issues have not yet been dealt with."""
-
-        self.outputTokens = []        
-
-        import tokenizer
-        self.tokenizer = tokenizer.HTMLTokenizer(self)
-        self.tokenizer.tokenize(stream)
+        self.outputTokens = []
+        
+        self.tokenizer = HTMLTokenizer(stream)
+        
+        for token in self.tokenizer:
+            getattr(self, 'process%s' % token.__class__.__name__)(token)
         
         return self.outputTokens
-
-    def processDoctype(self, name, error):
-        self.outputTokens.append([u"DOCTYPE", name, error])
-
-    def processStartTag(self, name, attributes):
-        self.outputTokens.append([u"StartTag", name, attributes])
-
-    def processEndTag(self, name):
-        self.outputTokens.append([u"EndTag", name])
-
-    def processComment(self, data):
-        self.outputTokens.append([u"Comment", data])
-
-    def processCharacter(self, data):
-        self.outputTokens.append([u"Character", data])
-        
-    def processEOF(self):
+    
+    def processDoctype(self, token):
+        self.outputTokens.append([u"DOCTYPE", token.name, token.data])
+    
+    def processStartTag(self, token):
+        self.outputTokens.append([u"StartTag", token.name, token.data])
+    
+    def processEndTag(self, token):
+        self.outputTokens.append([u"EndTag", token.name])
+    
+    def processComment(self, token):
+        self.outputTokens.append([u"Comment", token.data])
+    
+    def processCharacter(self, token):
+        self.outputTokens.append([u"Character", token.data])
+    
+    def processEOF(self, token):
         pass
-
-    def parseError(self):
+    
+    def processParseError(self, token):
         self.outputTokens.append(u"ParseError")
-
-    def atheistParseError(self):
+    
+    def processAtheistParseError(self, token):
         """This error is not an error"""
         self.outputTokens.append(u"AtheistParseError")
 
@@ -49,7 +53,7 @@ def concatenateCharacterTokens(tokens):
     outputTokens = []
     for token in tokens:
         if not "ParseError" in token and token[0] == "Character":
-            if (outputTokens and not "ParseError" in outputTokens[-1] and 
+            if (outputTokens and not "ParseError" in outputTokens[-1] and
                 outputTokens[-1][0] == "Character"):
                 outputTokens[-1][1] += token[1]
             else:
@@ -60,7 +64,7 @@ def concatenateCharacterTokens(tokens):
 
 def tokensMatch(expectedTokens, recievedTokens):
     """Test whether the test has passed or failed
-
+    
     For brevity in the tests, the test has passed if the sequence of expected
     tokens appears anywhere in the sequence of returned tokens.
     """
@@ -71,7 +75,7 @@ def tokensMatch(expectedTokens, recievedTokens):
                 recievedTokens[i:i+len(expectedTokens)]):
                 return True
     return False
-        
+
 
 class TestCase(unittest.TestCase):
     def runTokenizerTest(self, input, output):
@@ -79,9 +83,9 @@ class TestCase(unittest.TestCase):
         #concatenate all consecutive character tokens into a single token
         output = concatenateCharacterTokens(output)
         parser = TokenizerTestParser()
-        tokens = parser.parse(StringIO.StringIO(input))
+        tokens = parser.parse(input)
         tokens = concatenateCharacterTokens(tokens)
-        errorMsg = "\n".join(["\n\nExpected:", str(output), "\nRecieved:", 
+        errorMsg = "\n".join(["\n\nExpected:", str(output), "\nRecieved:",
                              str(tokens)])
         self.assertTrue(tokensMatch(tokens, output), errorMsg)
 
@@ -100,7 +104,7 @@ def buildTestSuite():
         testName = 'test%d' % tests
         testFunc = lambda self, method=func, input=input, output=output: \
             method(self, input, output)
-        testFunc.__doc__ = "\t".join([desc, str(input), str(output)]) 
+        testFunc.__doc__ = "\t".join([desc, str(input), str(output)])
         instanceMethod = new.instancemethod(testFunc, None, TestCase)
         setattr(TestCase, testName, instanceMethod)
     return unittest.TestLoader().loadTestsFromTestCase(TestCase)
@@ -113,5 +117,5 @@ if __name__ == "__main__":
     #Allow us to import the parent module
     os.chdir(os.path.split(os.path.abspath(__file__))[0])
     sys.path.insert(0, os.path.abspath(os.pardir))
-
+    
     main()
