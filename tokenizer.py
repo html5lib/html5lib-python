@@ -8,6 +8,8 @@ from constants import entitiesWindows1252, entities, voidElements
 from constants import asciiLowercase, asciiUppercase, asciiLetters
 from constants import digits, hexDigits
 
+from inputstream import HTMLInputStream
+
 EOF = None
 
 # Token objects used to hold token data when tokens are in the
@@ -118,7 +120,7 @@ class HTMLTokenizer(object):
     def tokenize(self, dataStream):
         # For simplicity we assume here that the input to the tokenizer is
         # already decoded to unicode
-        self.dataStream = dataStream
+        self.dataStream = HTMLInputStream(dataStream)
 
         # Start processing. When EOF is reached self.state will return False
         # instead of True and the loop will terminate.

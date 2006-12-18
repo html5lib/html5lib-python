@@ -1,4 +1,4 @@
-import codecs, StringIO
+import codecs, re
 
 from constants import EOF
 
@@ -10,19 +10,15 @@ class HTMLInputStream(object):
     """
     
     def __init__(self, source, encoding=None):
-        """ Initialise the HTMLInputReader.
+        """ Initialise the HTMLInputStream.
         
-        The stream can either be a file-object, filename, url or string
+        The source can either be a file-object, filename, url or string
         
         The optional encoding parameter must be a string that indicates
         the encoding.  If specified, that encoding will be used,
         regardless of any BOM or later declaration (such as in a meta
         element)
         """
-        
-        # Position counters
-        self.line = 1
-        self.col = 0
         
         # List of where new lines occur
         self.newLines = [0]
@@ -35,6 +31,9 @@ class HTMLInputStream(object):
         
         # Try to detect the encoding of the stream by looking for a BOM
         detectedEncoding = self.detectEncoding()
+        
+        # Note whether a BOM needs to be skipped over
+        self.skipBOM = detectedEncoding and 1 or 0
         
         # If an encoding was specified or detected from the BOM don't allow
         # the encoding to be changed futher into the stream
@@ -49,21 +48,24 @@ class HTMLInputStream(object):
             self.charEncoding = detectedEncoding or "cp1252"
         
         # Read bytes from stream decoding them into Unicode
-        unicodeStream = self.rawStream.read().decode(self.charEncoding, 'replace')
+        uString = self.rawStream.read().decode(self.charEncoding, 'replace')
         
-        unicodeStream = self.normalizeStream(unicodeStream)
+        # Normalize new lines and null characters
+        uString = re.sub('\r\n?', '\n', uString)
+        uString = re.sub('\x00', '\xFFFD', uString)
         
-        # If encoding was determined from a BOM remove it from the stream
-        if detectedEncoding:
-            unicodeStream = unicodeStream[1:]
+        uList = list(uString)
+        
+        # Reset position in the list to read from
+        self.reset()
         
         # Loop through stream and find where new lines occur
-        for i in xrange(len(unicodeStream)):
-            if unicodeStream[i] == u"\n":
+        for i in xrange(self.tell, len(uList)):
+            if uList[i] == u"\n":
                 self.newLines.append(i)
         
-        # Turn stream into a file-like object for access to characters
-        self.dataStream = StringIO.StringIO(unicodeStream)
+        # Use the normalized unicode list as the data stream
+        self.dataStream = uList
     
     def openStream(self, source):
         """ Opens source so it can be used as a file object
@@ -80,7 +82,8 @@ class HTMLInputStream(object):
             except: pass
             
             # Otherwise treat source as a string and covert to a file-like object
-            stream = StringIO.StringIO(str(source))
+            import cStringIO
+            stream = cStringIO.StringIO(str(source))
         return stream
     
     def detectEncoding(self):
@@ -112,21 +115,6 @@ class HTMLInputStream(object):
         
         return encoding
     
-    def normalizeStream(self, stream):
-        # Count U+FFFD replacement characters in case we need to switch encoding
-        if self.charEncoding == "cp1252" and stream.count(u"\uFFFD"):
-            self.incompatibleEncoding = True
-        else:
-            self.incompatibleEncoding = False
-        
-        # Normalize new lines
-        stream = stream.replace(u"\r\n", u"\n")
-        stream = stream.replace(u"\r", u"\n")
-        # Replace null bytes
-        stream = stream.replace(u"\x00", u"\uFFFD")
-        
-        return stream
-    
     def declareEncoding(self, encoding):
         """Report the encoding declared by the meta element
         
@@ -137,28 +125,13 @@ class HTMLInputStream(object):
         and non-US-ASCII characters have been seen, return True indicating
         parsing will have to begin again.
         """
-        # Only change encoding if we are using the default encoding
-        if self.allowEncodingOverride:
-            self.charEncoding = encoding
-            # If there was incompatible characters found in the first encoding
-            # we have to reencode the entire stream and start again
-            if self.incompatibleEncoding:
-                self.reset()
-                self.dataStream = StringIO.StringIO(self.normalizeStream(
-                    self.dataStream.read(-1).decode(self.charEncoding, 'replace')
-                  ))
-                return True
-            else:
-                # Just decode the bytes from now on
-                self.dataStream = codecs.EncodedFile(self.dataStream,
-                  self.charEncoding, 'replace')
-        return False
+        pass
     
     def position(self):
         """ Returns (line, col) position in the stream
         """
         line = 0
-        tell = self.dataStream.tell()
+        tell = self.tell
         for pos in self.newLines:
             if pos < tell:
                 line += 1
@@ -170,44 +143,16 @@ class HTMLInputStream(object):
     def reset(self):
         """ Resets the position in the stream back to the start
         """
-        self.dataStream.seek(0)
+        self.tell = self.skipBOM or 0
 
     def read(self, size=1):
         """ Reads size characters from the stream or EOF if EOF is reached.
         """
-        return self.dataStream.read(size) or EOF
-    
-    def readMany(self, size):
-        """ Returns a list of size characters from the stream
-        and adds an EOF marker if the EOF is reached.
-        """
-        charStack = list(self.dataStream.read(size)) or EOF
-        if len(charStack) < size:
-            charStack.append(EOF)
-        return charStack
-    
-    def readUntil(self, charList):
-        """ Returns a list of characters from the stream until a character
-        in charList is found or EOF is reached
-        """
-        charList = set(charList)
-        charList.add(EOF)
-        
-        charStack = [self.read(1)]
-        while charStack[-1] not in charList:
-            charStack.append(self.read(1))
-        
-        return charStack
-    
-    def readWhile(self, charList):
-        """ Returns a list of characters from the stream until a character
-        not in charList is found or EOF is reached
-        """
-        charStack = [self.read(1)]
-        while charStack[-1] in charList:
-            charStack.append(self.read(1))
-        
-        return charStack
+        try:
+            self.tell += 1
+            return self.dataStream[self.tell-1]
+        except:
+            return None
 
 if __name__ == "__main__":
     try:
@@ -219,7 +164,7 @@ if __name__ == "__main__":
             if c == u"\n":
                 print "Line %s, Column %s: Line Feed" % (line, col)
             else:
-                print "Line %s, Column %s: %s" % (line, col, c.encode(stream.charEncoding))
+                print "Line %s, Column %s: %s" % (line, col, c.encode('utf-8'))
             c = stream.read(1)
         print "EOF"
     except IOError:
