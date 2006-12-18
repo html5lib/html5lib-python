@@ -246,10 +246,9 @@ class HTMLParser(object):
             # XXX why clone?
             i += 1
             clone = self.activeFormattingElements[i].cloneNode()
-            self.openElements[-1].appendChild(clone)
-            self.openElements.append(clone)
-            self.activeFormattingElements[i] = clone
-            if clone == self.activeFormattingElements[-1]:
+            element = self.insertElement(clone.name, clone.attributes)
+            self.activeFormattingElements[i] = element
+            if element == self.activeFormattingElements[-1]:
                 break
 
     def clearActiveFormattingElements(self):
@@ -290,6 +289,7 @@ class HTMLParser(object):
             #special magic element rearranging
             self.insertMisnestedNodeFromTable(element)
             self.openElements.append(element)
+        return element
 
     def insertText(self, data, parent=None):
         node = TextNode(data)
