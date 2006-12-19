@@ -177,23 +177,25 @@ class HTMLTokenizer(object):
         else:
             return self.dataStream.readChar()
 
-    def consumeUntil(self, charList):
-        """ Get a list of characters up to but not including any character in
-        charList.
+    def consumeCharsUntil(self, characters):
+        """ Returns a string of characters from the stream up to but not
+        including any character in characters or EOF. characters can be
+        any container that supports the in method being called on it.
         """
         charStack = [self.consumeChar()]
         # Fill up from the local queue first
-        while charStack[-1] and charStack[-1] not in charList and \
+        while charStack[-1] and charStack[-1] not in characters and \
           self.characterQueue:
           charStack.append(self.characterQueue.pop(0))
 
         # Then direct from the dataStream
-        while charStack[-1] and charStack[-1] not in charList:
+        while charStack[-1] and charStack[-1] not in characters:
             charStack.append(self.dataStream.readChar())
 
-        # Reconsume the character we stopped on later
-        self.characterQueue.append(charStack.pop())
-        return charStack
+        # Put the character stopped on back to the front of the characterQueue
+        # from where it came.
+        self.characterQueue.insert(0, charStack.pop())
+        return "".join(charStack)
 
     # Below are various helper functions the tokenizer states use worked out.
 
@@ -399,8 +401,8 @@ class HTMLTokenizer(object):
         elif data == EOF:
             self.emitCurrentTokenWithParseError(data)
         else:
-            charStack = [data]+self.consumeUntil((quoteType, u"&"))
-            self.currentToken.data[-1][1] += "".join(charStack)
+            data += self.consumeCharsUntil((quoteType, u"&"))
+            self.currentToken.data[-1][1] += data
 
     # Below are the various tokenizer states worked out.
 
@@ -421,9 +423,7 @@ class HTMLTokenizer(object):
             # Tokenization ends.
             return False
         else:
-            # XXX removing this trick lets us pass a test again.
-            charStack = [data]+self.consumeUntil(u"&<")
-            self.emitToken(Character("".join(charStack)))
+            self.emitToken(Character(data))
         return True
 
     def entityDataState(self):
@@ -544,7 +544,7 @@ class HTMLTokenizer(object):
             self.processSolidusInTag()
             self.changeState("beforeAttributeName")
         else:
-            self.currentToken.name += data+"".join(self.consumeUntil(u"></"))
+            self.currentToken.name += data
         return True
 
     def beforeAttributeNameState(self):
@@ -670,11 +670,11 @@ class HTMLTokenizer(object):
     def bogusCommentState(self):
         assert self.contentModelFlag == contentModelFlags["PCDATA"]
 
-        charStack = self.consumeUntil(u">")
+        charStack = self.consumeCharsUntil((u">"))
 
         char = self.consumeChar()
 
-        if not char:
+        if char == EOF:
             self.characterQueue.append(EOF)
 
         # Make a new comment token and give it as value the characters the loop
@@ -711,7 +711,7 @@ class HTMLTokenizer(object):
         elif data == EOF:
             self.emitCurrentTokenWithParseError(data)
         else:
-            self.currentToken.data += data+"".join(self.consumeUntil(u"-"))
+            self.currentToken.data += data+self.consumeCharsUntil(u"-")
         return True
 
     def commentDashState(self):
