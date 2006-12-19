@@ -423,7 +423,9 @@ class HTMLTokenizer(object):
             # Tokenization ends.
             return False
         else:
-            self.emitToken(Character(data))
+            data += self.consumeCharsUntil((u"&", u"<"))
+            for char in data:
+                self.emitToken(Character(char))
         return True
 
     def entityDataState(self):
