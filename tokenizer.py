@@ -178,7 +178,25 @@ class HTMLTokenizer(object):
         if self.characterQueue:
             return self.characterQueue.pop(0)
         else:
-            return self.dataStream.read(1) or EOF
+            return self.dataStream.readChar()
+    
+    def consumeUntil(self, charList):
+        """Get a list of characters up to but not including any character in
+        charList.
+        """
+        charStack = [self.consumeChar()]
+        # Fill up from the local queue first
+        while charStack[-1] and charStack[-1] not in charList and \
+          self.characterQueue:
+          charStack.append(self.characterQueue.pop(0))
+        
+        # Then direct from the dataStream
+        while charStack[-1] and charStack[-1] not in charList:
+            charStack.append(self.dataStream.readChar())
+        
+        # Reconsume the character we stopped on later
+        self.characterQueue.append(charStack.pop())
+        return charStack
     
     # Below are various helper functions the tokenizer states use worked out.
     
@@ -384,7 +402,8 @@ class HTMLTokenizer(object):
         elif data == EOF:
             self.emitCurrentTokenWithParseError(data)
         else:
-            self.currentToken.data[-1][1] += data
+            charStack = [data]+self.consumeUntil((quoteType, u"&"))
+            self.currentToken.data[-1][1] += "".join(charStack)
     
     # Below are the various tokenizer states worked out.
     
@@ -407,7 +426,8 @@ class HTMLTokenizer(object):
             #self.emitToken(EOF())
             return False
         else:
-            self.emitToken(Character(data))
+            charStack = [data]+self.consumeUntil((u"&",u"<"))
+            self.emitToken(Character("".join(charStack)))
         return True
     
     def entityDataState(self):
@@ -528,7 +548,7 @@ class HTMLTokenizer(object):
             self.processSolidusInTag()
             self.changeState("beforeAttributeName")
         else:
-            self.currentToken.name += data
+            self.currentToken.name += data+"".join(self.consumeUntil(u"></"))
         return True
     
     def beforeAttributeNameState(self):
@@ -558,7 +578,7 @@ class HTMLTokenizer(object):
             self.changeState("beforeAttributeValue")
         elif data == u">":
             # XXX If we emit here the attributes are converted to a dict
-            # without being checked and when the code below runs we error 
+            # without being checked and when the code below runs we error
             # because data is a dict not a list
             pass
         elif data in asciiUppercase:
@@ -654,17 +674,17 @@ class HTMLTokenizer(object):
     def bogusCommentState(self):
         assert self.contentModelFlag == contentModelFlags["PCDATA"]
         
-        charStack = [self.consumeChar()]
-        while charStack[-1] not in [u">", EOF]:
-            charStack.append(self.consumeChar())
+        charStack = self.consumeUntil(u">")
         
-        if charStack[-1] == EOF:
+        char = self.consumeChar()
+        
+        if not char:
             self.characterQueue.append(EOF)
         
         # Make a new comment token and give it as value the characters the loop
         # consumed. The last character is either > or EOF and should not be
         # part of the comment data.
-        self.currentToken = Comment("".join(charStack[:-1]))
+        self.currentToken = Comment("".join(charStack))
         self.emitCurrentToken()
         return True
     
@@ -695,7 +715,7 @@ class HTMLTokenizer(object):
         elif data == EOF:
             self.emitCurrentTokenWithParseError(data)
         else:
-            self.currentToken.data += data
+            self.currentToken.data += data+"".join(self.consumeUntil(u"-"))
         return True
     
     def commentDashState(self):
@@ -706,6 +726,7 @@ class HTMLTokenizer(object):
             self.emitCurrentTokenWithParseError(data)
         else:
             self.currentToken.data += u"-" + data
+            self.changeState("comment")
         return True
     
     def commentEndState(self):

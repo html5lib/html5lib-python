@@ -21,7 +21,7 @@ class HTMLInputStream(object):
         """
         
         # List of where new lines occur
-        self.newLines = [0]
+        self.newLines = []
         
         # Encoding Information
         self.charEncoding = encoding
@@ -58,11 +58,6 @@ class HTMLInputStream(object):
         
         # Reset position in the list to read from
         self.reset()
-        
-        # Loop through stream and find where new lines occur
-        for i in xrange(self.tell, len(uList)):
-            if uList[i] == u"\n":
-                self.newLines.append(i)
         
         # Use the normalized unicode list as the data stream
         self.dataStream = uList
@@ -127,9 +122,21 @@ class HTMLInputStream(object):
         """
         pass
     
+    def determineNewLines(self):
+        """ Looks through the stream to find where new lines occur so
+        the position method can tell where it is.
+        """
+        self.newLines.append(self.skipBOM or 0)
+        for i in xrange(len(self.dataStream)):
+            if self.dataStream[i] == u"\n":
+                self.newLines.append(i)
+    
     def position(self):
         """ Returns (line, col) position in the stream
         """
+        # Calculate where new lines occur only if it hasn't been done yet
+        if not self.newLines:
+            self.determineNewLines()
         line = 0
         tell = self.tell
         for pos in self.newLines:
@@ -144,9 +151,9 @@ class HTMLInputStream(object):
         """ Resets the position in the stream back to the start
         """
         self.tell = self.skipBOM or 0
-
-    def read(self, size=1):
-        """ Reads size characters from the stream or EOF if EOF is reached.
+    
+    def readChar(self):
+        """ Read one character from the stream or EOF if EOF is reached.
         """
         try:
             self.tell += 1
