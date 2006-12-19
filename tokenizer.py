@@ -418,12 +418,11 @@ class HTMLTokenizer(object):
           self.contentModelFlag != contentModelFlags["PLAINTEXT"]):
             self.changeState("tagOpen")
         elif data == EOF:
-            # XXX Shouldn't need an EOF Token because when we reach the end of
-            # the loop it means we reached the EOF anyway
-            #self.emitToken(EOF())
+            # Tokenization ends.
             return False
         else:
-            charStack = [data]+self.consumeUntil((u"&",u"<"))
+            # XXX removing this trick lets us pass a test again.
+            charStack = [data]+self.consumeUntil(u"&<")
             self.emitToken(Character("".join(charStack)))
         return True
 
