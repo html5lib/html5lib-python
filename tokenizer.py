@@ -325,7 +325,7 @@ class HTMLTokenizer(object):
                     entityName = possibleEntityName
                     break
 
-            if entityName is not None:
+            if entityName:
                 char = entities[entityName]
 
                 # Check whether or not the last character returned can be
