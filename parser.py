@@ -345,8 +345,6 @@ class HTMLParser(object):
             assert self.innerHTML
             fosterParent = self.openElements[0]
             fosterParent.appendChild(element)
-        import sys
-        sys.stderr.write(repr(fosterParent))
 
     def generateImpliedEndTags(self, exclude=None):
         name = self.openElements[-1].name
