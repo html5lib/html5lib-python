@@ -1595,6 +1595,9 @@ class InRow(InsertionMode):
             self.parser.parseError()
 
     # the rest
+    def processNonSpaceCharacter(self, data):
+        InTable(self.parser).processNonSpaceCharacter(data)
+
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
             (("td", "th"), self.startTagTableCell),
