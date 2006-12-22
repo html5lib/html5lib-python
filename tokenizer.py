@@ -515,7 +515,7 @@ class HTMLTokenizer(object):
         if self.contentModelFlag == contentModelFlags["PCDATA"]:
             data = self.consumeChar()
             if data in asciiLetters:
-                self.currentToken = EndTag(data)
+                self.currentToken = EndTag(data.lower())
                 self.changeState("tagName")
             elif data == u">":
                 self.emitToken(ParseError())

@@ -1112,8 +1112,8 @@ class InBody(InsertionMode):
 
     def endTagFormatting(self, name):
         """The much-feared adoption agency algorithm"""
-        # XXX I don't like while True + break... too much
-        # possibility of infinite loops
+        # XXX I don't like while True + break... Too much possibility of
+        # infinite loops
         while True:
             # Step 1 paragraph 1
             afeElement = self.parser.elementInActiveFormattingElements(name)
