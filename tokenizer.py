@@ -375,7 +375,7 @@ class HTMLTokenizer(object):
         # Add token to the queue to be yielded
         self.tokenQueue.append(token)
 
-        self.changeState('data')
+        self.changeState("data")
 
     def emitToken(self, token):
         """ Used to add tokens directly to the queue to be yeilded
@@ -586,6 +586,7 @@ class HTMLTokenizer(object):
             self.changeState("beforeAttributeName")
         elif data == u"<" or data == EOF:
             self.emitCurrentTokenWithParseError(data)
+            leavingThisState = False
         else:
             self.currentToken.data[-1][0] += data
             leavingThisState = False
