@@ -1111,9 +1111,8 @@ class InBody(InsertionMode):
                 break
 
     def endTagFormatting(self, name):
-        """The much-feared adoption agency algorithm"""
-        # XXX I don't like while True + break... Too much possibility of
-        # infinite loops
+        """The much-feared adoption agency algorithm
+        """
         while True:
             # Step 1 paragraph 1
             afeElement = self.parser.elementInActiveFormattingElements(name)
@@ -1133,7 +1132,7 @@ class InBody(InsertionMode):
                 self.parser.parseError()
 
             # Step 2
-            # XXX Start of the adoption agency algorithm proper
+            # Start of the adoption agency algorithm proper
             afeIndex = self.parser.openElements.index(afeElement)
             furthestBlock = None
             for element in self.parser.openElements[afeIndex:]:
@@ -1279,7 +1278,6 @@ class InBody(InsertionMode):
 
 class InTable(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-table
-    # XXX Need some idea of how to address the "anything else" case here...
 
     # helper methods
     def clearStackToTableContext(self):
@@ -1290,7 +1288,6 @@ class InTable(InsertionMode):
         # When the current node is <html> it's an innerHTML case
 
     # processing methods
-    # processComment is handled by InsertionMode
     def processNonSpaceCharacter(self, data):
         self.parser.parseError()
         # Make all the special element rearranging voodoo kick in
@@ -1741,7 +1738,6 @@ class InSelect(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-select
 
     # No need for processComment.
-    # XXX character token ... always appended to the current node
     def processNonSpaceCharacter(self, data):
         self.parser.insertText(data)
 
