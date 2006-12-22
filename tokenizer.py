@@ -271,11 +271,10 @@ class HTMLTokenizer(object):
 
     def consumeEntity(self):
         char = None
-        charStack = []
-        charStack.append(self.consumeChar())
+        charStack = [self.consumeChar()]
         if charStack[0] == u"#":
-            charStack.append(self.consumeChar())
-            charStack.append(self.consumeChar())
+            # We might have a number entity here.
+            charStack.extend([self.consumeChar(), self.consumeChar()])
             if EOF in charStack:
                 # If we reach the end of the file put everything up to EOF
                 # back in the queue
