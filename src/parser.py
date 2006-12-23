@@ -1376,7 +1376,7 @@ class InCaption(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-caption
     # XXX ...
 
-    def processCharacter(data):
+    def processCharacter(self, data):
         InBody(self.parser).processCharacter(data)
 
     def processStartTag(self, name, attributes):
@@ -1411,8 +1411,8 @@ class InCaption(InsertionMode):
 
     def endTagCaption(self, name):
         if self.parser.elementInScope(name, True):
-            # XXX this code is quite similar to endTagTable in "InTable"
-            self.generateImpliedEndTags()
+            # AT this code is quite similar to endTagTable in "InTable"
+            self.parser.generateImpliedEndTags()
             if self.parser.openElements[-1].name == "caption":
                 self.parser.parseError()
             while self.parser.openElements[-1].name != "caption":
