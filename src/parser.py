@@ -240,32 +240,44 @@ class HTMLParser(object):
         assert False # We should never reach this point
 
     def reconstructActiveFormattingElements(self):
-        # This covers the ", if any" case mentioned often in the drafts, before
-        # you have to reconstruct the active formatting elements.
+        # Within this algorithm the order of steps described in the
+        # specification is not quite the same as the order of steps in the
+        # code. It should still do the same though.
+
+        # Step 1: stop the algorithm when there's nothing to do.
         if not self.activeFormattingElements:
             return
 
-        # We start with the last element. So i is -1.
+        # Step 2 and step 3: we start with the last element. So i is -1.
         i = -1
         entry = self.activeFormattingElements[i]
-
-        # Step 1
         if entry == Marker or entry in self.openElements:
             return
 
-        # Step 2 is covered above. When we assign entry to the last element.
-        # Step 3 and 4.
-        # XXX The specification says "and entry _not_ in" but that doesn't
-        # work. This seems to give correct results too...
-        while entry != Marker and entry in self.openElements:
+        # Step 6
+        while entry != Marker and entry not in self.openElements:
+            # Step 5: let entry be one earlier in the list.
             i -= 1
-            entry = self.activeFormattingElements[i]
+            try:
+                entry = self.activeFormattingElements[i]
+            except:
+                # Step 4: at this point we need to jump to step 8. By not doing
+                # i += 1 which is also done in step 7 we achieve that.
+                break
         while True:
-            # XXX why clone?
+            # Step 7
             i += 1
+
+            # Step 8
             clone = self.activeFormattingElements[i].cloneNode()
+
+            # Step 9
             element = self.insertElement(clone.name, clone.attributes)
+
+            # Step 10
             self.activeFormattingElements[i] = element
+
+            # Step 11
             if element == self.activeFormattingElements[-1]:
                 break
 
