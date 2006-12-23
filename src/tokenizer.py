@@ -167,22 +167,7 @@ class HTMLTokenizer(object):
         self.state = self.states[state]
 
 
-    def consumeCharsUntil(self, characters):
-        """ Returns a string of characters from the stream up to but not
-        including any character in characters or EOF. characters can be
-        any container that supports the in method being called on it.
-        """
-        charStack = [self.stream.char()]
-        while charStack[-1] and charStack[-1] not in characters:
-          charStack.append(self.stream.char())
-
-        # Put the character stopped on back to the front of the queue
-        # from where it came.
-        self.stream.queue.insert(0, charStack.pop())
-        return "".join(charStack)
-
     # Below are various helper functions the tokenizer states use worked out.
-
     def processSolidusInTag(self):
         """When a solidus (/) is encountered within a tag name what happens
         depends on whether the current tag name matches that of a void element.
@@ -384,7 +369,7 @@ class HTMLTokenizer(object):
         elif data == EOF:
             self.emitCurrentTokenWithParseError(data)
         else:
-            data += self.consumeCharsUntil((quoteType, u"&"))
+            data += self.stream.charsUntil((quoteType, u"&"))
             self.currentToken.data[-1][1] += data
 
     # Below are the various tokenizer states worked out.
@@ -406,7 +391,7 @@ class HTMLTokenizer(object):
             # Tokenization ends.
             return False
         else:
-            data += self.consumeCharsUntil((u"&", u"<"))
+            data += self.stream.charsUntil((u"&", u"<"))
             for char in data:
                 self.emitToken(Character(char))
         return True
@@ -656,7 +641,7 @@ class HTMLTokenizer(object):
     def bogusCommentState(self):
         assert self.contentModelFlag == contentModelFlags["PCDATA"]
 
-        charStack = self.consumeCharsUntil((u">"))
+        charStack = self.stream.charsUntil((u">"))
 
         char = self.stream.char()
 
@@ -697,7 +682,7 @@ class HTMLTokenizer(object):
         elif data == EOF:
             self.emitCurrentTokenWithParseError(data)
         else:
-            self.currentToken.data += data+self.consumeCharsUntil(u"-")
+            self.currentToken.data += data+self.stream.charsUntil(u"-")
         return True
 
     def commentDashState(self):
