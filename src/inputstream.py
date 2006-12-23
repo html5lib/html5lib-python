@@ -59,6 +59,8 @@ class HTMLInputStream(object):
         # Convert the unicode string into a list to be used as the data stream
         self.dataStream = list(uString)
 
+        self.queue = []
+
         # Reset position in the list to read from
         self.reset()
 
@@ -153,13 +155,18 @@ class HTMLInputStream(object):
         """Resets the position in the stream back to the start."""
         self.tell = 0
 
-    def readChar(self):
-        """Read one character from the stream or EOF if EOF is reached."""
-        try:
-            self.tell += 1
-            return self.dataStream[self.tell - 1]
-        except:
-            return None
+    def char(self):
+        """ Read one character from the stream or queue if available. Return
+            EOF when EOF is reached.
+        """
+        if self.queue:
+            return self.queue.pop(0)
+        else:
+            try:
+                self.tell += 1
+                return self.dataStream[self.tell - 1]
+            except:
+                return EOF
 
 if __name__ == "__main__":
     try:

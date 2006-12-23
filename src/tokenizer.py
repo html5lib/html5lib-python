@@ -104,13 +104,14 @@ class HTMLTokenizer(object):
     * self.states
       Holds a mapping between states and methods that implement the state.
 
-    * self.dataStream
+    * self.stream
+      Points to HTMLInputStream object.
     """
 
     # XXX need to fix documentation
 
     def __init__(self, stream):
-        self.dataStream = HTMLInputStream(stream)
+        self.stream = HTMLInputStream(stream)
 
         self.states = {
             "data":self.dataState,
@@ -144,7 +145,7 @@ class HTMLTokenizer(object):
         # The current token being created
         self.currentToken = None
 
-        self.characterQueue = []
+        # Tokens to be processed.
         self.tokenQueue = []
 
     def __iter__(self):
@@ -154,7 +155,7 @@ class HTMLTokenizer(object):
         to return we yield the token which pauses processing until the next token
         is requested.
         """
-        self.dataStream.reset()
+        self.stream.reset()
         self.tokenQueue = []
         # Start processing. When EOF is reached self.state will return False
         # instead of True and the loop will terminate.
@@ -165,36 +166,19 @@ class HTMLTokenizer(object):
     def changeState(self, state):
         self.state = self.states[state]
 
-    def consumeChar(self):
-        """Get the next character to be consumed
-
-        If the characterQueue has characters they must be processed before any
-        character is added to the stream. This is to allow e.g. lookahead
-        """
-
-        if self.characterQueue:
-            return self.characterQueue.pop(0)
-        else:
-            return self.dataStream.readChar()
 
     def consumeCharsUntil(self, characters):
         """ Returns a string of characters from the stream up to but not
         including any character in characters or EOF. characters can be
         any container that supports the in method being called on it.
         """
-        charStack = [self.consumeChar()]
-        # Fill up from the local queue first
-        while charStack[-1] and charStack[-1] not in characters and \
-          self.characterQueue:
-          charStack.append(self.characterQueue.pop(0))
-
-        # Then direct from the dataStream
+        charStack = [self.stream.char()]
         while charStack[-1] and charStack[-1] not in characters:
-            charStack.append(self.dataStream.readChar())
+          charStack.append(self.stream.char())
 
-        # Put the character stopped on back to the front of the characterQueue
+        # Put the character stopped on back to the front of the queue
         # from where it came.
-        self.characterQueue.insert(0, charStack.pop())
+        self.stream.queue.insert(0, charStack.pop())
         return "".join(charStack)
 
     # Below are various helper functions the tokenizer states use worked out.
@@ -208,7 +192,7 @@ class HTMLTokenizer(object):
 
         # We need to consume another character to make sure it's a ">" before
         # throwing an atheist parse error.
-        data = self.consumeChar()
+        data = self.stream.char()
 
         if self.currentToken.name in voidElements and data == u">":
             self.emitToken(AtheistParseError())
@@ -217,7 +201,7 @@ class HTMLTokenizer(object):
 
         # The character we just consumed need to be put back on the stack so it
         # doesn't get lost...
-        self.characterQueue.append(data)
+        self.stream.queue.append(data)
 
     def consumeNumberEntity(self, isHex):
         """This function returns either U+FFFD or the character based on the
@@ -236,10 +220,10 @@ class HTMLTokenizer(object):
 
         # Consume all the characters that are in range while making sure we
         # don't hit an EOF.
-        c = self.consumeChar()
+        c = self.stream.char()
         while c in allowed and c is not EOF:
             charStack.append(c)
-            c = self.consumeChar()
+            c = self.stream.char()
 
         # Convert the set of characters consumed to an int.
         charAsInt = int("".join(charStack), radix)
@@ -265,35 +249,35 @@ class HTMLTokenizer(object):
         # invoke parseError on parser.
         if c != u";":
             self.emitToken(ParseError())
-            self.characterQueue.append(c)
+            self.stream.queue.append(c)
 
         return char
 
     def consumeEntity(self):
         char = None
-        charStack = [self.consumeChar()]
+        charStack = [self.stream.char()]
         if charStack[0] == u"#":
             # We might have a number entity here.
-            charStack.extend([self.consumeChar(), self.consumeChar()])
+            charStack.extend([self.stream.char(), self.stream.char()])
             if EOF in charStack:
                 # If we reach the end of the file put everything up to EOF
                 # back in the queue
                 charStack = charStack[:charStack.index(EOF)]
-                self.characterQueue.extend(charStack)
+                self.stream.queue.extend(charStack)
                 self.emitToken(ParseError())
             else:
                 if charStack[1].lower() == u"x" \
                   and charStack[2] in hexDigits:
                     # Hexadecimal entity detected.
-                    self.characterQueue.append(charStack[2])
+                    self.stream.queue.append(charStack[2])
                     char = self.consumeNumberEntity(True)
                 elif charStack[1] in digits:
                     # Decimal entity detected.
-                    self.characterQueue.extend(charStack[1:])
+                    self.stream.queue.extend(charStack[1:])
                     char = self.consumeNumberEntity(False)
                 else:
                     # No number entity detected.
-                    self.characterQueue.extend(charStack)
+                    self.stream.queue.extend(charStack)
                     self.emitToken(ParseError())
         # Break out if we reach the end of the file
         elif charStack[0] == EOF:
@@ -312,7 +296,7 @@ class HTMLTokenizer(object):
 
             while (charStack[-1] != EOF and
                    entitiesStartingWith("".join(charStack))):
-                charStack.append(self.consumeChar())
+                charStack.append(self.stream.char())
 
             # At this point we have a string that starts with some characters
             # that may match an entity
@@ -332,10 +316,10 @@ class HTMLTokenizer(object):
                 # discarded or needs to be put back.
                 if not charStack[-1] == ";":
                     self.emitToken(ParseError())
-                    self.characterQueue.extend(charStack[entityLength:])
+                    self.stream.queue.extend(charStack[entityLength:])
             else:
                 self.emitToken(ParseError())
-                self.characterQueue.extend(charStack)
+                self.stream.queue.extend(charStack)
         return char
 
     def processEntityInAttribute(self):
@@ -387,12 +371,12 @@ class HTMLTokenizer(object):
         except that it also puts "data" back on the characters queue if a data
         argument is provided and it throws a parse error."""
         if data:
-            self.characterQueue.append(data)
+            self.stream.queue.append(data)
         self.emitCurrentToken()
         self.emitToken(ParseError())
 
     def attributeValueQuotedStateHandler(self, quoteType):
-        data = self.consumeChar()
+        data = self.stream.char()
         if data == quoteType:
             self.changeState("beforeAttributeName")
         elif data == u"&":
@@ -410,7 +394,7 @@ class HTMLTokenizer(object):
     # statements should be.
 
     def dataState(self):
-        data = self.consumeChar()
+        data = self.stream.char()
         if (data == u"&" and
           (self.contentModelFlag in
           (contentModelFlags["PCDATA"], contentModelFlags["RCDATA"]))):
@@ -439,14 +423,14 @@ class HTMLTokenizer(object):
         return True
 
     def tagOpenState(self):
-        data = self.consumeChar()
+        data = self.stream.char()
         if (self.contentModelFlag in
           (contentModelFlags["RCDATA"], contentModelFlags["CDATA"])):
             if data == u"/":
                 self.changeState("closeTagOpen")
             else:
                 self.emitToken(Character(u"<"))
-                self.characterQueue.append(data)
+                self.stream.queue.append(data)
                 self.changeState("data")
         elif self.contentModelFlag == contentModelFlags['PCDATA']:
             if data == u"!":
@@ -463,12 +447,12 @@ class HTMLTokenizer(object):
                 self.changeState("data")
             elif data == u"?":
                 self.emitToken(ParseError())
-                self.characterQueue.append(data)
+                self.stream.queue.append(data)
                 self.changeState("bogusComment")
             else:
                 self.emitToken(ParseError())
                 self.emitToken(Character(u"<"))
-                self.characterQueue.append(data)
+                self.stream.queue.append(data)
                 self.changeState("data")
         else:
             assert False
@@ -485,14 +469,14 @@ class HTMLTokenizer(object):
             # to have the character directly after the characters that could
             # match the start tag name.
             for x in xrange(len(self.currentToken.name)+1):
-                charStack.append(self.consumeChar())
+                charStack.append(self.stream.char())
                 # Make sure we don't get hit by EOF
                 if charStack[-1] == EOF:
                     break
 
             # Since this is just for checking. We put the characters back on
             # the stack.
-            self.characterQueue.extend(charStack)
+            self.stream.queue.extend(charStack)
 
             if self.currentToken.name == "".join(charStack[:-1]).lower() \
               and charStack[-1] in (spaceCharacters |
@@ -512,7 +496,7 @@ class HTMLTokenizer(object):
                 return True
 
         if self.contentModelFlag == contentModelFlags["PCDATA"]:
-            data = self.consumeChar()
+            data = self.stream.char()
             if data in asciiLetters:
                 self.currentToken = EndTag(data.lower())
                 self.changeState("tagName")
@@ -523,16 +507,16 @@ class HTMLTokenizer(object):
                 self.emitToken(ParseError())
                 self.emitToken(Character(u"<"))
                 self.emitToken(Character(u"/"))
-                self.characterQueue.append(data)
+                self.stream.queue.append(data)
                 self.changeState("data")
             else:
                 self.emitToken(ParseError())
-                self.characterQueue.append(data)
+                self.stream.queue.append(data)
                 self.changeState("bogusComment")
         return True
 
     def tagNameState(self):
-        data = self.consumeChar()
+        data = self.stream.char()
         if data in spaceCharacters:
             self.changeState("beforeAttributeName")
         elif data == u">":
@@ -549,7 +533,7 @@ class HTMLTokenizer(object):
         return True
 
     def beforeAttributeNameState(self):
-        data = self.consumeChar()
+        data = self.stream.char()
         if data in spaceCharacters:
             pass
         elif data == u">":
@@ -567,7 +551,7 @@ class HTMLTokenizer(object):
         return True
 
     def attributeNameState(self):
-        data = self.consumeChar()
+        data = self.stream.char()
         leavingThisState = True
         if data in spaceCharacters:
             self.changeState("afterAttributeName")
@@ -604,7 +588,7 @@ class HTMLTokenizer(object):
         return True
 
     def afterAttributeNameState(self):
-        data = self.consumeChar()
+        data = self.stream.char()
         if data in spaceCharacters:
             pass
         elif data == u"=":
@@ -625,14 +609,14 @@ class HTMLTokenizer(object):
         return True
 
     def beforeAttributeValueState(self):
-        data = self.consumeChar()
+        data = self.stream.char()
         if data in spaceCharacters:
             pass
         elif data == u"\"":
             self.changeState("attributeValueDoubleQuoted")
         elif data == u"&":
             self.changeState("attributeValueUnQuoted")
-            self.characterQueue.append(data);
+            self.stream.queue.append(data);
         elif data == u"'":
             self.changeState("attributeValueSingleQuoted")
         elif data == u">":
@@ -656,7 +640,7 @@ class HTMLTokenizer(object):
         return True
 
     def attributeValueUnQuotedState(self):
-        data = self.consumeChar()
+        data = self.stream.char()
         if data in spaceCharacters:
             self.changeState("beforeAttributeName")
         elif data == u"&":
@@ -674,10 +658,10 @@ class HTMLTokenizer(object):
 
         charStack = self.consumeCharsUntil((u">"))
 
-        char = self.consumeChar()
+        char = self.stream.char()
 
         if char == EOF:
-            self.characterQueue.append(EOF)
+            self.stream.queue.append(EOF)
 
         # Make a new comment token and give it as value the characters the loop
         # consumed. The last character is either > or EOF and should not be
@@ -689,25 +673,25 @@ class HTMLTokenizer(object):
     def markupDeclarationOpenState(self):
         assert self.contentModelFlag == contentModelFlags["PCDATA"]
 
-        charStack = [self.consumeChar(), self.consumeChar()]
+        charStack = [self.stream.char(), self.stream.char()]
         if charStack == [u"-", u"-"]:
             self.currentToken = Comment()
             self.changeState("comment")
         else:
             for x in xrange(5):
-                charStack.append(self.consumeChar())
+                charStack.append(self.stream.char())
             #XXX - put in explicit None check
             if (not EOF in charStack and
                 "".join(charStack).upper() == u"DOCTYPE"):
                 self.changeState("doctype")
             else:
                 self.emitToken(ParseError())
-                self.characterQueue.extend(charStack)
+                self.stream.queue.extend(charStack)
                 self.changeState("bogusComment")
         return True
 
     def commentState(self):
-        data = self.consumeChar()
+        data = self.stream.char()
         if data == u"-":
             self.changeState("commentDash")
         elif data == EOF:
@@ -717,7 +701,7 @@ class HTMLTokenizer(object):
         return True
 
     def commentDashState(self):
-        data = self.consumeChar()
+        data = self.stream.char()
         if data == u"-":
             self.changeState("commentEnd")
         elif data == EOF:
@@ -728,7 +712,7 @@ class HTMLTokenizer(object):
         return True
 
     def commentEndState(self):
-        data = self.consumeChar()
+        data = self.stream.char()
         if data == u">":
             self.emitCurrentToken()
         elif data == u"-":
@@ -743,17 +727,17 @@ class HTMLTokenizer(object):
         return True
 
     def doctypeState(self):
-        data = self.consumeChar()
+        data = self.stream.char()
         if data in spaceCharacters:
             self.changeState("beforeDoctypeName")
         else:
             self.emitToken(ParseError())
-            self.characterQueue.append(data)
+            self.stream.queue.append(data)
             self.changeState("beforeDoctypeName")
         return True
 
     def beforeDoctypeNameState(self):
-        data = self.consumeChar()
+        data = self.stream.char()
         if data in spaceCharacters:
             pass
         elif data in asciiLowercase:
@@ -771,7 +755,7 @@ class HTMLTokenizer(object):
         return True
 
     def doctypeNameState(self):
-        data = self.consumeChar()
+        data = self.stream.char()
         needsDoctypeCheck = False
         if data in spaceCharacters:
             self.changeState("afterDoctypeName")
@@ -795,7 +779,7 @@ class HTMLTokenizer(object):
         return True
 
     def afterDoctypeNameState(self):
-        data = self.consumeChar()
+        data = self.stream.char()
         if data in spaceCharacters:
             pass
         elif data == u">":
@@ -810,7 +794,7 @@ class HTMLTokenizer(object):
         return True
 
     def bogusDoctypeState(self):
-        data = self.consumeChar()
+        data = self.stream.char()
         if data == u">":
             self.emitCurrentToken()
         elif data == EOF:
