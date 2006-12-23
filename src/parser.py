@@ -616,7 +616,7 @@ class BeforeHead(InsertionMode):
             (("base", "link", "meta", "script", "style", "title"),
               self.startTagOther)
         ])
-        handlers.setDefaultValue(self.startTagOther)
+        handlers.default = self.startTagOther
         handlers[name](name, attributes)
 
     def startTagHead(self, name="head", attributes={}):
@@ -632,7 +632,7 @@ class BeforeHead(InsertionMode):
         handlers = utils.MethodDispatcher([
             ("html", self.endTagHtml)
         ])
-        handlers.setDefaultValue(self.endTagOther)
+        handlers.default = self.endTagOther
         handlers[name](name)
 
     def endTagHtml(self, name):
@@ -672,7 +672,7 @@ class InHead(InsertionMode):
             (("base", "link", "meta"), self.startTagBaseLinkMeta),
             ("head", self.startTagHead)
         ])
-        handlers.setDefaultValue(self.startTagOther)
+        handlers.default = self.startTagOther
         handlers[name](name, attributes)
 
     def startTagHead(self, name, attributes):
@@ -715,7 +715,7 @@ class InHead(InsertionMode):
             ("html", self.endTagHtml),
             (("title", "style", "script"), self.endTagTitleStyleScript)
         ])
-        handlers.setDefaultValue(self.endTagOther)
+        handlers.default = self.endTagOther
         handlers[name](name)
 
     def endTagHead(self, name):
@@ -760,7 +760,7 @@ class AfterHead(InsertionMode):
             (("base", "link", "meta", "script", "style", "title"),
               self.startTagFromHead)
         ])
-        handlers.setDefaultValue(self.startTagOther)
+        handlers.default = self.startTagOther
         handlers[name](name, attributes)
 
     def startTagBody(self, name, attributes):
@@ -840,7 +840,7 @@ class InBody(InsertionMode):
             (("event-source", "section", "nav", "article", "aside", "header",
               "footer", "datagrid", "command"), self.startTagNew)
         ])
-        handlers.setDefaultValue(self.startTagOther)
+        handlers.default = self.startTagOther
         handlers[name](name, attributes)
 
     def startTagScript(self, name, attributes):
@@ -1056,7 +1056,7 @@ class InBody(InsertionMode):
             (("event-source", "section", "nav", "article", "aside", "header",
               "footer", "datagrid", "command"), self.endTagNew)
             ])
-        handlers.setDefaultValue(self.endTagOther)
+        handlers.default = self.endTagOther
         handlers[name](name)
 
     def endTagP(self, name):
@@ -1317,7 +1317,7 @@ class InTable(InsertionMode):
             (("td", "th", "tr"), self.startTagImplyTbody),
             ("table", self.startTagTable)
         ])
-        handlers.setDefaultValue(self.startTagOther)
+        handlers.default = self.startTagOther
         handlers[name](name, attributes)
 
     def startTagCaption(self, name, attributes):
@@ -1364,7 +1364,7 @@ class InTable(InsertionMode):
             (("body", "caption", "col", "colgroup", "html", "tbody", "td",
               "tfoot", "th", "thead", "tr"), self.endTagIgnore)
         ])
-        handlers.setDefaultValue(self.endTagOther)
+        handlers.default = self.endTagOther
         handlers[name](name)
 
     def endTagTable(self, name):
@@ -1403,7 +1403,7 @@ class InCaption(InsertionMode):
             (("caption", "col", "colgroup", "tbody", "td", "tfoot", "th",
               "thead", "tr"), self.startTagTableElement)
         ])
-        handlers.setDefaultValue(self.startTagOther)
+        handlers.default = self.startTagOther
         handlers[name](name, attributes)
 
     def startTagTableElement(self, name, attributes):
@@ -1425,7 +1425,7 @@ class InCaption(InsertionMode):
             (("body", "col", "colgroup", "html", "tbody", "td", "tfoot", "th",
               "thead", "tr"), self.endTagIgnore)
         ])
-        handlers.setDefaultValue(self.endTagOther)
+        handlers.default = self.endTagOther
         handlers[name](name)
 
     def endTagCaption(self, name):
@@ -1470,7 +1470,7 @@ class InColumnGroup(InsertionMode):
             ("col", self.startTagCol)
         ])
         # XXX Can we handle this through the anything else case??
-        handlers.setDefaultValue(self.startTagOther)
+        handlers.default = self.startTagOther
         handlers[name](name, attributes)
 
     def startTagCol(self, name ,attributes):
@@ -1489,7 +1489,7 @@ class InColumnGroup(InsertionMode):
             ("col", self.endTagCol)
         ])
         # XXX Can we handle this through the anything else case??
-        handlers.setDefaultValue(self.endTagOther)
+        handlers.default = self.endTagOther
         handlers[name](name)
 
     def endTagColgroup(self, name="colgroup"):
@@ -1530,7 +1530,7 @@ class InTableBody(InsertionMode):
             (("td", "th"), self.startTagTableCell),
             (("caption", "col", "colgroup", "tbody", "tfoot", "thead"), self.startTagTableOther)
         ])
-        handlers.setDefaultValue(self.startTagOther)
+        handlers.default = self.startTagOther
         handlers[name](name, attributes)
 
     def startTagTr(self, name="tr", attributes={}):
@@ -1565,7 +1565,7 @@ class InTableBody(InsertionMode):
             (("body", "caption", "col", "colgroup", "html", "td", "th",
               "tr"), self.endTagIgnore)
         ])
-        handlers.setDefaultValue(self.endTagOther)
+        handlers.default = self.endTagOther
         handlers[name](name)
 
     def endTagTableRowGroup(self, name):
@@ -1613,7 +1613,7 @@ class InRow(InsertionMode):
             (("caption", "col", "colgroup", "tbody", "tfoot", "thead",
               "tr"), self.startTagTableOther)
         ])
-        handlers.setDefaultValue(self.startTagOther)
+        handlers.default = self.startTagOther
         handlers[name](name, attributes)
 
     def startTagTableCell(self, name, attributes):
@@ -1639,7 +1639,7 @@ class InRow(InsertionMode):
             (("body", "caption", "col", "colgroup", "html", "td", "th"),
               self.endTagIgnore)
         ])
-        handlers.setDefaultValue(self.endTagOther)
+        handlers.default = self.endTagOther
         handlers[name](name)
 
     def endTagTr(self, name="tr"):
@@ -1691,7 +1691,7 @@ class InCell(InsertionMode):
             (("caption", "col", "colgroup", "tbody", "td", "tfoot", "th",
               "thead", "tr"), self.startTagTableOther)
         ])
-        handlers.setDefaultValue(self.startTagOther)
+        handlers.default = self.startTagOther
         handlers[name](name, attributes)
 
     def startTagTableOther(self, name, attributes):
@@ -1712,7 +1712,7 @@ class InCell(InsertionMode):
             (("body", "caption", "col", "colgroup", "html"), self.endTagIgnore),
             (("table", "tbody", "tfoot", "thead", "tr"), self.endTagImply)
         ])
-        handlers.setDefaultValue(self.endTagOther)
+        handlers.default = self.endTagOther
         handlers[name](name)
 
     def endTagTableCell(self, name):
@@ -1759,7 +1759,7 @@ class InSelect(InsertionMode):
             ("optgroup", self.startTagOptgroup),
             ("select", self.startTagSelect)
         ])
-        handlers.setDefaultValue(self.processAnythingElse)
+        handlers.default = self.processAnythingElse
         handlers[name](name, attributes)
 
     def startTagOption(self, name, attributes):
@@ -1789,7 +1789,7 @@ class InSelect(InsertionMode):
             (("caption", "table", "tbody", "tfoot", "thead", "tr", "td",
               "th"), self.endTagTableElements)
         ])
-        handlers.setDefaultValue(self.processAnythingElse)
+        handlers.default = self.processAnythingElse
         handlers[name](name)
 
     def endTagOption(self, name="option"):
@@ -1844,7 +1844,7 @@ class AfterBody(InsertionMode):
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([("html", self.endTagHtml)])
-        handlers.setDefaultValue(self.endTagOther)
+        handlers.default = self.endTagOther
         handlers[name](name)
 
     def endTagHtml(self,name):
@@ -1870,7 +1870,7 @@ class InFrameset(InsertionMode):
             ("frame", self.startTagFrame),
             ("noframes", self.startTagNoframes)
         ])
-        handlers.setDefaultValue(self.tagOther)
+        handlers.default = self.tagOther
         handlers[name](name, attributes)
 
     def startTagFrameset(self, name, attributes):
@@ -1885,7 +1885,7 @@ class InFrameset(InsertionMode):
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([("frameset", self.endTagFrameset)])
-        handlers.setDefaultValue(self.tagOther)
+        handlers.default = self.tagOther
         handlers[name](name)
 
     def endTagFrameset(self, name):
@@ -1909,7 +1909,7 @@ class AfterFrameset(InsertionMode):
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([("noframes", self.startTagNoframes)])
-        handlers.setDefaultValue(self.tagOther)
+        handlers.default = self.tagOther
         handlers[name](name, attributes)
 
     def startTagNoframes(self, name, attributes):
@@ -1917,7 +1917,7 @@ class AfterFrameset(InsertionMode):
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([("html", self.endTagHtml)])
-        handlers.setDefaultValue(self.tagOther)
+        handlers.default = self.tagOther
         handlers[name](name)
 
     def endTagHtml(self, name):

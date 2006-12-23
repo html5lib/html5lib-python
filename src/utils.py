@@ -13,7 +13,7 @@ class MethodDispatcher(dict):
     md = MethodDispatcher({["foo", "bar"]:"baz"})
     md["foo"] == "baz"
 
-    A default value which can be set through the setDefaultValue method
+    A default value which can be set through the default attribute.
     """
 
     def __init__(self, items=()):
@@ -25,17 +25,13 @@ class MethodDispatcher(dict):
             else:
                 _dictEntries.append((name, value))
         dict.__init__(self, _dictEntries)
-
-    def setDefaultValue(self, value):
-        # XXX I think we should not use a method here... it only complicates
-        # things. I think we should use self.default instead. Short and simple.
-        self.defaultValue = value
+        self.default = None
 
     def __getitem__(self, key):
         try:
             return dict.__getitem__(self, key)
         except KeyError:
-            if hasattr(self, "defaultValue"):
-                return self.defaultValue
+            if self.default:
+                return self.default
             else:
                 raise
