@@ -801,7 +801,9 @@ class InBody(InsertionMode):
             self.parser.openElements[-1])
 
     # the real deal
-    def processCharacter(self, data):
+    def processNonSpaceCharacter(self, data):
+        # XXX The specification says to do this for every character at the
+        # moment, but apparently that doesn't match the real world...
         self.parser.reconstructActiveFormattingElements()
         self.parser.insertText(data)
 
