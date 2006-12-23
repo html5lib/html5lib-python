@@ -168,7 +168,7 @@ class HTMLInputStream(object):
             except:
                 return EOF
 
-    def charsUntil(self, characters):
+    def charsUntil(self, characters, opposite = False):
         """ Returns a string of characters from the stream up to but not
         including any character in characters or EOF. characters can be
         any container that supports the in method being called on it.
@@ -176,13 +176,14 @@ class HTMLInputStream(object):
         charStack = [self.char()]
 
         # First from the queue
-        while charStack[-1] and charStack[-1] not in characters and self.queue:
-             charStack.append(self.queue.pop(0))
+        while charStack[-1] and (charStack[-1] in characters) == opposite \
+          and self.queue:
+            charStack.append(self.queue.pop(0))
 
         # Then the rest
-        while charStack[-1] and charStack[-1] not in characters:
-             charStack.append(self.char())
-        
+        while charStack[-1] and (charStack[-1] in characters) == opposite:
+            charStack.append(self.char())
+
         # Put the character stopped on back to the front of the queue
         # from where it came.
         self.queue.insert(0, charStack.pop())

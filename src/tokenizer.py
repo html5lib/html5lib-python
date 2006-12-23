@@ -504,10 +504,14 @@ class HTMLTokenizer(object):
         data = self.stream.char()
         if data in spaceCharacters:
             self.changeState("beforeAttributeName")
+        elif data in asciiLowercase:
+            data += self.stream.charsUntil(asciiLowercase, True)
+            self.currentToken.name += data
+        elif data in asciiUppercase:
+            data += self.stream.charsUntil(asciiLetters, True)
+            self.currentToken.name += data.lower()
         elif data == u">":
             self.emitCurrentToken()
-        elif data in asciiUppercase:
-            self.currentToken.name += data.lower()
         elif data == u"<" or data == EOF:
             self.emitCurrentTokenWithParseError(data)
         elif data == u"/":
@@ -521,11 +525,11 @@ class HTMLTokenizer(object):
         data = self.stream.char()
         if data in spaceCharacters:
             pass
-        elif data == u">":
-            self.emitCurrentToken()
         elif data in asciiUppercase:
             self.currentToken.data.append([data.lower(), ""])
             self.changeState("attributeName")
+        elif data == u">":
+            self.emitCurrentToken()
         elif data == u"/":
             self.processSolidusInTag()
         elif data == u"<" or data == EOF:
@@ -547,7 +551,12 @@ class HTMLTokenizer(object):
             # without being checked and when the code below runs we error
             # because data is a dict not a list
             pass
+        elif data in asciiLowercase:
+            data += self.stream.charsUntil(asciiLowercase, True)
+            self.currentToken.data[-1][0] += data
+            leavingThisState = False
         elif data in asciiUppercase:
+            data += self.stream.charsUntil(asciiLetters, True)
             self.currentToken.data[-1][0] += data.lower()
             leavingThisState = False
         elif data == u"/":
@@ -665,7 +674,7 @@ class HTMLTokenizer(object):
         else:
             for x in xrange(5):
                 charStack.append(self.stream.char())
-            #XXX - put in explicit None check
+            # Put in explicit EOF check
             if (not EOF in charStack and
                 "".join(charStack).upper() == u"DOCTYPE"):
                 self.changeState("doctype")
