@@ -488,8 +488,6 @@ class RootElementPhase(Phase):
         self.parser.phase.processEndTag(name)
 
     def processComment(self, data):
-        assert False
-        # XXX Can this even occur?
         self.parser.document.appendChild(CommentNode(data))
 
     def processEOF(self):
