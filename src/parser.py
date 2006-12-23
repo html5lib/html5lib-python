@@ -859,13 +859,13 @@ class InBody(InsertionMode):
             self.parser.parseError()
         else:
             if self.parser.elementInScope("p"):
-                self.handlePEndTag("p")
+                self.endTagP("p")
             self.parser.insertElement(name, attributes)
             self.parser.formPointer = self.parser.openElements[-1]
 
     def startTagListItem(self, name, attributes):
         if self.parser.elementInScope("p"):
-            self.handlePEndTag("p")
+            self.endTagP("p")
         stopNames = {"li":("li"), "dd":("dd", "dt"), "dt":("dd", "dt")}
         stopName = stopNames[name]
         # AT Use reversed in Python 2.4...
