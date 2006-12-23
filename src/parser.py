@@ -1450,7 +1450,6 @@ class InColumnGroup(InsertionMode):
         handlers = utils.MethodDispatcher([
             ("col", self.startTagCol)
         ])
-        # XXX Can we handle this through the anything else case??
         handlers.default = self.startTagOther
         handlers[name](name, attributes)
 
@@ -1469,7 +1468,6 @@ class InColumnGroup(InsertionMode):
             ("colgroup", self.endTagColgroup),
             ("col", self.endTagCol)
         ])
-        # XXX Can we handle this through the anything else case??
         handlers.default = self.endTagOther
         handlers[name](name)
 
@@ -1746,21 +1744,19 @@ class InSelect(InsertionMode):
     def startTagOption(self, name, attributes):
         # We need to imply </option> if <option> is the current node.
         if self.parser.openElements[-1].name == "option":
-            # AT We could also pop the node from the stack...
-            self.endTagOption()
+            self.parser.openElements.pop()
         self.parser.insertElement(name, attributes)
 
     def startTagOptgroup(self, name, attributes):
         if self.parser.openElements[-1].name == "option":
-            # AT see above
-            self.endTagOption()
+            self.parser.openElements.pop()
         if self.parser.openElements[-1].name == "optgroup":
-            self.endTagOptgroup()
+            self.parser.openElements.pop()
         self.parser.insertElement(name, attributes)
 
     def startTagSelect(self, name, attributes):
         self.parser.parseError()
-        self.endTagSelect()
+        self.endTagSelect("select")
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
@@ -1773,17 +1769,17 @@ class InSelect(InsertionMode):
         handlers.default = self.processAnythingElse
         handlers[name](name)
 
-    def endTagOption(self, name="option"):
+    def endTagOption(self, name):
         if self.parser.openElements[-1].name == "option":
             self.parser.openElements.pop()
         else:
             self.parser.parseError()
 
-    def endTagOptgroup(self, name="optgroup"):
+    def endTagOptgroup(self, name):
         # </optgroup> implicitly closes <option>
         if self.parser.openElements[-1].name == "option" and \
           self.parser.openElements[-2].name == "optgroup":
-            self.endTagOption()
+            self.parser.openElements.pop()
         # It also closes </optgroup>
         if self.parser.openElements[-1].name == "optgroup":
             self.parser.openElements.pop()
@@ -1791,7 +1787,7 @@ class InSelect(InsertionMode):
         else:
             self.parser.parseError()
 
-    def endTagSelect(self, name="select"):
+    def endTagSelect(self, name):
         if self.parser.elementInScope(name, True):
             if self.parser.openElements[-1].name != "select":
                 node = self.parser.openElements.pop()
