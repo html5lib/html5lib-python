@@ -421,7 +421,7 @@ class Phase(object):
         self.parser.parseError()
 
     def processComment(self, data):
-        self.parser.parseError()
+        self.parser.document.appendChild(CommentNode(data))
 
     def processCharacter(self, data):
         self.parser.parseError()
@@ -453,9 +453,6 @@ class InitialPhase(Phase):
         self.parser.switchPhase("rootElement")
         self.parser.processEndTag(name)
 
-    def processComment(self, data):
-        self.parser.document.appendChild(CommentNode(data))
-
     def processEOF(self):
         self.parser.switchPhase("rootElement")
         self.parser.processEOF()
@@ -469,9 +466,6 @@ class RootElementPhase(Phase):
         self.parser.switchPhase("main")
 
     # other
-    def processDoctype(self, name, error):
-        self.parser.parseError()
-
     def processCharacter(self, data):
         if data in spaceCharacters:
             self.parser.insertText(data, self.parser.document)
@@ -486,9 +480,6 @@ class RootElementPhase(Phase):
     def processEndTag(self, name):
         self.insertHtmlElement()
         self.parser.phase.processEndTag(name)
-
-    def processComment(self, data):
-        self.parser.document.appendChild(CommentNode(data))
 
     def processEOF(self):
         self.insertHtmlElement()
@@ -515,9 +506,6 @@ class MainPhase(Phase):
         }
         self.insertionMode = self.insertionModes['beforeHead'](self.parser)
 
-    def processDoctype(self, name, error):
-        self.parser.parseError()
-
     def processEOF(self):
         self.insertionMode.processEOF()
 
@@ -543,10 +531,6 @@ class MainPhase(Phase):
         self.insertionMode.processCharacter(data)
 
 class TrailingEndPhase(Phase):
-
-    def processDoctype(self, name, error):
-        self.parser.parseError()
-
     def processEOF(self):
         pass
 
@@ -560,13 +544,12 @@ class TrailingEndPhase(Phase):
         self.parser.switchPhase("main")
         self.parser.processEndTag(name)
 
-    def processComment(self, data):
-        self.parser.document.appendChild(CommentNode(data))
-
     def processCharacter(self, data):
+        if data not in spaceCharacters:
+            self.parser.parseError()
         self.parser.switchPhase("main")
         self.parser.processCharacter(data)
-        # XXX Space characters do not actually cause us to switch phases
+        # If it's a space character we want to stay in this phase.
         if data in spaceCharacters:
             self.parser.switchPhase("trailingEnd")
 
