@@ -4,7 +4,6 @@ import utils
 from constants import contentModelFlags, spaceCharacters
 from constants import scopingElements, formattingElements, specialElements
 from constants import headingElements, tableInsertModeElements
-import inspect
 
 """The scope markers are inserted when entering buttons, object
 elements, marquees, table cells, and table captions, and are used to
