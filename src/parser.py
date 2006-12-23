@@ -863,11 +863,11 @@ class InBody(InsertionMode):
 
     def startTagCloseP(self, name, attributes):
         if self.parser.elementInScope("p"):
-            self.endTagP(name)
+            self.endTagP("p")
         self.parser.insertElement(name, attributes)
 
     def startTagForm(self, name, attributes):
-        if self.parser.formPointer is not None:
+        if self.parser.formPointer:
             self.parser.parseError()
         else:
             if self.parser.elementInScope("p"):
@@ -961,7 +961,8 @@ class InBody(InsertionMode):
         self.parser.openElements.pop()
 
     def startTagHr(self, name, attributes):
-        self.endTagP("p")
+        if self.parser.elementInScope("p"):
+            self.endTagP("p")
         self.parser.insertElement(name, attributes)
         self.parser.openElements.pop()
 
@@ -973,14 +974,14 @@ class InBody(InsertionMode):
     def startTagInput(self, name, attributes):
         self.parser.reconstructActiveFormattingElements()
         self.parser.insertElement(name, attributes)
-        if self.parser.formPointer is not None:
+        if self.parser.formPointer:
             # XXX Not exactly sure what to do here
             self.parser.openElements[-1].form = self.parser.formPointer
         self.parser.openElements.pop()
 
     def startTagIsIndex(self, name, attributes):
         self.parser.parseError()
-        if self.parser.formPointer is not None:
+        if self.parser.formPointer:
             return
         self.parser.processStartTag("form", [])
         self.parser.processStartTag("hr", [])
@@ -1060,7 +1061,7 @@ class InBody(InsertionMode):
     def endTagP(self, name):
         self.parser.generateImpliedEndTags("p")
         if self.parser.openElements[-1].name != "p":
-           self.parser.parseError()
+            self.parser.parseError()
         while self.parser.elementInScope("p"):
             self.parser.openElements.pop()
 
