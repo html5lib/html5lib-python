@@ -270,7 +270,7 @@ class HTMLTokenizer(object):
         else:
             # At this point in the process might have named entity. Entities
             # are stored in the global variable "entities".
-
+            #
             # Consume characters and compare to these to a substring of the
             # entity names in the list until the substring no longer matches.
             filteredEntityList = [e for e in entities if \
