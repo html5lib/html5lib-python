@@ -153,7 +153,7 @@ class HTMLParser(object):
         self.insertFromTable = False
 
         self.tokenizer = tokenizer.HTMLTokenizer(stream)
-        
+
         # XXX This is temporary for the moment so there isn't any other
         # changes needed for the parser to work with the iterable tokenizer
         for token in self.tokenizer:
@@ -169,7 +169,7 @@ class HTMLParser(object):
                 self.parseError()
             else:
                 self.atheistParseError()
-        
+
         # When the loop finishes it's EOF
         self.processEOF()
 
@@ -308,13 +308,13 @@ class HTMLParser(object):
 
     def insertElement(self, name, attributes):
         element = self.createElement(name, attributes)
-        if (not(self.insertFromTable) or (self.insertFromTable and 
-                                          self.openElements[-1].name not in 
+        if (not(self.insertFromTable) or (self.insertFromTable and
+                                          self.openElements[-1].name not in
                                           tableInsertModeElements)):
             self.openElements[-1].appendChild(element)
             self.openElements.append(element)
         else:
-            #We should be in the InTable mode. This means we want to do 
+            #We should be in the InTable mode. This means we want to do
             #special magic element rearranging
             self.insertMisnestedNodeFromTable(element)
             self.openElements.append(element)
@@ -322,14 +322,14 @@ class HTMLParser(object):
 
     def insertText(self, data, parent=None):
         node = TextNode(data)
-        if parent is None: 
+        if parent is None:
             parent = self.openElements[-1]
-        if (not(self.insertFromTable) or (self.insertFromTable and 
-                                          self.openElements[-1].name not in 
+        if (not(self.insertFromTable) or (self.insertFromTable and
+                                          self.openElements[-1].name not in
                                           tableInsertModeElements)):
             parent.appendChild(node)
         else:
-            #We should be in the InTable mode. This means we want to do 
+            #We should be in the InTable mode. This means we want to do
             #special magic element rearranging
             self.insertMisnestedNodeFromTable(node)
 
@@ -343,7 +343,7 @@ class HTMLParser(object):
                 lastTable = elm
                 break
         if lastTable:
-            #XXX - we should really check that this parent is actually a 
+            #XXX - we should really check that this parent is actually a
             #node here
             if lastTable.parent:
                 fosterParent = lastTable.parent
@@ -1836,6 +1836,11 @@ class AfterBody(InsertionMode):
         # This is needed because data is to be appended to the <html> element
         # here and not to whatever is currently open.
         self.parser.openElements[0].appendChild(CommentNode(data))
+
+    def processNonSpaceCharacter(self, data):
+        self.parser.parseError()
+        self.parser.switchInsertionMode("inBody")
+        self.parser.processCharacter(data)
 
     def processStartTag(self, name, attributes):
         self.parser.parseError()
