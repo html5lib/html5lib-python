@@ -1,6 +1,6 @@
 import tokenizer
 
-from utils import utils
+import utils
 from constants import contentModelFlags, spaceCharacters
 from constants import scopingElements, formattingElements, specialElements
 from constants import headingElements, tableInsertModeElements

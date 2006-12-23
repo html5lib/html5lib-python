@@ -88,6 +88,6 @@ def main():
 if __name__ == "__main__":
     #Allow us to import the parent module
     os.chdir(os.path.split(os.path.abspath(__file__))[0])
-    sys.path.insert(0, os.path.abspath(os.pardir))
+    sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
 
     main()
