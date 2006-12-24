@@ -24,12 +24,12 @@ class Node(object):
         return self.name
 
     def __repr__(self):
-        return "<%s %s>"%(self.__class__, self.name)
+        return "<%s %s>" % (self.__class__, self.name)
 
     def printTree(self, indent=0):
-        tree = '\n|%s%s' % (' '*indent, str(self))
+        tree = '\n|%s%s' % (' '* indent, str(self))
         for child in self.childNodes:
-            tree += child.printTree(indent+2)
+            tree += child.printTree(indent + 2)
         return tree
 
     def appendChild(self, node, index=None):
@@ -69,7 +69,7 @@ class Document(Node):
         Node.__init__(self, None)
 
     def __str__(self):
-        return '#document'
+        return "#document"
 
     def printTree(self):
         tree = str(self)
@@ -82,7 +82,7 @@ class DocumentType(Node):
         Node.__init__(self, name)
 
     def __str__(self):
-        return '<!DOCTYPE %s>' % self.name
+        return "<!DOCTYPE %s>" % self.name
 
 class TextNode(Node):
     def __init__(self, value):
@@ -90,21 +90,21 @@ class TextNode(Node):
         self.value = value
 
     def __str__(self):
-        return '"%s"' % self.value
+        return "\"%s\"" % self.value
 
 class Element(Node):
     def __init__(self, name):
         Node.__init__(self, name)
 
     def __str__(self):
-        return '<%s>' % self.name
+        return "<%s>" % self.name
 
     def printTree(self, indent):
         tree = '\n|%s%s' % (' '*indent, str(self))
         indent += 2
         if self.attributes:
             for name, value in self.attributes.iteritems():
-                tree += '\n|%s%s="%s"' % (' '*indent, name, value)
+                tree += '\n|%s%s="%s"' % (' ' * indent, name, value)
         for child in self.childNodes:
             tree += child.printTree(indent)
         return tree
@@ -115,7 +115,7 @@ class CommentNode(Node):
         self.data = data
 
     def __str__(self):
-        return '<!-- %s -->' % self.data
+        return "<!-- %s -->" % self.data
 
 class HTMLParser(object):
     """Main parser class"""

@@ -17,7 +17,10 @@ def convertTreeDump(treedump):
     treedump = treedump.split("\n")[1:]
     rv = []
     for line in treedump:
-        rv.append(line[3:])
+        if line.startswith("|"):
+            rv.append(line[3:])
+        else:
+            rv.append(line)
     return "\n".join(rv)
 
 if __name__ == "__main__":

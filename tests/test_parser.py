@@ -8,6 +8,8 @@ import new
 def parseTestcase(testString):
     testString = testString.split("\n")
     try:
+        if testString[0] != "#data":
+            print testString
         assert testString[0] == "#data"
     except:
         raise
@@ -16,12 +18,13 @@ def parseTestcase(testString):
     errors = []
     currentList = input
     for line in testString:
-        if line and line[0] != "#":
+        if line and not (line.startswith("#errors") or
+          line.startswith("#document") or line.startswith("#data")):
             if currentList is output:
-                assert line[0] == "|"
-                currentList.append(line[2:])
-                # XXX the line might not start with a "|" if it's a
-                # continuation line, e.g. if a text node contained a linefeed
+                if line.startswith("|"):
+                    currentList.append(line[2:])
+                else:
+                    currentList.append(line)
             else:
                 currentList.append(line)
         elif line == "#errors":
@@ -35,7 +38,10 @@ def convertTreeDump(treedump):
     treedump = treedump.split("\n")[1:]
     rv = []
     for line in treedump:
-        rv.append(line[3:])
+        if line.startswith("|"):
+            rv.append(line[3:])
+        else:
+            rv.append(line)
     return "\n".join(rv)
 
 class TestCase(unittest.TestCase):
@@ -45,26 +51,30 @@ class TestCase(unittest.TestCase):
         #concatenate all consecutive character tokens into a single token
         p = parser.HTMLParser()
         document = p.parse(StringIO.StringIO(input))
-        errorMsg = "\n".join(["\n\nExpected:", output, "\nRecieved:", 
-                              convertTreeDump(document.printTree())])
-        self.assertEquals(output, convertTreeDump(document.printTree()), 
-                          errorMsg)
+        errorMsg = "\n".join(["\n\nExpected:", output, "\nRecieved:",
+          convertTreeDump(document.printTree())])
+        self.assertEquals(output, convertTreeDump(document.printTree()),
+          errorMsg)
 
 def test_parser():
     for filename in glob.glob('tree-construction/*.dat'):
         f = open(filename)
         test = []
-        lastLine = ""
+        documentSeen = False
         for line in f:
-            #Assume tests are separated by a blank line
-            if not (line == "\n" and lastLine[0] == "|"):
-                #Strip out newline characters from the end of the string
+            # XXX This algorithm would need to be changed if we want to get rid
+            # of the double newline requirement at the end of test files.
+            if line.startswith("#document"):
+                documentSeen = True
+            if not line == "\n":
+                test.append(line[:-1])
+            elif line == "\n" and not documentSeen:
                 test.append(line[:-1])
             else:
                 input, output, errors = parseTestcase("\n".join(test))
                 yield TestCase.runParserTest, input, output, errors
                 test = []
-            lastLine = line
+                documentSeen = False
 
 def buildTestSuite():
     tests = 0
