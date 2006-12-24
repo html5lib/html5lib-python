@@ -36,7 +36,7 @@ class TokenizerTestParser(object):
     def processComment(self, token):
         self.outputTokens.append([u"Comment", token.data])
     
-    def processCharacter(self, token):
+    def processCharacters(self, token):
         self.outputTokens.append([u"Character", token.data])
     
     def processEOF(self, token):
