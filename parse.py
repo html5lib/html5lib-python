@@ -1,11 +1,18 @@
 import sys
 import os
 
-from test_parser import *
+from src import parser
 
-os.chdir(os.path.split(os.path.abspath(__file__))[0])
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
-import parser
+def convertTreeDump(treedump):
+    """convert the output of str(document) to the format used in the testcases"""
+    treedump = treedump.split("\n")
+    rv = []
+    for line in treedump:
+        if line.startswith("#document"):
+            pass
+        else:
+            rv.append(line[3:])
+    return "\n".join(rv)
 
 if __name__ == "__main__":
     p = parser.HTMLParser()
