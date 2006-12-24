@@ -539,23 +539,23 @@ class HTMLTokenizer(object):
     def attributeNameState(self):
         data = self.stream.char()
         leavingThisState = True
-        if data in spaceCharacters:
-            self.changeState("afterAttributeName")
-        elif data == u"=":
+        if data == u"=":
             self.changeState("beforeAttributeValue")
-        elif data == u">":
-            # XXX If we emit here the attributes are converted to a dict
-            # without being checked and when the code below runs we error
-            # because data is a dict not a list
-            pass
         elif data in asciiLowercase:
-            data += self.stream.charsUntil(asciiLowercase, True)
-            self.currentToken.data[-1][0] += data
+            self.currentToken.data[-1][0] += data + self.stream.charsUntil(
+              asciiLowercase, True)
             leavingThisState = False
         elif data in asciiUppercase:
             data += self.stream.charsUntil(asciiLetters, True)
             self.currentToken.data[-1][0] += data.lower()
             leavingThisState = False
+        elif data == u">":
+            # XXX If we emit here the attributes are converted to a dict
+            # without being checked and when the code below runs we error
+            # because data is a dict not a list
+            pass
+        elif data in spaceCharacters:
+            self.changeState("afterAttributeName")
         elif data == u"/":
             self.processSolidusInTag()
             self.changeState("beforeAttributeName")
