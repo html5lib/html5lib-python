@@ -412,10 +412,10 @@ class Phase(object):
     def processDoctype(self, name, error):
         self.parser.parseError()
 
-    def processStartTag(self, tagname, attributes):
+    def processStartTag(self, name, attributes):
         self.parser.parseError()
 
-    def processEndTag(self, tagname):
+    def processEndTag(self, name):
         self.parser.parseError()
 
     def processComment(self, data):
@@ -476,9 +476,9 @@ class RootElementPhase(Phase):
             self.insertHtmlElement()
             self.parser.phase.processCharacters(data)
 
-    def processStartTag(self, tagname, attributes):
+    def processStartTag(self, name, attributes):
         self.insertHtmlElement()
-        self.parser.phase.processStartTag(tagname, attributes)
+        self.parser.phase.processStartTag(name, attributes)
 
     def processEndTag(self, name):
         self.insertHtmlElement()
