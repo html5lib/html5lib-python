@@ -1500,7 +1500,7 @@ class InTableBody(InsertionMode):
             self.parser.parseError()
 
     # the rest
-    def processNonSpaceCharacter(self,data):
+    def processCharacter(self,data):
         InTable(self.parser).processCharacter(data)
 
     def processStartTag(self, name, attributes):
@@ -1583,7 +1583,7 @@ class InRow(InsertionMode):
             self.parser.parseError()
 
     # the rest
-    def processNonSpaceCharacter(self, data):
+    def processCharacter(self, data):
         InTable(self.parser).processNonSpaceCharacter(data)
 
     def processStartTag(self, name, attributes):
@@ -1662,7 +1662,7 @@ class InCell(InsertionMode):
             self.endTagTableCell("th")
 
     # the rest
-    def processNonSpaceCharacter(self, data):
+    def processCharacter(self, data):
         InBody(self.parser).processCharacter(data)
 
     def processStartTag(self, name, attributes):
@@ -1729,7 +1729,7 @@ class InSelect(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-select
 
     # No need for processComment.
-    def processNonSpaceCharacter(self, data):
+    def processCharacter(self, data):
         self.parser.insertText(data)
 
     def processStartTag(self, name, attributes):
