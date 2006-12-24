@@ -811,6 +811,7 @@ class InBody(InsertionMode):
               "spacer", "wbr"), self.startTagVoidFormatting),
             ("hr", self.startTagHr),
             ("image", self.startTagImage),
+            ("input", self.startTagInput),
             ("isindex", self.startTagIsIndex),
             ("textarea", self.startTagTextarea),
             (("iframe", "noembed", "noframes", "noscript"), self.startTagCdata),
