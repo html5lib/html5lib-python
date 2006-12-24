@@ -386,9 +386,8 @@ class HTMLTokenizer(object):
             # Tokenization ends.
             return False
         else:
-            data += self.stream.charsUntil((u"&", u"<"))
-            for char in data:
-                self.tokenQueue.append(Character(char))
+            data += self.stream.charsUntil(frozenset(u"&", u"<") | spaceCharacters)
+            self.tokenQueue.append(Character(data))
         return True
 
     def entityDataState(self):
