@@ -59,22 +59,13 @@ class TestCase(unittest.TestCase):
 def test_parser():
     for filename in glob.glob('tree-construction/*.dat'):
         f = open(filename)
-        test = []
-        documentSeen = False
-        for line in f:
-            # XXX This algorithm would need to be changed if we want to get rid
-            # of the double newline requirement at the end of test files.
-            if line.startswith("#document"):
-                documentSeen = True
-            if not line == "\n":
-                test.append(line[:-1])
-            elif line == "\n" and not documentSeen:
-                test.append(line[:-1])
-            else:
-                input, output, errors = parseTestcase("\n".join(test))
-                yield TestCase.runParserTest, input, output, errors
-                test = []
-                documentSeen = False
+        tests = f.read().split("#data\n")
+        for test in tests:
+            if test == "":
+                continue
+            test = "#data\n" + test
+            input, output, errors = parseTestcase(test)
+            yield TestCase.runParserTest, input, output, errors
 
 def buildTestSuite():
     tests = 0
