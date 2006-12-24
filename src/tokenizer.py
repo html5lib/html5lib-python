@@ -364,8 +364,8 @@ class HTMLTokenizer(object):
         elif data == EOF:
             self.emitCurrentTokenWithParseError(data)
         else:
-            data += self.stream.charsUntil((quoteType, u"&"))
-            self.currentToken.data[-1][1] += data
+            self.currentToken.data[-1][1] += data + self.stream.charsUntil(\
+              (quoteType, u"&"))
 
     # Below are the various tokenizer states worked out.
 
@@ -639,7 +639,8 @@ class HTMLTokenizer(object):
         elif data == u"<" or data == EOF:
             self.emitCurrentTokenWithParseError(data)
         else:
-            self.currentToken.data[-1][1] += data
+            self.currentToken.data[-1][1] += data + self.stream.charsUntil( \
+              frozenset(("&", ">","<")) | spaceCharacters)
         return True
 
     def bogusCommentState(self):
