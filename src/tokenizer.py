@@ -139,8 +139,8 @@ class HTMLTokenizer(object):
         }
 
         # Setup the initial tokenizer state
-        self.contentModelFlag = contentModelFlags['PCDATA']
-        self.state = self.states['data']
+        self.contentModelFlag = contentModelFlags["PCDATA"]
+        self.state = self.states["data"]
 
         # The current token being created
         self.currentToken = None
@@ -162,10 +162,6 @@ class HTMLTokenizer(object):
         while self.state():
             while self.tokenQueue:
                 yield self.tokenQueue.pop(0)
-
-    def changeState(self, state):
-        self.state = self.states[state]
-
 
     # Below are various helper functions the tokenizer states use worked out.
     def processSolidusInTag(self):
@@ -344,7 +340,7 @@ class HTMLTokenizer(object):
         # Add token to the queue to be yielded
         self.tokenQueue.append(token)
 
-        self.changeState("data")
+        self.state = self.states["data"]
 
     def emitCurrentTokenWithParseError(self, data=None):
         """This method is equivalent to emitCurrentToken (well, it invokes it)
@@ -358,7 +354,7 @@ class HTMLTokenizer(object):
     def attributeValueQuotedStateHandler(self, quoteType):
         data = self.stream.char()
         if data == quoteType:
-            self.changeState("beforeAttributeName")
+            self.state = self.states["beforeAttributeName"]
         elif data == u"&":
             self.processEntityInAttribute()
         elif data == EOF:
@@ -378,10 +374,10 @@ class HTMLTokenizer(object):
         if (data == u"&" and
           (self.contentModelFlag in
           (contentModelFlags["PCDATA"], contentModelFlags["RCDATA"]))):
-            self.changeState("entityData")
+            self.state = self.states["entityData"]
         elif (data == u"<" and
           self.contentModelFlag != contentModelFlags["PLAINTEXT"]):
-            self.changeState("tagOpen")
+            self.state = self.states["tagOpen"]
         elif data == EOF:
             # Tokenization ends.
             return False
@@ -401,7 +397,7 @@ class HTMLTokenizer(object):
             self.tokenQueue.append(Characters(entity))
         else:
             self.tokenQueue.append(Characters(u"&"))
-        self.changeState("data")
+        self.state = self.states["data"]
         return True
 
     def tagOpenState(self):
@@ -409,32 +405,32 @@ class HTMLTokenizer(object):
         if (self.contentModelFlag in
           (contentModelFlags["RCDATA"], contentModelFlags["CDATA"])):
             if data == u"/":
-                self.changeState("closeTagOpen")
+                self.state = self.states["closeTagOpen"]
             else:
                 self.tokenQueue.append(Characters(u"<"))
                 self.stream.queue.append(data)
-                self.changeState("data")
+                self.state = self.states["data"]
         elif self.contentModelFlag == contentModelFlags['PCDATA']:
             if data == u"!":
-                self.changeState("markupDeclarationOpen")
+                self.state = self.states["markupDeclarationOpen"]
             elif data == u"/":
-                self.changeState("closeTagOpen")
+                self.state = self.states["closeTagOpen"]
             elif data in asciiLetters:
                 self.currentToken = StartTag(data.lower())
-                self.changeState("tagName")
+                self.state = self.states["tagName"]
             elif data == u">":
                 self.tokenQueue.append(ParseError())
                 self.tokenQueue.append(Characters(u"<>"))
-                self.changeState("data")
+                self.state = self.states["data"]
             elif data == u"?":
                 self.tokenQueue.append(ParseError())
                 self.stream.queue.append(data)
-                self.changeState("bogusComment")
+                self.state = self.states["bogusComment"]
             else:
                 self.tokenQueue.append(ParseError())
                 self.tokenQueue.append(Characters(u"<"))
                 self.stream.queue.append(data)
-                self.changeState("data")
+                self.state = self.states["data"]
         else:
             assert False
         return True
@@ -469,7 +465,7 @@ class HTMLTokenizer(object):
             else:
                 self.tokenQueue.append(ParseError())
                 self.tokenQueue.append(Characters(u"</"))
-                self.changeState("data")
+                self.state = self.states["data"]
 
                 # Need to return here since we don't want the rest of the
                 # method to be walked through.
@@ -479,25 +475,25 @@ class HTMLTokenizer(object):
             data = self.stream.char()
             if data in asciiLetters:
                 self.currentToken = EndTag(data.lower())
-                self.changeState("tagName")
+                self.state = self.states["tagName"]
             elif data == u">":
                 self.tokenQueue.append(ParseError())
-                self.changeState("data")
+                self.state = self.states["data"]
             elif data == EOF:
                 self.tokenQueue.append(ParseError())
                 self.tokenQueue.append(Characters(u"</"))
                 self.stream.queue.append(data)
-                self.changeState("data")
+                self.state = self.states["data"]
             else:
                 self.tokenQueue.append(ParseError())
                 self.stream.queue.append(data)
-                self.changeState("bogusComment")
+                self.state = self.states["bogusComment"]
         return True
 
     def tagNameState(self):
         data = self.stream.char()
         if data in spaceCharacters:
-            self.changeState("beforeAttributeName")
+            self.state = self.states["beforeAttributeName"]
         elif data in asciiLowercase:
             data += self.stream.charsUntil(asciiLowercase, True)
             self.currentToken.name += data
@@ -510,7 +506,7 @@ class HTMLTokenizer(object):
             self.emitCurrentTokenWithParseError(data)
         elif data == u"/":
             self.processSolidusInTag()
-            self.changeState("beforeAttributeName")
+            self.state = self.states["beforeAttributeName"]
         else:
             self.currentToken.name += data
         return True
@@ -521,7 +517,7 @@ class HTMLTokenizer(object):
             pass
         elif data in asciiUppercase:
             self.currentToken.data.append([data.lower(), ""])
-            self.changeState("attributeName")
+            self.state = self.states["attributeName"]
         elif data == u">":
             self.emitCurrentToken()
         elif data == u"/":
@@ -530,14 +526,14 @@ class HTMLTokenizer(object):
             self.emitCurrentTokenWithParseError(data)
         else:
             self.currentToken.data.append([data, ""])
-            self.changeState("attributeName")
+            self.state = self.states["attributeName"]
         return True
 
     def attributeNameState(self):
         data = self.stream.char()
         leavingThisState = True
         if data == u"=":
-            self.changeState("beforeAttributeValue")
+            self.state = self.states["beforeAttributeValue"]
         elif data in asciiLowercase:
             self.currentToken.data[-1][0] += data + self.stream.charsUntil(
               asciiLowercase, True)
@@ -552,10 +548,10 @@ class HTMLTokenizer(object):
             # because data is a dict not a list
             pass
         elif data in spaceCharacters:
-            self.changeState("afterAttributeName")
+            self.state = self.states["afterAttributeName"]
         elif data == u"/":
             self.processSolidusInTag()
-            self.changeState("beforeAttributeName")
+            self.state = self.states["beforeAttributeName"]
         elif data == u"<" or data == EOF:
             self.emitCurrentTokenWithParseError(data)
             leavingThisState = False
@@ -580,20 +576,20 @@ class HTMLTokenizer(object):
         if data in spaceCharacters:
             pass
         elif data == u"=":
-            self.changeState("beforeAttributeValue")
+            self.state = self.states["beforeAttributeValue"]
         elif data == u">":
             self.emitCurrentToken()
         elif data in asciiUppercase:
             self.currentToken.data.append([data.lower(), ""])
-            self.changeState("attributeName")
+            self.state = self.states["attributeName"]
         elif data == u"/":
             self.processSolidusInTag()
-            self.changeState("beforeAttributeName")
+            self.state = self.states["beforeAttributeName"]
         elif data == u"<" or data == EOF:
             self.emitCurrentTokenWithParseError(data)
         else:
             self.currentToken.data.append([data, ""])
-            self.changeState("attributeName")
+            self.state = self.states["attributeName"]
         return True
 
     def beforeAttributeValueState(self):
@@ -601,19 +597,19 @@ class HTMLTokenizer(object):
         if data in spaceCharacters:
             pass
         elif data == u"\"":
-            self.changeState("attributeValueDoubleQuoted")
+            self.state = self.states["attributeValueDoubleQuoted"]
         elif data == u"&":
-            self.changeState("attributeValueUnQuoted")
+            self.state = self.states["attributeValueUnQuoted"]
             self.stream.queue.append(data);
         elif data == u"'":
-            self.changeState("attributeValueSingleQuoted")
+            self.state = self.states["attributeValueSingleQuoted"]
         elif data == u">":
             self.emitCurrentToken()
         elif data == u"<" or data == EOF:
             self.emitCurrentTokenWithParseError(data)
         else:
             self.currentToken.data[-1][1] += data
-            self.changeState("attributeValueUnQuoted")
+            self.state = self.states["attributeValueUnQuoted"]
         return True
 
     def attributeValueDoubleQuotedState(self):
@@ -630,7 +626,7 @@ class HTMLTokenizer(object):
     def attributeValueUnQuotedState(self):
         data = self.stream.char()
         if data in spaceCharacters:
-            self.changeState("beforeAttributeName")
+            self.state = self.states["beforeAttributeName"]
         elif data == u"&":
             self.processEntityInAttribute()
         elif data == u">":
@@ -661,24 +657,24 @@ class HTMLTokenizer(object):
         charStack = [self.stream.char(), self.stream.char()]
         if charStack == [u"-", u"-"]:
             self.currentToken = Comment()
-            self.changeState("comment")
+            self.state = self.states["comment"]
         else:
             for x in xrange(5):
                 charStack.append(self.stream.char())
             # Put in explicit EOF check
             if (not EOF in charStack and
                 "".join(charStack).upper() == u"DOCTYPE"):
-                self.changeState("doctype")
+                self.state = self.states["doctype"]
             else:
                 self.tokenQueue.append(ParseError())
                 self.stream.queue.extend(charStack)
-                self.changeState("bogusComment")
+                self.state = self.states["bogusComment"]
         return True
 
     def commentState(self):
         data = self.stream.char()
         if data == u"-":
-            self.changeState("commentDash")
+            self.state = self.states["commentDash"]
         elif data == EOF:
             self.emitCurrentTokenWithParseError(data)
         else:
@@ -688,7 +684,7 @@ class HTMLTokenizer(object):
     def commentDashState(self):
         data = self.stream.char()
         if data == u"-":
-            self.changeState("commentEnd")
+            self.state = self.states["commentEnd"]
         elif data == EOF:
             self.emitCurrentTokenWithParseError(data)
         else:
@@ -712,17 +708,17 @@ class HTMLTokenizer(object):
         else:
             self.tokenQueue.append(ParseError())
             self.currentToken.data += u"--" + data
-            self.changeState("comment")
+            self.state = self.states["comment"]
         return True
 
     def doctypeState(self):
         data = self.stream.char()
         if data in spaceCharacters:
-            self.changeState("beforeDoctypeName")
+            self.state = self.states["beforeDoctypeName"]
         else:
             self.tokenQueue.append(ParseError())
             self.stream.queue.append(data)
-            self.changeState("beforeDoctypeName")
+            self.state = self.states["beforeDoctypeName"]
         return True
 
     def beforeDoctypeNameState(self):
@@ -731,7 +727,7 @@ class HTMLTokenizer(object):
             pass
         elif data in asciiLowercase:
             self.currentToken = Doctype(data.upper())
-            self.changeState("doctypeName")
+            self.state = self.states["doctypeName"]
         elif data == u">":
             # Character needs to be consumed per the specification so don't
             # invoke emitCurrentTokenWithParseError with "data" as argument.
@@ -740,14 +736,14 @@ class HTMLTokenizer(object):
             self.emitCurrentTokenWithParseError(data)
         else:
             self.currentToken = Doctype(data)
-            self.changeState("doctypeName")
+            self.state = self.states["doctypeName"]
         return True
 
     def doctypeNameState(self):
         data = self.stream.char()
         needsDoctypeCheck = False
         if data in spaceCharacters:
-            self.changeState("afterDoctypeName")
+            self.state = self.states["afterDoctypeName"]
             needsDoctypeCheck = True
         elif data == u">":
             self.emitCurrentToken()
@@ -779,7 +775,7 @@ class HTMLTokenizer(object):
         else:
             self.tokenQueue.append(ParseError())
             self.currentToken.data = True
-            self.changeState("bogusDoctype")
+            self.state = self.states["bogusDoctype"]
         return True
 
     def bogusDoctypeState(self):
