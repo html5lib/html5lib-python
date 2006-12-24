@@ -4,14 +4,12 @@ import os
 from src import parser
 
 def convertTreeDump(treedump):
-    """convert the output of str(document) to the format used in the testcases"""
-    treedump = treedump.split("\n")
+    """convert the output of str(document) to something more readable
+    """
+    treedump = treedump.split("\n")[1:]
     rv = []
     for line in treedump:
-        if line.startswith("#document"):
-            pass
-        else:
-            rv.append(line[3:])
+        rv.append(line[3:])
     return "\n".join(rv)
 
 if __name__ == "__main__":
