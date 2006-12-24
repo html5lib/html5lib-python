@@ -32,13 +32,10 @@ def parseTestcase(testString):
 
 def convertTreeDump(treedump):
     """convert the output of str(document) to the format used in the testcases"""
-    treedump = treedump.split("\n")
+    treedump = treedump.split("\n")[1:]
     rv = []
     for line in treedump:
-        if line.startswith("#document"):
-            pass
-        else:
-            rv.append(line[3:])
+        rv.append(line[3:])
     return "\n".join(rv)
 
 class TestCase(unittest.TestCase):
