@@ -682,7 +682,7 @@ class HTMLTokenizer(object):
         elif data == EOF:
             self.emitCurrentTokenWithParseError(data)
         else:
-            self.currentToken.data += data+self.stream.charsUntil(u"-")
+            self.currentToken.data += data + self.stream.charsUntil(u"-")
         return True
 
     def commentDashState(self):
@@ -692,8 +692,12 @@ class HTMLTokenizer(object):
         elif data == EOF:
             self.emitCurrentTokenWithParseError(data)
         else:
-            self.currentToken.data += u"-" + data
-            self.changeState("comment")
+            self.currentToken.data += u"-" + data +\
+              self.stream.charsUntil(u"-")
+            # Consume the next character which is either a "-" or an EOF as
+            # well so if there's a "-" directly after the "-" we go nicely to
+            # the "comment end state" without emitting a ParseError() there.
+            self.stream.char()
         return True
 
     def commentEndState(self):
