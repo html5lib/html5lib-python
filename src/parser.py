@@ -773,22 +773,9 @@ class AfterHead(InsertionMode):
 class InBody(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-body
     # the crazy mode
-
-    # helper
-    def addFormattingElement(self, name, attributes):
-        self.parser.insertElement(name, attributes)
-        self.parser.activeFormattingElements.append(
-            self.parser.openElements[-1])
-
-    # the real deal
-    def processNonSpaceCharacters(self, data):
-        # XXX The specification says to do this for every character at the
-        # moment, but apparently that doesn't match the real world...
-        self.parser.reconstructActiveFormattingElements()
-        self.parser.insertText(data)
-
-    def processStartTag(self, name, attributes):
-        handlers=utils.MethodDispatcher([
+    def __init__(self, parser):
+        InsertionMode.__init__(self, parser)
+        self.processStartTagHandler = utils.MethodDispatcher([
             ("script", self.startTagScript),
             (("base", "link", "meta", "style", "title"),
               self.startTagFromHead),
@@ -822,8 +809,47 @@ class InBody(InsertionMode):
             (("event-source", "section", "nav", "article", "aside", "header",
               "footer", "datagrid", "command"), self.startTagNew)
         ])
-        handlers.default = self.startTagOther
-        handlers[name](name, attributes)
+        self.processStartTagHandler.default = self.startTagOther
+
+        self.processEndTagHandler = utils.MethodDispatcher([
+            ("p",self.endTagP),
+            ("body",self.endTagBody),
+            ("html",self.endTagHtml),
+            (("address", "blockquote", "center", "div", "dl", "fieldset",
+              "listing", "menu", "ol", "pre", "ul"), self.endTagBlock),
+            ("form", self.endTagForm),
+            (("dd", "dt", "li"), self.endTagListItem),
+            (headingElements, self.endTagHeading),
+            (("a", "b", "big", "em", "font", "i", "nobr", "s", "small",
+              "strike", "strong", "tt", "u"), self.endTagFormatting),
+            (("marquee", "object", "button"), self.endTagButtonMarqueeObject),
+            (("caption", "col", "colgroup", "frame", "frameset", "head",
+              "option", "optgroup", "tbody", "td", "tfoot", "th", "thead",
+              "tr", "area", "basefont", "bgsound", "br", "embed", "hr",
+              "image", "img", "input", "isindex", "param", "select", "spacer",
+              "table",  "wbr"),self.endTagMisplacedNone),
+            (("noframes", "noscript", "noembed", "textarea", "xmp", "iframe"),
+              self.endTagCdataTextAreaXmp),
+            (("event-source", "section", "nav", "article", "aside", "header",
+              "footer", "datagrid", "command"), self.endTagNew)
+            ])
+        self.processEndTagHandler.default = self.endTagOther
+
+    # helper
+    def addFormattingElement(self, name, attributes):
+        self.parser.insertElement(name, attributes)
+        self.parser.activeFormattingElements.append(
+            self.parser.openElements[-1])
+
+    # the real deal
+    def processNonSpaceCharacters(self, data):
+        # XXX The specification says to do this for every character at the
+        # moment, but apparently that doesn't match the real world...
+        self.parser.reconstructActiveFormattingElements()
+        self.parser.insertText(data)
+
+    def processStartTag(self, name, attributes):
+        self.processStartTagHandler[name](name, attributes)
 
     def startTagScript(self, name, attributes):
         self.parser.phase.insertionModes["inHead"](self.parser).\
@@ -1017,30 +1043,7 @@ class InBody(InsertionMode):
 
 
     def processEndTag(self, name):
-        handlers = utils.MethodDispatcher([
-            ("p",self.endTagP),
-            ("body",self.endTagBody),
-            ("html",self.endTagHtml),
-            (("address", "blockquote", "center", "div", "dl", "fieldset",
-              "listing", "menu", "ol", "pre", "ul"), self.endTagBlock),
-            ("form", self.endTagForm),
-            (("dd", "dt", "li"), self.endTagListItem),
-            (headingElements, self.endTagHeading),
-            (("a", "b", "big", "em", "font", "i", "nobr", "s", "small",
-              "strike", "strong", "tt", "u"), self.endTagFormatting),
-            (("marquee", "object", "button"), self.endTagButtonMarqueeObject),
-            (("caption", "col", "colgroup", "frame", "frameset", "head",
-              "option", "optgroup", "tbody", "td", "tfoot", "th", "thead",
-              "tr", "area", "basefont", "bgsound", "br", "embed", "hr",
-              "image", "img", "input", "isindex", "param", "select", "spacer",
-              "table",  "wbr"),self.endTagMisplacedNone),
-            (("noframes", "noscript", "noembed", "textarea", "xmp", "iframe"),
-              self.endTagCdataTextAreaXmp),
-            (("event-source", "section", "nav", "article", "aside", "header",
-              "footer", "datagrid", "command"), self.endTagNew)
-            ])
-        handlers.default = self.endTagOther
-        handlers[name](name)
+        self.processEndTagHandler[name](name)
 
     def endTagP(self, name):
         self.parser.generateImpliedEndTags("p")
