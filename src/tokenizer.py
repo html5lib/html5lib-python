@@ -385,9 +385,12 @@ class HTMLTokenizer(object):
         elif data == EOF:
             # Tokenization ends.
             return False
-        else:
-            data += self.stream.charsUntil(frozenset(u"&", u"<") | spaceCharacters)
+        elif data in spaceCharacters:
             self.tokenQueue.append(Character(data))
+        else:
+            # XXX we need a testcase that breaks this!
+            self.tokenQueue.append(Character(
+              data + self.stream.charsUntil((u"&", u"<"))))
         return True
 
     def entityDataState(self):
