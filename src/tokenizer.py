@@ -22,10 +22,10 @@ class Token(object):
     def __str__(self):
         return '%s: %s %s' % (self.__class__.__name__, self.name or '', self.data or '')
 
-class Character(Token):
+class Characters(Token):
     """ Token representing a Character
 
-    class Character(data)
+    class Characters(data)
 
     Creates a Character token with the given data attribute
     """
@@ -386,10 +386,10 @@ class HTMLTokenizer(object):
             # Tokenization ends.
             return False
         elif data in spaceCharacters:
-            self.tokenQueue.append(Character(data))
+            self.tokenQueue.append(Characters(data))
         else:
             # XXX we need a testcase that breaks this!
-            self.tokenQueue.append(Character(
+            self.tokenQueue.append(Characters(
               data + self.stream.charsUntil((u"&", u"<"))))
         return True
 
@@ -398,9 +398,9 @@ class HTMLTokenizer(object):
 
         entity = self.consumeEntity()
         if entity:
-            self.tokenQueue.append(Character(entity))
+            self.tokenQueue.append(Characters(entity))
         else:
-            self.tokenQueue.append(Character(u"&"))
+            self.tokenQueue.append(Characters(u"&"))
         self.changeState("data")
         return True
 
@@ -411,7 +411,7 @@ class HTMLTokenizer(object):
             if data == u"/":
                 self.changeState("closeTagOpen")
             else:
-                self.tokenQueue.append(Character(u"<"))
+                self.tokenQueue.append(Characters(u"<"))
                 self.stream.queue.append(data)
                 self.changeState("data")
         elif self.contentModelFlag == contentModelFlags['PCDATA']:
@@ -424,8 +424,7 @@ class HTMLTokenizer(object):
                 self.changeState("tagName")
             elif data == u">":
                 self.tokenQueue.append(ParseError())
-                self.tokenQueue.append(Character(u"<"))
-                self.tokenQueue.append(Character(u">"))
+                self.tokenQueue.append(Characters(u"<>"))
                 self.changeState("data")
             elif data == u"?":
                 self.tokenQueue.append(ParseError())
@@ -433,7 +432,7 @@ class HTMLTokenizer(object):
                 self.changeState("bogusComment")
             else:
                 self.tokenQueue.append(ParseError())
-                self.tokenQueue.append(Character(u"<"))
+                self.tokenQueue.append(Characters(u"<"))
                 self.stream.queue.append(data)
                 self.changeState("data")
         else:
@@ -469,8 +468,7 @@ class HTMLTokenizer(object):
                 self.contentModelFlag = contentModelFlags["PCDATA"]
             else:
                 self.tokenQueue.append(ParseError())
-                self.tokenQueue.append(Character(u"<"))
-                self.tokenQueue.append(Character(u"/"))
+                self.tokenQueue.append(Characters(u"</"))
                 self.changeState("data")
 
                 # Need to return here since we don't want the rest of the
@@ -487,8 +485,7 @@ class HTMLTokenizer(object):
                 self.changeState("data")
             elif data == EOF:
                 self.tokenQueue.append(ParseError())
-                self.tokenQueue.append(Character(u"<"))
-                self.tokenQueue.append(Character(u"/"))
+                self.tokenQueue.append(Characters(u"</"))
                 self.stream.queue.append(data)
                 self.changeState("data")
             else:
