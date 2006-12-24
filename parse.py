@@ -1,3 +1,11 @@
+"""
+ Usage:
+   python parse.py tests/sites/web-apps.htm > outputfile
+     To parse the file web-apps.htm and get a tree.
+   
+   python parse.py tests/sites/web-apps.htm x > outputfile
+     To parse the file web-apps.htm and get a profile.
+"""
 import sys
 import os
 
