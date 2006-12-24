@@ -5,13 +5,12 @@ from constants import contentModelFlags, spaceCharacters
 from constants import scopingElements, formattingElements, specialElements
 from constants import headingElements, tableInsertModeElements
 
-"""The scope markers are inserted when entering buttons, object
-elements, marquees, table cells, and table captions, and are used to
-prevent formatting from "leaking" into tables, buttons, object
-elements, and marquees."""
+# The scope markers are inserted when entering buttons, object elements,
+# marquees, table cells, and table captions, and are used to prevent formatting
+# from "leaking" into tables, buttons, object elements, and marquees.
 Marker = None
 
-#Really crappy basic implementation of a DOM-core like thing
+# Really crappy basic implementation of a DOM-core like thing
 class Node(object):
     def __init__(self, name):
         self.name = name
@@ -309,8 +308,7 @@ class HTMLParser(object):
     def insertElement(self, name, attributes):
         element = self.createElement(name, attributes)
         if (not(self.insertFromTable) or (self.insertFromTable and
-                                          self.openElements[-1].name not in
-                                          tableInsertModeElements)):
+          self.openElements[-1].name not in tableInsertModeElements)):
             self.openElements[-1].appendChild(element)
             self.openElements.append(element)
         else:
@@ -968,19 +966,20 @@ class InBody(InsertionMode):
         self.parser.parseError()
         if self.parser.formPointer:
             return
-        self.parser.processStartTag("form", [])
-        self.parser.processStartTag("hr", [])
-        self.parser.processStartTag("p", [])
-        self.parser.processStartTag("label", [])
-        self.parser.processCharacters(
+        self.processStartTag("form", {})
+        self.processStartTag("hr", {})
+        self.processStartTag("p", {})
+        self.processStartTag("label", {})
+        # XXX Localization ...
+        self.processCharacters(
             "This is a searchable index. Insert your search keywords here:")
         attributes["name"] = "isindex"
         attrs = [[key,value] for key,value in attributes.iteritems()]
-        self.parser.processStartTag("input", attrs)
-        self.parser.processEndTag("label")
-        self.parser.processEndTag("p")
-        self.parser.processStartTag("hr")
-        self.parser.processEndTag("form")
+        self.processStartTag("input", dict(attrs))
+        self.processEndTag("label")
+        self.processEndTag("p")
+        self.processStartTag("hr", {})
+        self.processEndTag("form")
 
     def startTagTextarea(self, name, attributes):
         # XXX Form element pointer checking here as well...
