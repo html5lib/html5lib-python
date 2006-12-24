@@ -52,7 +52,7 @@ class TestCase(unittest.TestCase):
 
 def test_parser():
     for filename in glob.glob('tree-construction/*.dat'):
-        f = file(filename)
+        f = open(filename)
         test = []
         lastLine = ""
         for line in f:
