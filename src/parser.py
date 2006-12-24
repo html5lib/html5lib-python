@@ -157,7 +157,7 @@ class HTMLParser(object):
         # changes needed for the parser to work with the iterable tokenizer
         for token in self.tokenizer:
             tokenClass = token.__class__.__name__
-            method = getattr(self, 'process%s' % tokenClass, None)
+            method = getattr(self.phase, 'process%s' % tokenClass, None)
             if tokenClass in ('Characters', 'Comment'):
                 method(token.data)
             elif tokenClass in ('Doctype', 'StartTag'):
@@ -220,7 +220,7 @@ class HTMLParser(object):
     def switchInsertionMode(self, name):
         """Switch between different insertion modes in the main phase"""
         # XXX AT Arguably this should be on the main phase object itself
-        self.phase.insertionMode = self.phase.insertionModes[name](self)
+        self.phase.mode = self.phase.modes[name](self)
 
     def elementInScope(self, target, tableVariant=False):
         # AT Use reverse instead of [::-1] when we can rely on Python 2.4
@@ -422,6 +422,7 @@ class Phase(object):
         self.parser.document.appendChild(CommentNode(data))
 
     def processCharacters(self, data):
+        # XXX This method is never invoked...
         self.parser.parseError()
 
     def processEOF(self):
@@ -443,19 +444,19 @@ class InitialPhase(Phase):
         else:
             self.parser.parseError()
             self.parser.switchPhase("rootElement")
-            self.parser.processCharacters(data)
+            self.parser.phase.processCharacters(data)
 
     def processStartTag(self, name, attributes):
         self.parser.switchPhase("rootElement")
-        self.parser.processStartTag(name, attributes)
+        self.parser.phase.processStartTag(name, attributes)
 
     def processEndTag(self, name):
         self.parser.switchPhase("rootElement")
-        self.parser.processEndTag(name)
+        self.parser.phase.processEndTag(name)
 
     def processEOF(self):
         self.parser.switchPhase("rootElement")
-        self.parser.processEOF()
+        self.parser.phase.processEOF()
 
 class RootElementPhase(Phase):
     # helper methods
@@ -490,7 +491,7 @@ class RootElementPhase(Phase):
 class MainPhase(Phase):
     def __init__(self, parser):
         Phase.__init__(self, parser)
-        self.insertionModes = {
+        self.modes = {
             "beforeHead":BeforeHead,
             "inHead":InHead,
             "afterHead":AfterHead,
@@ -506,10 +507,10 @@ class MainPhase(Phase):
             "inFrameset":InFrameset,
             "afterFrameset":AfterFrameset
         }
-        self.insertionMode = self.insertionModes['beforeHead'](self.parser)
+        self.mode = self.modes["beforeHead"](self.parser)
 
     def processEOF(self):
-        self.insertionMode.processEOF()
+        self.mode.processEOF()
 
     def processStartTag(self, name, attributes):
         if name == "html":
@@ -521,16 +522,16 @@ class MainPhase(Phase):
                 if attr not in self.parser.openElements[0].attributes:
                     self.parser.openElements[0].attributes[attr] = value
         else:
-            self.insertionMode.processStartTag(name, attributes)
+            self.mode.processStartTag(name, attributes)
 
     def processEndTag(self, name):
-        self.insertionMode.processEndTag(name)
+        self.mode.processEndTag(name)
 
     def processComment(self, data):
-        self.insertionMode.processComment(data)
+        self.mode.processComment(data)
 
     def processCharacters(self, data):
-        self.insertionMode.processCharacters(data)
+        self.mode.processCharacters(data)
 
 class TrailingEndPhase(Phase):
     def processEOF(self):
@@ -539,12 +540,12 @@ class TrailingEndPhase(Phase):
     def processStartTag(self, name, attributes):
         self.parser.parseError()
         self.parser.switchPhase("main")
-        self.parser.processStartTag(name, attributes)
+        self.parser.phase.processStartTag(name, attributes)
 
     def processEndTag(self, name):
         self.parser.parseError()
         self.parser.switchPhase("main")
-        self.parser.processEndTag(name)
+        self.parser.phase.processEndTag(name)
 
     def processCharacters(self, data):
         if data not in spaceCharacters:
@@ -552,7 +553,7 @@ class TrailingEndPhase(Phase):
             # emitted as a single character. Same below.
             self.parser.parseError()
         self.parser.switchPhase("main")
-        self.parser.processCharacters(data)
+        self.parser.phase.processCharacters(data)
         # If it's a space character we want to stay in this phase.
         if data in spaceCharacters:
             self.parser.switchPhase("trailingEnd")
@@ -561,7 +562,6 @@ class TrailingEndPhase(Phase):
 class InsertionMode(object):
     def __init__(self, parser):
         self.parser = parser
-        self.tokenizer = self.parser.tokenizer
 
     def processEOF(self):
         self.parser.generateImpliedEndTags()
@@ -852,13 +852,13 @@ class InBody(InsertionMode):
         self.processStartTagHandler[name](name, attributes)
 
     def startTagScript(self, name, attributes):
-        self.parser.phase.insertionModes["inHead"](self.parser).\
-          processStartTag(name, attributes)
+        self.parser.phase.modes["inHead"](self.parser).processStartTag(name,
+          attributes)
 
     def startTagFromHead(self, name, attributes):
         self.parser.parseError()
-        self.parser.phase.insertionModes["inHead"](self.parser).\
-          processStartTag(name, attributes)
+        self.parser.phase.modes["inHead"](self.parser).processStartTag(name,
+          attributes)
 
     def startTagBody(self, name, attributes):
         self.parser.parseError()
@@ -908,7 +908,7 @@ class InBody(InsertionMode):
         if self.parser.elementInScope("p"):
             self.endTagP("p")
         self.parser.insertElement(name, attributes)
-        self.tokenizer.contentModelFlag = contentModelFlags["PLAINTEXT"]
+        self.parser.tokenizer.contentModelFlag = contentModelFlags["PLAINTEXT"]
 
     def startTagHeading(self, name, attributes):
         if self.parser.elementInScope("p"):
@@ -956,7 +956,7 @@ class InBody(InsertionMode):
     def startTagXmp(self, name, attributes):
         self.parser.reconstructActiveFormattingElements()
         self.parser.insertElement(name, attributes)
-        self.tokenizer.contentModelFlag = contentModelFlags["CDATA"]
+        self.parser.tokenizer.contentModelFlag = contentModelFlags["CDATA"]
 
     def startTagTable(self, name, attributes):
         if self.parser.elementInScope("p"):
