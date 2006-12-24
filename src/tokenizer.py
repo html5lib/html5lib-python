@@ -648,18 +648,14 @@ class HTMLTokenizer(object):
     def bogusCommentState(self):
         assert self.contentModelFlag == contentModelFlags["PCDATA"]
 
-        charStack = self.stream.charsUntil((u">"))
-
-        char = self.stream.char()
-
-        if char == EOF:
-            self.stream.queue.append(EOF)
-
-        # Make a new comment token and give it as value the characters the loop
-        # consumed. The last character is either > or EOF and should not be
-        # part of the comment data.
-        self.currentToken = Comment("".join(charStack))
+        # Make a new comment token and give it as value all the characters
+        # until the first > or EOF (charsUntil checks for EOF automatically)
+        self.currentToken = Comment(self.stream.charsUntil((u">")))
         self.emitCurrentToken()
+
+        # Eat the character directly after the bogus comment which is either a
+        # ">" or an EOF.
+        self.stream.char()
         return True
 
     def markupDeclarationOpenState(self):
