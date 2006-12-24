@@ -57,7 +57,7 @@ class HTMLInputStream(object):
         uString = re.sub('\x00', '\xFFFD', uString)
 
         # Convert the unicode string into a list to be used as the data stream
-        self.dataStream = list(uString)
+        self.dataStream = uString
 
         self.queue = []
 
@@ -182,7 +182,11 @@ class HTMLInputStream(object):
 
         # Then the rest
         while charStack[-1] and (charStack[-1] in characters) == opposite:
-            charStack.append(self.char())
+            try:
+                self.tell += 1
+                charStack.append(self.dataStream[self.tell - 1])
+            except:
+                charStack.append(EOF)
 
         # Put the character stopped on back to the front of the queue
         # from where it came.
