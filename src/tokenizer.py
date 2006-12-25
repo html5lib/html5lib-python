@@ -291,21 +291,24 @@ class HTMLTokenizer(object):
 
     def dataState(self):
         data = self.stream.char()
-        if (data == u"&" and
-          (self.contentModelFlag in
-          (contentModelFlags["PCDATA"], contentModelFlags["RCDATA"]))):
+        if data == u"&" and self.contentModelFlag in\
+          (contentModelFlags["PCDATA"], contentModelFlags["RCDATA"]):
             self.state = self.states["entityData"]
-        elif (data == u"<" and
-          self.contentModelFlag != contentModelFlags["PLAINTEXT"]):
+        elif data == u"<" and self.contentModelFlag !=\
+          contentModelFlags["PLAINTEXT"]:
             self.state = self.states["tagOpen"]
         elif data == EOF:
             # Tokenization ends.
             return False
         elif data in spaceCharacters:
+            # Directly after emitting a token you switch back to the "data
+            # state". At that point spaceCharacters are important so they are
+            # emitted separately.
+            # XXX need to check if we don't need a special "spaces" flag on
+            # characters.
             self.tokenQueue.append({"type": "Characters", "data":
               data + self.stream.charsUntil(spaceCharacters, True)})
         else:
-            # XXX we need a testcase that breaks this!
             self.tokenQueue.append({"type": "Characters", "data": 
               data + self.stream.charsUntil((u"&", u"<"))})
         return True
