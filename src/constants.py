@@ -3,7 +3,7 @@ import string
 try:
     frozenset
 except NameError:
-    #Import from the sets module for python 2.3
+    # Import from the sets module for python 2.3
     from sets import Set as set
     from sets import ImmutableSet as frozenset
 
@@ -129,7 +129,7 @@ asciiLetters = frozenset(string.ascii_letters)
 digits = frozenset(string.digits)
 hexDigits = frozenset(string.hexdigits)
 
-#Heading elements need to be ordered 
+# Heading elements need to be ordered 
 headingElements = (
     "h1",
     "h2",

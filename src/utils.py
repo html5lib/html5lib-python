@@ -19,12 +19,17 @@ class MethodDispatcher(dict):
     """
 
     def __init__(self, items=()):
+        # Using _dictEntries instead of directly assigning to self is about
+        # twice as fast. Please do careful performance testing before changing
+        # anything here.
+        _dictEntries = []
         for name,value in items:
             if type(name) in (list, tuple, frozenset, set):
                 for item in name:
-                    self[item] = value
+                    _dictEntries.append((item, value))
             else:
-                self[name] = value
+                _dictEntries.append((name, value))
+        dict.__init__(self, _dictEntries)
         self.default = None
 
     def __getitem__(self, key):
