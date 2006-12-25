@@ -1799,10 +1799,9 @@ class InSelect(InsertionMode):
 
     def endTagSelect(self, name):
         if self.parser.elementInScope(name, True):
-            if self.parser.openElements[-1].name != "select":
+            node = self.parser.openElements.pop()
+            while node.name != "select":
                 node = self.parser.openElements.pop()
-                while node.name != "select":
-                    node = self.parser.openElements.pop()
             self.parser.resetInsertionMode()
         else:
             # innerHTML case
