@@ -314,8 +314,6 @@ class HTMLTokenizer(object):
         return True
 
     def entityDataState(self):
-        assert self.contentModelFlag != contentModelFlags["CDATA"]
-
         entity = self.consumeEntity()
         if entity:
             self.tokenQueue.append({"type": "Characters", "data": entity})
@@ -326,15 +324,7 @@ class HTMLTokenizer(object):
 
     def tagOpenState(self):
         data = self.stream.char()
-        if (self.contentModelFlag in
-          (contentModelFlags["RCDATA"], contentModelFlags["CDATA"])):
-            if data == u"/":
-                self.state = self.states["closeTagOpen"]
-            else:
-                self.tokenQueue.append({"type": "Characters", "data": u"<"})
-                self.stream.queue.append(data)
-                self.state = self.states["data"]
-        elif self.contentModelFlag == contentModelFlags["PCDATA"]:
+        if self.contentModelFlag == contentModelFlags["PCDATA"]:
             if data == u"!":
                 self.state = self.states["markupDeclarationOpen"]
             elif data == u"/":
@@ -357,7 +347,15 @@ class HTMLTokenizer(object):
                 self.stream.queue.append(data)
                 self.state = self.states["data"]
         else:
-            assert False
+            # We know the content model flag is set to either RCDATA or CDATA
+            # now because this state can never be entered with the PLAINTEXT
+            # flag.
+            if data == u"/":
+                self.state = self.states["closeTagOpen"]
+            else:
+                self.tokenQueue.append({"type": "Characters", "data": u"<"})
+                self.stream.queue.append(data)
+                self.state = self.states["data"]
         return True
 
     def closeTagOpenState(self):
@@ -565,8 +563,6 @@ class HTMLTokenizer(object):
         return True
 
     def bogusCommentState(self):
-        assert self.contentModelFlag == contentModelFlags["PCDATA"]
-
         # Make a new comment token and give it as value all the characters
         # until the first > or EOF (charsUntil checks for EOF automatically)
         self.currentToken =\
@@ -579,8 +575,6 @@ class HTMLTokenizer(object):
         return True
 
     def markupDeclarationOpenState(self):
-        assert self.contentModelFlag == contentModelFlags["PCDATA"]
-
         charStack = [self.stream.char(), self.stream.char()]
         if charStack == [u"-", u"-"]:
             self.currentToken = {"type": "Comment", "data": ""}
