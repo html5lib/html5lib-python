@@ -1,7 +1,9 @@
 try:
+    type(frozenset)
+except NameError:
+    #Import from the sets module for python 2.3
+    from sets import Set as set
     from sets import ImmutableSet as frozenset
-except:
-    pass
 
 class MethodDispatcher(dict):
     """Dict with 2 special properties:

@@ -1,9 +1,11 @@
 import string
 
 try:
+    type(frozenset)
+except NameError:
+    #Import from the sets module for python 2.3
+    from sets import Set as set
     from sets import ImmutableSet as frozenset
-except:
-    pass
 
 EOF = None
 
@@ -127,14 +129,15 @@ asciiLetters = frozenset(string.ascii_letters)
 digits = frozenset(string.digits)
 hexDigits = frozenset(string.hexdigits)
 
-headingElements = frozenset((
+#Heading elements need to be ordered 
+headingElements = (
     "h1",
     "h2",
     "h3",
     "h4",
     "h5",
     "h6"
-))
+)
 
 # XXX What about event-source and command?
 voidElements = frozenset((
