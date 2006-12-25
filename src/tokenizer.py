@@ -419,8 +419,8 @@ class HTMLTokenizer(object):
         if data in spaceCharacters:
             self.state = self.states["beforeAttributeName"]
         elif data in asciiLowercase:
-            data += self.stream.charsUntil(asciiLowercase, True)
-            self.currentToken["name"] += data
+            self.currentToken["name"] += data +\
+              self.stream.charsUntil(asciiLowercase, True)
         elif data in asciiUppercase:
             self.currentToken["name"] += data.lower() +\
               self.stream.charsUntil(asciiLetters, True).lower()
