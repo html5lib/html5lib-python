@@ -12,21 +12,19 @@ class MethodDispatcher(dict):
     multiple keys so accessing any one of the items in the original
     list-like object returns the matching value
 
-    md = MethodDispatcher({["foo", "bar"]:"baz"})
+    md = MethodDispatcher({("foo", "bar"):"baz"})
     md["foo"] == "baz"
 
     A default value which can be set through the default attribute.
     """
 
     def __init__(self, items=()):
-        _dictEntries = []
         for name,value in items:
             if type(name) in (list, tuple, frozenset, set):
                 for item in name:
-                    _dictEntries.append((item, value))
+                    self[item] = value
             else:
-                _dictEntries.append((name, value))
-        dict.__init__(self, _dictEntries)
+                self[name] = value
         self.default = None
 
     def __getitem__(self, key):
