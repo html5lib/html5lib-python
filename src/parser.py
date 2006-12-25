@@ -163,15 +163,15 @@ class HTMLParser(object):
         # XXX This is temporary for the moment so there isn't any other
         # changes needed for the parser to work with the iterable tokenizer
         for token in self.tokenizer:
-            tokenClass = token.__class__.__name__
-            method = getattr(self.phase, 'process%s' % tokenClass, None)
-            if tokenClass in ('Characters', 'Comment'):
-                method(token.data)
-            elif tokenClass in ('Doctype', 'StartTag'):
-                method(token.name, token.data)
-            elif tokenClass == 'EndTag':
-                method(token.name)
-            elif tokenClass == 'ParseError':
+            type = token["type"]
+            method = getattr(self.phase, "process%s" % type, None)
+            if type in ("Characters", "Comment"):
+                method(token["data"])
+            elif type in ("Doctype", "StartTag"):
+                method(token["name"], token["data"])
+            elif type == "EndTag":
+                method(token["name"])
+            elif type == "ParseError":
                 self.parseError()
             else:
                 self.atheistParseError()

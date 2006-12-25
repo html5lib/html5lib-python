@@ -16,35 +16,35 @@ from tokenizer import HTMLTokenizer
 class TokenizerTestParser(object):
     def parse(self, stream, innerHTML=False):
         self.outputTokens = []
-        
+
         self.tokenizer = HTMLTokenizer(stream)
-        
+
         for token in self.tokenizer:
-            getattr(self, 'process%s' % token.__class__.__name__)(token)
-        
+            getattr(self, 'process%s' % token["type"])(token)
+
         return self.outputTokens
-    
+
     def processDoctype(self, token):
-        self.outputTokens.append([u"DOCTYPE", token.name, token.data])
-    
+        self.outputTokens.append([u"DOCTYPE", token["name"], token["data"]])
+
     def processStartTag(self, token):
-        self.outputTokens.append([u"StartTag", token.name, token.data])
-    
+        self.outputTokens.append([u"StartTag", token["name"], token["data"]])
+
     def processEndTag(self, token):
-        self.outputTokens.append([u"EndTag", token.name])
-    
+        self.outputTokens.append([u"EndTag", token["name"]])
+
     def processComment(self, token):
-        self.outputTokens.append([u"Comment", token.data])
-    
+        self.outputTokens.append([u"Comment", token["data"]])
+
     def processCharacters(self, token):
-        self.outputTokens.append([u"Character", token.data])
-    
+        self.outputTokens.append([u"Character", token["data"]])
+
     def processEOF(self, token):
         pass
-    
+
     def processParseError(self, token):
         self.outputTokens.append(u"ParseError")
-    
+
     def processAtheistParseError(self, token):
         """This error is not an error"""
         self.outputTokens.append(u"AtheistParseError")
@@ -64,7 +64,7 @@ def concatenateCharacterTokens(tokens):
 
 def tokensMatch(expectedTokens, recievedTokens):
     """Test whether the test has passed or failed
-    
+
     For brevity in the tests, the test has passed if the sequence of expected
     tokens appears anywhere in the sequence of returned tokens.
     """
@@ -117,5 +117,5 @@ if __name__ == "__main__":
     #Allow us to import the parent module
     os.chdir(os.path.split(os.path.abspath(__file__))[0])
     sys.path.insert(0, os.path.abspath(os.pardir))
-    
+
     main()
