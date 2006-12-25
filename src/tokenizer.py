@@ -302,7 +302,8 @@ class HTMLTokenizer(object):
             # Tokenization ends.
             return False
         elif data in spaceCharacters:
-            self.tokenQueue.append({"type": "Characters", "data": data})
+            self.tokenQueue.append({"type": "Characters", "data":
+              data + self.stream.charsUntil(spaceCharacters, True)})
         else:
             # XXX we need a testcase that breaks this!
             self.tokenQueue.append({"type": "Characters", "data": 
@@ -436,7 +437,7 @@ class HTMLTokenizer(object):
     def beforeAttributeNameState(self):
         data = self.stream.char()
         if data in spaceCharacters:
-            pass
+            self.stream.charsUntil(spaceCharacters, True)
         elif data in asciiUppercase:
             self.currentToken["data"].append([data.lower(), ""])
             self.state = self.states["attributeName"]
@@ -496,7 +497,7 @@ class HTMLTokenizer(object):
     def afterAttributeNameState(self):
         data = self.stream.char()
         if data in spaceCharacters:
-            pass
+            self.stream.charsUntil(spaceCharacters, True)
         elif data == u"=":
             self.state = self.states["beforeAttributeValue"]
         elif data == u">":
@@ -517,7 +518,7 @@ class HTMLTokenizer(object):
     def beforeAttributeValueState(self):
         data = self.stream.char()
         if data in spaceCharacters:
-            pass
+            self.stream.charsUntil(spaceCharacters, True)
         elif data == u"\"":
             self.state = self.states["attributeValueDoubleQuoted"]
         elif data == u"&":
