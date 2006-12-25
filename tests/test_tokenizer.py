@@ -87,7 +87,7 @@ class TestCase(unittest.TestCase):
         tokens = concatenateCharacterTokens(tokens)
         errorMsg = "\n".join(["\n\nExpected:", str(output), "\nRecieved:",
                              str(tokens)])
-        self.assertTrue(tokensMatch(tokens, output), errorMsg)
+        self.assertEquals(tokensMatch(tokens, output), True, errorMsg)
 
 
 def test_tokenizer():

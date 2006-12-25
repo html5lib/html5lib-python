@@ -1,3 +1,10 @@
+try:
+    frozenset
+except NameError:
+    #Import from the sets module for python 2.3
+    from sets import Set as set
+    from sets import ImmutableSet as frozenset
+
 import tokenizer
 
 import utils
