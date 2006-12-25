@@ -422,8 +422,8 @@ class HTMLTokenizer(object):
             data += self.stream.charsUntil(asciiLowercase, True)
             self.currentToken["name"] += data
         elif data in asciiUppercase:
-            data += self.stream.charsUntil(asciiLetters, True)
-            self.currentToken["name"] += data.lower()
+            self.currentToken["name"] += data.lower() +\
+              self.stream.charsUntil(asciiLetters, True).lower()
         elif data == u">":
             self.emitCurrentToken()
         elif data == u"<" or data == EOF:
@@ -459,12 +459,12 @@ class HTMLTokenizer(object):
         if data == u"=":
             self.state = self.states["beforeAttributeValue"]
         elif data in asciiLowercase:
-            self.currentToken["data"][-1][0] += data + self.stream.charsUntil(
-              asciiLowercase, True)
+            self.currentToken["data"][-1][0] += data +\
+              self.stream.charsUntil(asciiLowercase, True)
             leavingThisState = False
         elif data in asciiUppercase:
-            data += self.stream.charsUntil(asciiLetters, True)
-            self.currentToken["data"][-1][0] += data.lower()
+            self.currentToken["data"][-1][0] += data.lower() +\
+              self.stream.charsUntil(asciiLetters, True).lower()
             leavingThisState = False
         elif data == u">":
             # XXX If we emit here the attributes are converted to a dict
