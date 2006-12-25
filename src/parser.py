@@ -230,6 +230,10 @@ class HTMLParser(object):
         self.phase.mode = self.phase.modes[name](self)
 
     def elementInScope(self, target, tableVariant=False):
+        # Exit early when possible.
+        if self.openElements[-1].name == target:
+            return True
+
         # AT Use reverse instead of [::-1] when we can rely on Python 2.4
         # AT How about while True and simply set node to [-1] and set it to
         # [-2] at the end...
@@ -364,9 +368,12 @@ class HTMLParser(object):
 
     def generateImpliedEndTags(self, exclude=None):
         name = self.openElements[-1].name
-        if (name in frozenset(("dd", "dt", "li", "p", "td", "th", "tr"))
-          and name != exclude):
-            self.processEndTag(name)
+        if name in frozenset(("dd", "dt", "li", "p", "td", "th", "tr"))\
+          and name != exclude:
+            self.openElements.pop()
+            # XXX Until someone has broven that the above breaks stuff I think
+            # we should keep it in.
+            # self.processEndTag(name)
             self.generateImpliedEndTags(exclude)
 
     def resetInsertionMode(self):

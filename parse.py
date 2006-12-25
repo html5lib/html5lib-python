@@ -38,8 +38,14 @@ if __name__ == "__main__":
             stats.sort_stats('time')
             stats.print_stats()
         else:
+            from time import time
+            t = time()
             document = p.parse(x)
+            t = time() - t
+            t2 = time()
             print convertTreeDump(document.printTree())
+            t2 = time() - t2
+            print "\n\nDuration:", t, "\nTree dump duration:", t2
     else:
         print """Pass one argument to parse the document and two to get an
               indication on what's going on.
