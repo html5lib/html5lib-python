@@ -483,7 +483,10 @@ class RootElementPhase(Phase):
         self.parser.phase.processEOF()
 
 class MainPhase(Phase):
-    # XXX See processStartTag
+    # XXX Removing this class entirely would remove quite a few useless method
+    # calls that cycle through this thing every time a new token is emitted for
+    # this phase...
+
     def __init__(self, parser):
         Phase.__init__(self, parser)
         self.modes = {
@@ -508,25 +511,7 @@ class MainPhase(Phase):
         self.mode.processEOF()
 
     def processStartTag(self, name, attributes):
-        # XXX this must be made faster. This thing seems to be the sole reason
-        # we still have this class. That makes it quite inefficient. I'm not
-        # sure how to strip it out but it has to be done. We can just move
-        # handling <html x> to every individual state perhaps with a common
-        # handler.
-        #
-        # Removing this class entirely would remove quite a few useless method
-        # calls that cycle through this thing every time a new token is emitted
-        # for this phase...
-        if name != "html":
-            self.mode.processStartTag(name, attributes)
-        else:
-            if self.parser.openElements:
-                # XXX Is this check right? Need to be sure there has _never_
-                # been a HTML tag open
-                self.parser.parseError()
-            for attr, value in attributes.iteritems():
-                if attr not in self.parser.openElements[0].attributes:
-                    self.parser.openElements[0].attributes[attr] = value
+        self.mode.processStartTag(name, attributes)
 
     def processEndTag(self, name):
         self.mode.processEndTag(name)
@@ -587,6 +572,15 @@ class InsertionMode(object):
     def processStartTag(self, name, attributes):
         self.startTagHandler[name](name, attributes)
 
+    def startTagHtml(self, name, attributes):
+        if self.parser.openElements:
+            # XXX Is this check right? Need to be sure there has _never_
+            # been a HTML tag open
+            self.parser.parseError()
+        for attr, value in attributes.iteritems():
+            if attr not in self.parser.openElements[0].attributes:
+                self.parser.openElements[0].attributes[attr] = value
+
     def processEndTag(self, name):
         self.endTagHandler[name](name)
 
@@ -595,6 +589,7 @@ class BeforeHead(InsertionMode):
         InsertionMode.__init__(self, parser)
 
         self.startTagHandler = utils.MethodDispatcher([
+            ("html", self.startTagHtml),
             ("head", self.startTagHead)
         ])
         self.startTagHandler.default = self.startTagOther
@@ -633,6 +628,7 @@ class InHead(InsertionMode):
         InsertionMode.__init__(self, parser)
 
         self.startTagHandler =  utils.MethodDispatcher([
+            ("html", self.startTagHtml),
             (("title", "style"), self.startTagTitleStyle),
             ("script", self.startTagScript),
             (("base", "link", "meta"), self.startTagBaseLinkMeta),
@@ -734,8 +730,9 @@ class AfterHead(InsertionMode):
         InsertionMode.__init__(self, parser)
         
         self.startTagHandler = utils.MethodDispatcher([
-            ("body",self.startTagBody),
-            ("frameset",self.startTagFrameset),
+            ("html", self.startTagHtml),
+            ("body", self.startTagBody),
+            ("frameset", self.startTagFrameset),
             (("base", "link", "meta", "script", "style", "title"),
               self.startTagFromHead)
         ])
@@ -781,6 +778,7 @@ class InBody(InsertionMode):
     def __init__(self, parser):
         InsertionMode.__init__(self, parser)
         self.startTagHandler = utils.MethodDispatcher([
+            ("html", self.startTagHtml),
             ("script", self.startTagScript),
             (("base", "link", "meta", "style", "title"),
               self.startTagFromHead),
@@ -1276,6 +1274,7 @@ class InTable(InsertionMode):
     def __init__(self, parser):
         InsertionMode.__init__(self, parser)
         self.startTagHandler = utils.MethodDispatcher([
+            ("html", self.startTagHtml),
             ("caption", self.startTagCaption),
             ("colgroup", self.startTagColgroup),
             ("col", self.startTagCol),
@@ -1379,6 +1378,7 @@ class InCaption(InsertionMode):
         InsertionMode.__init__(self, parser)
 
         self.startTagHandler = utils.MethodDispatcher([
+            ("html", self.startTagHtml),
             (("caption", "col", "colgroup", "tbody", "td", "tfoot", "th",
               "thead", "tr"), self.startTagTableElement)
         ])
@@ -1442,6 +1442,7 @@ class InColumnGroup(InsertionMode):
         InsertionMode.__init__(self, parser)
 
         self.startTagHandler = utils.MethodDispatcher([
+            ("html", self.startTagHtml),
             ("col", self.startTagCol)
         ])
         self.startTagHandler.default = self.startTagOther
@@ -1491,6 +1492,7 @@ class InTableBody(InsertionMode):
     def __init__(self, parser):
         InsertionMode.__init__(self, parser)
         self.startTagHandler = utils.MethodDispatcher([
+            ("html", self.startTagHtml),
             ("tr", self.startTagTr),
             (("td", "th"), self.startTagTableCell),
             (("caption", "col", "colgroup", "tbody", "tfoot", "thead"), self.startTagTableOther)
@@ -1572,6 +1574,7 @@ class InRow(InsertionMode):
     def __init__(self, parser):
         InsertionMode.__init__(self, parser)
         self.startTagHandler = utils.MethodDispatcher([
+            ("html", self.startTagHtml),
             (("td", "th"), self.startTagTableCell),
             (("caption", "col", "colgroup", "tbody", "tfoot", "thead",
               "tr"), self.startTagTableOther)
@@ -1647,6 +1650,7 @@ class InCell(InsertionMode):
     def __init__(self, parser):
         InsertionMode.__init__(self, parser)
         self.startTagHandler = utils.MethodDispatcher([
+            ("html", self.startTagHtml),
             (("caption", "col", "colgroup", "tbody", "td", "tfoot", "th",
               "thead", "tr"), self.startTagTableOther)
         ])
@@ -1718,6 +1722,7 @@ class InSelect(InsertionMode):
         InsertionMode.__init__(self, parser)
 
         self.startTagHandler = utils.MethodDispatcher([
+            ("html", self.startTagHtml),
             ("option", self.startTagOption),
             ("optgroup", self.startTagOptgroup),
             ("select", self.startTagSelect)
@@ -1796,6 +1801,7 @@ class AfterBody(InsertionMode):
     def __init__(self, parser):
         InsertionMode.__init__(self, parser)
 
+        # XXX We should prolly add a handler for "html" here as well...
         self.endTagHandler = utils.MethodDispatcher([("html", self.endTagHtml)])
         self.endTagHandler.default = self.endTagOther
 
@@ -1831,6 +1837,7 @@ class InFrameset(InsertionMode):
         InsertionMode.__init__(self, parser)
 
         self.startTagHandler = utils.MethodDispatcher([
+            ("html", self.startTagHtml),
             ("frameset", self.startTagFrameset),
             ("frame", self.startTagFrame),
             ("noframes", self.startTagNoframes)
@@ -1872,7 +1879,10 @@ class AfterFrameset(InsertionMode):
     def __init__(self, parser):
         InsertionMode.__init__(self, parser)
         
-        self.startTagHandler = utils.MethodDispatcher([("noframes", self.startTagNoframes)])
+        self.startTagHandler = utils.MethodDispatcher([
+            ("html", self.startTagHtml),
+            ("noframes", self.startTagNoframes)
+        ])
         self.startTagHandler.default = self.tagOther
 
         self.endTagHandler = utils.MethodDispatcher([("html", self.endTagHtml)])
