@@ -605,24 +605,24 @@ class BeforeHead(InsertionMode):
         self.endTagHandler.default = self.endTagOther
 
     def processEOF(self):
-        self.startTagHead()
+        self.startTagHead("head", {})
         self.parser.phase.mode.processEOF()
 
     def processCharacters(self, data):
-        self.startTagHead()
+        self.startTagHead("head", {})
         self.parser.phase.mode.processCharacters(data)
 
-    def startTagHead(self, name="head", attributes={}):
+    def startTagHead(self, name, attributes):
         self.parser.insertElement(name, attributes)
         self.parser.headPointer = self.parser.openElements[-1]
         self.parser.switchInsertionMode("inHead")
 
     def startTagOther(self, name, attributes):
-        self.startTagHead()
+        self.startTagHead("head", {})
         self.parser.phase.mode.processStartTag(name, attributes)
 
     def endTagHtml(self, name):
-        self.startTagHead()
+        self.startTagHead("head", {})
         self.parser.phase.mode.processEndTag(name)
 
     def endTagOther(self, name):
@@ -1315,13 +1315,13 @@ class InTable(InsertionMode):
         self.parser.insertElement(name, attributes)
         self.parser.switchInsertionMode("inCaption")
 
-    def startTagColgroup(self, name="colgroup", attributes={}):
+    def startTagColgroup(self, name, attributes):
         self.clearStackToTableContext()
         self.parser.insertElement(name, attributes)
         self.parser.switchInsertionMode("inColumnGroup")
 
     def startTagCol(self, name, attributes):
-        self.startTagColgroup()
+        self.startTagColgroup("colgroup", {})
         self.parser.phase.mode.processStartTag(name, attributes)
 
     def startTagRowGroup(self, name, attributes={}):
@@ -1453,7 +1453,7 @@ class InColumnGroup(InsertionMode):
         self.endTagHandler.default = self.endTagOther
 
     def processCharacters(self, data):
-        self.endTagColgroup()
+        self.endTagColgroup("colgroup")
         # XXX
         if not self.parser.innerHTML:
             self.parser.phase.mode.processCharacters(data)
@@ -1463,12 +1463,12 @@ class InColumnGroup(InsertionMode):
         self.parser.openElements.pop()
 
     def startTagOther(self, name, attributes):
-        self.endTagColgroup()
+        self.endTagColgroup("colgroup")
         # XXX how can be sure it's always ignored?
         if not self.parser.innerHTML:
             self.parser.phase.mode.processStartTag(name, attributes)
 
-    def endTagColgroup(self, name="colgroup"):
+    def endTagColgroup(self, name):
         if self.parser.openElements[-1].name == "html":
             # innerHTML case
             self.parser.parseError()
@@ -1480,7 +1480,7 @@ class InColumnGroup(InsertionMode):
         self.parser.parseError()
 
     def endTagOther(self, name):
-        self.endTagColgroup()
+        self.endTagColgroup("colgroup")
         # XXX how can be sure it's always ignored?
         if not self.parser.innerHTML:
             self.parser.phase.mode.processEndTag(name)
@@ -1516,14 +1516,14 @@ class InTableBody(InsertionMode):
     def processCharacters(self,data):
         self.parser.phase.modes["inTable"].processCharacters(data)
 
-    def startTagTr(self, name="tr", attributes={}):
+    def startTagTr(self, name, attributes):
         self.clearStackToTableBodyContext()
         self.parser.insertElement(name, attributes)
         self.parser.switchInsertionMode("inRow")
 
     def startTagTableCell(self, name, attributes):
         self.parser.parseError()
-        self.startTagTr()
+        self.startTagTr("tr", {})
         self.parser.phase.mode.processStartTag(name, attributes)
 
     def startTagTableOther(self, name, attributes):
@@ -1604,7 +1604,7 @@ class InRow(InsertionMode):
         self.parser.activeFormattingElements.append(Marker)
 
     def startTagTableOther(self, name, attributes):
-        self.endTagTr()
+        self.endTagTr("tr")
         # XXX how are we sure it's always ignored in the innerHTML case?
         if not self.parser.innerHTML:
             self.parser.phase.mode.processStartTag(name, attributes)
@@ -1612,7 +1612,7 @@ class InRow(InsertionMode):
     def startTagOther(self, name, attributes):
         self.parser.phase.modes["inTable"].processStartTag(name, attributes)
 
-    def endTagTr(self, name="tr"):
+    def endTagTr(self, name):
         if self.parser.elementInScope("tr", True):
             self.clearStackToTableRowContext()
             self.parser.openElements.pop()
@@ -1630,7 +1630,7 @@ class InRow(InsertionMode):
 
     def endTagTableRowGroup(self, name):
         if self.parser.elementInScope(name, True):
-            self.endTagTr()
+            self.endTagTr("tr")
             self.parser.phase.mode.processEndTag(name)
         else:
             # innerHTML case
