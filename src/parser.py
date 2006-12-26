@@ -512,7 +512,9 @@ class MainPhase(Phase):
 
     def processStartTag(self, name, attributes):
         # XXX this must be made faster
-        if name == "html":
+        if name != "html":
+            self.mode.processStartTag(name, attributes)
+        else:
             if self.parser.openElements:
                 # XXX Is this check right? Need to be sure there has _never_
                 # been a HTML tag open
@@ -520,8 +522,6 @@ class MainPhase(Phase):
             for attr, value in attributes.iteritems():
                 if attr not in self.parser.openElements[0].attributes:
                     self.parser.openElements[0].attributes[attr] = value
-        else:
-            self.mode.processStartTag(name, attributes)
 
     def processEndTag(self, name):
         self.mode.processEndTag(name)
@@ -578,7 +578,28 @@ class InsertionMode(object):
     def processSpaceCharacters(self, data):
         self.parser.insertText(data)
 
+    def processStartTag(self, name, attributes):
+        self.startTagHandler[name](name, attributes)
+
+    def processEndTag(self, name):
+        self.endTagHandler[name](name)
+
 class BeforeHead(InsertionMode):
+    def __init__(self, parser):
+        InsertionMode.__init__(self, parser)
+
+        self.startTagHandler = utils.MethodDispatcher([
+            ("head", self.startTagHead),
+            (("base", "link", "meta", "script", "style", "title"),
+              self.startTagOther)
+        ])
+        self.startTagHandler.default = self.startTagOther
+
+        self.endTagHandler = utils.MethodDispatcher([
+            ("html", self.endTagHtml)
+        ])
+        self.endTagHandler.default = self.endTagOther
+
     def processEOF(self):
         self.startTagHead()
         self.parser.phase.mode.processEOF()
@@ -586,15 +607,6 @@ class BeforeHead(InsertionMode):
     def processCharacters(self, data):
         self.startTagHead()
         self.parser.phase.mode.processCharacters(data)
-
-    def processStartTag(self, name, attributes):
-        handlers = utils.MethodDispatcher([
-            ("head", self.startTagHead),
-            (("base", "link", "meta", "script", "style", "title"),
-              self.startTagOther)
-        ])
-        handlers.default = self.startTagOther
-        handlers[name](name, attributes)
 
     def startTagHead(self, name="head", attributes={}):
         self.parser.insertElement(name, attributes)
@@ -605,13 +617,6 @@ class BeforeHead(InsertionMode):
         self.startTagHead()
         self.parser.processStartTag(name, attributes)
 
-    def processEndTag(self, name):
-        handlers = utils.MethodDispatcher([
-            ("html", self.endTagHtml)
-        ])
-        handlers.default = self.endTagOther
-        handlers[name](name)
-
     def endTagHtml(self, name):
         self.startTagHead()
         self.parser.processEndTag(name)
@@ -620,6 +625,24 @@ class BeforeHead(InsertionMode):
         self.parser.parseError()
 
 class InHead(InsertionMode):
+    def __init__(self, parser):
+        InsertionMode.__init__(self, parser)
+
+        self.startTagHandler =  utils.MethodDispatcher([
+            (("title", "style"), self.startTagTitleStyle),
+            ("script", self.startTagScript),
+            (("base", "link", "meta"), self.startTagBaseLinkMeta),
+            ("head", self.startTagHead)
+        ])
+        self.startTagHandler.default = self.startTagOther 
+
+        self. endTagHandler = utils.MethodDispatcher([
+            ("head", self.endTagHead),
+            ("html", self.endTagHtml),
+            (("title", "style", "script"), self.endTagTitleStyleScript)
+        ])
+        self.endTagHandler.default = self.endTagOther
+
     # helper
     def appendToHead(self, element):
         if self.parser.headPointer is not None:
@@ -641,16 +664,6 @@ class InHead(InsertionMode):
         else:
             self.anythingElse()
             self.parser.phase.mode.processCharacters(data)
-
-    def processStartTag(self, name, attributes):
-        handlers = utils.MethodDispatcher([
-            (("title", "style"), self.startTagTitleStyle),
-            ("script", self.startTagScript),
-            (("base", "link", "meta"), self.startTagBaseLinkMeta),
-            ("head", self.startTagHead)
-        ])
-        handlers.default = self.startTagOther
-        handlers[name](name, attributes)
 
     def startTagHead(self, name, attributes):
         self.parser.insertElement(name, attributes)
@@ -686,15 +699,6 @@ class InHead(InsertionMode):
         self.anythingElse()
         self.parser.processStartTag(name, attributes)
 
-    def processEndTag(self, name):
-        handlers = utils.MethodDispatcher([
-            ("head", self.endTagHead),
-            ("html", self.endTagHtml),
-            (("title", "style", "script"), self.endTagTitleStyleScript)
-        ])
-        handlers.default = self.endTagOther
-        handlers[name](name)
-
     def endTagHead(self, name):
         if self.parser.openElements[-1].name == "head":
             self.parser.openElements.pop()
@@ -722,6 +726,17 @@ class InHead(InsertionMode):
             self.parser.switchInsertionMode("afterHead")
 
 class AfterHead(InsertionMode):
+    def __init__(self, parser):
+        InsertionMode.__init__(self, parser)
+        
+        self.startTagHandler = utils.MethodDispatcher([
+            ("body",self.startTagBody),
+            ("frameset",self.startTagFrameset),
+            (("base", "link", "meta", "script", "style", "title"),
+              self.startTagFromHead)
+        ])
+        self.startTagHandler.default = self.startTagOther
+
     def processEOF(self):
         self.anythingElse()
         self.parser.phase.mode.processEOF()
@@ -729,16 +744,6 @@ class AfterHead(InsertionMode):
     def processCharacters(self, data):
         self.anythingElse()
         self.parser.phase.mode.processCharacters(data)
-
-    def processStartTag(self, name, attributes):
-        handlers = utils.MethodDispatcher([
-            ("body",self.startTagBody),
-            ("frameset",self.startTagFrameset),
-            (("base", "link", "meta", "script", "style", "title"),
-              self.startTagFromHead)
-        ])
-        handlers.default = self.startTagOther
-        handlers[name](name, attributes)
 
     def startTagBody(self, name, attributes):
         self.parser.insertElement(name, attributes)
@@ -771,7 +776,7 @@ class InBody(InsertionMode):
     # the crazy mode
     def __init__(self, parser):
         InsertionMode.__init__(self, parser)
-        self.processStartTagHandler = utils.MethodDispatcher([
+        self.startTagHandler = utils.MethodDispatcher([
             ("script", self.startTagScript),
             (("base", "link", "meta", "style", "title"),
               self.startTagFromHead),
@@ -805,9 +810,9 @@ class InBody(InsertionMode):
             (("event-source", "section", "nav", "article", "aside", "header",
               "footer", "datagrid", "command"), self.startTagNew)
         ])
-        self.processStartTagHandler.default = self.startTagOther
+        self.startTagHandler.default = self.startTagOther
 
-        self.processEndTagHandler = utils.MethodDispatcher([
+        self.endTagHandler = utils.MethodDispatcher([
             ("p",self.endTagP),
             ("body",self.endTagBody),
             ("html",self.endTagHtml),
@@ -829,7 +834,7 @@ class InBody(InsertionMode):
             (("event-source", "section", "nav", "article", "aside", "header",
               "footer", "datagrid", "command"), self.endTagNew)
             ])
-        self.processEndTagHandler.default = self.endTagOther
+        self.endTagHandler.default = self.endTagOther
 
     # helper
     def addFormattingElement(self, name, attributes):
@@ -844,9 +849,6 @@ class InBody(InsertionMode):
         # do it for space characters.
         self.parser.reconstructActiveFormattingElements()
         self.parser.insertText(data)
-
-    def processStartTag(self, name, attributes):
-        self.processStartTagHandler[name](name, attributes)
 
     def startTagScript(self, name, attributes):
         self.parser.phase.modes["inHead"].processStartTag(name, attributes)
@@ -1035,10 +1037,6 @@ class InBody(InsertionMode):
     def startTagOther(self, name, attributes):
         self.parser.reconstructActiveFormattingElements()
         self.parser.insertElement(name, attributes)
-
-
-    def processEndTag(self, name):
-        self.processEndTagHandler[name](name)
 
     def endTagP(self, name):
         self.parser.generateImpliedEndTags("p")
@@ -1273,7 +1271,7 @@ class InTable(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-table
     def __init__(self, parser):
         InsertionMode.__init__(self, parser)
-        self.processStartTagHandler = utils.MethodDispatcher([
+        self.startTagHandler = utils.MethodDispatcher([
             ("caption", self.startTagCaption),
             ("colgroup", self.startTagColgroup),
             ("col", self.startTagCol),
@@ -1281,14 +1279,14 @@ class InTable(InsertionMode):
             (("td", "th", "tr"), self.startTagImplyTbody),
             ("table", self.startTagTable)
         ])
-        self.processStartTagHandler.default = self.startTagOther
+        self.startTagHandler.default = self.startTagOther
 
-        self.processEndTagHandler = utils.MethodDispatcher([
+        self.endTagHandler = utils.MethodDispatcher([
             ("table", self.endTagTable),
             (("body", "caption", "col", "colgroup", "html", "tbody", "td",
               "tfoot", "th", "thead", "tr"), self.endTagIgnore)
         ])
-        self.processEndTagHandler.default = self.endTagOther
+        self.endTagHandler.default = self.endTagOther
 
     # helper methods
     def clearStackToTableContext(self):
@@ -1306,9 +1304,6 @@ class InTable(InsertionMode):
         # Process the character in the "in body" mode
         self.parser.phase.modes["inBody"].processCharacters(data)
         self.parser.insertFromTable = False
-
-    def processStartTag(self, name, attributes):
-        self.processStartTagHandler[name](name, attributes)
 
     def startTagCaption(self, name, attributes):
         self.clearStackToTableContext()
@@ -1348,9 +1343,6 @@ class InTable(InsertionMode):
         self.parser.phase.modes["inBody"].processStartTag(name, attributes)
         self.parser.insertFromTable = False
 
-    def processEndTag(self, name):
-        self.processEndTagHandler[name](name)
-
     def endTagTable(self, name):
         if self.parser.elementInScope("table", True):
             self.parser.generateImpliedEndTags()
@@ -1379,16 +1371,25 @@ class InCaption(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-caption
     # XXX ...
 
-    def processCharacters(self, data):
-        self.parser.phase.modes["inBody"].processCharacters(data)
+    def __init__(self, parser):
+        InsertionMode.__init__(self, parser)
 
-    def processStartTag(self, name, attributes):
-        handlers = utils.MethodDispatcher([
+        self.startTagHandler = utils.MethodDispatcher([
             (("caption", "col", "colgroup", "tbody", "td", "tfoot", "th",
               "thead", "tr"), self.startTagTableElement)
         ])
-        handlers.default = self.startTagOther
-        handlers[name](name, attributes)
+        self.startTagHandler.default = self.startTagOther
+
+        self.endTagHandler = utils.MethodDispatcher([
+            ("caption", self.endTagCaption),
+            ("table", self.endTagTable),
+            (("body", "col", "colgroup", "html", "tbody", "td", "tfoot", "th",
+              "thead", "tr"), self.endTagIgnore)
+        ])
+        self.endTagHandler.default = self.endTagOther
+
+    def processCharacters(self, data):
+        self.parser.phase.modes["inBody"].processCharacters(data)
 
     def startTagTableElement(self, name, attributes):
         self.parser.parseError()
@@ -1401,16 +1402,6 @@ class InCaption(InsertionMode):
 
     def startTagOther(self, name, attributes):
         self.parser.phase.modes["inBody"].processStartTag(name, attributes)
-
-    def processEndTag(self, name):
-        handlers = utils.MethodDispatcher([
-            ("caption", self.endTagCaption),
-            ("table", self.endTagTable),
-            (("body", "col", "colgroup", "html", "tbody", "td", "tfoot", "th",
-              "thead", "tr"), self.endTagIgnore)
-        ])
-        handlers.default = self.endTagOther
-        handlers[name](name)
 
     def endTagCaption(self, name):
         if self.parser.elementInScope(name, True):
@@ -1443,18 +1434,25 @@ class InCaption(InsertionMode):
 class InColumnGroup(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-column
 
+    def __init__(self, parser):
+        InsertionMode.__init__(self, parser)
+
+        self.startTagHandler = utils.MethodDispatcher([
+            ("col", self.startTagCol)
+        ])
+        self.startTagHandler.default = self.startTagOther
+
+        self.endTagHandler = utils.MethodDispatcher([
+            ("colgroup", self.endTagColgroup),
+            ("col", self.endTagCol)
+        ])
+        self.endTagHandler.default = self.endTagOther
+
     def processCharacters(self, data):
         self.endTagColgroup()
         # XXX
         if not self.parser.innerHTML:
             self.parser.processCharacters(data)
-
-    def processStartTag(self, name, attributes):
-        handlers = utils.MethodDispatcher([
-            ("col", self.startTagCol)
-        ])
-        handlers.default = self.startTagOther
-        handlers[name](name, attributes)
 
     def startTagCol(self, name ,attributes):
         self.parser.insertElement(name, attributes)
@@ -1465,14 +1463,6 @@ class InColumnGroup(InsertionMode):
         # XXX how can be sure it's always ignored?
         if not self.parser.innerHTML:
             self.parser.processStartTag(name, attributes)
-
-    def processEndTag(self, name):
-        handlers = utils.MethodDispatcher([
-            ("colgroup", self.endTagColgroup),
-            ("col", self.endTagCol)
-        ])
-        handlers.default = self.endTagOther
-        handlers[name](name)
 
     def endTagColgroup(self, name="colgroup"):
         if self.parser.openElements[-1].name == "html":
@@ -1496,20 +1486,20 @@ class InTableBody(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-table0
     def __init__(self, parser):
         InsertionMode.__init__(self, parser)
-        self.processStartTagHandler = utils.MethodDispatcher([
+        self.startTagHandler = utils.MethodDispatcher([
             ("tr", self.startTagTr),
             (("td", "th"), self.startTagTableCell),
             (("caption", "col", "colgroup", "tbody", "tfoot", "thead"), self.startTagTableOther)
         ])
-        self.processStartTagHandler.default = self.startTagOther
+        self.startTagHandler.default = self.startTagOther
 
-        self.processEndTagHandler = utils.MethodDispatcher([
+        self.endTagHandler = utils.MethodDispatcher([
             (("tbody", "tfoot", "thead"), self.endTagTableRowGroup),
             ("table", self.endTagTable),
             (("body", "caption", "col", "colgroup", "html", "td", "th",
               "tr"), self.endTagIgnore)
         ])
-        self.processEndTagHandler.default = self.endTagOther
+        self.endTagHandler.default = self.endTagOther
 
     # helper methods
     def clearStackToTableBodyContext(self):
@@ -1521,9 +1511,6 @@ class InTableBody(InsertionMode):
     # the rest
     def processCharacters(self,data):
         self.parser.phase.modes["inTable"].processCharacters(data)
-
-    def processStartTag(self, name, attributes):
-        self.processStartTagHandler[name](name, attributes)
 
     def startTagTr(self, name="tr", attributes={}):
         self.clearStackToTableBodyContext()
@@ -1549,9 +1536,6 @@ class InTableBody(InsertionMode):
 
     def startTagOther(self, name, attributes):
         self.parser.phase.modes["inTable"].processStartTag(name, attributes)
-
-    def processEndTag(self, name):
-        self.processEndTagHandler[name](name)
 
     def endTagTableRowGroup(self, name):
         if self.parser.elementInScope(name, True):
@@ -1583,21 +1567,21 @@ class InRow(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-row
     def __init__(self, parser):
         InsertionMode.__init__(self, parser)
-        self.processStartTagHandler = utils.MethodDispatcher([
+        self.startTagHandler = utils.MethodDispatcher([
             (("td", "th"), self.startTagTableCell),
             (("caption", "col", "colgroup", "tbody", "tfoot", "thead",
               "tr"), self.startTagTableOther)
         ])
-        self.processStartTagHandler.default = self.startTagOther
+        self.startTagHandler.default = self.startTagOther
 
-        self.processEndTagHandler = utils.MethodDispatcher([
+        self.endTagHandler = utils.MethodDispatcher([
             ("tr", self.endTagTr),
             ("table", self.endTagTable),
             (("tbody", "tfoot", "thead"), self.endTagTableRowGroup),
             (("body", "caption", "col", "colgroup", "html", "td", "th"),
               self.endTagIgnore)
         ])
-        self.processEndTagHandler.default = self.endTagOther
+        self.endTagHandler.default = self.endTagOther
 
     # helper methods (XXX unify this with other table helper methods)
     def clearStackToTableRowContext(self):
@@ -1608,9 +1592,6 @@ class InRow(InsertionMode):
     # the rest
     def processCharacters(self, data):
         self.parser.phase.modes["inTable"].processCharacters(data)
-
-    def processStartTag(self, name, attributes):
-        self.processStartTagHandler[name](name, attributes)
 
     def startTagTableCell(self, name, attributes):
         self.clearStackToTableRowContext()
@@ -1626,9 +1607,6 @@ class InRow(InsertionMode):
 
     def startTagOther(self, name, attributes):
         self.parser.phase.modes["inTable"].processStartTag(name, attributes)
-
-    def processEndTag(self, name):
-        self.processEndTagHandler[name](name)
 
     def endTagTr(self, name="tr"):
         if self.parser.elementInScope("tr", True):
@@ -1664,18 +1642,18 @@ class InCell(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-cell
     def __init__(self, parser):
         InsertionMode.__init__(self, parser)
-        self.processStartTagHandler = utils.MethodDispatcher([
+        self.startTagHandler = utils.MethodDispatcher([
             (("caption", "col", "colgroup", "tbody", "td", "tfoot", "th",
               "thead", "tr"), self.startTagTableOther)
         ])
-        self.processStartTagHandler.default = self.startTagOther
+        self.startTagHandler.default = self.startTagOther
 
-        self.processEndTagHandler = utils.MethodDispatcher([
+        self.endTagHandler = utils.MethodDispatcher([
             (("td", "th"), self.endTagTableCell),
             (("body", "caption", "col", "colgroup", "html"), self.endTagIgnore),
             (("table", "tbody", "tfoot", "thead", "tr"), self.endTagImply)
         ])
-        self.processEndTagHandler.default = self.endTagOther
+        self.endTagHandler.default = self.endTagOther
 
     # helper
     def closeCell(self):
@@ -1688,9 +1666,6 @@ class InCell(InsertionMode):
     def processCharacters(self, data):
         self.parser.phase.modes["inBody"].processCharacters(data)
 
-    def processStartTag(self, name, attributes):
-        self.processStartTagHandler[name](name, attributes)
-
     def startTagTableOther(self, name, attributes):
         if self.parser.elementInScope("td", True) or \
           self.parser.elementInScope("th", True):
@@ -1702,9 +1677,6 @@ class InCell(InsertionMode):
 
     def startTagOther(self, name, attributes):
         self.parser.phase.modes["inBody"].processStartTag(name, attributes)
-
-    def processEndTag(self, name):
-        self.processEndTagHandler[name](name)
 
     def endTagTableCell(self, name):
         if self.parser.elementInScope(name, True):
@@ -1738,18 +1710,28 @@ class InCell(InsertionMode):
 
 
 class InSelect(InsertionMode):
-    # http://www.whatwg.org/specs/web-apps/current-work/#in-select
-    def processCharacters(self, data):
-        self.parser.insertText(data)
+    def __init__(self, parser):
+        InsertionMode.__init__(self, parser)
 
-    def processStartTag(self, name, attributes):
-        handlers = utils.MethodDispatcher([
+        self.startTagHandler = utils.MethodDispatcher([
             ("option", self.startTagOption),
             ("optgroup", self.startTagOptgroup),
             ("select", self.startTagSelect)
         ])
-        handlers.default = self.processAnythingElse
-        handlers[name](name, attributes)
+        self.startTagHandler.default = self.processAnythingElse
+
+        self.endTagHandler = utils.MethodDispatcher([
+            ("option", self.endTagOption),
+            ("optgroup", self.endTagOptgroup),
+            ("select", self.endTagSelect),
+            (("caption", "table", "tbody", "tfoot", "thead", "tr", "td",
+              "th"), self.endTagTableElements)
+        ])
+        self.endTagHandler.default = self.processAnythingElse
+
+    # http://www.whatwg.org/specs/web-apps/current-work/#in-select
+    def processCharacters(self, data):
+        self.parser.insertText(data)
 
     def startTagOption(self, name, attributes):
         # We need to imply </option> if <option> is the current node.
@@ -1767,17 +1749,6 @@ class InSelect(InsertionMode):
     def startTagSelect(self, name, attributes):
         self.parser.parseError()
         self.endTagSelect("select")
-
-    def processEndTag(self, name):
-        handlers = utils.MethodDispatcher([
-            ("option", self.endTagOption),
-            ("optgroup", self.endTagOptgroup),
-            ("select", self.endTagSelect),
-            (("caption", "table", "tbody", "tfoot", "thead", "tr", "td",
-              "th"), self.endTagTableElements)
-        ])
-        handlers.default = self.processAnythingElse
-        handlers[name](name)
 
     def endTagOption(self, name):
         if self.parser.openElements[-1].name == "option":
@@ -1818,6 +1789,12 @@ class InSelect(InsertionMode):
 
 
 class AfterBody(InsertionMode):
+    def __init__(self, parser):
+        InsertionMode.__init__(self, parser)
+
+        self.endTagHandler = utils.MethodDispatcher([("html", self.endTagHtml)])
+        self.endTagHandler.default = self.endTagOther
+
     def processComment(self, data):
         # This is needed because data is to be appended to the <html> element
         # here and not to whatever is currently open.
@@ -1833,11 +1810,6 @@ class AfterBody(InsertionMode):
         self.parser.switchInsertionMode("inBody")
         self.parser.processStartTag(name, attributes)
 
-    def processEndTag(self, name):
-        handlers = utils.MethodDispatcher([("html", self.endTagHtml)])
-        handlers.default = self.endTagOther
-        handlers[name](name)
-
     def endTagHtml(self,name):
         if self.parser.innerHTML:
             self.parser.parseError()
@@ -1851,18 +1823,21 @@ class AfterBody(InsertionMode):
 
 class InFrameset(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-frameset
+    def __init__(self, parser):
+        InsertionMode.__init__(self, parser)
 
-    def processCharacters(self, data):
-        self.parser.parseError()
-
-    def processStartTag(self, name, attributes):
-        handlers = utils.MethodDispatcher([
+        self.startTagHandler = utils.MethodDispatcher([
             ("frameset", self.startTagFrameset),
             ("frame", self.startTagFrame),
             ("noframes", self.startTagNoframes)
         ])
-        handlers.default = self.tagOther
-        handlers[name](name, attributes)
+        self.startTagHandler.default = self.tagOther
+
+        self.endTagHandler = utils.MethodDispatcher([("frameset", self.endTagFrameset)])
+        self.endTagHandler.default = self.tagOther
+
+    def processCharacters(self, data):
+        self.parser.parseError()
 
     def startTagFrameset(self, name, attributes):
         self.parser.insertElement(name, attributes)
@@ -1873,11 +1848,6 @@ class InFrameset(InsertionMode):
 
     def startTagNoframes(self, name, attributes):
         self.parser.phase.modes["inBody"].processStartTag(name, attributes)
-
-    def processEndTag(self, name):
-        handlers = utils.MethodDispatcher([("frameset", self.endTagFrameset)])
-        handlers.default = self.tagOther
-        handlers[name](name)
 
     def endTagFrameset(self, name):
         if self.parser.openElements[-1].name == "html":
@@ -1895,21 +1865,20 @@ class InFrameset(InsertionMode):
 
 class AfterFrameset(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#after3
+    def __init__(self, parser):
+        InsertionMode.__init__(self, parser)
+        
+        self.startTagHandler = utils.MethodDispatcher([("noframes", self.startTagNoframes)])
+        self.startTagHandler.default = self.tagOther
+
+        self.endTagHandler = utils.MethodDispatcher([("html", self.endTagHtml)])
+        self.endTagHandler.default = self.tagOther
+
     def processCharacters(self, data):
         self.parser.parseError()
 
-    def processStartTag(self, name, attributes):
-        handlers = utils.MethodDispatcher([("noframes", self.startTagNoframes)])
-        handlers.default = self.tagOther
-        handlers[name](name, attributes)
-
     def startTagNoframes(self, name, attributes):
         self.parser.phase.modes["inBody"].processStartTag(name, attributes)
-
-    def processEndTag(self, name):
-        handlers = utils.MethodDispatcher([("html", self.endTagHtml)])
-        handlers.default = self.tagOther
-        handlers[name](name)
 
     def endTagHtml(self, name):
         self.parser.switchPhase("trailingEnd")

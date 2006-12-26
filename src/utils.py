@@ -33,10 +33,4 @@ class MethodDispatcher(dict):
         self.default = None
 
     def __getitem__(self, key):
-        try:
-            return dict.__getitem__(self, key)
-        except KeyError:
-            if self.default:
-                return self.default
-            else:
-                raise
+        return dict.get(self, key, self.default)
