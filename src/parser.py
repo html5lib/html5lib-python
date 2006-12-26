@@ -215,7 +215,7 @@ class HTMLParser(object):
     def switchInsertionMode(self, name):
         """Switch between different insertion modes in the main phase"""
         # XXX AT Arguably this should be on the main phase object itself
-        self.phase.mode = self.phase.modes[name](self)
+        self.phase.mode = self.phase.modes[name]
 
     def elementInScope(self, target, tableVariant=False):
         # Exit early when possible.
@@ -490,22 +490,22 @@ class MainPhase(Phase):
     def __init__(self, parser):
         Phase.__init__(self, parser)
         self.modes = {
-            "beforeHead":BeforeHead,
-            "inHead":InHead,
-            "afterHead":AfterHead,
-            "inBody":InBody,
-            "inTable":InTable,
-            "inCaption":InCaption,
-            "inColumnGroup":InColumnGroup,
-            "inTableBody":InTableBody,
-            "inRow":InRow,
-            "inCell":InCell,
-            "inSelect":InSelect,
-            "afterBody":AfterBody,
-            "inFrameset":InFrameset,
-            "afterFrameset":AfterFrameset
+            "beforeHead":BeforeHead(self.parser),
+            "inHead":InHead(self.parser),
+            "afterHead":AfterHead(self.parser),
+            "inBody":InBody(self.parser),
+            "inTable":InTable(self.parser),
+            "inCaption":InCaption(self.parser),
+            "inColumnGroup":InColumnGroup(self.parser),
+            "inTableBody":InTableBody(self.parser),
+            "inRow":InRow(self.parser),
+            "inCell":InCell(self.parser),
+            "inSelect":InSelect(self.parser),
+            "afterBody":AfterBody(self.parser),
+            "inFrameset":InFrameset(self.parser),
+            "afterFrameset":AfterFrameset(self.parser)
         }
-        self.mode = self.modes["beforeHead"](self.parser)
+        self.mode = self.modes["beforeHead"]
 
     def processEOF(self):
         self.mode.processEOF()
@@ -848,13 +848,11 @@ class InBody(InsertionMode):
         self.processStartTagHandler[name](name, attributes)
 
     def startTagScript(self, name, attributes):
-        self.parser.phase.modes["inHead"](self.parser).processStartTag(name,
-          attributes)
+        self.parser.phase.modes["inHead"].processStartTag(name, attributes)
 
     def startTagFromHead(self, name, attributes):
         self.parser.parseError()
-        self.parser.phase.modes["inHead"](self.parser).processStartTag(name,
-          attributes)
+        self.parser.phase.modes["inHead"].processStartTag(name, attributes)
 
     def startTagBody(self, name, attributes):
         self.parser.parseError()
@@ -1287,7 +1285,7 @@ class InTable(InsertionMode):
         # Make all the special element rearranging voodoo kick in
         self.parser.insertFromTable = True
         # Process the character in the "in body" mode
-        InBody(self.parser).processCharacters(data)
+        self.parser.phase.modes["inBody"].processCharacters(data)
         self.parser.insertFromTable = False
 
     def processStartTag(self, name, attributes):
@@ -1337,7 +1335,7 @@ class InTable(InsertionMode):
         # Make all the special element rearranging voodoo kick in
         self.parser.insertFromTable = True
         # Process the start tag in the "in body" mode
-        InBody(self.parser).processStartTag(name, attributes)
+        self.parser.phase.modes["inBody"].processStartTag(name, attributes)
         self.parser.insertFromTable = False
 
     def processEndTag(self, name):
@@ -1369,7 +1367,7 @@ class InTable(InsertionMode):
         # Make all the special element rearranging voodoo kick in
         self.parser.insertFromTable = True
         # Process the end tag in the "in body" mode
-        InBody(self.parser).processEndTag(name)
+        self.parser.phase.modes["inBody"].processEndTag(name)
         self.parser.insertFromTable = False
 
 
@@ -1378,7 +1376,7 @@ class InCaption(InsertionMode):
     # XXX ...
 
     def processCharacters(self, data):
-        InBody(self.parser).processCharacters(data)
+        self.parser.phase.modes["inBody"].processCharacters(data)
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
@@ -1398,7 +1396,7 @@ class InCaption(InsertionMode):
             self.parser.processStartTag(name, attributes)
 
     def startTagOther(self, name, attributes):
-        InBody(self.parser).processStartTag(name, attributes)
+        self.parser.phase.modes["inBody"].processStartTag(name, attributes)
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
@@ -1435,7 +1433,7 @@ class InCaption(InsertionMode):
         self.parser.parseError()
 
     def endTagOther(self, name):
-        InBody(self.parser).processEndTag(name)
+        self.parser.phase.modes["inBody"].processEndTag(name)
 
 
 class InColumnGroup(InsertionMode):
@@ -1502,7 +1500,7 @@ class InTableBody(InsertionMode):
 
     # the rest
     def processCharacters(self,data):
-        InTable(self.parser).processCharacters(data)
+        self.parser.phase.modes["inTable"].processCharacters(data)
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
@@ -1536,7 +1534,7 @@ class InTableBody(InsertionMode):
             self.parser.parseError()
 
     def startTagOther(self, name, attributes):
-        InTable(self.parser).processStartTag(name, attributes)
+        self.parser.phase.modes["inTable"].processStartTag(name, attributes)
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
@@ -1571,7 +1569,7 @@ class InTableBody(InsertionMode):
         self.parser.parseError()
 
     def endTagOther(self, name):
-        InTable(self.parser).processEndTag(name)
+        self.parser.phase.modes["inTable"].processEndTag(name)
 
 
 class InRow(InsertionMode):
@@ -1585,7 +1583,7 @@ class InRow(InsertionMode):
 
     # the rest
     def processCharacters(self, data):
-        InTable(self.parser).processCharacters(data)
+        self.parser.phase.modes["inTable"].processCharacters(data)
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
@@ -1609,7 +1607,7 @@ class InRow(InsertionMode):
             self.parser.processStartTag(name, attributes)
 
     def startTagOther(self, name, attributes):
-        InTable(self.parser).processStartTag(name, attributes)
+        self.parser.phase.modes["inTable"].processStartTag(name, attributes)
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
@@ -1650,7 +1648,7 @@ class InRow(InsertionMode):
         self.parser.parseError()
 
     def endTagOther(self, name):
-        InTable(self.parser).processEndTag(name)
+        self.parser.phase.modes["inTable"].processEndTag(name)
 
 class InCell(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-cell
@@ -1664,7 +1662,7 @@ class InCell(InsertionMode):
 
     # the rest
     def processCharacters(self, data):
-        InBody(self.parser).processCharacters(data)
+        self.parser.phase.modes["inBody"].processCharacters(data)
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
@@ -1684,7 +1682,7 @@ class InCell(InsertionMode):
             self.parser.parseError()
 
     def startTagOther(self, name, attributes):
-        InBody(self.parser).processStartTag(name, attributes)
+        self.parser.phase.modes["inBody"].processStartTag(name, attributes)
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([
@@ -1723,7 +1721,7 @@ class InCell(InsertionMode):
             self.parser.parseError()
 
     def endTagOther(self, name):
-        InBody(self.parser).processEndTag(name)
+        self.parser.phase.modes["inBody"].processEndTag(name)
 
 
 class InSelect(InsertionMode):
@@ -1861,7 +1859,7 @@ class InFrameset(InsertionMode):
         self.parser.openElements.pop()
 
     def startTagNoframes(self, name, attributes):
-        InBody(self.parser).processStartTag(name, attributes)
+        self.parser.phase.modes["inBody"].processStartTag(name, attributes)
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([("frameset", self.endTagFrameset)])
@@ -1893,7 +1891,7 @@ class AfterFrameset(InsertionMode):
         handlers[name](name, attributes)
 
     def startTagNoframes(self, name, attributes):
-        InBody(self.parser).processStartTag(name, attributes)
+        self.parser.phase.modes["inBody"].processStartTag(name, attributes)
 
     def processEndTag(self, name):
         handlers = utils.MethodDispatcher([("html", self.endTagHtml)])
