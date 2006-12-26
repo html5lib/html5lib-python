@@ -403,28 +403,57 @@ class HTMLParser(object):
                 break
 
 class Phase(object):
-    """Base class for helper object that implements each phase of processing"""
+    """Base class for helper object that implements each phase of processing
+    """
+    # Order should be (they can be omitted):
+    # * EOF
+    # * Comment
+    # * Doctype
+    # * SpaceCharacters
+    # * Characters
+    # * StartTag
+    #   - startTag* methods
+    # * EndTag
+    #   - endTag* methods
+
     def __init__(self, parser):
         self.parser = parser
+
+    def processEOF(self):
+        self.parser.generateImpliedEndTags()
+        if self.parser.innerHTML == False\
+          or len(self.parser.openElements) > 1:
+            # XXX No need to check for "body" because our EOF handling is not
+            # per specification. (Specification needs an update.)
+            self.parser.parseError()
+        # Stop parsing
+
+    def processComment(self, data):
+        # For most phases the following is correct. Where it's not it will be
+        # overridden.
+        self.parser.openElements[-1].appendChild(CommentNode(data))
 
     def processDoctype(self, name, error):
         self.parser.parseError()
 
+    def processSpaceCharacters(self, data):
+        self.parser.insertText(data)
+
     def processStartTag(self, name, attributes):
-        self.parser.parseError()
+        self.startTagHandler[name](name, attributes)
+
+    def startTagHtml(self, name, attributes):
+        if self.parser.openElements:
+            # XXX Is this check right? Need to be sure there has _never_
+            # been a HTML tag open
+            self.parser.parseError()
+        for attr, value in attributes.iteritems():
+            if attr not in self.parser.openElements[0].attributes:
+                self.parser.openElements[0].attributes[attr] = value
 
     def processEndTag(self, name):
-        self.parser.parseError()
+        self.endTagHandler[name](name)
 
-    def processComment(self, data):
-        self.parser.document.appendChild(CommentNode(data))
-
-    def processCharacters(self, data):
-        # XXX This method is never invoked...
-        self.parser.parseError()
-
-    def processEOF(self):
-        self.parser.parseError()
 
 class InitialPhase(Phase):
     # XXX This phase deals with error handling as well which is currently not
@@ -433,6 +462,9 @@ class InitialPhase(Phase):
     def processDoctype(self, name, error):
         self.parser.document.appendChild(DocumentType(name))
         self.parser.switchPhase("rootElement")
+
+    def processComment(self, data):
+        self.parser.document.appendChild(CommentNode(data))
 
     def processSpaceCharacters(self, data):
         self.parser.insertText(data, self.parser.document)
@@ -463,6 +495,9 @@ class RootElementPhase(Phase):
         self.parser.switchPhase("main")
 
     # other
+    def processComment(self, data):
+        self.parser.document.appendChild(CommentNode(data))
+
     def processSpaceCharacters(self, data):
         self.parser.insertText(data, self.parser.document)
 
@@ -526,6 +561,9 @@ class MainPhase(Phase):
         self.mode.processCharacters(data)
 
 class TrailingEndPhase(Phase):
+    def processComment(self, data):
+        self.parser.document.appendChild(CommentNode(data))
+
     def processEOF(self):
         pass
 
@@ -550,43 +588,9 @@ class TrailingEndPhase(Phase):
         self.parser.phase.processCharacters(data)
 
 
-class InsertionMode(object):
+class BeforeHead(Phase):
     def __init__(self, parser):
-        self.parser = parser
-
-    def processEOF(self):
-        self.parser.generateImpliedEndTags()
-        if self.parser.innerHTML == False\
-          or len(self.parser.openElements) > 1:
-            # XXX No need to check for "body" because our EOF handling is not
-            # per specification. (Specification needs an update.)
-            self.parser.parseError()
-        # Stop parsing
-
-    def processComment(self, data):
-        self.parser.openElements[-1].appendChild(CommentNode(data))
-
-    def processSpaceCharacters(self, data):
-        self.parser.insertText(data)
-
-    def processStartTag(self, name, attributes):
-        self.startTagHandler[name](name, attributes)
-
-    def startTagHtml(self, name, attributes):
-        if self.parser.openElements:
-            # XXX Is this check right? Need to be sure there has _never_
-            # been a HTML tag open
-            self.parser.parseError()
-        for attr, value in attributes.iteritems():
-            if attr not in self.parser.openElements[0].attributes:
-                self.parser.openElements[0].attributes[attr] = value
-
-    def processEndTag(self, name):
-        self.endTagHandler[name](name)
-
-class BeforeHead(InsertionMode):
-    def __init__(self, parser):
-        InsertionMode.__init__(self, parser)
+        Phase.__init__(self, parser)
 
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
@@ -623,9 +627,9 @@ class BeforeHead(InsertionMode):
     def endTagOther(self, name):
         self.parser.parseError()
 
-class InHead(InsertionMode):
+class InHead(Phase):
     def __init__(self, parser):
-        InsertionMode.__init__(self, parser)
+        Phase.__init__(self, parser)
 
         self.startTagHandler =  utils.MethodDispatcher([
             ("html", self.startTagHtml),
@@ -634,7 +638,7 @@ class InHead(InsertionMode):
             (("base", "link", "meta"), self.startTagBaseLinkMeta),
             ("head", self.startTagHead)
         ])
-        self.startTagHandler.default = self.startTagOther 
+        self.startTagHandler.default = self.startTagOther
 
         self. endTagHandler = utils.MethodDispatcher([
             ("head", self.endTagHead),
@@ -725,10 +729,10 @@ class InHead(InsertionMode):
         else:
             self.parser.switchInsertionMode("afterHead")
 
-class AfterHead(InsertionMode):
+class AfterHead(Phase):
     def __init__(self, parser):
-        InsertionMode.__init__(self, parser)
-        
+        Phase.__init__(self, parser)
+
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
             ("body", self.startTagBody),
@@ -772,11 +776,11 @@ class AfterHead(InsertionMode):
         self.parser.switchInsertionMode("inBody")
 
 
-class InBody(InsertionMode):
+class InBody(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-body
     # the crazy mode
     def __init__(self, parser):
-        InsertionMode.__init__(self, parser)
+        Phase.__init__(self, parser)
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
             ("script", self.startTagScript),
@@ -1269,10 +1273,10 @@ class InBody(InsertionMode):
                     self.parser.parseError()
                     break
 
-class InTable(InsertionMode):
+class InTable(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-table
     def __init__(self, parser):
-        InsertionMode.__init__(self, parser)
+        Phase.__init__(self, parser)
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
             ("caption", self.startTagCaption),
@@ -1370,12 +1374,12 @@ class InTable(InsertionMode):
         self.parser.insertFromTable = False
 
 
-class InCaption(InsertionMode):
+class InCaption(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-caption
     # XXX ...
 
     def __init__(self, parser):
-        InsertionMode.__init__(self, parser)
+        Phase.__init__(self, parser)
 
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
@@ -1435,11 +1439,11 @@ class InCaption(InsertionMode):
         self.parser.phase.modes["inBody"].processEndTag(name)
 
 
-class InColumnGroup(InsertionMode):
+class InColumnGroup(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-column
 
     def __init__(self, parser):
-        InsertionMode.__init__(self, parser)
+        Phase.__init__(self, parser)
 
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
@@ -1487,10 +1491,10 @@ class InColumnGroup(InsertionMode):
             self.parser.phase.mode.processEndTag(name)
 
 
-class InTableBody(InsertionMode):
+class InTableBody(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-table0
     def __init__(self, parser):
-        InsertionMode.__init__(self, parser)
+        Phase.__init__(self, parser)
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
             ("tr", self.startTagTr),
@@ -1569,10 +1573,10 @@ class InTableBody(InsertionMode):
         self.parser.phase.modes["inTable"].processEndTag(name)
 
 
-class InRow(InsertionMode):
+class InRow(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-row
     def __init__(self, parser):
-        InsertionMode.__init__(self, parser)
+        Phase.__init__(self, parser)
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
             (("td", "th"), self.startTagTableCell),
@@ -1645,10 +1649,10 @@ class InRow(InsertionMode):
     def endTagOther(self, name):
         self.parser.phase.modes["inTable"].processEndTag(name)
 
-class InCell(InsertionMode):
+class InCell(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-cell
     def __init__(self, parser):
-        InsertionMode.__init__(self, parser)
+        Phase.__init__(self, parser)
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
             (("caption", "col", "colgroup", "tbody", "td", "tfoot", "th",
@@ -1717,9 +1721,9 @@ class InCell(InsertionMode):
         self.parser.phase.modes["inBody"].processEndTag(name)
 
 
-class InSelect(InsertionMode):
+class InSelect(Phase):
     def __init__(self, parser):
-        InsertionMode.__init__(self, parser)
+        Phase.__init__(self, parser)
 
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
@@ -1797,9 +1801,9 @@ class InSelect(InsertionMode):
         self.parser.parseError()
 
 
-class AfterBody(InsertionMode):
+class AfterBody(Phase):
     def __init__(self, parser):
-        InsertionMode.__init__(self, parser)
+        Phase.__init__(self, parser)
 
         # XXX We should prolly add a handler for "html" here as well...
         self.endTagHandler = utils.MethodDispatcher([("html", self.endTagHtml)])
@@ -1831,10 +1835,10 @@ class AfterBody(InsertionMode):
         self.parser.switchInsertionMode("inBody")
         self.parser.phase.mode.processEndTag(name)
 
-class InFrameset(InsertionMode):
+class InFrameset(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-frameset
     def __init__(self, parser):
-        InsertionMode.__init__(self, parser)
+        Phase.__init__(self, parser)
 
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
@@ -1874,11 +1878,11 @@ class InFrameset(InsertionMode):
         self.parser.parseError()
 
 
-class AfterFrameset(InsertionMode):
+class AfterFrameset(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#after3
     def __init__(self, parser):
-        InsertionMode.__init__(self, parser)
-        
+        Phase.__init__(self, parser)
+
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
             ("noframes", self.startTagNoframes)
