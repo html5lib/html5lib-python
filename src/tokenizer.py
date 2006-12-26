@@ -306,7 +306,7 @@ class HTMLTokenizer(object):
             # emitted separately.
             # XXX need to check if we don't need a special "spaces" flag on
             # characters.
-            self.tokenQueue.append({"type": "Characters", "data":
+            self.tokenQueue.append({"type": "SpaceCharacters", "data":
               data + self.stream.charsUntil(spaceCharacters, True)})
         else:
             self.tokenQueue.append({"type": "Characters", "data": 

@@ -165,9 +165,9 @@ class HTMLParser(object):
         for token in self.tokenizer:
             type = token["type"]
             method = getattr(self.phase, "process%s" % type, None)
-            if type in ("Characters", "Comment"):
+            if type in ("Characters", "SpaceCharacters", "Comment"):
                 method(token["data"])
-            elif type in ("Doctype", "StartTag"):
+            elif type in ("StartTag", "Doctype"):
                 method(token["name"], token["data"])
             elif type == "EndTag":
                 method(token["name"])
@@ -177,27 +177,15 @@ class HTMLParser(object):
                 self.atheistParseError()
 
         # When the loop finishes it's EOF
-        self.processEOF()
+        self.phase.processEOF()
 
         return self.document
-
-    def processDoctype(self, name, error):
-        self.phase.processDoctype(name, error)
 
     def processStartTag(self, name, attributes):
         self.phase.processStartTag(name, attributes)
 
     def processEndTag(self, name):
         self.phase.processEndTag(name)
-
-    def processComment(self, data):
-        self.phase.processComment(data)
-
-    def processCharacters(self, data):
-        self.phase.processCharacters(data)
-
-    def processEOF(self):
-        self.phase.processEOF()
 
     def parseError(self):
         if self.strict:
@@ -450,15 +438,13 @@ class InitialPhase(Phase):
         self.parser.document.appendChild(DocumentType(name))
         self.parser.switchPhase("rootElement")
 
+    def processSpaceCharacters(self, data):
+        self.parser.insertText(data, self.parser.document)
+    
     def processCharacters(self, data):
-        if data in spaceCharacters:
-            # This check works because space characters (when needed) are
-            # emitted as a single character.
-            self.parser.insertText(data, self.parser.document)
-        else:
-            self.parser.parseError()
-            self.parser.switchPhase("rootElement")
-            self.parser.phase.processCharacters(data)
+        self.parser.parseError()
+        self.parser.switchPhase("rootElement")
+        self.parser.phase.processCharacters(data)
 
     def processStartTag(self, name, attributes):
         self.parser.switchPhase("rootElement")
@@ -481,14 +467,12 @@ class RootElementPhase(Phase):
         self.parser.switchPhase("main")
 
     # other
+    def processSpaceCharacters(self, data):
+        self.parser.insertText(data, self.parser.document)
+    
     def processCharacters(self, data):
-        if data in spaceCharacters:
-            # This check works because space characters (when needed) are
-            # emitted as a single character.
-            self.parser.insertText(data, self.parser.document)
-        else:
-            self.insertHtmlElement()
-            self.parser.phase.processCharacters(data)
+        self.insertHtmlElement()
+        self.parser.phase.processCharacters(data)
 
     def processStartTag(self, name, attributes):
         self.insertHtmlElement()
@@ -544,6 +528,9 @@ class MainPhase(Phase):
     def processComment(self, data):
         self.mode.processComment(data)
 
+    def processSpaceCharacters(self, data):
+        self.mode.processSpaceCharacters(data)
+
     def processCharacters(self, data):
         self.mode.processCharacters(data)
 
@@ -561,16 +548,15 @@ class TrailingEndPhase(Phase):
         self.parser.switchPhase("main")
         self.parser.phase.processEndTag(name)
 
-    def processCharacters(self, data):
-        if data not in spaceCharacters:
-            # This check works because space characters (when needed) are
-            # emitted as a single character. Same below.
-            self.parser.parseError()
+    def processSpaceCharacters(self, data):
         self.parser.switchPhase("main")
         self.parser.phase.processCharacters(data)
-        # If it's a space character we want to stay in this phase.
-        if data in spaceCharacters:
-            self.parser.switchPhase("trailingEnd")
+        self.parser.switchPhase("trailingEnd")
+
+    def processCharacters(self, data):
+        self.parser.parseError()
+        self.parser.switchPhase("main")
+        self.parser.phase.processCharacters(data)
 
 
 class InsertionMode(object):
@@ -588,22 +574,17 @@ class InsertionMode(object):
     def processComment(self, data):
         self.parser.openElements[-1].appendChild(CommentNode(data))
 
-    def processCharacters(self, data):
-        if data in spaceCharacters:
-            # This check works because space characters (when needed) are
-            # emitted as a single character.
-            self.parser.insertText(data)
-        else:
-            self.processNonSpaceCharacters(data)
+    def processSpaceCharacters(self, data):
+        self.parser.insertText(data)
 
 class BeforeHead(InsertionMode):
     def processEOF(self):
         self.startTagHead()
-        self.parser.processEOF()
+        self.parser.phase.mode.processEOF()
 
-    def processNonSpaceCharacters(self, data):
+    def processCharacters(self, data):
         self.startTagHead()
-        self.parser.processCharacters(data)
+        self.parser.phase.mode.processCharacters(data)
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
@@ -651,14 +632,14 @@ class InHead(InsertionMode):
         if self.parser.openElements[-1].name in ("title", "style", "script"):
             self.parser.openElements.pop()
         self.anythingElse()
-        self.parser.processEOF()
+        self.parser.phase.mode.processEOF()
 
-    def processNonSpaceCharacters(self, data):
+    def processCharacters(self, data):
         if self.parser.openElements[-1].name in ("title", "style", "script"):
             self.parser.insertText(data)
         else:
             self.anythingElse()
-            self.parser.processCharacters(data)
+            self.parser.phase.mode.processCharacters(data)
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
@@ -742,11 +723,11 @@ class InHead(InsertionMode):
 class AfterHead(InsertionMode):
     def processEOF(self):
         self.anythingElse()
-        self.parser.processEOF()
+        self.parser.phase.mode.processEOF()
 
-    def processNonSpaceCharacters(self, data):
+    def processCharacters(self, data):
         self.anythingElse()
-        self.parser.processCharacters(data)
+        self.parser.phase.mode.processCharacters(data)
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
@@ -856,9 +837,10 @@ class InBody(InsertionMode):
             self.parser.openElements[-1])
 
     # the real deal
-    def processNonSpaceCharacters(self, data):
+    def processCharacters(self, data):
         # XXX The specification says to do this for every character at the
-        # moment, but apparently that doesn't match the real world...
+        # moment, but apparently that doesn't match the real world so we don't
+        # do it for space characters.
         self.parser.reconstructActiveFormattingElements()
         self.parser.insertText(data)
 
@@ -1300,7 +1282,7 @@ class InTable(InsertionMode):
         # When the current node is <html> it's an innerHTML case
 
     # processing methods
-    def processNonSpaceCharacters(self, data):
+    def processCharacters(self, data):
         self.parser.parseError()
         # Make all the special element rearranging voodoo kick in
         self.parser.insertFromTable = True
@@ -1459,7 +1441,7 @@ class InCaption(InsertionMode):
 class InColumnGroup(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-column
 
-    def processNonSpaceCharacters(self, data):
+    def processCharacters(self, data):
         self.endTagColgroup()
         # XXX
         if not self.parser.innerHTML:
@@ -1603,7 +1585,7 @@ class InRow(InsertionMode):
 
     # the rest
     def processCharacters(self, data):
-        InTable(self.parser).processNonSpaceCharacters(data)
+        InTable(self.parser).processCharacters(data)
 
     def processStartTag(self, name, attributes):
         handlers = utils.MethodDispatcher([
@@ -1830,10 +1812,10 @@ class AfterBody(InsertionMode):
         # here and not to whatever is currently open.
         self.parser.openElements[0].appendChild(CommentNode(data))
 
-    def processNonSpaceCharacters(self, data):
+    def processCharacters(self, data):
         self.parser.parseError()
         self.parser.switchInsertionMode("inBody")
-        self.parser.processCharacters(data)
+        self.parser.phase.mode.processCharacters(data)
 
     def processStartTag(self, name, attributes):
         self.parser.parseError()
@@ -1859,7 +1841,7 @@ class AfterBody(InsertionMode):
 class InFrameset(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-frameset
 
-    def processNonSpaceCharacters(self, data):
+    def processCharacters(self, data):
         self.parser.parseError()
 
     def processStartTag(self, name, attributes):
@@ -1902,7 +1884,7 @@ class InFrameset(InsertionMode):
 
 class AfterFrameset(InsertionMode):
     # http://www.whatwg.org/specs/web-apps/current-work/#after3
-    def processNonSpaceCharacters(self, data):
+    def processCharacters(self, data):
         self.parser.parseError()
 
     def processStartTag(self, name, attributes):
