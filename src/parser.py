@@ -483,6 +483,7 @@ class RootElementPhase(Phase):
         self.parser.phase.processEOF()
 
 class MainPhase(Phase):
+    # XXX See processStartTag
     def __init__(self, parser):
         Phase.__init__(self, parser)
         self.modes = {
@@ -507,7 +508,15 @@ class MainPhase(Phase):
         self.mode.processEOF()
 
     def processStartTag(self, name, attributes):
-        # XXX this must be made faster
+        # XXX this must be made faster. This thing seems to be the sole reason
+        # we still have this class. That makes it quite inefficient. I'm not
+        # sure how to strip it out but it has to be done. We can just move
+        # handling <html x> to every individual state perhaps with a common
+        # handler.
+        #
+        # Removing this class entirely would remove quite a few useless method
+        # calls that cycle through this thing every time a new token is emitted
+        # for this phase...
         if name != "html":
             self.mode.processStartTag(name, attributes)
         else:
