@@ -1617,6 +1617,10 @@ class InCellPhase(Phase):
 
     def startTagOther(self, name, attributes):
         self.parser.phases["inBody"].processStartTag(name, attributes)
+        # Optimize this for subsequent invocations. Can't do this initially
+        # because self.phases doesn't really exist at that point.
+        self.startTagHandler.default =\
+          self.parser.phases["inBody"].processStartTag
 
     def endTagTableCell(self, name):
         if self.parser.elementInScope(name, True):
@@ -1647,6 +1651,9 @@ class InCellPhase(Phase):
 
     def endTagOther(self, name):
         self.parser.phases["inBody"].processEndTag(name)
+        # Optimize this for subsequent invocations. Can't do this initially
+        # because self.phases doesn't really exist at that point.
+        self.endTagHandler.default = self.parser.phases["inBody"].processEndTag
 
 
 class InSelectPhase(Phase):
