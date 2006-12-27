@@ -137,11 +137,28 @@ class HTMLParser(object):
         self.formPointer = None
 
         self.phases = {
-            "initial": InitialPhase,
-            "rootElement": RootElementPhase,
-            "main": MainPhase,
-            "trailingEnd": TrailingEndPhase
+            "initial": InitialPhase(self),
+            "rootElement": RootElementPhase(self),
+            "beforeHead": BeforeHeadPhase(self),
+            "inHead": InHeadPhase(self),
+            "afterHead": AfterHeadPhase(self),
+            "inBody": InBodyPhase(self),
+            "inTable": InTablePhase(self),
+            "inCaption": InCaptionPhase(self),
+            "inColumnGroup": InColumnGroupPhase(self),
+            "inTableBody": InTableBodyPhase(self),
+            "inRow": InRowPhase(self),
+            "inCell": InCellPhase(self),
+            "inSelect": InSelectPhase(self),
+            "afterBody": AfterBodyPhase(self),
+            "inFrameset": InFramesetPhase(self),
+            "afterFrameset": AfterFramesetPhase(self),
+            "trailingEnd": TrailingEndPhase(self)
         }
+        self.phase = self.phases["initial"]
+        # We only seem to have InBodyPhase testcases where the following is
+        # relevant ... need others too
+        self.lastPhase = None
 
     def parse(self, stream, innerHTML=False):
         """Stream should be a stream of unicode bytes. Character encoding
@@ -152,9 +169,6 @@ class HTMLParser(object):
         # We don't actually support inner HTML yet but this should allow
         # assertations
         self.innerHTML = innerHTML
-
-        # The parsing phase we are currently in
-        self.phase = InitialPhase(self)
 
         # Flag indicationg special insertion mode from elements misnested inside
         # a table
@@ -191,27 +205,8 @@ class HTMLParser(object):
         """This error is not an error"""
         pass
 
-    def switchPhase(self, name):
-        """Switch between different phases of the parsing
-        """
-        # Need to hang on to state between trailing end phase and main phase
-        if (name == "trailingEnd" and
-            isinstance(self.phase, self.phases["main"])):
-            self.mainPhaseState = self.phase
-            self.phase = self.phases["trailingEnd"](self)
-        elif (name == "main" and
-              isinstance(self.phase, self.phases["trailingEnd"])):
-            self.phase = self.mainPhaseState
-        else:
-            self.phase = self.phases[name](self)
-
     #XXX - almost everthing after this point should be moved into a
     #seperate treebuilder object
-
-    def switchInsertionMode(self, name):
-        """Switch between different insertion modes in the main phase"""
-        # XXX AT Arguably this should be on the main phase object itself
-        self.phase.mode = self.phase.modes[name]
 
     def elementInScope(self, target, tableVariant=False):
         # Exit early when possible.
@@ -361,6 +356,8 @@ class HTMLParser(object):
             self.generateImpliedEndTags(exclude)
 
     def resetInsertionMode(self):
+        # The name of this method is mostly historical. (It's also used in the
+        # specification.)
         last = False
         newModes = {
             "select":"inSelect",
@@ -390,16 +387,16 @@ class HTMLParser(object):
                 # XXX
                 assert self.innerHTML
             if node.name in newModes:
-                self.switchInsertionMode(newModes[node.name])
+                self.phase = self.phases[newModes[node.name]]
                 break
             elif node.name == "html":
                 if self.headPointer is None:
-                    self.switchInsertionMode("beforeHead")
+                    self.phase = self.phases["beforeHead"]
                 else:
-                   self.switchInsertionMode("afterHead")
+                   self.phase = self.phases["afterHead"]
                 break
             elif last:
-                self.switchInsertionMode("body")
+                self.phase = self.phases["body"]
                 break
 
 class Phase(object):
@@ -461,7 +458,7 @@ class InitialPhase(Phase):
 
     def processDoctype(self, name, error):
         self.parser.document.appendChild(DocumentType(name))
-        self.parser.switchPhase("rootElement")
+        self.parser.phase = self.parser.phases["rootElement"]
 
     def processComment(self, data):
         self.parser.document.appendChild(CommentNode(data))
@@ -471,20 +468,21 @@ class InitialPhase(Phase):
 
     def processCharacters(self, data):
         self.parser.parseError()
-        self.parser.switchPhase("rootElement")
+        self.parser.phase = self.parser.phases["rootElement"]
         self.parser.phase.processCharacters(data)
 
     def processStartTag(self, name, attributes):
-        self.parser.switchPhase("rootElement")
+        self.parser.phase = self.parser.phases["rootElement"]
         self.parser.phase.processStartTag(name, attributes)
 
     def processEndTag(self, name):
-        self.parser.switchPhase("rootElement")
+        self.parser.phase = self.parser.phases["rootElement"]
         self.parser.phase.processEndTag(name)
 
     def processEOF(self):
-        self.parser.switchPhase("rootElement")
+        self.parser.phase = self.parser.phases["rootElement"]
         self.parser.phase.processEOF()
+
 
 class RootElementPhase(Phase):
     # helper methods
@@ -492,7 +490,7 @@ class RootElementPhase(Phase):
         element = self.parser.createElement("html", {})
         self.parser.openElements.append(element)
         self.parser.document.appendChild(element)
-        self.parser.switchPhase("main")
+        self.parser.phase = self.parser.phases["beforeHead"]
 
     # other
     def processComment(self, data):
@@ -517,78 +515,8 @@ class RootElementPhase(Phase):
         self.insertHtmlElement()
         self.parser.phase.processEOF()
 
-class MainPhase(Phase):
-    # XXX Removing this class entirely would remove quite a few useless method
-    # calls that cycle through this thing every time a new token is emitted for
-    # this phase...
 
-    def __init__(self, parser):
-        Phase.__init__(self, parser)
-        self.modes = {
-            "beforeHead":BeforeHead(self.parser),
-            "inHead":InHead(self.parser),
-            "afterHead":AfterHead(self.parser),
-            "inBody":InBody(self.parser),
-            "inTable":InTable(self.parser),
-            "inCaption":InCaption(self.parser),
-            "inColumnGroup":InColumnGroup(self.parser),
-            "inTableBody":InTableBody(self.parser),
-            "inRow":InRow(self.parser),
-            "inCell":InCell(self.parser),
-            "inSelect":InSelect(self.parser),
-            "afterBody":AfterBody(self.parser),
-            "inFrameset":InFrameset(self.parser),
-            "afterFrameset":AfterFrameset(self.parser)
-        }
-        self.mode = self.modes["beforeHead"]
-
-    def processEOF(self):
-        self.mode.processEOF()
-
-    def processStartTag(self, name, attributes):
-        self.mode.processStartTag(name, attributes)
-
-    def processEndTag(self, name):
-        self.mode.processEndTag(name)
-
-    def processComment(self, data):
-        self.mode.processComment(data)
-
-    def processSpaceCharacters(self, data):
-        self.mode.processSpaceCharacters(data)
-
-    def processCharacters(self, data):
-        self.mode.processCharacters(data)
-
-class TrailingEndPhase(Phase):
-    def processComment(self, data):
-        self.parser.document.appendChild(CommentNode(data))
-
-    def processEOF(self):
-        pass
-
-    def processStartTag(self, name, attributes):
-        self.parser.parseError()
-        self.parser.switchPhase("main")
-        self.parser.phase.processStartTag(name, attributes)
-
-    def processEndTag(self, name):
-        self.parser.parseError()
-        self.parser.switchPhase("main")
-        self.parser.phase.processEndTag(name)
-
-    def processSpaceCharacters(self, data):
-        self.parser.switchPhase("main")
-        self.parser.phase.processCharacters(data)
-        self.parser.switchPhase("trailingEnd")
-
-    def processCharacters(self, data):
-        self.parser.parseError()
-        self.parser.switchPhase("main")
-        self.parser.phase.processCharacters(data)
-
-
-class BeforeHead(Phase):
+class BeforeHeadPhase(Phase):
     def __init__(self, parser):
         Phase.__init__(self, parser)
 
@@ -605,29 +533,29 @@ class BeforeHead(Phase):
 
     def processEOF(self):
         self.startTagHead("head", {})
-        self.parser.phase.mode.processEOF()
+        self.parser.phase.processEOF()
 
     def processCharacters(self, data):
         self.startTagHead("head", {})
-        self.parser.phase.mode.processCharacters(data)
+        self.parser.phase.processCharacters(data)
 
     def startTagHead(self, name, attributes):
         self.parser.insertElement(name, attributes)
         self.parser.headPointer = self.parser.openElements[-1]
-        self.parser.switchInsertionMode("inHead")
+        self.parser.phase = self.parser.phases["inHead"]
 
     def startTagOther(self, name, attributes):
         self.startTagHead("head", {})
-        self.parser.phase.mode.processStartTag(name, attributes)
+        self.parser.phase.processStartTag(name, attributes)
 
     def endTagHtml(self, name):
         self.startTagHead("head", {})
-        self.parser.phase.mode.processEndTag(name)
+        self.parser.phase.processEndTag(name)
 
     def endTagOther(self, name):
         self.parser.parseError()
 
-class InHead(Phase):
+class InHeadPhase(Phase):
     def __init__(self, parser):
         Phase.__init__(self, parser)
 
@@ -660,19 +588,19 @@ class InHead(Phase):
         if self.parser.openElements[-1].name in ("title", "style", "script"):
             self.parser.openElements.pop()
         self.anythingElse()
-        self.parser.phase.mode.processEOF()
+        self.parser.phase.processEOF()
 
     def processCharacters(self, data):
         if self.parser.openElements[-1].name in ("title", "style", "script"):
             self.parser.insertText(data)
         else:
             self.anythingElse()
-            self.parser.phase.mode.processCharacters(data)
+            self.parser.phase.processCharacters(data)
 
     def startTagHead(self, name, attributes):
         self.parser.insertElement(name, attributes)
         self.parser.headPointer = self.parser.openElements[-1]
-        self.parser.switchInsertionMode("inHead")
+        self.parser.phase = self.parser.phases["inHead"]
 
     def startTagTitleStyle(self, name, attributes):
         cmFlags = {"title":"RCDATA", "style":"CDATA"}
@@ -701,18 +629,18 @@ class InHead(Phase):
 
     def startTagOther(self, name, attributes):
         self.anythingElse()
-        self.parser.phase.mode.processStartTag(name, attributes)
+        self.parser.phase.processStartTag(name, attributes)
 
     def endTagHead(self, name):
         if self.parser.openElements[-1].name == "head":
             self.parser.openElements.pop()
         else:
             self.parser.parseError()
-        self.parser.switchInsertionMode("afterHead")
+        self.parser.phase = self.parser.phases["afterHead"]
 
     def endTagHtml(self, name):
         self.anythingElse()
-        self.parser.phase.mode.processEndTag(name)
+        self.parser.phase.processEndTag(name)
 
     def endTagTitleStyleScript(self, name):
         if self.parser.openElements[-1].name == name:
@@ -727,9 +655,9 @@ class InHead(Phase):
         if self.parser.openElements[-1].name == "head":
             self.endTagHead("head")
         else:
-            self.parser.switchInsertionMode("afterHead")
+            self.parser.phase = self.parser.phases["afterHead"]
 
-class AfterHead(Phase):
+class AfterHeadPhase(Phase):
     def __init__(self, parser):
         Phase.__init__(self, parser)
 
@@ -744,39 +672,39 @@ class AfterHead(Phase):
 
     def processEOF(self):
         self.anythingElse()
-        self.parser.phase.mode.processEOF()
+        self.parser.phase.processEOF()
 
     def processCharacters(self, data):
         self.anythingElse()
-        self.parser.phase.mode.processCharacters(data)
+        self.parser.phase.processCharacters(data)
 
     def startTagBody(self, name, attributes):
         self.parser.insertElement(name, attributes)
-        self.parser.switchInsertionMode("inBody")
+        self.parser.phase = self.parser.phases["inBody"]
 
     def startTagFrameset(self, name, attributes):
         self.parser.insertElement(name, attributes)
-        self.parser.switchInsertionMode("inFrameset")
+        self.parser.phase = self.parser.phases["inFrameset"]
 
     def startTagFromHead(self, name, attributes):
         self.parser.parseError()
-        self.parser.switchInsertionMode("inHead")
-        self.parser.phase.mode.processStartTag(name, attributes)
+        self.parser.phase = self.parser.phases["inHead"]
+        self.parser.phase.processStartTag(name, attributes)
 
     def startTagOther(self, name, attributes):
         self.anythingElse()
-        self.parser.phase.mode.processStartTag(name, attributes)
+        self.parser.phase.processStartTag(name, attributes)
 
     def processEndTag(self, name):
         self.anythingElse()
-        self.parser.phase.mode.processEndTag(name)
+        self.parser.phase.processEndTag(name)
 
     def anythingElse(self):
         self.parser.insertElement("body", {})
-        self.parser.switchInsertionMode("inBody")
+        self.parser.phase = self.parser.phases["inBody"]
 
 
-class InBody(Phase):
+class InBodyPhase(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-body
     # the crazy mode
     def __init__(self, parser):
@@ -857,11 +785,11 @@ class InBody(Phase):
         self.parser.insertText(data)
 
     def startTagScript(self, name, attributes):
-        self.parser.phase.modes["inHead"].processStartTag(name, attributes)
+        self.parser.phases["inHead"].processStartTag(name, attributes)
 
     def startTagFromHead(self, name, attributes):
         self.parser.parseError()
-        self.parser.phase.modes["inHead"].processStartTag(name, attributes)
+        self.parser.phases["inHead"].processStartTag(name, attributes)
 
     def startTagBody(self, name, attributes):
         self.parser.parseError()
@@ -945,7 +873,7 @@ class InBody(Phase):
         if self.parser.elementInScope("button"):
             self.parser.parseError()
             self.processEndTag("button")
-            self.parser.phase.mode.processStartTag(name, attributes)
+            self.parser.phase.processStartTag(name, attributes)
         else:
             self.parser.reconstructActiveFormattingElements()
             self.parser.insertElement(name, attributes)
@@ -965,7 +893,7 @@ class InBody(Phase):
         if self.parser.elementInScope("p"):
             self.processEndTag("p")
         self.parser.insertElement(name, attributes)
-        self.parser.switchInsertionMode("inTable")
+        self.parser.phase = self.parser.phases["inTable"]
 
     def startTagVoidFormatting(self, name, attributes):
         self.parser.reconstructActiveFormattingElements()
@@ -1023,7 +951,7 @@ class InBody(Phase):
     def startTagSelect(self, name, attributes):
         self.parser.reconstructActiveFormattingElements()
         self.parser.insertElement(name, attributes)
-        self.parser.switchInsertionMode("inSelect")
+        self.parser.phase = self.parser.phases["inSelect"]
 
     def startTagMisplaced(self, name, attributes):
         """ Elements that should be children of other elements that have a
@@ -1058,12 +986,12 @@ class InBody(Phase):
             return
         if self.parser.openElements[-1].name != "body":
             self.parser.parseError()
-        self.parser.switchInsertionMode("afterBody")
+        self.parser.phase = self.parser.phases["afterBody"]
 
     def endTagHtml(self, name):
         self.endTagBody(name)
         if not self.parser.innerHTML:
-            self.parser.phase.mode.processEndTag(name)
+            self.parser.phase.processEndTag(name)
 
     def endTagBlock(self, name):
         inScope = self.parser.elementInScope(name)
@@ -1273,7 +1201,7 @@ class InBody(Phase):
                     self.parser.parseError()
                     break
 
-class InTable(Phase):
+class InTablePhase(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-table
     def __init__(self, parser):
         Phase.__init__(self, parser)
@@ -1309,45 +1237,45 @@ class InTable(Phase):
         # Make all the special element rearranging voodoo kick in
         self.parser.insertFromTable = True
         # Process the character in the "in body" mode
-        self.parser.phase.modes["inBody"].processCharacters(data)
+        self.parser.phases["inBody"].processCharacters(data)
         self.parser.insertFromTable = False
 
     def startTagCaption(self, name, attributes):
         self.clearStackToTableContext()
         self.parser.activeFormattingElements.append(Marker)
         self.parser.insertElement(name, attributes)
-        self.parser.switchInsertionMode("inCaption")
+        self.parser.phase = self.parser.phases["inCaption"]
 
     def startTagColgroup(self, name, attributes):
         self.clearStackToTableContext()
         self.parser.insertElement(name, attributes)
-        self.parser.switchInsertionMode("inColumnGroup")
+        self.parser.phase = self.parser.phases["inColumnGroup"]
 
     def startTagCol(self, name, attributes):
         self.startTagColgroup("colgroup", {})
-        self.parser.phase.mode.processStartTag(name, attributes)
+        self.parser.phase.processStartTag(name, attributes)
 
     def startTagRowGroup(self, name, attributes={}):
         self.clearStackToTableContext()
         self.parser.insertElement(name, attributes)
-        self.parser.switchInsertionMode("inTableBody")
+        self.parser.phase = self.parser.phases["inTableBody"]
 
     def startTagImplyTbody(self, name, attributes):
         self.startTagRowGroup("tbody")
-        self.parser.phase.mode.processStartTag(name, attributes)
+        self.parser.phase.processStartTag(name, attributes)
 
     def startTagTable(self, name, attributes):
         self.parser.parseError()
-        self.parser.phase.mode.processEndTag("table")
+        self.parser.phase.processEndTag("table")
         if not self.parser.innerHTML:
-            self.parser.phase.mode.processStartTag(name, attributes)
+            self.parser.phase.processStartTag(name, attributes)
 
     def startTagOther(self, name, attributes):
         self.parser.parseError()
         # Make all the special element rearranging voodoo kick in
         self.parser.insertFromTable = True
         # Process the start tag in the "in body" mode
-        self.parser.phase.modes["inBody"].processStartTag(name, attributes)
+        self.parser.phases["inBody"].processStartTag(name, attributes)
         self.parser.insertFromTable = False
 
     def endTagTable(self, name):
@@ -1370,11 +1298,11 @@ class InTable(Phase):
         # Make all the special element rearranging voodoo kick in
         self.parser.insertFromTable = True
         # Process the end tag in the "in body" mode
-        self.parser.phase.modes["inBody"].processEndTag(name)
+        self.parser.phases["inBody"].processEndTag(name)
         self.parser.insertFromTable = False
 
 
-class InCaption(Phase):
+class InCaptionPhase(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-caption
     # XXX ...
 
@@ -1397,19 +1325,19 @@ class InCaption(Phase):
         self.endTagHandler.default = self.endTagOther
 
     def processCharacters(self, data):
-        self.parser.phase.modes["inBody"].processCharacters(data)
+        self.parser.phases["inBody"].processCharacters(data)
 
     def startTagTableElement(self, name, attributes):
         self.parser.parseError()
-        self.parser.phase.mode.processEndTag("caption")
+        self.parser.phase.processEndTag("caption")
         # XXX how do we know the tag is _always_ ignored in the innerHTML
         # case and therefore shouldn't be processed again? I'm not sure this
         # strategy makes sense...
         if not self.parser.innerHTML:
-            self.parser.phase.mode.processStartTag(name, attributes)
+            self.parser.phase.processStartTag(name, attributes)
 
     def startTagOther(self, name, attributes):
-        self.parser.phase.modes["inBody"].processStartTag(name, attributes)
+        self.parser.phases["inBody"].processStartTag(name, attributes)
 
     def endTagCaption(self, name):
         if self.parser.elementInScope(name, True):
@@ -1420,26 +1348,26 @@ class InCaption(Phase):
             while self.parser.openElements[-1].name != "caption":
                 self.parser.openElements.pop()
             self.parser.clearActiveFormattingElements()
-            self.parser.switchInsertionMode("inTable")
+            self.parser.phase = self.parser.phases["inTable"]
         else:
             # innerHTML case
             self.parser.parseError()
 
     def endTagTable(self, name):
         self.parser.parseError()
-        self.parser.phase.mode.processEndTag("caption")
+        self.parser.phase.processEndTag("caption")
         # XXX ...
         if not self.parser.innerHTML:
-            self.parser.phase.mode.processStartTag(name, attributes)
+            self.parser.phase.processStartTag(name, attributes)
 
     def endTagIgnore(self, name):
         self.parser.parseError()
 
     def endTagOther(self, name):
-        self.parser.phase.modes["inBody"].processEndTag(name)
+        self.parser.phases["inBody"].processEndTag(name)
 
 
-class InColumnGroup(Phase):
+class InColumnGroupPhase(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-column
 
     def __init__(self, parser):
@@ -1461,7 +1389,7 @@ class InColumnGroup(Phase):
         self.endTagColgroup("colgroup")
         # XXX
         if not self.parser.innerHTML:
-            self.parser.phase.mode.processCharacters(data)
+            self.parser.phase.processCharacters(data)
 
     def startTagCol(self, name ,attributes):
         self.parser.insertElement(name, attributes)
@@ -1471,7 +1399,7 @@ class InColumnGroup(Phase):
         self.endTagColgroup("colgroup")
         # XXX how can be sure it's always ignored?
         if not self.parser.innerHTML:
-            self.parser.phase.mode.processStartTag(name, attributes)
+            self.parser.phase.processStartTag(name, attributes)
 
     def endTagColgroup(self, name):
         if self.parser.openElements[-1].name == "html":
@@ -1479,7 +1407,7 @@ class InColumnGroup(Phase):
             self.parser.parseError()
         else:
             self.parser.openElements.pop()
-            self.parser.switchInsertionMode("inTable")
+            self.parser.phase = self.parser.phases["inTable"]
 
     def endTagCol(self, name):
         self.parser.parseError()
@@ -1488,10 +1416,10 @@ class InColumnGroup(Phase):
         self.endTagColgroup("colgroup")
         # XXX how can be sure it's always ignored?
         if not self.parser.innerHTML:
-            self.parser.phase.mode.processEndTag(name)
+            self.parser.phase.processEndTag(name)
 
 
-class InTableBody(Phase):
+class InTableBodyPhase(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-table0
     def __init__(self, parser):
         Phase.__init__(self, parser)
@@ -1520,17 +1448,17 @@ class InTableBody(Phase):
 
     # the rest
     def processCharacters(self,data):
-        self.parser.phase.modes["inTable"].processCharacters(data)
+        self.parser.phases["inTable"].processCharacters(data)
 
     def startTagTr(self, name, attributes):
         self.clearStackToTableBodyContext()
         self.parser.insertElement(name, attributes)
-        self.parser.switchInsertionMode("inRow")
+        self.parser.phase = self.parser.phases["inRow"]
 
     def startTagTableCell(self, name, attributes):
         self.parser.parseError()
         self.startTagTr("tr", {})
-        self.parser.phase.mode.processStartTag(name, attributes)
+        self.parser.phase.processStartTag(name, attributes)
 
     def startTagTableOther(self, name, attributes):
         # XXX AT Any ideas on how to share this with endTagTable?
@@ -1539,19 +1467,19 @@ class InTableBody(Phase):
           self.parser.elementInScope("tfoot", True):
             self.clearStackToTableBodyContext()
             self.endTagTableRowGroup(self.parser.openElements[-1].name)
-            self.parser.phase.mode.processStartTag(name, attributes)
+            self.parser.phase.processStartTag(name, attributes)
         else:
             # innerHTML case
             self.parser.parseError()
 
     def startTagOther(self, name, attributes):
-        self.parser.phase.modes["inTable"].processStartTag(name, attributes)
+        self.parser.phases["inTable"].processStartTag(name, attributes)
 
     def endTagTableRowGroup(self, name):
         if self.parser.elementInScope(name, True):
             self.clearStackToTableBodyContext()
             self.parser.openElements.pop()
-            self.parser.switchInsertionMode("inTable")
+            self.parser.phase = self.parser.phases["inTable"]
         else:
             self.parser.parseError()
 
@@ -1561,7 +1489,7 @@ class InTableBody(Phase):
           self.parser.elementInScope("tfoot", True):
             self.clearStackToTableBodyContext()
             self.endTagTableRowGroup(self.parser.openElements[-1].name)
-            self.parser.phase.mode.processEndTag(name)
+            self.parser.phase.processEndTag(name)
         else:
             # innerHTML case
             self.parser.parseError()
@@ -1570,10 +1498,10 @@ class InTableBody(Phase):
         self.parser.parseError()
 
     def endTagOther(self, name):
-        self.parser.phase.modes["inTable"].processEndTag(name)
+        self.parser.phases["inTable"].processEndTag(name)
 
 
-class InRow(Phase):
+class InRowPhase(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-row
     def __init__(self, parser):
         Phase.__init__(self, parser)
@@ -1602,28 +1530,28 @@ class InRow(Phase):
 
     # the rest
     def processCharacters(self, data):
-        self.parser.phase.modes["inTable"].processCharacters(data)
+        self.parser.phases["inTable"].processCharacters(data)
 
     def startTagTableCell(self, name, attributes):
         self.clearStackToTableRowContext()
         self.parser.insertElement(name, attributes)
-        self.parser.switchInsertionMode("inCell")
+        self.parser.phase = self.parser.phases["inCell"]
         self.parser.activeFormattingElements.append(Marker)
 
     def startTagTableOther(self, name, attributes):
         self.endTagTr("tr")
         # XXX how are we sure it's always ignored in the innerHTML case?
         if not self.parser.innerHTML:
-            self.parser.phase.mode.processStartTag(name, attributes)
+            self.parser.phase.processStartTag(name, attributes)
 
     def startTagOther(self, name, attributes):
-        self.parser.phase.modes["inTable"].processStartTag(name, attributes)
+        self.parser.phases["inTable"].processStartTag(name, attributes)
 
     def endTagTr(self, name):
         if self.parser.elementInScope("tr", True):
             self.clearStackToTableRowContext()
             self.parser.openElements.pop()
-            self.parser.switchInsertionMode("inTableBody")
+            self.parser.phase = self.parser.phases["inTableBody"]
         else:
             # innerHTML case
             self.parser.parseError()
@@ -1633,12 +1561,12 @@ class InRow(Phase):
         # Reprocess the current tag if the tr end tag was not ignored
         # XXX how are we sure it's always ignored in the innerHTML case?
         if not self.parser.innerHTML:
-            self.parser.phase.mode.processEndTag(name)
+            self.parser.phase.processEndTag(name)
 
     def endTagTableRowGroup(self, name):
         if self.parser.elementInScope(name, True):
             self.endTagTr("tr")
-            self.parser.phase.mode.processEndTag(name)
+            self.parser.phase.processEndTag(name)
         else:
             # innerHTML case
             self.parser.parseError()
@@ -1647,9 +1575,9 @@ class InRow(Phase):
         self.parser.parseError()
 
     def endTagOther(self, name):
-        self.parser.phase.modes["inTable"].processEndTag(name)
+        self.parser.phases["inTable"].processEndTag(name)
 
-class InCell(Phase):
+class InCellPhase(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-cell
     def __init__(self, parser):
         Phase.__init__(self, parser)
@@ -1676,19 +1604,19 @@ class InCell(Phase):
 
     # the rest
     def processCharacters(self, data):
-        self.parser.phase.modes["inBody"].processCharacters(data)
+        self.parser.phases["inBody"].processCharacters(data)
 
     def startTagTableOther(self, name, attributes):
         if self.parser.elementInScope("td", True) or \
           self.parser.elementInScope("th", True):
             self.closeCell()
-            self.parser.phase.mode.processStartTag(name, attributes)
+            self.parser.phase.processStartTag(name, attributes)
         else:
             # innerHTML case
             self.parser.parseError()
 
     def startTagOther(self, name, attributes):
-        self.parser.phase.modes["inBody"].processStartTag(name, attributes)
+        self.parser.phases["inBody"].processStartTag(name, attributes)
 
     def endTagTableCell(self, name):
         if self.parser.elementInScope(name, True):
@@ -1702,7 +1630,7 @@ class InCell(Phase):
             else:
                 self.parser.openElements.pop()
             self.parser.clearActiveFormattingElements()
-            self.parser.switchInsertionMode("inRow")
+            self.parser.phase = self.parser.phases["inRow"]
         else:
             self.parser.parseError()
 
@@ -1712,16 +1640,16 @@ class InCell(Phase):
     def endTagImply(self, name):
         if self.parser.elementInScope(name, True):
             self.closeCell()
-            self.parser.phase.mode.processEndTag(name)
+            self.parser.phase.processEndTag(name)
         else:
             # sometimes innerHTML case
             self.parser.parseError()
 
     def endTagOther(self, name):
-        self.parser.phase.modes["inBody"].processEndTag(name)
+        self.parser.phases["inBody"].processEndTag(name)
 
 
-class InSelect(Phase):
+class InSelectPhase(Phase):
     def __init__(self, parser):
         Phase.__init__(self, parser)
 
@@ -1795,13 +1723,13 @@ class InSelect(Phase):
         self.parser.parseError()
         if self.parser.elementInScope(name, True):
             self.endTagSelect()
-            self.parser.phase.mode.processEndTag(name)
+            self.parser.phase.processEndTag(name)
 
     def processAnythingElse(self, name, attributes={}):
         self.parser.parseError()
 
 
-class AfterBody(Phase):
+class AfterBodyPhase(Phase):
     def __init__(self, parser):
         Phase.__init__(self, parser)
 
@@ -1816,26 +1744,27 @@ class AfterBody(Phase):
 
     def processCharacters(self, data):
         self.parser.parseError()
-        self.parser.switchInsertionMode("inBody")
-        self.parser.phase.mode.processCharacters(data)
+        self.parser.phase = self.parser.phases["inBody"]
+        self.parser.phase.processCharacters(data)
 
     def processStartTag(self, name, attributes):
         self.parser.parseError()
-        self.parser.switchInsertionMode("inBody")
-        self.parser.phase.mode.processStartTag(name, attributes)
+        self.parser.phase = self.parser.phases["inBody"]
+        self.parser.phase.processStartTag(name, attributes)
 
     def endTagHtml(self,name):
         if self.parser.innerHTML:
             self.parser.parseError()
         else:
-            self.parser.switchPhase("trailingEnd")
+            self.parser.lastPhase = self.parser.phase
+            self.parser.phase = self.parser.phases["trailingEnd"]
 
     def endTagOther(self, name):
         self.parser.parseError()
-        self.parser.switchInsertionMode("inBody")
-        self.parser.phase.mode.processEndTag(name)
+        self.parser.phase = self.parser.phases["inBody"]
+        self.parser.phase.processEndTag(name)
 
-class InFrameset(Phase):
+class InFramesetPhase(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-frameset
     def __init__(self, parser):
         Phase.__init__(self, parser)
@@ -1862,7 +1791,7 @@ class InFrameset(Phase):
         self.parser.openElements.pop()
 
     def startTagNoframes(self, name, attributes):
-        self.parser.phase.modes["inBody"].processStartTag(name, attributes)
+        self.parser.phases["inBody"].processStartTag(name, attributes)
 
     def endTagFrameset(self, name):
         if self.parser.openElements[-1].name == "html":
@@ -1872,13 +1801,13 @@ class InFrameset(Phase):
             self.parser.openElements.pop()
         if not self.parser.innerHTML and \
           self.parser.openElements[-1].name == "frameset":
-            self.parser.switchInsertionMode("afterFrameset")
+            self.parser.phase = self.parser.phases["afterFrameset"]
 
     def tagOther(self, name, attributes={}):
         self.parser.parseError()
 
 
-class AfterFrameset(Phase):
+class AfterFramesetPhase(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#after3
     def __init__(self, parser):
         Phase.__init__(self, parser)
@@ -1889,20 +1818,49 @@ class AfterFrameset(Phase):
         ])
         self.startTagHandler.default = self.tagOther
 
-        self.endTagHandler = utils.MethodDispatcher([("html", self.endTagHtml)])
+        self.endTagHandler = utils.MethodDispatcher([
+            ("html", self.endTagHtml)
+        ])
         self.endTagHandler.default = self.tagOther
 
     def processCharacters(self, data):
         self.parser.parseError()
 
     def startTagNoframes(self, name, attributes):
-        self.parser.phase.modes["inBody"].processStartTag(name, attributes)
+        self.parser.phases["inBody"].processStartTag(name, attributes)
 
     def endTagHtml(self, name):
-        self.parser.switchPhase("trailingEnd")
+        self.parser.lastPhase = self.parser.phase
+        self.parser.phase = self.parser.phases["trailingEnd"]
 
     def tagOther(self, name, attributes={}):
         self.parser.parseError()
+
+
+class TrailingEndPhase(Phase):
+    def processComment(self, data):
+        self.parser.document.appendChild(CommentNode(data))
+
+    def processEOF(self):
+        pass
+
+    def processSpaceCharacters(self, data):
+        self.parser.lastPhase.processCharacters(data)
+
+    def processCharacters(self, data):
+        self.parser.parseError()
+        self.parser.phase = self.parser.lastPhase
+        self.parser.phase.processCharacters(data)
+
+    def processStartTag(self, name, attributes):
+        self.parser.parseError()
+        self.parser.phase = self.parser.lastPhase
+        self.parser.phase.processStartTag(name, attributes)
+
+    def processEndTag(self, name):
+        self.parser.parseError()
+        self.parser.phase = self.parser.lastPhase
+        self.parser.phase.processEndTag(name)
 
 
 class ParseError(Exception):
