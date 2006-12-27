@@ -23,7 +23,7 @@ def f4():
     x = "%s%s%s" % (x, y, z)
 
 import timeit
-for x in xrange(3):
+for x in xrange(4):
     statement = "f%s" % (x + 1)
     t = timeit.Timer(statement, "from __main__ import " + statement)
     r = t.repeat(3, 1000000)
