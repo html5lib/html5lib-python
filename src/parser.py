@@ -440,10 +440,8 @@ class Phase(object):
         self.startTagHandler[name](name, attributes)
 
     def startTagHtml(self, name, attributes):
-        if self.parser.openElements:
-            # XXX Is this check right? Need to be sure there has _never_
-            # been a HTML tag open
-            self.parser.parseError()
+        # XXX Need a check here to see if the first start tag token emitted is
+        # this token... If it's not, invoke self.parser.parseError().
         for attr, value in attributes.iteritems():
             if attr not in self.parser.openElements[0].attributes:
                 self.parser.openElements[0].attributes[attr] = value
