@@ -1,32 +1,30 @@
-from time import time
-
-x = "TEST"
-y = "TEST"
-z = "TEST"
-
-t = time()
-for i in xrange(1000000):
+def f1():
+    x = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    y = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    z = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ"
     x += y + z
-    x = "TEST"
-print 'duration:', time()-t
 
-x = "TEST"
-t = time()
-for i in xrange(1000000):
+def f2():
+    x = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    y = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    z = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ"
     x = x + y + z
-    x = "TEST"
-print 'duration:', time()-t
 
-x = "TEST"
-t = time()
-for i in xrange(1000000):
+def f3():
+    x = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    y = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    z = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ"
     x = "".join((x, y, z))
-    x = "TEST"
-print 'duration:', time()-t
 
-x = "TEST"
-t = time()
-for i in xrange(1000000):
+def f4():
+    x = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    y = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    z = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ"
     x = "%s%s%s" % (x, y, z)
-    x = "TEST"
-print 'duration:', time()-t
+
+import timeit
+for x in xrange(4):
+    statement = "f%s" % (x + 1)
+    t = timeit.Timer(statement, "from __main__ import " + statement)
+    r = t.repeat(3, 1000000)
+    print r, min(r)
