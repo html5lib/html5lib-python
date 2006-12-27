@@ -1253,13 +1253,13 @@ class InTablePhase(Phase):
         self.startTagColgroup("colgroup", {})
         self.parser.phase.processStartTag(name, attributes)
 
-    def startTagRowGroup(self, name, attributes={}):
+    def startTagRowGroup(self, name, attributes):
         self.clearStackToTableContext()
         self.parser.insertElement(name, attributes)
         self.parser.phase = self.parser.phases["inTableBody"]
 
     def startTagImplyTbody(self, name, attributes):
-        self.startTagRowGroup("tbody")
+        self.startTagRowGroup("tbody", {})
         self.parser.phase.processStartTag(name, attributes)
 
     def startTagTable(self, name, attributes):
@@ -1302,8 +1302,6 @@ class InTablePhase(Phase):
 
 class InCaptionPhase(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-caption
-    # XXX ...
-
     def __init__(self, parser):
         Phase.__init__(self, parser)
 
