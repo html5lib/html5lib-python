@@ -1,11 +1,10 @@
 import sys
 import os
 
-sys.path.insert(0, os.path.abspath(os.pardir))
-
-from constants import contentModelFlags, spaceCharacters
-from constants import scopingElements, formattingElements, specialElements
-from constants import headingElements, tableInsertModeElements
+# XXX someone please fix this up! And make sure it doesn't break Windows.
+from src.constants import contentModelFlags, spaceCharacters
+from src.constants import scopingElements, formattingElements, specialElements
+from src.constants import headingElements, tableInsertModeElements
 
 # The scope markers are inserted when entering buttons, object elements,
 # marquees, table cells, and table captions, and are used to prevent formatting
