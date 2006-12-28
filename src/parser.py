@@ -7,153 +7,42 @@ except NameError:
 
 import tokenizer
 
+import treebuilders
+from treebuilders.base import Marker
+from treebuilders import DOMlite
+
 import utils
 from constants import contentModelFlags, spaceCharacters
 from constants import scopingElements, formattingElements, specialElements
 from constants import headingElements, tableInsertModeElements
 
-# The scope markers are inserted when entering buttons, object elements,
-# marquees, table cells, and table captions, and are used to prevent formatting
-# from "leaking" into tables, buttons, object elements, and marquees.
-Marker = None
-
-# Really crappy basic implementation of a DOM-core like thing
-class Node(object):
-    def __init__(self, name):
-        self.name = name
-        self.parent = None
-        self.value = None
-        self.childNodes = []
-        self._flags = []
-
-    def __str__(self):
-        return self.name
-
-    def __repr__(self):
-        return "<%s %s>" % (self.__class__, self.name)
-
-    def printTree(self, indent=0):
-        tree = '\n|%s%s' % (' '* indent, str(self))
-        for child in self.childNodes:
-            tree += child.printTree(indent + 2)
-        return tree
-
-    def appendChild(self, node, index=None):
-        if (isinstance(node, TextNode) and self.childNodes and
-          isinstance(self.childNodes[-1], TextNode)):
-            self.childNodes[-1].value += node.value
-        else:
-            self.childNodes.append(node)
-        node.parent = self
-
-    def insertBefore(self, node, refNode):
-        index = self.childNodes.index(refNode)
-        if (isinstance(node, TextNode) and index > 0 and
-          isinstance(self.childNodes[index - 1], TextNode)):
-            self.childNodes[index - 1].value += node.value
-        else:
-            self.childNodes.insert(index, node)
-        node.parent = self
-
-    def removeChild(self, node):
-        try:
-            self.childNodes.remove(node)
-        except:
-            # XXX
-            raise
-        node.parent = None
-
-    def cloneNode(self):
-        newNode = type(self)(self.name)
-        for attr, value in self.attributes.iteritems():
-            newNode.attributes[attr] = value
-        newNode.value = self.value
-        return newNode
-
-class Document(Node):
-    def __init__(self):
-        Node.__init__(self, None)
-
-    def __str__(self):
-        return "#document"
-
-    def printTree(self):
-        tree = str(self)
-        for child in self.childNodes:
-            tree += child.printTree(2)
-        return tree
-
-class DocumentType(Node):
-    def __init__(self, name):
-        Node.__init__(self, name)
-
-    def __str__(self):
-        return "<!DOCTYPE %s>" % self.name
-
-class TextNode(Node):
-    def __init__(self, value):
-        Node.__init__(self, None)
-        self.value = value
-
-    def __str__(self):
-        return "\"%s\"" % self.value
-
-class Element(Node):
-    def __init__(self, name):
-        Node.__init__(self, name)
-        self.attributes = {}
-
-    def __str__(self):
-        return "<%s>" % self.name
-
-    def printTree(self, indent):
-        tree = '\n|%s%s' % (' '*indent, str(self))
-        indent += 2
-        if self.attributes:
-            for name, value in self.attributes.iteritems():
-                tree += '\n|%s%s="%s"' % (' ' * indent, name, value)
-        for child in self.childNodes:
-            tree += child.printTree(indent)
-        return tree
-
-class CommentNode(Node):
-    def __init__(self, data):
-        Node.__init__(self, None)
-        self.data = data
-
-    def __str__(self):
-        return "<!-- %s -->" % self.data
-
 class HTMLParser(object):
     """Main parser class"""
 
-    def __init__(self, strict = False):
+    def __init__(self, strict = False, tree=DOMlite.TreeBuilder):
         # Raise an exception on the first error encountered
         self.strict = strict
 
-        self.openElements = []
-        self.activeFormattingElements = []
-        self.headPointer = None
-        self.formPointer = None
+        self.tree = tree()
 
         self.phases = {
-            "initial": InitialPhase(self),
-            "rootElement": RootElementPhase(self),
-            "beforeHead": BeforeHeadPhase(self),
-            "inHead": InHeadPhase(self),
-            "afterHead": AfterHeadPhase(self),
-            "inBody": InBodyPhase(self),
-            "inTable": InTablePhase(self),
-            "inCaption": InCaptionPhase(self),
-            "inColumnGroup": InColumnGroupPhase(self),
-            "inTableBody": InTableBodyPhase(self),
-            "inRow": InRowPhase(self),
-            "inCell": InCellPhase(self),
-            "inSelect": InSelectPhase(self),
-            "afterBody": AfterBodyPhase(self),
-            "inFrameset": InFramesetPhase(self),
-            "afterFrameset": AfterFramesetPhase(self),
-            "trailingEnd": TrailingEndPhase(self)
+            "initial": InitialPhase(self, self.tree),
+            "rootElement": RootElementPhase(self, self.tree),
+            "beforeHead": BeforeHeadPhase(self, self.tree),
+            "inHead": InHeadPhase(self, self.tree),
+            "afterHead": AfterHeadPhase(self, self.tree),
+            "inBody": InBodyPhase(self, self.tree),
+            "inTable": InTablePhase(self, self.tree),
+            "inCaption": InCaptionPhase(self, self.tree),
+            "inColumnGroup": InColumnGroupPhase(self, self.tree),
+            "inTableBody": InTableBodyPhase(self, self.tree),
+            "inRow": InRowPhase(self, self.tree),
+            "inCell": InCellPhase(self, self.tree),
+            "inSelect": InSelectPhase(self, self.tree),
+            "afterBody": AfterBodyPhase(self, self.tree),
+            "inFrameset": InFramesetPhase(self, self.tree),
+            "afterFrameset": AfterFramesetPhase(self, self.tree),
+            "trailingEnd": TrailingEndPhase(self, self.tree)
         }
         self.phase = self.phases["initial"]
         # We only seem to have InBodyPhase testcases where the following is
@@ -164,7 +53,7 @@ class HTMLParser(object):
         """Stream should be a stream of unicode bytes. Character encoding
         issues have not yet been dealt with."""
 
-        self.document = Document()
+        #XXX - need to ensure the tree is reset here
 
         # We don't actually support inner HTML yet but this should allow
         # assertations
@@ -195,7 +84,7 @@ class HTMLParser(object):
         # When the loop finishes it's EOF
         self.phase.processEOF()
 
-        return self.document
+        return self.tree.document
 
     def parseError(self):
         if self.strict:
@@ -208,152 +97,6 @@ class HTMLParser(object):
     #XXX - almost everthing after this point should be moved into a
     #seperate treebuilder object
 
-    def elementInScope(self, target, tableVariant=False):
-        # Exit early when possible.
-        if self.openElements[-1].name == target:
-            return True
-
-        # AT Use reverse instead of [::-1] when we can rely on Python 2.4
-        # AT How about while True and simply set node to [-1] and set it to
-        # [-2] at the end...
-        for node in self.openElements[::-1]:
-            if node.name == target:
-                return True
-            elif node.name == "table":
-                return False
-            elif not tableVariant and node.name in scopingElements:
-                return False
-            elif node.name == "html":
-                return False
-        assert False # We should never reach this point
-
-    def reconstructActiveFormattingElements(self):
-        # Within this algorithm the order of steps described in the
-        # specification is not quite the same as the order of steps in the
-        # code. It should still do the same though.
-
-        # Step 1: stop the algorithm when there's nothing to do.
-        if not self.activeFormattingElements:
-            return
-
-        # Step 2 and step 3: we start with the last element. So i is -1.
-        i = -1
-        entry = self.activeFormattingElements[i]
-        if entry == Marker or entry in self.openElements:
-            return
-
-        # Step 6
-        while entry != Marker and entry not in self.openElements:
-            # Step 5: let entry be one earlier in the list.
-            i -= 1
-            try:
-                entry = self.activeFormattingElements[i]
-            except:
-                # Step 4: at this point we need to jump to step 8. By not doing
-                # i += 1 which is also done in step 7 we achieve that.
-                break
-        while True:
-            # Step 7
-            i += 1
-
-            # Step 8
-            clone = self.activeFormattingElements[i].cloneNode()
-
-            # Step 9
-            element = self.insertElement(clone.name, clone.attributes)
-
-            # Step 10
-            self.activeFormattingElements[i] = element
-
-            # Step 11
-            if element == self.activeFormattingElements[-1]:
-                break
-
-    def clearActiveFormattingElements(self):
-        entry = self.activeFormattingElements.pop()
-        while self.activeFormattingElements and entry != Marker:
-            entry = self.activeFormattingElements.pop()
-
-    def elementInActiveFormattingElements(self, name):
-        """Check if an element exists between the end of the active
-        formatting elements and the last marker. If it does, return it, else
-        return false"""
-
-        for item in self.activeFormattingElements[::-1]:
-            # Check for Marker first because if it's a Marker it doesn't have a
-            # name attribute.
-            if item == Marker:
-                break
-            elif item.name == name:
-                return item
-        return False
-
-    def createElement(self, name, attributes):
-        # XXX AT Change this if we ever implement different node types for
-        # different elements
-        element = Element(name)
-        element.attributes = attributes
-        return element
-
-    def insertElement(self, name, attributes):
-        element = self.createElement(name, attributes)
-        if (not(self.insertFromTable) or (self.insertFromTable and
-          self.openElements[-1].name not in tableInsertModeElements)):
-            self.openElements[-1].appendChild(element)
-            self.openElements.append(element)
-        else:
-            #We should be in the InTable mode. This means we want to do
-            #special magic element rearranging
-            self.insertMisnestedNodeFromTable(element)
-            self.openElements.append(element)
-        return element
-
-    def insertText(self, data, parent=None):
-        node = TextNode(data)
-        if parent is None:
-            parent = self.openElements[-1]
-        if (not(self.insertFromTable) or (self.insertFromTable and
-                                          self.openElements[-1].name not in
-                                          tableInsertModeElements)):
-            parent.appendChild(node)
-        else:
-            #We should be in the InTable mode. This means we want to do
-            #special magic element rearranging
-            self.insertMisnestedNodeFromTable(node)
-
-    def insertMisnestedNodeFromTable(self, element):
-        #The foster parent element is the one which comes before the most
-        #recently opened table element
-        #XXX - this is really inelegant
-        lastTable=None
-        for elm in self.openElements[::-1]:
-            if elm.name == u"table":
-                lastTable = elm
-                break
-        if lastTable:
-            #XXX - we should really check that this parent is actually a
-            #node here
-            if lastTable.parent:
-                fosterParent = lastTable.parent
-                fosterParent.insertBefore(element, lastTable)
-            else:
-                fosterParent = self.openElements[
-                    self.openElements.index(lastTable) - 1]
-                fosterParent.appendChild(element)
-        else:
-            assert self.innerHTML
-            fosterParent = self.openElements[0]
-            fosterParent.appendChild(element)
-
-    def generateImpliedEndTags(self, exclude=None):
-        name = self.openElements[-1].name
-        if name in frozenset(("dd", "dt", "li", "p", "td", "th", "tr"))\
-          and name != exclude:
-            self.openElements.pop()
-            # XXX Until someone has broven that the above breaks stuff I think
-            # we should keep it in.
-            # self.processEndTag(name)
-            self.generateImpliedEndTags(exclude)
 
     def resetInsertionMode(self):
         # The name of this method is mostly historical. (It's also used in the
@@ -374,8 +117,8 @@ class HTMLParser(object):
             "body":"inBody",
             "frameset":"inFrameset"
         }
-        for node in self.openElements[::-1]:
-            if node == self.openElements[0]:
+        for node in self.tree.openElements[::-1]:
+            if node == self.tree.openElements[0]:
                 last = True
                 if node.name not in ['td', 'th']:
                     # XXX
@@ -390,7 +133,7 @@ class HTMLParser(object):
                 self.phase = self.phases[newModes[node.name]]
                 break
             elif node.name == "html":
-                if self.headPointer is None:
+                if self.tree.headPointer is None:
                     self.phase = self.phases["beforeHead"]
                 else:
                    self.phase = self.phases["afterHead"]
@@ -413,13 +156,14 @@ class Phase(object):
     # * EndTag
     #   - endTag* methods
 
-    def __init__(self, parser):
+    def __init__(self, parser, tree):
         self.parser = parser
+        self.tree = tree
 
     def processEOF(self):
-        self.parser.generateImpliedEndTags()
+        self.tree.generateImpliedEndTags()
         if self.parser.innerHTML == False\
-          or len(self.parser.openElements) > 1:
+          or len(self.tree.openElements) > 1:
             # XXX No need to check for "body" because our EOF handling is not
             # per specification. (Specification needs an update.)
             self.parser.parseError()
@@ -428,13 +172,13 @@ class Phase(object):
     def processComment(self, data):
         # For most phases the following is correct. Where it's not it will be
         # overridden.
-        self.parser.openElements[-1].appendChild(CommentNode(data))
+        self.tree.insertComment(data, self.tree.openElements[-1])
 
     def processDoctype(self, name, error):
         self.parser.parseError()
 
     def processSpaceCharacters(self, data):
-        self.parser.insertText(data)
+        self.tree.insertText(data)
 
     def processStartTag(self, name, attributes):
         self.startTagHandler[name](name, attributes)
@@ -443,8 +187,8 @@ class Phase(object):
         # XXX Need a check here to see if the first start tag token emitted is
         # this token... If it's not, invoke self.parser.parseError().
         for attr, value in attributes.iteritems():
-            if attr not in self.parser.openElements[0].attributes:
-                self.parser.openElements[0].attributes[attr] = value
+            if attr not in self.tree.openElements[0].attributes:
+                self.tree.openElements[0].attributes[attr] = value
 
     def processEndTag(self, name):
         self.endTagHandler[name](name)
@@ -455,14 +199,14 @@ class InitialPhase(Phase):
     # in the specification.
 
     def processDoctype(self, name, error):
-        self.parser.document.appendChild(DocumentType(name))
+        self.tree.insertDoctype(name)
         self.parser.phase = self.parser.phases["rootElement"]
 
     def processComment(self, data):
-        self.parser.document.appendChild(CommentNode(data))
+        self.tree.insertComment(data, self.tree.document)
 
     def processSpaceCharacters(self, data):
-        self.parser.insertText(data, self.parser.document)
+        self.tree.insertText(data, self.tree.document)
 
     def processCharacters(self, data):
         self.parser.parseError()
@@ -485,17 +229,17 @@ class InitialPhase(Phase):
 class RootElementPhase(Phase):
     # helper methods
     def insertHtmlElement(self):
-        element = self.parser.createElement("html", {})
-        self.parser.openElements.append(element)
-        self.parser.document.appendChild(element)
+        element = self.tree.createElement("html", {})
+        self.tree.openElements.append(element)
+        self.tree.document.appendChild(element)
         self.parser.phase = self.parser.phases["beforeHead"]
 
     # other
     def processComment(self, data):
-        self.parser.document.appendChild(CommentNode(data))
+        self.tree.insertComment(data, self.tree.document)
 
     def processSpaceCharacters(self, data):
-        self.parser.insertText(data, self.parser.document)
+        self.tree.insertText(data, self.tree.document)
 
     def processCharacters(self, data):
         self.insertHtmlElement()
@@ -515,8 +259,8 @@ class RootElementPhase(Phase):
 
 
 class BeforeHeadPhase(Phase):
-    def __init__(self, parser):
-        Phase.__init__(self, parser)
+    def __init__(self, parser, tree):
+        Phase.__init__(self, parser, tree)
 
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
@@ -538,8 +282,8 @@ class BeforeHeadPhase(Phase):
         self.parser.phase.processCharacters(data)
 
     def startTagHead(self, name, attributes):
-        self.parser.insertElement(name, attributes)
-        self.parser.headPointer = self.parser.openElements[-1]
+        self.tree.insertElement(name, attributes)
+        self.tree.headPointer = self.tree.openElements[-1]
         self.parser.phase = self.parser.phases["inHead"]
 
     def startTagOther(self, name, attributes):
@@ -554,8 +298,8 @@ class BeforeHeadPhase(Phase):
         self.parser.parseError()
 
 class InHeadPhase(Phase):
-    def __init__(self, parser):
-        Phase.__init__(self, parser)
+    def __init__(self, parser, tree):
+        Phase.__init__(self, parser, tree)
 
         self.startTagHandler =  utils.MethodDispatcher([
             ("html", self.startTagHtml),
@@ -575,54 +319,54 @@ class InHeadPhase(Phase):
 
     # helper
     def appendToHead(self, element):
-        if self.parser.headPointer is not None:
-            self.parser.headPointer.appendChild(element)
+        if self.tree.headPointer is not None:
+            self.tree.headPointer.appendChild(element)
         else:
             assert self.parser.innerHTML
-            self.parser.openElements[-1].appendChild(element)
+            self.tree.openElements[-1].appendChild(element)
 
     # the real thing
     def processEOF(self):
-        if self.parser.openElements[-1].name in ("title", "style", "script"):
-            self.parser.openElements.pop()
+        if self.tree.openElements[-1].name in ("title", "style", "script"):
+            self.tree.openElements.pop()
         self.anythingElse()
         self.parser.phase.processEOF()
 
     def processCharacters(self, data):
-        if self.parser.openElements[-1].name in ("title", "style", "script"):
-            self.parser.insertText(data)
+        if self.tree.openElements[-1].name in ("title", "style", "script"):
+            self.tree.insertText(data)
         else:
             self.anythingElse()
             self.parser.phase.processCharacters(data)
 
     def startTagHead(self, name, attributes):
-        self.parser.insertElement(name, attributes)
-        self.parser.headPointer = self.parser.openElements[-1]
+        self.tree.insertElement(name, attributes)
+        self.tree.headPointer = self.tree.openElements[-1]
         self.parser.phase = self.parser.phases["inHead"]
 
     def startTagTitleStyle(self, name, attributes):
         cmFlags = {"title":"RCDATA", "style":"CDATA"}
-        element = self.parser.createElement(name, attributes)
+        element = self.tree.createElement(name, attributes)
         self.appendToHead(element)
-        self.parser.openElements.append(element)
+        self.tree.openElements.append(element)
         self.parser.tokenizer.contentModelFlag =\
           contentModelFlags[cmFlags[name]]
 
     def startTagScript(self, name, attributes):
-        element = self.parser.createElement(name, attributes)
+        element = self.tree.createElement(name, attributes)
         element._flags.append("parser-inserted")
 
         # XXX in theory we should check if we're actually in the InHead state
         # here and if the headElementPointer is not zero but it seems to work
         # without that being the case.
-        self.parser.openElements[-1].appendChild(element)
-        self.parser.openElements.append(element)
+        self.tree.openElements[-1].appendChild(element)
+        self.tree.openElements.append(element)
 
-        # XXX AT we could use self.parser.insertElement(name, attributes) ...
+        # XXX AT we could use self.tree.insertElement(name, attributes) ...
         self.parser.tokenizer.contentModelFlag = contentModelFlags["CDATA"]
 
     def startTagBaseLinkMeta(self, name, attributes):
-        element = self.parser.createElement(name, attributes)
+        element = self.tree.createElement(name, attributes)
         self.appendToHead(element)
 
     def startTagOther(self, name, attributes):
@@ -630,8 +374,8 @@ class InHeadPhase(Phase):
         self.parser.phase.processStartTag(name, attributes)
 
     def endTagHead(self, name):
-        if self.parser.openElements[-1].name == "head":
-            self.parser.openElements.pop()
+        if self.tree.openElements[-1].name == "head":
+            self.tree.openElements.pop()
         else:
             self.parser.parseError()
         self.parser.phase = self.parser.phases["afterHead"]
@@ -641,8 +385,8 @@ class InHeadPhase(Phase):
         self.parser.phase.processEndTag(name)
 
     def endTagTitleStyleScript(self, name):
-        if self.parser.openElements[-1].name == name:
-            self.parser.openElements.pop()
+        if self.tree.openElements[-1].name == name:
+            self.tree.openElements.pop()
         else:
             self.parser.parseError()
 
@@ -650,14 +394,14 @@ class InHeadPhase(Phase):
         self.parser.parseError()
 
     def anythingElse(self):
-        if self.parser.openElements[-1].name == "head":
+        if self.tree.openElements[-1].name == "head":
             self.endTagHead("head")
         else:
             self.parser.phase = self.parser.phases["afterHead"]
 
 class AfterHeadPhase(Phase):
-    def __init__(self, parser):
-        Phase.__init__(self, parser)
+    def __init__(self, parser, tree):
+        Phase.__init__(self, parser, tree)
 
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
@@ -677,11 +421,11 @@ class AfterHeadPhase(Phase):
         self.parser.phase.processCharacters(data)
 
     def startTagBody(self, name, attributes):
-        self.parser.insertElement(name, attributes)
+        self.tree.insertElement(name, attributes)
         self.parser.phase = self.parser.phases["inBody"]
 
     def startTagFrameset(self, name, attributes):
-        self.parser.insertElement(name, attributes)
+        self.tree.insertElement(name, attributes)
         self.parser.phase = self.parser.phases["inFrameset"]
 
     def startTagFromHead(self, name, attributes):
@@ -698,15 +442,15 @@ class AfterHeadPhase(Phase):
         self.parser.phase.processEndTag(name)
 
     def anythingElse(self):
-        self.parser.insertElement("body", {})
+        self.tree.insertElement("body", {})
         self.parser.phase = self.parser.phases["inBody"]
 
 
 class InBodyPhase(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-body
     # the crazy mode
-    def __init__(self, parser):
-        Phase.__init__(self, parser)
+    def __init__(self, parser, tree):
+        Phase.__init__(self, parser, tree)
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
             ("script", self.startTagScript),
@@ -770,17 +514,17 @@ class InBodyPhase(Phase):
 
     # helper
     def addFormattingElement(self, name, attributes):
-        self.parser.insertElement(name, attributes)
-        self.parser.activeFormattingElements.append(
-            self.parser.openElements[-1])
+        self.tree.insertElement(name, attributes)
+        self.tree.activeFormattingElements.append(
+            self.tree.openElements[-1])
 
     # the real deal
     def processCharacters(self, data):
         # XXX The specification says to do this for every character at the
         # moment, but apparently that doesn't match the real world so we don't
         # do it for space characters.
-        self.parser.reconstructActiveFormattingElements()
-        self.parser.insertText(data)
+        self.tree.reconstructActiveFormattingElements()
+        self.tree.insertText(data)
 
     def startTagScript(self, name, attributes):
         self.parser.phases["inHead"].processStartTag(name, attributes)
@@ -791,38 +535,38 @@ class InBodyPhase(Phase):
 
     def startTagBody(self, name, attributes):
         self.parser.parseError()
-        if len(self.parser.openElements) == 1 \
-          or self.parser.openElements[1].name != "body":
+        if len(self.tree.openElements) == 1 \
+          or self.tree.openElements[1].name != "body":
             assert self.parser.innerHTML
         else:
             for attr, value in attributes.iteritems():
-                if attr not in self.parser.openElements[1].attributes:
-                    self.parser.openElements[1].attributes[attr] = value
+                if attr not in self.tree.openElements[1].attributes:
+                    self.tree.openElements[1].attributes[attr] = value
 
     def startTagCloseP(self, name, attributes):
-        if self.parser.elementInScope("p"):
+        if self.tree.elementInScope("p"):
             self.endTagP("p")
-        self.parser.insertElement(name, attributes)
+        self.tree.insertElement(name, attributes)
 
     def startTagForm(self, name, attributes):
-        if self.parser.formPointer:
+        if self.tree.formPointer:
             self.parser.parseError()
         else:
-            if self.parser.elementInScope("p"):
+            if self.tree.elementInScope("p"):
                 self.endTagP("p")
-            self.parser.insertElement(name, attributes)
-            self.parser.formPointer = self.parser.openElements[-1]
+            self.tree.insertElement(name, attributes)
+            self.tree.formPointer = self.tree.openElements[-1]
 
     def startTagListItem(self, name, attributes):
-        if self.parser.elementInScope("p"):
+        if self.tree.elementInScope("p"):
             self.endTagP("p")
         stopNames = {"li":("li"), "dd":("dd", "dt"), "dt":("dd", "dt")}
         stopName = stopNames[name]
         # AT Use reversed in Python 2.4...
-        for i, node in enumerate(self.parser.openElements[::-1]):
+        for i, node in enumerate(self.tree.openElements[::-1]):
             if node.name in stopName:
                 for j in range(i+1):
-                    self.parser.openElements.pop()
+                    self.tree.openElements.pop()
                 break
 
             # Phrasing elements are all non special, non scoping, non
@@ -831,78 +575,78 @@ class InBodyPhase(Phase):
               and node.name not in ("address", "div")):
                 break
         # Always insert an <li> element.
-        self.parser.insertElement(name, attributes)
+        self.tree.insertElement(name, attributes)
 
     def startTagPlaintext(self, name, attributes):
-        if self.parser.elementInScope("p"):
+        if self.tree.elementInScope("p"):
             self.endTagP("p")
-        self.parser.insertElement(name, attributes)
+        self.tree.insertElement(name, attributes)
         self.parser.tokenizer.contentModelFlag = contentModelFlags["PLAINTEXT"]
 
     def startTagHeading(self, name, attributes):
-        if self.parser.elementInScope("p"):
+        if self.tree.elementInScope("p"):
             self.endTagP("p")
         for item in headingElements:
-            if self.parser.elementInScope(item):
+            if self.tree.elementInScope(item):
                 self.parser.parseError()
-                item = self.parser.openElements.pop()
+                item = self.tree.openElements.pop()
                 while item.name not in headingElements:
-                    item = self.parser.openElements.pop()
+                    item = self.tree.openElements.pop()
                 break
-        self.parser.insertElement(name, attributes)
+        self.tree.insertElement(name, attributes)
 
     def startTagA(self, name, attributes):
-        afeAElement = self.parser.elementInActiveFormattingElements("a")
+        afeAElement = self.tree.elementInActiveFormattingElements("a")
         if afeAElement:
             self.parser.parseError()
             self.endTagFormatting("a")
-            if afeAElement in self.parser.openElements:
-                self.parser.openElements.remove(afeAElement)
-            if afeAElement in self.parser.activeFormattingElements:
-                self.parser.activeFormattingElements.remove(afeAElement)
-        self.parser.reconstructActiveFormattingElements()
+            if afeAElement in self.tree.openElements:
+                self.tree.openElements.remove(afeAElement)
+            if afeAElement in self.tree.activeFormattingElements:
+                self.tree.activeFormattingElements.remove(afeAElement)
+        self.tree.reconstructActiveFormattingElements()
         self.addFormattingElement(name, attributes)
 
     def startTagFormatting(self, name, attributes):
-        self.parser.reconstructActiveFormattingElements()
+        self.tree.reconstructActiveFormattingElements()
         self.addFormattingElement(name, attributes)
 
     def startTagButton(self, name, attributes):
-        if self.parser.elementInScope("button"):
+        if self.tree.elementInScope("button"):
             self.parser.parseError()
             self.processEndTag("button")
             self.parser.phase.processStartTag(name, attributes)
         else:
-            self.parser.reconstructActiveFormattingElements()
-            self.parser.insertElement(name, attributes)
-            self.parser.activeFormattingElements.append(Marker)
+            self.tree.reconstructActiveFormattingElements()
+            self.tree.insertElement(name, attributes)
+            self.tree.activeFormattingElements.append(Marker)
 
     def startTagMarqueeObject(self, name, attributes):
-        self.parser.reconstructActiveFormattingElements()
-        self.parser.insertElement(name, attributes)
-        self.parser.activeFormattingElements.append(Marker)
+        self.tree.reconstructActiveFormattingElements()
+        self.tree.insertElement(name, attributes)
+        self.tree.activeFormattingElements.append(Marker)
 
     def startTagXmp(self, name, attributes):
-        self.parser.reconstructActiveFormattingElements()
-        self.parser.insertElement(name, attributes)
+        self.tree.reconstructActiveFormattingElements()
+        self.tree.insertElement(name, attributes)
         self.parser.tokenizer.contentModelFlag = contentModelFlags["CDATA"]
 
     def startTagTable(self, name, attributes):
-        if self.parser.elementInScope("p"):
+        if self.tree.elementInScope("p"):
             self.processEndTag("p")
-        self.parser.insertElement(name, attributes)
+        self.tree.insertElement(name, attributes)
         self.parser.phase = self.parser.phases["inTable"]
 
     def startTagVoidFormatting(self, name, attributes):
-        self.parser.reconstructActiveFormattingElements()
-        self.parser.insertElement(name, attributes)
-        self.parser.openElements.pop()
+        self.tree.reconstructActiveFormattingElements()
+        self.tree.insertElement(name, attributes)
+        self.tree.openElements.pop()
 
     def startTagHr(self, name, attributes):
-        if self.parser.elementInScope("p"):
+        if self.tree.elementInScope("p"):
             self.endTagP("p")
-        self.parser.insertElement(name, attributes)
-        self.parser.openElements.pop()
+        self.tree.insertElement(name, attributes)
+        self.tree.openElements.pop()
 
     def startTagImage(self, name, attributes):
         # No really...
@@ -910,16 +654,16 @@ class InBodyPhase(Phase):
         self.processStartTag("img", attributes)
 
     def startTagInput(self, name, attributes):
-        self.parser.reconstructActiveFormattingElements()
-        self.parser.insertElement(name, attributes)
-        if self.parser.formPointer:
+        self.tree.reconstructActiveFormattingElements()
+        self.tree.insertElement(name, attributes)
+        if self.tree.formPointer:
             # XXX Not exactly sure what to do here
-            self.parser.openElements[-1].form = self.parser.formPointer
-        self.parser.openElements.pop()
+            self.tree.openElements[-1].form = self.tree.formPointer
+        self.tree.openElements.pop()
 
     def startTagIsIndex(self, name, attributes):
         self.parser.parseError()
-        if self.parser.formPointer:
+        if self.tree.formPointer:
             return
         self.processStartTag("form", {})
         self.processStartTag("hr", {})
@@ -938,17 +682,17 @@ class InBodyPhase(Phase):
 
     def startTagTextarea(self, name, attributes):
         # XXX Form element pointer checking here as well...
-        self.parser.insertElement(name, attributes)
+        self.tree.insertElement(name, attributes)
         self.parser.tokenizer.contentModelFlag = contentModelFlags["RCDATA"]
 
     def startTagCdata(self, name, attributes):
         """iframe, noembed noframes, noscript(if scripting enabled)"""
-        self.parser.insertElement(name, attributes)
+        self.tree.insertElement(name, attributes)
         self.parser.tokenizer.contentModelFlag = contentModelFlags["CDATA"]
 
     def startTagSelect(self, name, attributes):
-        self.parser.reconstructActiveFormattingElements()
-        self.parser.insertElement(name, attributes)
+        self.tree.reconstructActiveFormattingElements()
+        self.tree.insertElement(name, attributes)
         self.parser.phase = self.parser.phases["inSelect"]
 
     def startTagMisplaced(self, name, attributes):
@@ -967,22 +711,22 @@ class InBodyPhase(Phase):
         raise NotImplementedError
 
     def startTagOther(self, name, attributes):
-        self.parser.reconstructActiveFormattingElements()
-        self.parser.insertElement(name, attributes)
+        self.tree.reconstructActiveFormattingElements()
+        self.tree.insertElement(name, attributes)
 
     def endTagP(self, name):
-        self.parser.generateImpliedEndTags("p")
-        if self.parser.openElements[-1].name != "p":
+        self.tree.generateImpliedEndTags("p")
+        if self.tree.openElements[-1].name != "p":
             self.parser.parseError()
-        while self.parser.elementInScope("p"):
-            self.parser.openElements.pop()
+        while self.tree.elementInScope("p"):
+            self.tree.openElements.pop()
 
     def endTagBody(self, name):
-        if self.parser.openElements[1].name != "body":
+        if self.tree.openElements[1].name != "body":
             # innerHTML case
             self.parser.parseError()
             return
-        if self.parser.openElements[-1].name != "body":
+        if self.tree.openElements[-1].name != "body":
             self.parser.parseError()
         self.parser.phase = self.parser.phases["afterBody"]
 
@@ -992,45 +736,45 @@ class InBodyPhase(Phase):
             self.parser.phase.processEndTag(name)
 
     def endTagBlock(self, name):
-        inScope = self.parser.elementInScope(name)
+        inScope = self.tree.elementInScope(name)
         if inScope:
-            self.parser.generateImpliedEndTags()
-        if self.parser.openElements[-1].name != name:
+            self.tree.generateImpliedEndTags()
+        if self.tree.openElements[-1].name != name:
              self.parser.parseError()
         if inScope:
-            node = self.parser.openElements.pop()
+            node = self.tree.openElements.pop()
             while node.name != name:
-                node = self.parser.openElements.pop()
+                node = self.tree.openElements.pop()
 
     def endTagForm(self, name):
         self.endTagBlock(name)
-        self.parser.formPointer = None
+        self.tree.formPointer = None
 
     def endTagListItem(self, name):
         # AT Could merge this with the Block case
-        if self.parser.elementInScope(name):
-            self.parser.generateImpliedEndTags(name)
-            if self.parser.openElements[-1].name != name:
+        if self.tree.elementInScope(name):
+            self.tree.generateImpliedEndTags(name)
+            if self.tree.openElements[-1].name != name:
                 self.parser.parseError()
 
-        if self.parser.elementInScope(name):
-            node = self.parser.openElements.pop()
+        if self.tree.elementInScope(name):
+            node = self.tree.openElements.pop()
             while node.name != name:
-                node = self.parser.openElements.pop()
+                node = self.tree.openElements.pop()
 
     def endTagHeading(self, name):
         for item in headingElements:
-            if self.parser.elementInScope(item):
-                self.parser.generateImpliedEndTags()
+            if self.tree.elementInScope(item):
+                self.tree.generateImpliedEndTags()
                 break
-        if self.parser.openElements[-1].name != name:
+        if self.tree.openElements[-1].name != name:
             self.parser.parseError()
 
         for item in headingElements:
-            if self.parser.elementInScope(item):
-                item = self.parser.openElements.pop()
+            if self.tree.elementInScope(item):
+                item = self.tree.openElements.pop()
                 while item.name not in headingElements:
-                    item = self.parser.openElements.pop()
+                    item = self.tree.openElements.pop()
                 break
 
     def endTagFormatting(self, name):
@@ -1038,39 +782,39 @@ class InBodyPhase(Phase):
         """
         while True:
             # Step 1 paragraph 1
-            afeElement = self.parser.elementInActiveFormattingElements(name)
-            if not afeElement or (afeElement in self.parser.openElements and
-              not self.parser.elementInScope(afeElement.name)):
+            afeElement = self.tree.elementInActiveFormattingElements(name)
+            if not afeElement or (afeElement in self.tree.openElements and
+              not self.tree.elementInScope(afeElement.name)):
                 self.parser.parseError()
                 return
 
             # Step 1 paragraph 2
-            elif afeElement not in self.parser.openElements:
+            elif afeElement not in self.tree.openElements:
                 self.parser.parseError()
-                self.parser.activeFormattingElements.remove(afeElement)
+                self.tree.activeFormattingElements.remove(afeElement)
                 return
 
             # Step 1 paragraph 3
-            if afeElement != self.parser.openElements[-1]:
+            if afeElement != self.tree.openElements[-1]:
                 self.parser.parseError()
 
             # Step 2
             # Start of the adoption agency algorithm proper
-            afeIndex = self.parser.openElements.index(afeElement)
+            afeIndex = self.tree.openElements.index(afeElement)
             furthestBlock = None
-            for element in self.parser.openElements[afeIndex:]:
+            for element in self.tree.openElements[afeIndex:]:
                 if element.name in specialElements | scopingElements:
                     furthestBlock = element
                     break
 
             # Step 3
             if furthestBlock is None:
-                element = self.parser.openElements.pop()
+                element = self.tree.openElements.pop()
                 while element != afeElement:
-                    element = self.parser.openElements.pop()
-                self.parser.activeFormattingElements.remove(element)
+                    element = self.tree.openElements.pop()
+                self.tree.activeFormattingElements.remove(element)
                 return
-            commonAncestor = self.parser.openElements[afeIndex-1]
+            commonAncestor = self.tree.openElements[afeIndex-1]
 
             # Step 5
             if furthestBlock.parent:
@@ -1081,20 +825,20 @@ class InBodyPhase(Phase):
             # nodes in step 12. We have to ensure that we reinsert nodes after
             # the node before the active formatting element. Note the bookmark
             # can move in step 7.4
-            bookmark = self.parser.activeFormattingElements.index(afeElement)
+            bookmark = self.tree.activeFormattingElements.index(afeElement)
 
             # Step 7
             lastNode = node = furthestBlock
             while True:
                 # AT replace this with a function and recursion?
                 # Node is element before node in open elements
-                node = self.parser.openElements[
-                    self.parser.openElements.index(node)-1]
-                while node not in self.parser.activeFormattingElements:
+                node = self.tree.openElements[
+                    self.tree.openElements.index(node)-1]
+                while node not in self.tree.activeFormattingElements:
                     tmpNode = node
-                    node = self.parser.openElements[
-                        self.parser.openElements.index(node)-1]
-                    self.parser.openElements.remove(tmpNode)
+                    node = self.tree.openElements[
+                        self.tree.openElements.index(node)-1]
+                    self.tree.openElements.remove(tmpNode)
                 # Step 7.3
                 if node == afeElement:
                     break
@@ -1103,16 +847,16 @@ class InBodyPhase(Phase):
                     # XXX should this be index(node) or index(node)+1
                     # Anne: I think +1 is ok. Given x = [2,3,4,5]
                     # x.index(3) gives 1 and then x[1 +1] gives 4...
-                    bookmark = self.parser.activeFormattingElements.\
+                    bookmark = self.tree.activeFormattingElements.\
                       index(node) + 1
                 # Step 7.5
                 if node.childNodes:
                     clone = node.cloneNode()
                     # Replace node with clone
-                    self.parser.activeFormattingElements[
-                      self.parser.activeFormattingElements.index(node)] = clone
-                    self.parser.openElements[
-                      self.parser.openElements.index(node)] = clone
+                    self.tree.activeFormattingElements[
+                      self.tree.activeFormattingElements.index(node)] = clone
+                    self.tree.openElements[
+                      self.tree.openElements.index(node)] = clone
                     node = clone
                 # Step 7.6
                 # Remove lastNode from its parents, if any
@@ -1139,25 +883,25 @@ class InBodyPhase(Phase):
             furthestBlock.childNodes.append(clone)
 
             # Step 12
-            self.parser.activeFormattingElements.remove(afeElement)
-            self.parser.activeFormattingElements.insert(bookmark, clone)
+            self.tree.activeFormattingElements.remove(afeElement)
+            self.tree.activeFormattingElements.insert(bookmark, clone)
 
             # Step 13
-            self.parser.openElements.remove(afeElement)
-            self.parser.openElements.insert(
-              self.parser.openElements.index(furthestBlock) + 1, clone)
+            self.tree.openElements.remove(afeElement)
+            self.tree.openElements.insert(
+              self.tree.openElements.index(furthestBlock) + 1, clone)
 
     def endTagButtonMarqueeObject(self, name):
-        if self.parser.elementInScope(name):
-            self.parser.generateImpliedEndTags()
-        if self.parser.openElements[-1].name != name:
+        if self.tree.elementInScope(name):
+            self.tree.generateImpliedEndTags()
+        if self.tree.openElements[-1].name != name:
             self.parser.parseError()
 
-        if self.parser.elementInScope(name):
-            element = self.parser.openElements.pop()
+        if self.tree.elementInScope(name):
+            element = self.tree.openElements.pop()
             while element.name != name:
-                element = self.parser.openElements.pop()
-            self.parser.clearActiveFormattingElements()
+                element = self.tree.openElements.pop()
+            self.tree.clearActiveFormattingElements()
 
     def endTagMisplacedNone(self, name):
         """ Elements that should be children of other elements that have a
@@ -1172,8 +916,8 @@ class InBodyPhase(Phase):
         self.parser.parseError()
 
     def endTagCdataTextAreaXmp(self, name):
-        if self.parser.openElements[-1].name == name:
-            self.parser.openElements.pop()
+        if self.tree.openElements[-1].name == name:
+            self.tree.openElements.pop()
         else:
             self.parser.parseError()
 
@@ -1186,12 +930,12 @@ class InBodyPhase(Phase):
     def endTagOther(self, name):
         # XXX This logic should be moved into the treebuilder
         # AT should use reversed instead of [::-1] when Python 2.4 == True.
-        for node in self.parser.openElements[::-1]:
+        for node in self.tree.openElements[::-1]:
             if node.name == name:
-                self.parser.generateImpliedEndTags()
-                if self.parser.openElements[-1].name != name:
+                self.tree.generateImpliedEndTags()
+                if self.tree.openElements[-1].name != name:
                     self.parser.parseError()
-                while self.parser.openElements.pop() != node:
+                while self.tree.openElements.pop() != node:
                     pass
                 break
             else:
@@ -1201,8 +945,8 @@ class InBodyPhase(Phase):
 
 class InTablePhase(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-table
-    def __init__(self, parser):
-        Phase.__init__(self, parser)
+    def __init__(self, parser, tree):
+        Phase.__init__(self, parser, tree)
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
             ("caption", self.startTagCaption),
@@ -1224,8 +968,8 @@ class InTablePhase(Phase):
     # helper methods
     def clearStackToTableContext(self):
         # "clear the stack back to a table context"
-        while self.parser.openElements[-1].name not in ("table", "html"):
-            self.parser.openElements.pop()
+        while self.tree.openElements[-1].name not in ("table", "html"):
+            self.tree.openElements.pop()
             self.parser.parseError()
         # When the current node is <html> it's an innerHTML case
 
@@ -1233,20 +977,20 @@ class InTablePhase(Phase):
     def processCharacters(self, data):
         self.parser.parseError()
         # Make all the special element rearranging voodoo kick in
-        self.parser.insertFromTable = True
+        self.tree.insertFromTable = True
         # Process the character in the "in body" mode
         self.parser.phases["inBody"].processCharacters(data)
-        self.parser.insertFromTable = False
+        self.tree.insertFromTable = False
 
     def startTagCaption(self, name, attributes):
         self.clearStackToTableContext()
-        self.parser.activeFormattingElements.append(Marker)
-        self.parser.insertElement(name, attributes)
+        self.tree.activeFormattingElements.append(Marker)
+        self.tree.insertElement(name, attributes)
         self.parser.phase = self.parser.phases["inCaption"]
 
     def startTagColgroup(self, name, attributes):
         self.clearStackToTableContext()
-        self.parser.insertElement(name, attributes)
+        self.tree.insertElement(name, attributes)
         self.parser.phase = self.parser.phases["inColumnGroup"]
 
     def startTagCol(self, name, attributes):
@@ -1255,7 +999,7 @@ class InTablePhase(Phase):
 
     def startTagRowGroup(self, name, attributes):
         self.clearStackToTableContext()
-        self.parser.insertElement(name, attributes)
+        self.tree.insertElement(name, attributes)
         self.parser.phase = self.parser.phases["inTableBody"]
 
     def startTagImplyTbody(self, name, attributes):
@@ -1271,19 +1015,19 @@ class InTablePhase(Phase):
     def startTagOther(self, name, attributes):
         self.parser.parseError()
         # Make all the special element rearranging voodoo kick in
-        self.parser.insertFromTable = True
+        self.tree.insertFromTable = True
         # Process the start tag in the "in body" mode
         self.parser.phases["inBody"].processStartTag(name, attributes)
-        self.parser.insertFromTable = False
+        self.tree.insertFromTable = False
 
     def endTagTable(self, name):
-        if self.parser.elementInScope("table", True):
-            self.parser.generateImpliedEndTags()
-            if self.parser.openElements[-1].name == "table":
+        if self.tree.elementInScope("table", True):
+            self.tree.generateImpliedEndTags()
+            if self.tree.openElements[-1].name == "table":
                 self.parser.parseError()
-            while self.parser.openElements[-1].name != "table":
-                self.parser.openElements.pop()
-            self.parser.openElements.pop()
+            while self.tree.openElements[-1].name != "table":
+                self.tree.openElements.pop()
+            self.tree.openElements.pop()
             self.parser.resetInsertionMode()
         else:
             self.parser.parseError()
@@ -1302,8 +1046,8 @@ class InTablePhase(Phase):
 
 class InCaptionPhase(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-caption
-    def __init__(self, parser):
-        Phase.__init__(self, parser)
+    def __init__(self, parser, tree):
+        Phase.__init__(self, parser, tree)
 
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
@@ -1336,14 +1080,14 @@ class InCaptionPhase(Phase):
         self.parser.phases["inBody"].processStartTag(name, attributes)
 
     def endTagCaption(self, name):
-        if self.parser.elementInScope(name, True):
+        if self.tree.elementInScope(name, True):
             # AT this code is quite similar to endTagTable in "InTable"
-            self.parser.generateImpliedEndTags()
-            if self.parser.openElements[-1].name == "caption":
+            self.tree.generateImpliedEndTags()
+            if self.tree.openElements[-1].name == "caption":
                 self.parser.parseError()
-            while self.parser.openElements[-1].name != "caption":
-                self.parser.openElements.pop()
-            self.parser.clearActiveFormattingElements()
+            while self.tree.openElements[-1].name != "caption":
+                self.tree.openElements.pop()
+            self.tree.clearActiveFormattingElements()
             self.parser.phase = self.parser.phases["inTable"]
         else:
             # innerHTML case
@@ -1366,8 +1110,8 @@ class InCaptionPhase(Phase):
 class InColumnGroupPhase(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-column
 
-    def __init__(self, parser):
-        Phase.__init__(self, parser)
+    def __init__(self, parser, tree):
+        Phase.__init__(self, parser, tree)
 
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
@@ -1388,8 +1132,8 @@ class InColumnGroupPhase(Phase):
             self.parser.phase.processCharacters(data)
 
     def startTagCol(self, name ,attributes):
-        self.parser.insertElement(name, attributes)
-        self.parser.openElements.pop()
+        self.tree.insertElement(name, attributes)
+        self.tree.openElements.pop()
 
     def startTagOther(self, name, attributes):
         self.endTagColgroup("colgroup")
@@ -1398,11 +1142,11 @@ class InColumnGroupPhase(Phase):
             self.parser.phase.processStartTag(name, attributes)
 
     def endTagColgroup(self, name):
-        if self.parser.openElements[-1].name == "html":
+        if self.tree.openElements[-1].name == "html":
             # innerHTML case
             self.parser.parseError()
         else:
-            self.parser.openElements.pop()
+            self.tree.openElements.pop()
             self.parser.phase = self.parser.phases["inTable"]
 
     def endTagCol(self, name):
@@ -1417,8 +1161,8 @@ class InColumnGroupPhase(Phase):
 
 class InTableBodyPhase(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-table0
-    def __init__(self, parser):
-        Phase.__init__(self, parser)
+    def __init__(self, parser, tree):
+        Phase.__init__(self, parser, tree)
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
             ("tr", self.startTagTr),
@@ -1437,9 +1181,9 @@ class InTableBodyPhase(Phase):
 
     # helper methods
     def clearStackToTableBodyContext(self):
-        while self.parser.openElements[-1].name not in ("tbody", "tfoot",
+        while self.tree.openElements[-1].name not in ("tbody", "tfoot",
           "thead", "html"):
-            self.parser.openElements.pop()
+            self.tree.openElements.pop()
             self.parser.parseError()
 
     # the rest
@@ -1448,7 +1192,7 @@ class InTableBodyPhase(Phase):
 
     def startTagTr(self, name, attributes):
         self.clearStackToTableBodyContext()
-        self.parser.insertElement(name, attributes)
+        self.tree.insertElement(name, attributes)
         self.parser.phase = self.parser.phases["inRow"]
 
     def startTagTableCell(self, name, attributes):
@@ -1458,11 +1202,11 @@ class InTableBodyPhase(Phase):
 
     def startTagTableOther(self, name, attributes):
         # XXX AT Any ideas on how to share this with endTagTable?
-        if self.parser.elementInScope("tbody", True) or \
-          self.parser.elementInScope("thead", True) or \
-          self.parser.elementInScope("tfoot", True):
+        if self.tree.elementInScope("tbody", True) or \
+          self.tree.elementInScope("thead", True) or \
+          self.tree.elementInScope("tfoot", True):
             self.clearStackToTableBodyContext()
-            self.endTagTableRowGroup(self.parser.openElements[-1].name)
+            self.endTagTableRowGroup(self.tree.openElements[-1].name)
             self.parser.phase.processStartTag(name, attributes)
         else:
             # innerHTML case
@@ -1472,19 +1216,19 @@ class InTableBodyPhase(Phase):
         self.parser.phases["inTable"].processStartTag(name, attributes)
 
     def endTagTableRowGroup(self, name):
-        if self.parser.elementInScope(name, True):
+        if self.tree.elementInScope(name, True):
             self.clearStackToTableBodyContext()
-            self.parser.openElements.pop()
+            self.tree.openElements.pop()
             self.parser.phase = self.parser.phases["inTable"]
         else:
             self.parser.parseError()
 
     def endTagTable(self, name):
-        if self.parser.elementInScope("tbody", True) or \
-          self.parser.elementInScope("thead", True) or \
-          self.parser.elementInScope("tfoot", True):
+        if self.tree.elementInScope("tbody", True) or \
+          self.tree.elementInScope("thead", True) or \
+          self.tree.elementInScope("tfoot", True):
             self.clearStackToTableBodyContext()
-            self.endTagTableRowGroup(self.parser.openElements[-1].name)
+            self.endTagTableRowGroup(self.tree.openElements[-1].name)
             self.parser.phase.processEndTag(name)
         else:
             # innerHTML case
@@ -1499,8 +1243,8 @@ class InTableBodyPhase(Phase):
 
 class InRowPhase(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-row
-    def __init__(self, parser):
-        Phase.__init__(self, parser)
+    def __init__(self, parser, tree):
+        Phase.__init__(self, parser, tree)
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
             (("td", "th"), self.startTagTableCell),
@@ -1520,8 +1264,8 @@ class InRowPhase(Phase):
 
     # helper methods (XXX unify this with other table helper methods)
     def clearStackToTableRowContext(self):
-        while self.parser.openElements[-1].name not in ("tr", "html"):
-            self.parser.openElements.pop()
+        while self.tree.openElements[-1].name not in ("tr", "html"):
+            self.tree.openElements.pop()
             self.parser.parseError()
 
     # the rest
@@ -1530,9 +1274,9 @@ class InRowPhase(Phase):
 
     def startTagTableCell(self, name, attributes):
         self.clearStackToTableRowContext()
-        self.parser.insertElement(name, attributes)
+        self.tree.insertElement(name, attributes)
         self.parser.phase = self.parser.phases["inCell"]
-        self.parser.activeFormattingElements.append(Marker)
+        self.tree.activeFormattingElements.append(Marker)
 
     def startTagTableOther(self, name, attributes):
         self.endTagTr("tr")
@@ -1544,9 +1288,9 @@ class InRowPhase(Phase):
         self.parser.phases["inTable"].processStartTag(name, attributes)
 
     def endTagTr(self, name):
-        if self.parser.elementInScope("tr", True):
+        if self.tree.elementInScope("tr", True):
             self.clearStackToTableRowContext()
-            self.parser.openElements.pop()
+            self.tree.openElements.pop()
             self.parser.phase = self.parser.phases["inTableBody"]
         else:
             # innerHTML case
@@ -1560,7 +1304,7 @@ class InRowPhase(Phase):
             self.parser.phase.processEndTag(name)
 
     def endTagTableRowGroup(self, name):
-        if self.parser.elementInScope(name, True):
+        if self.tree.elementInScope(name, True):
             self.endTagTr("tr")
             self.parser.phase.processEndTag(name)
         else:
@@ -1575,8 +1319,8 @@ class InRowPhase(Phase):
 
 class InCellPhase(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-cell
-    def __init__(self, parser):
-        Phase.__init__(self, parser)
+    def __init__(self, parser, tree):
+        Phase.__init__(self, parser, tree)
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
             (("caption", "col", "colgroup", "tbody", "td", "tfoot", "th",
@@ -1593,9 +1337,9 @@ class InCellPhase(Phase):
 
     # helper
     def closeCell(self):
-        if self.parser.elementInScope("td", True):
+        if self.tree.elementInScope("td", True):
             self.endTagTableCell("td")
-        elif self.parser.elementInScope("th", True):
+        elif self.tree.elementInScope("th", True):
             self.endTagTableCell("th")
 
     # the rest
@@ -1603,8 +1347,8 @@ class InCellPhase(Phase):
         self.parser.phases["inBody"].processCharacters(data)
 
     def startTagTableOther(self, name, attributes):
-        if self.parser.elementInScope("td", True) or \
-          self.parser.elementInScope("th", True):
+        if self.tree.elementInScope("td", True) or \
+          self.tree.elementInScope("th", True):
             self.closeCell()
             self.parser.phase.processStartTag(name, attributes)
         else:
@@ -1619,17 +1363,17 @@ class InCellPhase(Phase):
           self.parser.phases["inBody"].processStartTag
 
     def endTagTableCell(self, name):
-        if self.parser.elementInScope(name, True):
-            self.parser.generateImpliedEndTags(name)
-            if self.parser.openElements[-1].name != name:
+        if self.tree.elementInScope(name, True):
+            self.tree.generateImpliedEndTags(name)
+            if self.tree.openElements[-1].name != name:
                 self.parser.parseError()
                 while True:
-                    node = self.parser.openElements.pop()
+                    node = self.tree.openElements.pop()
                     if node.name == name:
                         break
             else:
-                self.parser.openElements.pop()
-            self.parser.clearActiveFormattingElements()
+                self.tree.openElements.pop()
+            self.tree.clearActiveFormattingElements()
             self.parser.phase = self.parser.phases["inRow"]
         else:
             self.parser.parseError()
@@ -1638,7 +1382,7 @@ class InCellPhase(Phase):
         self.parser.parseError()
 
     def endTagImply(self, name):
-        if self.parser.elementInScope(name, True):
+        if self.tree.elementInScope(name, True):
             self.closeCell()
             self.parser.phase.processEndTag(name)
         else:
@@ -1653,8 +1397,8 @@ class InCellPhase(Phase):
 
 
 class InSelectPhase(Phase):
-    def __init__(self, parser):
-        Phase.__init__(self, parser)
+    def __init__(self, parser, tree):
+        Phase.__init__(self, parser, tree)
 
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
@@ -1675,48 +1419,48 @@ class InSelectPhase(Phase):
 
     # http://www.whatwg.org/specs/web-apps/current-work/#in-select
     def processCharacters(self, data):
-        self.parser.insertText(data)
+        self.tree.insertText(data)
 
     def startTagOption(self, name, attributes):
         # We need to imply </option> if <option> is the current node.
-        if self.parser.openElements[-1].name == "option":
-            self.parser.openElements.pop()
-        self.parser.insertElement(name, attributes)
+        if self.tree.openElements[-1].name == "option":
+            self.tree.openElements.pop()
+        self.tree.insertElement(name, attributes)
 
     def startTagOptgroup(self, name, attributes):
-        if self.parser.openElements[-1].name == "option":
-            self.parser.openElements.pop()
-        if self.parser.openElements[-1].name == "optgroup":
-            self.parser.openElements.pop()
-        self.parser.insertElement(name, attributes)
+        if self.tree.openElements[-1].name == "option":
+            self.tree.openElements.pop()
+        if self.tree.openElements[-1].name == "optgroup":
+            self.tree.openElements.pop()
+        self.tree.insertElement(name, attributes)
 
     def startTagSelect(self, name, attributes):
         self.parser.parseError()
         self.endTagSelect("select")
 
     def endTagOption(self, name):
-        if self.parser.openElements[-1].name == "option":
-            self.parser.openElements.pop()
+        if self.tree.openElements[-1].name == "option":
+            self.tree.openElements.pop()
         else:
             self.parser.parseError()
 
     def endTagOptgroup(self, name):
         # </optgroup> implicitly closes <option>
-        if self.parser.openElements[-1].name == "option" and \
-          self.parser.openElements[-2].name == "optgroup":
-            self.parser.openElements.pop()
+        if self.tree.openElements[-1].name == "option" and \
+          self.tree.openElements[-2].name == "optgroup":
+            self.tree.openElements.pop()
         # It also closes </optgroup>
-        if self.parser.openElements[-1].name == "optgroup":
-            self.parser.openElements.pop()
+        if self.tree.openElements[-1].name == "optgroup":
+            self.tree.openElements.pop()
         # But nothing else
         else:
             self.parser.parseError()
 
     def endTagSelect(self, name):
-        if self.parser.elementInScope(name, True):
-            node = self.parser.openElements.pop()
+        if self.tree.elementInScope(name, True):
+            node = self.tree.openElements.pop()
             while node.name != "select":
-                node = self.parser.openElements.pop()
+                node = self.tree.openElements.pop()
             self.parser.resetInsertionMode()
         else:
             # innerHTML case
@@ -1724,7 +1468,7 @@ class InSelectPhase(Phase):
 
     def endTagTableElements(self, name):
         self.parser.parseError()
-        if self.parser.elementInScope(name, True):
+        if self.tree.elementInScope(name, True):
             self.endTagSelect()
             self.parser.phase.processEndTag(name)
 
@@ -1733,8 +1477,8 @@ class InSelectPhase(Phase):
 
 
 class AfterBodyPhase(Phase):
-    def __init__(self, parser):
-        Phase.__init__(self, parser)
+    def __init__(self, parser, tree):
+        Phase.__init__(self, parser, tree)
 
         # XXX We should prolly add a handler for "html" here as well...
         self.endTagHandler = utils.MethodDispatcher([("html", self.endTagHtml)])
@@ -1743,7 +1487,7 @@ class AfterBodyPhase(Phase):
     def processComment(self, data):
         # This is needed because data is to be appended to the <html> element
         # here and not to whatever is currently open.
-        self.parser.openElements[0].appendChild(CommentNode(data))
+        self.tree.insertComment(data, self.tree.openElements[0])
 
     def processCharacters(self, data):
         self.parser.parseError()
@@ -1769,8 +1513,8 @@ class AfterBodyPhase(Phase):
 
 class InFramesetPhase(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-frameset
-    def __init__(self, parser):
-        Phase.__init__(self, parser)
+    def __init__(self, parser, tree):
+        Phase.__init__(self, parser, tree)
 
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
@@ -1787,23 +1531,23 @@ class InFramesetPhase(Phase):
         self.parser.parseError()
 
     def startTagFrameset(self, name, attributes):
-        self.parser.insertElement(name, attributes)
+        self.tree.insertElement(name, attributes)
 
     def startTagFrame(self, name, attributes):
-        self.parser.insertElement(name, attributes)
-        self.parser.openElements.pop()
+        self.tree.insertElement(name, attributes)
+        self.tree.openElements.pop()
 
     def startTagNoframes(self, name, attributes):
         self.parser.phases["inBody"].processStartTag(name, attributes)
 
     def endTagFrameset(self, name):
-        if self.parser.openElements[-1].name == "html":
+        if self.tree.openElements[-1].name == "html":
             # innerHTML case
             self.parser.parseError()
         else:
-            self.parser.openElements.pop()
+            self.tree.openElements.pop()
         if not self.parser.innerHTML and \
-          self.parser.openElements[-1].name == "frameset":
+          self.tree.openElements[-1].name == "frameset":
             self.parser.phase = self.parser.phases["afterFrameset"]
 
     def tagOther(self, name, attributes={}):
@@ -1812,8 +1556,8 @@ class InFramesetPhase(Phase):
 
 class AfterFramesetPhase(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#after3
-    def __init__(self, parser):
-        Phase.__init__(self, parser)
+    def __init__(self, parser, tree):
+        Phase.__init__(self, parser, tree)
 
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
@@ -1842,7 +1586,7 @@ class AfterFramesetPhase(Phase):
 
 class TrailingEndPhase(Phase):
     def processComment(self, data):
-        self.parser.document.appendChild(CommentNode(data))
+        self.parser.insertCommenr(data, self.tree.document)
 
     def processEOF(self):
         pass
