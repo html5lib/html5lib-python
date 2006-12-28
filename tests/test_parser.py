@@ -84,7 +84,7 @@ def main():
     unittest.main()
 
 if __name__ == "__main__":
-    #Allow us to import the parent module
+    # XXX Allow us to import the sibling module
     os.chdir(os.path.split(os.path.abspath(__file__))[0])
     sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
 

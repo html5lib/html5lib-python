@@ -1036,7 +1036,7 @@ class InTablePhase(Phase):
     def endTagIgnore(self, name):
         self.parser.parseError()
 
-    def endTagOther(self, name, attributes={}):
+    def endTagOther(self, name):
         # Make all the special element rearranging voodoo kick in
         self.parser.insertFromTable = True
         # Process the end tag in the "in body" mode
