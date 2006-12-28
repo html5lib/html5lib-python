@@ -36,6 +36,10 @@ class TokenizerTestParser(object):
     def processComment(self, token):
         self.outputTokens.append([u"Comment", token["data"]])
 
+    def processSpaceCharacters(self, token):
+        self.outputTokens.append([u"Character", token["data"]])
+        self.processSpaceCharacters = self.processCharacters
+
     def processCharacters(self, token):
         self.outputTokens.append([u"Character", token["data"]])
 
