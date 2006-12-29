@@ -1,13 +1,11 @@
+"""usage: %prog [options] filename
+
+Parse a document to a DOMlite tree, with optional profiling
 """
- Usage:
-   python parse.py tests/sites/web-apps.htm > outputfile
-     To parse the file web-apps.htm and get a tree.
-   
-   python parse.py tests/sites/web-apps.htm x > outputfile
-     To parse the file web-apps.htm and get a profile.
-"""
+
 import sys
 import os
+from optparse import OptionParser
 
 from src import parser
 
@@ -23,30 +21,48 @@ def convertTreeDump(treedump):
             rv.append(line)
     return "\n".join(rv)
 
-if __name__ == "__main__":
+def parse():
+    optParser = getOptParser()
+    opts,args = optParser.parse_args()
+
     p = parser.HTMLParser()
-    if len(sys.argv) > 1:
-        x = sys.argv[1]
-        if len(sys.argv) > 2:
-            import hotshot
-            import hotshot.stats
-            prof = hotshot.Profile('stats.prof')
-            prof.runcall(p.parse, x, False)
-            prof.close()
-            stats = hotshot.stats.load('stats.prof')
-            stats.strip_dirs()
-            stats.sort_stats('time')
-            stats.print_stats()
-        else:
-            from time import time
-            t = time()
-            document = p.parse(x)
-            t = time() - t
-            t2 = time()
-            print convertTreeDump(document.printTree())
-            t2 = time() - t2
-            print "\n\nDuration:", t, "\nTree dump duration:", t2
+    f = open(args[0])
+    if opts.profile:
+        import hotshot
+        import hotshot.stats
+        prof = hotshot.Profile('stats.prof')
+        prof.runcall(p.parse, f, False)
+        prof.close()
+        #XXX - We should use a temp file here
+        stats = hotshot.stats.load('stats.prof')
+        stats.strip_dirs()
+        stats.sort_stats('time')
+        stats.print_stats()
+    elif opts.time:
+        import time
+        t0 = time.time()
+        document = p.parse(f)
+        t1 = time.time()
+        print convertTreeDump(document.printTree())
+        t2 = time.time()
+        print "\n\nRun took: %fs (plus %fs to print the output)"%(t1-t0, t2-t1)
     else:
-        print """Pass one argument to parse the document and two to get an
-              indication on what's going on.
-              """
+        document = p.parse(f)
+        print convertTreeDump(document.printTree())
+
+def getOptParser():
+    parser = OptionParser(usage=__doc__)
+    
+    parser.add_option("-p", "--profile", action="store_true", default=False,
+                      dest="profile", help="Use the hotdhot profiler to "
+                      "produce a detailed log of the run")
+    
+    parser.add_option("-t", "--time",
+                      action="store_true", default=False, dest="time", 
+                      help="Time the run using time.time (may not be accurate on all platforms, especially for short runs)")
+    
+    return parser
+
+if __name__ == "__main__":
+    print os.path.abspath(os.curdir)
+    parse()

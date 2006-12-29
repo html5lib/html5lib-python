@@ -1,10 +1,16 @@
 import sys
 import os
 
-# XXX someone please fix this up! And make sure it doesn't break Windows.
-from src.constants import contentModelFlags, spaceCharacters
-from src.constants import scopingElements, formattingElements, specialElements
-from src.constants import headingElements, tableInsertModeElements
+#Insert the parent directory of the current file into the path
+_curDir = os.path.abspath(os.curdir)
+os.chdir(os.path.dirname(__file__))
+sys.path.insert(0, os.path.abspath(os.pardir))
+os.chdir(_curDir)
+del _curDir
+
+from constants import contentModelFlags, spaceCharacters
+from constants import scopingElements, formattingElements, specialElements
+from constants import headingElements, tableInsertModeElements
 
 # The scope markers are inserted when entering buttons, object elements,
 # marquees, table cells, and table captions, and are used to prevent formatting
@@ -224,3 +230,7 @@ class TreeBuilder(object):
             # we should keep it in.
             # self.processEndTag(name)
             self.generateImpliedEndTags(exclude)
+
+    def getDocument(self):
+        "Return the final tree"
+        return self.document

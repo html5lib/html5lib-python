@@ -59,10 +59,6 @@ class HTMLParser(object):
         # assertations
         self.innerHTML = innerHTML
 
-        # Flag indicationg special insertion mode from elements misnested inside
-        # a table
-        self.insertFromTable = False
-
         self.tokenizer = tokenizer.HTMLTokenizer(stream)
 
         # XXX This is temporary for the moment so there isn't any other
@@ -84,7 +80,7 @@ class HTMLParser(object):
         # When the loop finishes it's EOF
         self.phase.processEOF()
 
-        return self.tree.document
+        return self.tree.getDocument()
 
     def parseError(self):
         if self.strict:
