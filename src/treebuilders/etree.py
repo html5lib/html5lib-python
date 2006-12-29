@@ -1,6 +1,6 @@
 try:
     from xml.etree import ElementTree
-except NameError:
+except ImportError:
     from elementtree import ElementTree
 
 import base
@@ -20,8 +20,7 @@ class Element(object):
     name = property(_getName, _setName)
 
     def _getAttributes(self):
-        #Just return the _element which implements a dict-like interface to the attributes
-        return self._element
+        return self._element.attrib
 
     def _setAttributes(self, attributes):
         #Delete existing attributes first
@@ -29,7 +28,7 @@ class Element(object):
         for key in self._element.attrib.keys():
             del self._element.attrib[key]
         for key, value in attributes.iteritems():
-            self._elements.set(key) = value
+            self._elements.set(key, value)
 
     attributes = property(_getAttributes, _setAttributes)
 
