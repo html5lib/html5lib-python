@@ -192,15 +192,23 @@ class Phase(object):
 
 
 class InitialPhase(Phase):
-    # XXX This phase deals with error handling as well which is currently not
-    # in the specification.
+    # This phase deals with error handling as well which is currently not
+    # covered in the specification. The error handling is typically known as
+    # "quirks mode". It is expected that a future version of HTML5 will defin
+    # this.
+    #
+    # AT Given that. I think it should be possible to merge this phase with the
+    # root element phase in due course.
+    def processEOF(self):
+        self.parser.phase = self.parser.phases["rootElement"]
+        self.parser.phase.processEOF()
+
+    def processComment(self, data):
+        self.tree.insertComment(data, self.tree.document)
 
     def processDoctype(self, name, error):
         self.tree.insertDoctype(name)
         self.parser.phase = self.parser.phases["rootElement"]
-
-    def processComment(self, data):
-        self.tree.insertComment(data, self.tree.document)
 
     def processSpaceCharacters(self, data):
         self.tree.insertText(data, self.tree.document)
@@ -218,10 +226,6 @@ class InitialPhase(Phase):
         self.parser.phase = self.parser.phases["rootElement"]
         self.parser.phase.processEndTag(name)
 
-    def processEOF(self):
-        self.parser.phase = self.parser.phases["rootElement"]
-        self.parser.phase.processEOF()
-
 
 class RootElementPhase(Phase):
     # helper methods
@@ -232,6 +236,10 @@ class RootElementPhase(Phase):
         self.parser.phase = self.parser.phases["beforeHead"]
 
     # other
+    def processEOF(self):
+        self.insertHtmlElement()
+        self.parser.phase.processEOF()
+
     def processComment(self, data):
         self.tree.insertComment(data, self.tree.document)
 
@@ -249,10 +257,6 @@ class RootElementPhase(Phase):
     def processEndTag(self, name):
         self.insertHtmlElement()
         self.parser.phase.processEndTag(name)
-
-    def processEOF(self):
-        self.insertHtmlElement()
-        self.parser.phase.processEOF()
 
 
 class BeforeHeadPhase(Phase):
@@ -1585,11 +1589,11 @@ class AfterFramesetPhase(Phase):
 
 
 class TrailingEndPhase(Phase):
-    def processComment(self, data):
-        self.parser.insertCommenr(data, self.tree.document)
-
     def processEOF(self):
         pass
+
+    def processComment(self, data):
+        self.parser.insertCommenr(data, self.tree.document)
 
     def processSpaceCharacters(self, data):
         self.parser.lastPhase.processCharacters(data)

@@ -406,7 +406,6 @@ class HTMLTokenizer(object):
             elif data == EOF:
                 self.tokenQueue.append({"type": "ParseError"})
                 self.tokenQueue.append({"type": "Characters", "data": u"</"})
-                self.stream.queue.append(data)
                 self.state = self.states["data"]
             else:
                 self.tokenQueue.append({"type": "ParseError"})
@@ -599,7 +598,7 @@ class HTMLTokenizer(object):
         if data == u"-":
             self.state = self.states["commentDash"]
         elif data == EOF:
-            self.emitCurrentTokenWithParseError(data)
+            self.emitCurrentTokenWithParseError()
         else:
             self.currentToken["data"] += data + self.stream.charsUntil(u"-")
         return True
@@ -609,7 +608,7 @@ class HTMLTokenizer(object):
         if data == u"-":
             self.state = self.states["commentEnd"]
         elif data == EOF:
-            self.emitCurrentTokenWithParseError(data)
+            self.emitCurrentTokenWithParseError()
         else:
             self.currentToken["data"] += u"-" + data +\
               self.stream.charsUntil(u"-")
@@ -627,7 +626,7 @@ class HTMLTokenizer(object):
             self.tokenQueue.append({"type": "ParseError"})
             self.currentToken["data"] += data
         elif data == EOF:
-            self.emitCurrentTokenWithParseError(data)
+            self.emitCurrentTokenWithParseError()
         else:
             self.tokenQueue.append({"type": "ParseError"})
             self.currentToken["data"] += u"--" + data
