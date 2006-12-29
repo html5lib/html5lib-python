@@ -585,6 +585,8 @@ class HTMLTokenizer(object):
             # Put in explicit EOF check
             if (not EOF in charStack and
                 "".join(charStack).upper() == u"DOCTYPE"):
+                self.currentToken =\
+                  {"type": "Doctype", "name": "", "data": True}
                 self.state = self.states["doctype"]
             else:
                 self.tokenQueue.append({"type": "ParseError"})
@@ -647,8 +649,7 @@ class HTMLTokenizer(object):
         if data in spaceCharacters:
             pass
         elif data in asciiLowercase:
-            self.currentToken =\
-              {"type": "Doctype", "name": data.upper(), "data": True}
+            self.currentToken["name"] = data.upper()
             self.state = self.states["doctypeName"]
         elif data == u">":
             # Character needs to be consumed per the specification so don't
@@ -657,7 +658,7 @@ class HTMLTokenizer(object):
         elif data == EOF:
             self.emitCurrentTokenWithParseError(data)
         else:
-            self.currentToken = {"type": "Doctype", "name": data, "data": True}
+            self.currentToken["name"] = data
             self.state = self.states["doctypeName"]
         return True
 
