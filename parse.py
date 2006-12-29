@@ -26,14 +26,16 @@ def parse():
     opts,args = optParser.parse_args()
 
     p = parser.HTMLParser()
-    f = open(args[0])
+    # Don't try to open args[0]. It should be possible to pass a string or file
+    # reference. HTMLInputStream takes care of the difference.
+    f = args[0]
     if opts.profile:
         import hotshot
         import hotshot.stats
         prof = hotshot.Profile('stats.prof')
         prof.runcall(p.parse, f, False)
         prof.close()
-        #XXX - We should use a temp file here
+        # XXX - We should use a temp file here
         stats = hotshot.stats.load('stats.prof')
         stats.strip_dirs()
         stats.sort_stats('time')
