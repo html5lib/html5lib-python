@@ -53,9 +53,10 @@ class HTMLParser(object):
         """Stream should be a stream of unicode bytes. Character encoding
         issues have not yet been dealt with."""
 
-        #XXX - need to ensure the tree is reset here
+        # XXX - need to ensure the tree is reset here
+        # Why? -- anne
 
-        # We don't actually support inner HTML yet but this should allow
+        # We don't actually support innerHTML yet but this should allow
         # assertations
         self.innerHTML = innerHTML
 
@@ -1559,12 +1560,12 @@ class AfterFramesetPhase(Phase):
             ("html", self.startTagHtml),
             ("noframes", self.startTagNoframes)
         ])
-        self.startTagHandler.default = self.tagOther
+        self.startTagHandler.default = self.startTagOther
 
         self.endTagHandler = utils.MethodDispatcher([
             ("html", self.endTagHtml)
         ])
-        self.endTagHandler.default = self.tagOther
+        self.endTagHandler.default = self.endTagOther
 
     def processCharacters(self, data):
         self.parser.parseError()
@@ -1572,11 +1573,14 @@ class AfterFramesetPhase(Phase):
     def startTagNoframes(self, name, attributes):
         self.parser.phases["inBody"].processStartTag(name, attributes)
 
+    def startTagOther(self, name, attributes):
+        self.parser.parseError()
+
     def endTagHtml(self, name):
         self.parser.lastPhase = self.parser.phase
         self.parser.phase = self.parser.phases["trailingEnd"]
 
-    def tagOther(self, name, attributes={}):
+    def endTagOther(self, name):
         self.parser.parseError()
 
 
