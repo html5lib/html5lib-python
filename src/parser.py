@@ -1541,13 +1541,16 @@ class InFramesetPhase(Phase):
             ("frame", self.startTagFrame),
             ("noframes", self.startTagNoframes)
         ])
-        self.startTagHandler.default = self.tagOther
+        self.startTagHandler.default = self.startTagOther
 
-        self.endTagHandler = utils.MethodDispatcher([("frameset", self.endTagFrameset)])
-        self.endTagHandler.default = self.tagOther
+        self.endTagHandler = utils.MethodDispatcher([
+            ("frameset", self.endTagFrameset)
+        ])
+        self.endTagHandler.default = self.endTagOther
 
     def processCharacters(self, data):
-        self.parser.parseError()
+        self.parser.parseError("Unepxected characters in the frameset phase. "
+          "Characters ignored.")
 
     def startTagFrameset(self, name, attributes):
         self.tree.insertElement(name, attributes)
@@ -1559,18 +1562,26 @@ class InFramesetPhase(Phase):
     def startTagNoframes(self, name, attributes):
         self.parser.phases["inBody"].processStartTag(name, attributes)
 
+    def startTagOther(self, name, attributes):
+        self.parser.parseError("Unexpected start tag token (" + name +\
+          ") in the frameset phase.")
+
     def endTagFrameset(self, name):
         if self.tree.openElements[-1].name == "html":
             # innerHTML case
-            self.parser.parseError()
+            self.parser.parseError("Unexpected end tag token (frameset) in the"
+              "frameset phase (innerHTML)")
         else:
             self.tree.openElements.pop()
-        if not self.parser.innerHTML and \
-          self.tree.openElements[-1].name == "frameset":
+        if not self.parser.innerHTML and\
+          self.tree.openElements[-1].name != "frameset":
+            # If we're not in innerHTML mode and the the current node is not a
+            # "frameset" element (anymore) then switch.
             self.parser.phase = self.parser.phases["afterFrameset"]
 
-    def tagOther(self, name, attributes={}):
-        self.parser.parseError()
+    def endTagOther(self, name):
+        self.parser.parseError("Unexpected end tag token (" + name +
+          ") in the frameset phase.")
 
 
 class AfterFramesetPhase(Phase):

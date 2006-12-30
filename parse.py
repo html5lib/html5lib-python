@@ -51,7 +51,7 @@ def parse():
     else:
         document = p.parse(f)
         print convertTreeDump(document.printTree())
-        print "\nParse errors:", len(p.errors)
+        print "\nParse errors:\n" + "\n".join(p.errors)
 
 def getOptParser():
     parser = OptionParser(usage=__doc__)
