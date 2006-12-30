@@ -72,7 +72,6 @@ class Element(object):
         return element
 
 class Comment(Element):
-
     def __init__(self, data):
         self._element = ElementTree.Comment(data)
         self.name = None
@@ -87,11 +86,37 @@ class Comment(Element):
     data = property(_getData, _setData)
 
 class DocumentType(Element):
-    pass
+    def __init__(self, name):
+        self._element = ElementTree.Element(DocumentType)
+        self.text = "html"
 
 class Document(Element):
     def __init__(self):
         Element.__init__(self, "")
+
+def testSerializer(element):
+    print type(ElementTree.Comment)
+    rv = []
+    rv.append("#document")
+    def serializeElement(element, indent=0):
+        if element.tag is DocumentType:
+            rv.append("|%s<!DOCTYPE %s>"%(' '*indent, element.text))
+        elif element.tag is ElementTree.Comment:
+            rv.append("|%s<!-- %s -->"%(' '*indent, element.text))
+        else:
+            rv.append("|%s<%s>"%(' '*indent, element.tag))
+            if hasattr(element, "attrib"):
+                for name, value in element.attrib.iteritems():
+                    rv.append('|%s%s="%s"' % (' '*(indent+2), name, value))
+            if element.text:
+                rv.append("|%s\"%s\"" %(' '*(indent+2), element.text))
+        indent += 2
+        for child in element.getchildren():
+            serializeElement(child, indent)
+        if element.tail:
+            rv.append("|%s\"%s\"" %(' '*(indent-2), element.tail))
+    serializeElement(element)
+    return "\n".join(rv)
 
 class TreeBuilder(base.TreeBuilder):
     documentClass = Document
@@ -100,7 +125,7 @@ class TreeBuilder(base.TreeBuilder):
     commentClass = Comment
 
     def testSerializer(self, element):
-        ElementTree.tostring(element)
+        return testSerializer(element)
 
     def getDocument(self):
-        return self.document.getchildren()[0]._element
+        return self.document._element.getchildren()[0]
