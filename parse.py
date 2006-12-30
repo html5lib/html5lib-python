@@ -51,18 +51,19 @@ def parse():
     else:
         document = p.parse(f)
         print convertTreeDump(document.printTree())
+        print "\nParse errors:", len(p.errors)
 
 def getOptParser():
     parser = OptionParser(usage=__doc__)
-    
+
     parser.add_option("-p", "--profile", action="store_true", default=False,
                       dest="profile", help="Use the hotdhot profiler to "
                       "produce a detailed log of the run")
-    
+
     parser.add_option("-t", "--time",
-                      action="store_true", default=False, dest="time", 
+                      action="store_true", default=False, dest="time",
                       help="Time the run using time.time (may not be accurate on all platforms, especially for short runs)")
-    
+
     return parser
 
 if __name__ == "__main__":

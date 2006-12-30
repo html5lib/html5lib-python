@@ -35,6 +35,7 @@ class HTMLParser(object):
     def __init__(self, strict = False, tree=DOMlite.TreeBuilder):
         # Raise an exception on the first error encountered
         self.strict = strict
+        self.errors = []
 
         self.tree = tree()
 
@@ -87,7 +88,7 @@ class HTMLParser(object):
             elif type == "EndTag":
                 method(token["name"])
             elif type == "ParseError":
-                self.parseError()
+                self.parseError(token["data"])
             else:
                 self.atheistParseError()
 
@@ -96,7 +97,8 @@ class HTMLParser(object):
 
         return self.tree.getDocument()
 
-    def parseError(self):
+    def parseError(self, data=None):
+        self.errors.append(data)
         if self.strict:
             raise ParseError
 
