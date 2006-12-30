@@ -1583,8 +1583,7 @@ class InFramesetPhase(Phase):
             self.parser.phase = self.parser.phases["afterFrameset"]
 
     def endTagNoframes(self, name):
-        # XXX likely to be an innerHTML case here too
-        self.tree.openElements.pop()
+        self.parser.phases["inBody"].processEndTag(name)
 
     def endTagOther(self, name):
         self.parser.parseError("Unexpected end tag token (" + name +

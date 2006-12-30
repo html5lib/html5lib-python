@@ -384,8 +384,8 @@ class HTMLTokenizer(object):
         return True
 
     def closeTagOpenState(self):
-        if (self.contentModelFlag in
-          (contentModelFlags["RCDATA"], contentModelFlags["CDATA"])):
+        if self.contentModelFlag in (contentModelFlags["RCDATA"],\
+          contentModelFlags["CDATA"]):
             charStack = []
 
             # So far we know that "</" has been consumed. We now need to know
