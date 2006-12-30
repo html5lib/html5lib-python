@@ -194,17 +194,14 @@ class HTMLInputStream(object):
         return "".join(charStack)
 
 if __name__ == "__main__":
-    try:
-        stream = HTMLInputStream("tests/utf-8-bom.html")
+    stream = HTMLInputStream("../tests/utf-8-bom.html")
 
-        c = stream.readChar()
-        while c:
-            line, col = stream.position()
-            if c == u"\n":
-                print "Line %s, Column %s: Line Feed" % (line, col)
-            else:
-                print "Line %s, Column %s: %s" % (line, col, c.encode('utf-8'))
-            c = stream.readChar()
-        print "EOF"
-    except IOError:
-        print "The file does not exist."
+    c = stream.char()
+    while c:
+        line, col = stream.position()
+        if c == u"\n":
+            print "Line %s, Column %s: Line Feed" % (line, col)
+        else:
+            print "Line %s, Column %s: %s" % (line, col, c.encode('utf-8'))
+        c = stream.char()
+    print "EOF"
