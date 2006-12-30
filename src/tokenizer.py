@@ -274,7 +274,6 @@ class HTMLTokenizer(object):
 
         # Add token to the queue to be yielded
         self.tokenQueue.append(token)
-
         self.state = self.states["data"]
 
     def emitCurrentTokenWithParseError(self, data=None):
@@ -596,13 +595,14 @@ class HTMLTokenizer(object):
     def bogusCommentState(self):
         # Make a new comment token and give it as value all the characters
         # until the first > or EOF (charsUntil checks for EOF automatically)
-        self.currentToken =\
-          {"type": "Comment", "data": self.stream.charsUntil((u">"))}
-        self.emitCurrentToken()
+        # and emit it.
+        self.tokenQueue.append(
+          {"type": "Comment", "data": self.stream.charsUntil((u">"))})
 
         # Eat the character directly after the bogus comment which is either a
         # ">" or an EOF.
         self.stream.char()
+        self.state = self.states["data"]
         return True
 
     def markupDeclarationOpenState(self):
@@ -631,6 +631,7 @@ class HTMLTokenizer(object):
         if data == u"-":
             self.state = self.states["commentDash"]
         elif data == EOF:
+            # XXX EMIT
             self.emitCurrentTokenWithParseError()
         else:
             self.currentToken["data"] += data + self.stream.charsUntil(u"-")
@@ -641,6 +642,7 @@ class HTMLTokenizer(object):
         if data == u"-":
             self.state = self.states["commentEnd"]
         elif data == EOF:
+            # XXX EMIT
             self.emitCurrentTokenWithParseError()
         else:
             self.currentToken["data"] += u"-" + data +\
@@ -654,12 +656,14 @@ class HTMLTokenizer(object):
     def commentEndState(self):
         data = self.stream.char()
         if data == u">":
+            # XXX EMIT
             self.emitCurrentToken()
         elif data == u"-":
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Unexpected '--' sequence found in comment.")})
             self.currentToken["data"] += data
         elif data == EOF:
+            # XXX EMIT
             self.emitCurrentTokenWithParseError()
         else:
             # XXX
@@ -690,9 +694,11 @@ class HTMLTokenizer(object):
         elif data == u">":
             # Character needs to be consumed per the specification so don't
             # invoke emitCurrentTokenWithParseError with "data" as argument.
+            # XXX EMIT
             self.emitCurrentTokenWithParseError()
         elif data == EOF:
-            self.emitCurrentTokenWithParseError(data)
+            # XXX EMIT
+            self.emitCurrentTokenWithParseError()
         else:
             self.currentToken["name"] = data
             self.state = self.states["doctypeName"]
@@ -705,9 +711,11 @@ class HTMLTokenizer(object):
             self.state = self.states["afterDoctypeName"]
             needsDoctypeCheck = True
         elif data == u">":
-            self.emitCurrentToken()
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.states["data"]
         elif data == EOF:
-            self.emitCurrentTokenWithParseError(data)
+            # XXX EMIT
+            self.emitCurrentTokenWithParseError()
         else:
             # We can't just uppercase everything that arrives here. For
             # instance, non-ASCII characters.
@@ -727,9 +735,11 @@ class HTMLTokenizer(object):
         if data in spaceCharacters:
             pass
         elif data == u">":
-            self.emitCurrentToken()
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.states["data"]
         elif data == EOF:
             self.currentToken["data"] = True
+            # XXX EMIT
             self.emitCurrentTokenWithParseError(data)
         else:
             self.tokenQueue.append({"type": "ParseError", "data":
@@ -741,8 +751,10 @@ class HTMLTokenizer(object):
     def bogusDoctypeState(self):
         data = self.stream.char()
         if data == u">":
-            self.emitCurrentToken()
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.states["data"]
         elif data == EOF:
+            # XXX EMIT
             self.emitCurrentTokenWithParseError(data)
         else:
             pass
