@@ -1,3 +1,16 @@
+# Differences from the current specification (23 December 2006) are as follows:
+# * Phases and insertion modes are one concept in parser.py.
+# * EOF handling is slightly different to make sure <html>, <head> and <body>
+#   always exist.
+# * We also deal with content when there's no DOCTYPE.
+# It is expected that the specification will catch up with us in due course ;-)
+#
+# It should be trivial to add the following cases. However, we should probably
+# also look into comment handling and such then...
+# * A <p> element end tag creates an empty <p> element when there's no <p>
+#   element in scope.
+# * A <br> element end tag creates an empty <br> element.
+
 try:
     frozenset
 except NameError:
