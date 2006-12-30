@@ -119,3 +119,5 @@ class TreeBuilder(base.TreeBuilder):
     elementClass = Element
     commentClass = CommentNode
     
+    def testSerializer(self, node):
+        node.printTree()

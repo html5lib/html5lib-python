@@ -7,9 +7,15 @@ import base
 
 class Element(object):
     def __init__(self, name):
-        self._element = ElementTree.Element()
+        self._element = ElementTree.Element(name)
         self.name = name
         self.parent = None
+        self._flags = []
+
+        #Set the element text and tail to the empty string rather than None
+        #XXX - is this desirable or should we do it on a case by case basis?
+        self._element.text = ""
+        self._element.tail = ""
 
     def _setName(self, name):
         self._element.tag = name
@@ -28,7 +34,7 @@ class Element(object):
         for key in self._element.attrib.keys():
             del self._element.attrib[key]
         for key, value in attributes.iteritems():
-            self._elements.set(key, value)
+            self._element.set(key, value)
 
     attributes = property(_getAttributes, _setAttributes)
 
@@ -37,7 +43,7 @@ class Element(object):
         node.parent = self
 
     def insertBefore(self, node, refNode):
-        index = self._element.getChildren().index(refNode._element)
+        index = self._element.getchildren().index(refNode._element)
         self._element.insert(index, node._element)
         node.parent = self
 
@@ -45,7 +51,7 @@ class Element(object):
         self._element.remove(node._element)
         node.parent=None
 
-    def insertText(self, text, insertBefore):
+    def insertText(self, data, insertBefore=None):
         if not(len(self._element)):
             self._element.text += data
         elif insertBefore is None:
@@ -53,7 +59,7 @@ class Element(object):
             self._element[-1].tail += data
         else:
             #Insert the text before the specified node
-            children = self._element.getChildren()
+            children = self._element.getchildren()
             index = children.index(insertBefore._element)
             if index > 0:
                 self._element[index-1].tail += data
@@ -83,11 +89,18 @@ class Comment(Element):
 class DocumentType(Element):
     pass
 
+class Document(Element):
+    def __init__(self):
+        Element.__init__(self, "")
+
 class TreeBuilder(base.TreeBuilder):
-    documentClass = Element
+    documentClass = Document
     doctypeClass = DocumentType
     elementClass = Element
     commentClass = Comment
 
+    def testSerializer(self, element):
+        ElementTree.tostring(element)
+
     def getDocument(self):
-        return self.document._element
+        return self.document.getchildren()[0]._element

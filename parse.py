@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """usage: %prog [options] filename
 
 Parse a document to a DOMlite tree, with optional profiling
@@ -7,7 +8,7 @@ import sys
 import os
 from optparse import OptionParser
 
-from src import parser
+from src import parser, treebuilders
 
 def convertTreeDump(treedump):
     """convert the output of str(document) to something more readable
@@ -25,10 +26,23 @@ def parse():
     optParser = getOptParser()
     opts,args = optParser.parse_args()
 
-    p = parser.HTMLParser()
-    # Don't try to open args[0]. It should be possible to pass a string or file
-    # reference. HTMLInputStream takes care of the difference.
-    f = args[0]
+    try:
+        f = args[-1]
+    except IndexError:
+        print "No filename provided. Use -h for help"
+        sys.exit(1)
+    if hasattr(opts, "treebuilder"):
+        try:
+            #This isn't a great way to do this
+            exec("import treebuilders.%s")%opts.treebuilder.split(".")[0]
+            treebuilder = eval("treebuilders.%s"%opts.treebuilder)
+        except NameError:
+            print "Treebuilder %s not found"%opts.treebuilder 
+            raise
+    else:
+        treebuilder = treebuilders.DOMlite.TreeBuilder
+    p = parser.HTMLParser(tree=treebuilder)
+
     if opts.profile:
         import hotshot
         import hotshot.stats
@@ -45,24 +59,27 @@ def parse():
         t0 = time.time()
         document = p.parse(f)
         t1 = time.time()
-        print convertTreeDump(document.printTree())
+        print p.tree.testSerializer(document)
         t2 = time.time()
         print "\n\nRun took: %fs (plus %fs to print the output)"%(t1-t0, t2-t1)
     else:
         document = p.parse(f)
-        print convertTreeDump(document.printTree())
+        print p.tree.testSerializer(document)
         print "\nParse errors:\n" + "\n".join(p.errors)
 
 def getOptParser():
     parser = OptionParser(usage=__doc__)
 
     parser.add_option("-p", "--profile", action="store_true", default=False,
-                      dest="profile", help="Use the hotdhot profiler to "
+                      dest="profile", help="Use the hotshot profiler to "
                       "produce a detailed log of the run")
 
     parser.add_option("-t", "--time",
                       action="store_true", default=False, dest="time",
                       help="Time the run using time.time (may not be accurate on all platforms, especially for short runs)")
+
+    parser.add_option("-b", "--treebuilder", action="store", type="string",
+                      dest="treebuilder")
 
     return parser
 
