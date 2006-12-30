@@ -315,7 +315,8 @@ class BeforeHeadPhase(Phase):
         self.parser.phase.processEndTag(name)
 
     def endTagOther(self, name):
-        self.parser.parseError()
+        self.parser.parseError("Unexpected end tag (" + name +\
+          ") after the root element.")
 
 class InHeadPhase(Phase):
     def __init__(self, parser, tree):
