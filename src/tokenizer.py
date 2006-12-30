@@ -4,6 +4,8 @@ except NameError:
     # Import from the sets module for python 2.3
     from sets import Set as set
     from sets import ImmutableSet as frozenset
+import gettext
+_ = gettext.gettext
 
 from constants import contentModelFlags, spaceCharacters
 from constants import entitiesWindows1252, entities, voidElements
@@ -96,9 +98,11 @@ class HTMLTokenizer(object):
         data = self.stream.char()
 
         if self.currentToken["name"] in voidElements and data == u">":
-            self.tokenQueue.append({"type": "AtheistParseError"})
+            self.tokenQueue.append({"type": "AtheistParseError", "data":
+              _("Solidus (/) incorrectly placed in tag (atheists only).")})
         else:
-            self.tokenQueue.append({"type": "ParseError"})
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Solidus (/) incorrectly placed in tag.")})
 
         # The character we just consumed need to be put back on the stack so it
         # doesn't get lost...
@@ -132,6 +136,9 @@ class HTMLTokenizer(object):
         # If the integer is between 127 and 160 (so 128 and bigger and 159 and
         # smaller) we need to do the "windows trick".
         if 127 < charAsInt < 160:
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Entity used with illegal number (windows-1252 reference).")})
+
             charAsInt = entitiesWindows1252[charAsInt - 128]
 
         # 0 is not a good number.
@@ -144,12 +151,14 @@ class HTMLTokenizer(object):
             # according to hsivonen. Also, unichr has a limitation of 65535
             char = unichr(charAsInt)
         except:
-            self.tokenQueue.append({"type": "ParseError"})
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Numeric entity couldn't be converted to character.")})
 
         # Discard the ; if present. Otherwise, put it back on the queue and
         # invoke parseError on parser.
         if c != u";":
-            self.tokenQueue.append({"type": "ParseError"})
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Numeric entity didn't end with ';'.")})
             self.stream.queue.append(c)
 
         return char
@@ -165,7 +174,8 @@ class HTMLTokenizer(object):
                 # back in the queue
                 charStack = charStack[:charStack.index(EOF)]
                 self.stream.queue.extend(charStack)
-                self.tokenQueue.append({"type": "ParseError"})
+                self.tokenQueue.append({"type": "ParseError", "data":
+                  _("Numeric entity expected. Got end of file instead.")})
             else:
                 if charStack[1].lower() == u"x" \
                   and charStack[2] in hexDigits:
@@ -179,10 +189,12 @@ class HTMLTokenizer(object):
                 else:
                     # No number entity detected.
                     self.stream.queue.extend(charStack)
-                    self.tokenQueue.append({"type": "ParseError"})
+                    self.tokenQueue.append({"type": "ParseError", "data":
+                      _("Numeric entity expected but none found.")})
         # Break out if we reach the end of the file
         elif charStack[0] == EOF:
-            self.tokenQueue.append({"type": "ParseError"})
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Entity expected. Got end of file instead.")})
         else:
             # At this point in the process might have named entity. Entities
             # are stored in the global variable "entities".
@@ -195,8 +207,8 @@ class HTMLTokenizer(object):
             def entitiesStartingWith(name):
                 return [e for e in filteredEntityList if e.startswith(name)]
 
-            while (charStack[-1] != EOF and
-                   entitiesStartingWith("".join(charStack))):
+            while charStack[-1] != EOF and\
+              entitiesStartingWith("".join(charStack)):
                 charStack.append(self.stream.char())
 
             # At this point we have a string that starts with some characters
@@ -216,10 +228,12 @@ class HTMLTokenizer(object):
                 # Check whether or not the last character returned can be
                 # discarded or needs to be put back.
                 if not charStack[-1] == ";":
-                    self.tokenQueue.append({"type": "ParseError"})
+                    self.tokenQueue.append({"type": "ParseError", "data":
+                      _("Named entity did not end in ';'.")})
                     self.stream.queue.extend(charStack[entityLength:])
             else:
-                self.tokenQueue.append({"type": "ParseError"})
+                self.tokenQueue.append({"type": "ParseError", "data":
+                  _("Named entity expected. Got none.")})
                 self.stream.queue.extend(charStack)
         return char
 
@@ -254,7 +268,8 @@ class HTMLTokenizer(object):
         # If an end tag has attributes it's a parse error and they should
         # be removed
         elif token["type"] == "EndTag" and token["data"]:
-            self.tokenQueue.append({"type": "ParseError"})
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("End tag contains unexpected attributes.")})
             token["data"] = {}
 
         # Add token to the queue to be yielded
@@ -263,13 +278,15 @@ class HTMLTokenizer(object):
         self.state = self.states["data"]
 
     def emitCurrentTokenWithParseError(self, data=None):
+        # XXX if we want useful error messages we need to inline this method
         """This method is equivalent to emitCurrentToken (well, it invokes it)
         except that it also puts "data" back on the characters queue if a data
         argument is provided and it throws a parse error."""
         if data:
             self.stream.queue.append(data)
+        self.tokenQueue.append({"type": "ParseError", "data":
+          _("XXX Something is wrong with the emitted token.")})
         self.emitCurrentToken()
-        self.tokenQueue.append({"type": "ParseError"})
 
     def attributeValueQuotedStateHandler(self, quoteType):
         data = self.stream.char()
@@ -334,15 +351,24 @@ class HTMLTokenizer(object):
                   {"type": "StartTag", "name": data.lower(), "data": []}
                 self.state = self.states["tagName"]
             elif data == u">":
-                self.tokenQueue.append({"type": "ParseError"})
+                # XXX In theory it could be something besides a tag name. But
+                # do we really care?
+                self.tokenQueue.append({"type": "ParseError", "data":
+                  _("Expected tag name. Got '>' instead.")})
                 self.tokenQueue.append({"type": "Characters", "data": u"<>"})
                 self.state = self.states["data"]
             elif data == u"?":
-                self.tokenQueue.append({"type": "ParseError"})
+                # XXX In theory it could be something besides a tag name. But
+                # do we really care?
+                self.tokenQueue.append({"type": "ParseError", "data":
+                  _("Expected tag name. Got '?' instead (HTML doesn't support processing instructions).")})
                 self.stream.queue.append(data)
                 self.state = self.states["bogusComment"]
             else:
-                self.tokenQueue.append({"type": "ParseError"})
+                # XXX
+                self.tokenQueue.append({"type": "ParseError", "data":
+                  _("Expected tag name. Got something else instead")})
+                # XXX can't we do "<" + data here?
                 self.tokenQueue.append({"type": "Characters", "data": u"<"})
                 self.stream.queue.append(data)
                 self.state = self.states["data"]
@@ -386,7 +412,8 @@ class HTMLTokenizer(object):
                 # emitting the end tag token.
                 self.contentModelFlag = contentModelFlags["PCDATA"]
             else:
-                self.tokenQueue.append({"type": "ParseError"})
+                self.tokenQueue.append({"type": "ParseError", "data":
+                  _("Expected closing tag after seeing '</'. None found.")})
                 self.tokenQueue.append({"type": "Characters", "data": u"</"})
                 self.state = self.states["data"]
 
@@ -401,14 +428,18 @@ class HTMLTokenizer(object):
                   {"type": "EndTag", "name": data.lower(), "data": []}
                 self.state = self.states["tagName"]
             elif data == u">":
-                self.tokenQueue.append({"type": "ParseError"})
+                self.tokenQueue.append({"type": "ParseError", "data":
+                  _("Expected closing tag. Got '>' instead. Ignoring '</>'.")})
                 self.state = self.states["data"]
             elif data == EOF:
-                self.tokenQueue.append({"type": "ParseError"})
+                self.tokenQueue.append({"type": "ParseError", "data":
+                  _("Expected closing tag. Unexpected end of file.")})
                 self.tokenQueue.append({"type": "Characters", "data": u"</"})
                 self.state = self.states["data"]
             else:
-                self.tokenQueue.append({"type": "ParseError"})
+                # XXX data can be '...
+                self.tokenQueue.append({"type": "ParseError", "data":
+                  _("Expected closing tag. Unexpected character '" + data + "' found.")})
                 self.stream.queue.append(data)
                 self.state = self.states["bogusComment"]
         return True
@@ -488,7 +519,8 @@ class HTMLTokenizer(object):
             # to attributes, but we do want to report the parse error in time.
             for name, value in self.currentToken["data"][:-1]:
                 if self.currentToken["data"][-1][0] == name:
-                    self.tokenQueue.append({"type": "ParseError"})
+                    self.tokenQueue.append({"type": "ParseError", "data":
+                      _("Dropped duplicate attribute on tag.")})
             # XXX Fix for above XXX
             if data == u">":
                 self.emitCurrentToken()
@@ -588,7 +620,8 @@ class HTMLTokenizer(object):
                   {"type": "Doctype", "name": "", "data": True}
                 self.state = self.states["doctype"]
             else:
-                self.tokenQueue.append({"type": "ParseError"})
+                self.tokenQueue.append({"type": "ParseError", "data":
+                  _("Expected '--' or 'DOCTYPE'. Not found.")})
                 self.stream.queue.extend(charStack)
                 self.state = self.states["bogusComment"]
         return True
@@ -623,12 +656,15 @@ class HTMLTokenizer(object):
         if data == u">":
             self.emitCurrentToken()
         elif data == u"-":
-            self.tokenQueue.append({"type": "ParseError"})
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected '--' sequence found in comment.")})
             self.currentToken["data"] += data
         elif data == EOF:
             self.emitCurrentTokenWithParseError()
         else:
-            self.tokenQueue.append({"type": "ParseError"})
+            # XXX
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected character in comment found.")})
             self.currentToken["data"] += u"--" + data
             self.state = self.states["comment"]
         return True
@@ -638,7 +674,8 @@ class HTMLTokenizer(object):
         if data in spaceCharacters:
             self.state = self.states["beforeDoctypeName"]
         else:
-            self.tokenQueue.append({"type": "ParseError"})
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("No space after literal string 'DOCTYPE'.")})
             self.stream.queue.append(data)
             self.state = self.states["beforeDoctypeName"]
         return True
@@ -695,7 +732,8 @@ class HTMLTokenizer(object):
             self.currentToken["data"] = True
             self.emitCurrentTokenWithParseError(data)
         else:
-            self.tokenQueue.append({"type": "ParseError"})
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Expected space or '>'. Got '" + data + "'")})
             self.currentToken["data"] = True
             self.state = self.states["bogusDoctype"]
         return True
