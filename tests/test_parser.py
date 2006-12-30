@@ -55,8 +55,8 @@ class TestCase(unittest.TestCase):
           convertTreeDump(document.printTree())])
         self.assertEquals(output, convertTreeDump(document.printTree()),
           errorMsg)
-        errorMsg2 = "\n".join(["\n\nInput errors:  " + str(len(errors)),
-          "Actual errors: " + str(len(p.errors))])
+        errorMsg2 = "\n".join(["\n\nInput errors:\n" + "\n".join(errors),
+          "Actual errors:\n" + "\n".join(p.errors)])
         self.assertEquals(len(p.errors), len(errors), errorMsg2)
 
 def test_parser():

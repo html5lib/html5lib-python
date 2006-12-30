@@ -97,7 +97,8 @@ class HTMLParser(object):
 
         return self.tree.getDocument()
 
-    def parseError(self, data=None):
+    def parseError(self, data="XXX ERROR MESSAGE NEEDED"):
+        # The idea is to make data mandatory.
         self.errors.append(data)
         if self.strict:
             raise ParseError
@@ -1544,7 +1545,8 @@ class InFramesetPhase(Phase):
         self.startTagHandler.default = self.startTagOther
 
         self.endTagHandler = utils.MethodDispatcher([
-            ("frameset", self.endTagFrameset)
+            ("frameset", self.endTagFrameset),
+            ("noframes", self.endTagNoframes)
         ])
         self.endTagHandler.default = self.endTagOther
 
@@ -1578,6 +1580,10 @@ class InFramesetPhase(Phase):
             # If we're not in innerHTML mode and the the current node is not a
             # "frameset" element (anymore) then switch.
             self.parser.phase = self.parser.phases["afterFrameset"]
+
+    def endTagNoframes(self, name):
+        # XXX likely to be an innerHTML case here too
+        self.tree.openElements.pop()
 
     def endTagOther(self, name):
         self.parser.parseError("Unexpected end tag token (" + name +
