@@ -229,7 +229,7 @@ class HTMLTokenizer(object):
                 # discarded or needs to be put back.
                 if not charStack[-1] == ";":
                     self.tokenQueue.append({"type": "ParseError", "data":
-                      _("Named entity did not end in ';'.")})
+                      _("Named entity did not  ';'.")})
                     self.stream.queue.extend(charStack[entityLength:])
             else:
                 self.tokenQueue.append({"type": "ParseError", "data":
@@ -660,7 +660,7 @@ class HTMLTokenizer(object):
             self.emitCurrentToken()
         elif data == u"-":
             self.tokenQueue.append({"type": "ParseError", "data":
-              _("Unexpected '--' sequence found in comment.")})
+              _("Unexpected '-' after '--' found in comment.")})
             self.currentToken["data"] += data
         elif data == EOF:
             # XXX EMIT
