@@ -174,10 +174,11 @@ class Phase(object):
 
     def processEOF(self):
         self.tree.generateImpliedEndTags()
-        if self.parser.innerHTML == False\
-          or len(self.tree.openElements) > 1:
+        if self.parser.innerHTML == True and len(self.tree.openElements) > 1:
             # XXX No need to check for "body" because our EOF handling is not
             # per specification. (Specification needs an update.)
+            #
+            # XXX Need to check this more carefully in the future.
             self.parser.parseError()
         # Stop parsing
 
@@ -212,6 +213,7 @@ class InitialPhase(Phase):
     # "quirks mode". It is expected that a future version of HTML5 will defin
     # this.
     def processEOF(self):
+        self.parser.parseError("No DOCTYPE seen.")
         self.parser.phase = self.parser.phases["rootElement"]
         self.parser.phase.processEOF()
 
@@ -219,6 +221,8 @@ class InitialPhase(Phase):
         self.tree.insertComment(data, self.tree.document)
 
     def processDoctype(self, name, error):
+        if error:
+            self.parser.parseError("DOCTYPE is in error.")
         self.tree.insertDoctype(name)
         self.parser.phase = self.parser.phases["rootElement"]
 
@@ -226,15 +230,17 @@ class InitialPhase(Phase):
         self.tree.insertText(data, self.tree.document)
 
     def processCharacters(self, data):
-        self.parser.parseError()
+        self.parser.parseError("No DOCTYPE seen.")
         self.parser.phase = self.parser.phases["rootElement"]
         self.parser.phase.processCharacters(data)
 
     def processStartTag(self, name, attributes):
+        self.parser.parseError("No DOCTYPE seen.")
         self.parser.phase = self.parser.phases["rootElement"]
         self.parser.phase.processStartTag(name, attributes)
 
     def processEndTag(self, name):
+        self.parser.parseError("No DOCTYPE seen.")
         self.parser.phase = self.parser.phases["rootElement"]
         self.parser.phase.processEndTag(name)
 
