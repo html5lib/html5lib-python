@@ -144,7 +144,7 @@ class HTMLTokenizer(object):
             # according to hsivonen. Also, unichr has a limitation of 65535
             char = unichr(charAsInt)
         except:
-            pass
+            self.tokenQueue.append({"type": "ParseError"})
 
         # Discard the ; if present. Otherwise, put it back on the queue and
         # invoke parseError on parser.
