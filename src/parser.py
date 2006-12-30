@@ -209,9 +209,6 @@ class InitialPhase(Phase):
     # covered in the specification. The error handling is typically known as
     # "quirks mode". It is expected that a future version of HTML5 will defin
     # this.
-    #
-    # AT Given that. I think it should be possible to merge this phase with the
-    # root element phase in due course.
     def processEOF(self):
         self.parser.phase = self.parser.phases["rootElement"]
         self.parser.phase.processEOF()
