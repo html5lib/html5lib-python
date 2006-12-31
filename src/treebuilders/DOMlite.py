@@ -120,4 +120,4 @@ class TreeBuilder(base.TreeBuilder):
     commentClass = CommentNode
     
     def testSerializer(self, node):
-        node.printTree()
+        return node.printTree()

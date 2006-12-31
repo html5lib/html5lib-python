@@ -10,6 +10,7 @@ class Element(object):
         self._element = ElementTree.Element(name)
         self.name = name
         self.parent = None
+        self._childNodes = []
         self._flags = []
 
         #Set the element text and tail to the empty string rather than None
@@ -38,7 +39,19 @@ class Element(object):
 
     attributes = property(_getAttributes, _setAttributes)
 
+    def _getChildNodes(self):
+        return self._childNodes
+
+    def _setChildNodes(self, value):
+        del self._element[:]
+        self._childNodes = []
+        for element in value:
+            self.insertChild(element)
+
+    childNodes = property(_getChildNodes, _setChildNodes)
+
     def appendChild(self, node):
+        self._childNodes.append(node)
         self._element.append(node._element)
         node.parent = self
 
@@ -64,7 +77,7 @@ class Element(object):
             if index > 0:
                 self._element[index-1].tail += data
             else:
-                self.text += data
+                self._element.text += data
 
     def cloneNode(self):
         element = Element(self.name)
@@ -88,14 +101,13 @@ class Comment(Element):
 class DocumentType(Element):
     def __init__(self, name):
         self._element = ElementTree.Element(DocumentType)
-        self.text = "html"
+        self._element.text = "html"
 
 class Document(Element):
     def __init__(self):
         Element.__init__(self, "")
 
 def testSerializer(element):
-    print type(ElementTree.Comment)
     rv = []
     rv.append("#document")
     def serializeElement(element, indent=0):
@@ -115,7 +127,7 @@ def testSerializer(element):
             serializeElement(child, indent)
         if element.tail:
             rv.append("|%s\"%s\"" %(' '*(indent-2), element.tail))
-    serializeElement(element)
+    serializeElement(element, 2)
     return "\n".join(rv)
 
 class TreeBuilder(base.TreeBuilder):

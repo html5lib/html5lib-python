@@ -897,11 +897,12 @@ class InBodyPhase(Phase):
             clone = afeElement.cloneNode()
 
             # Step 10
-            clone.childNodes.extend(furthestBlock.childNodes)
+            for furthestBlockChild in furthestBlock.childNodes:
+                clone.appendChild(furthestBlockChild)
             furthestBlock.childNodes = []
 
             # Step 11
-            furthestBlock.childNodes.append(clone)
+            furthestBlock.appendChild(clone)
 
             # Step 12
             self.tree.activeFormattingElements.remove(afeElement)
