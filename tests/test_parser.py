@@ -5,6 +5,13 @@ import StringIO
 import unittest
 import new
 
+# XXX Allow us to import the sibling module
+os.chdir(os.path.split(os.path.abspath(__file__))[0])
+sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
+
+import parser
+import treebuilders
+
 def parseTestcase(testString):
     testString = testString.split("\n")
     try:
@@ -46,18 +53,18 @@ def convertTreeDump(treedump):
 
 class TestCase(unittest.TestCase):
     def runParserTest(self, input, output, errors):
-        import parser
         #XXX - move this out into the setup function
         #concatenate all consecutive character tokens into a single token
         p = parser.HTMLParser()
         document = p.parse(StringIO.StringIO(input))
         errorMsg = "\n".join(["\n\nExpected:", output, "\nRecieved:",
-          convertTreeDump(document.printTree())])
-        self.assertEquals(output, convertTreeDump(document.printTree()),
-          errorMsg)
-        errorMsg2 = "\n".join(["\n\nInput errors:\n" + "\n".join(errors),
-          "Actual errors:\n" + "\n".join(p.errors)])
-        self.assertEquals(len(p.errors), len(errors), errorMsg2)
+          convertTreeDump(p.tree.testSerializer(document))])
+        self.assertEquals(output, 
+                          convertTreeDump(p.tree.testSerializer(document)),
+                          errorMsg)
+#         errorMsg2 = "\n".join(["\n\nInput errors:\n" + "\n".join(errors),
+#           "Actual errors:\n" + "\n".join(p.errors)])
+#         self.assertEquals(len(p.errors), len(errors), errorMsg2)
 
 def test_parser():
     for filename in glob.glob('tree-construction/*.dat'):
@@ -90,5 +97,4 @@ if __name__ == "__main__":
     # XXX Allow us to import the sibling module
     os.chdir(os.path.split(os.path.abspath(__file__))[0])
     sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
-
     main()
