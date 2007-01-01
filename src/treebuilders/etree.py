@@ -86,9 +86,8 @@ class Element(object):
 
 class Comment(Element):
     def __init__(self, data):
-        self._element = ElementTree.Comment(data)
-        self.name = None
-        self.parent = None
+        Element.__init__(self, Comment)
+        self._element.text = data
 
     def _getData(self):
         return self._element.text
@@ -114,7 +113,7 @@ def testSerializer(element):
             rv.append("|%s<!DOCTYPE %s>"%(' '*indent, element.text))
         elif element.tag is Document:
             rv.append("#document")
-        elif element.tag is ElementTree.Comment:
+        elif element.tag is Comment:
             rv.append("|%s<!-- %s -->"%(' '*indent, element.text))
         else:
             rv.append("|%s<%s>"%(' '*indent, element.tag))
@@ -142,3 +141,11 @@ class TreeBuilder(base.TreeBuilder):
 
     def getDocument(self):
         return self.document._element
+    
+    def reparentChildren(self, oldParent, newParent):
+        if newParent.childNodes:
+            newParent.childNodes[-1]._element.tail += oldParent._element.text
+        else:
+            newParent._element.text += oldParent._element.text
+        oldParent._element.text = ""
+        base.TreeBuilder.reparentChildren(self, oldParent, newParent)

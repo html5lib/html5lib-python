@@ -231,6 +231,15 @@ class TreeBuilder(object):
             # self.processEndTag(name)
             self.generateImpliedEndTags(exclude)
 
+    def reparentChildren(self, oldParent, newParent):
+        """Move all the children of oldParent to newParent. This is needed do 
+        that trees that don't store text as nodes move the text in the correct 
+        way"""
+        #XXX - should this method be made more general?
+        for child in oldParent.childNodes:
+            newParent.appendChild(child)
+        oldParent.childNodes = []
+
     def getDocument(self):
         "Return the final tree"
         return self.document

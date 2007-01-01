@@ -906,9 +906,7 @@ class InBodyPhase(Phase):
             clone = afeElement.cloneNode()
 
             # Step 10
-            for furthestBlockChild in furthestBlock.childNodes:
-                clone.appendChild(furthestBlockChild)
-            furthestBlock.childNodes = []
+            self.tree.reparentChildren(furthestBlock, clone)
 
             # Step 11
             furthestBlock.appendChild(clone)
