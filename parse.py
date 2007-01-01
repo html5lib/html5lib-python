@@ -39,6 +39,8 @@ def parse():
         except NameError:
             print "Treebuilder %s not found"%opts.treebuilder 
             raise
+        except:
+            treebuilder = treebuilders.DOMlite.TreeBuilder
     else:
         treebuilder = treebuilders.DOMlite.TreeBuilder
     p = parser.HTMLParser(tree=treebuilder)
