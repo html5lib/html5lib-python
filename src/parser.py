@@ -23,7 +23,7 @@ _ = gettext.gettext
 import tokenizer
 
 import treebuilders
-from treebuilders.base import Marker
+from treebuilders._base import Marker
 from treebuilders import simpletree
 
 import utils
