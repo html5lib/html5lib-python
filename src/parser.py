@@ -24,7 +24,7 @@ import tokenizer
 
 import treebuilders
 from treebuilders.base import Marker
-from treebuilders import DOMlite
+from treebuilders import simpletree
 
 import utils
 from constants import contentModelFlags, spaceCharacters
@@ -34,7 +34,7 @@ from constants import headingElements, tableInsertModeElements
 class HTMLParser(object):
     """Main parser class"""
 
-    def __init__(self, strict = False, tree=DOMlite.TreeBuilder):
+    def __init__(self, strict = False, tree=simpletree.TreeBuilder):
         # Raise an exception on the first error encountered
         self.strict = strict
         self.errors = []
@@ -907,7 +907,7 @@ class InBodyPhase(Phase):
             clone = afeElement.cloneNode()
 
             # Step 10
-            self.tree.reparentChildren(furthestBlock, clone)
+            furthestBlock.reparentChildren(clone)
 
             # Step 11
             furthestBlock.appendChild(clone)

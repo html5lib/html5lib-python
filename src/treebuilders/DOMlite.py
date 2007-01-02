@@ -1,7 +1,7 @@
 import _base
 
 # Really crappy basic implementation of a DOM-core like thing
-class Node(object):
+class Node(_base.Node):
     def __init__(self, name):
         self.name = name
         self.parent = None

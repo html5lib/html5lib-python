@@ -5,7 +5,7 @@ except ImportError:
 
 import _base
 
-class Element(object):
+class Element(_base.Node):
     def __init__(self, name):
         self._element = ElementTree.Element(name)
         self.name = name
@@ -17,9 +17,6 @@ class Element(object):
         #XXX - is this desirable or should we do it on a case by case basis?
         self._element.text = ""
         self._element.tail = ""
-
-    def __repr__(self):
-        return "<%s %s>" % (self.__class__, self.name)
 
     def _setName(self, name):
         self._element.tag = name
@@ -91,6 +88,14 @@ class Element(object):
         element.attributes = self.attributes
         return element
 
+    def reparentChildren(self, newParent):
+        if newParent.childNodes:
+            newParent.childNodes[-1]._element.tail += self._element.text
+        else:
+            newParent._element.text += self._element.text
+        self._element.text = ""
+        _base.Node.reparentChildren(self, newParent)
+
 class Comment(Element):
     def __init__(self, data):
         Element.__init__(self, Comment)
@@ -157,11 +162,3 @@ class TreeBuilder(_base.TreeBuilder):
 
     def getDocument(self):
         return self.document._element
-    
-    def reparentChildren(self, oldParent, newParent):
-        if newParent.childNodes:
-            newParent.childNodes[-1]._element.tail += oldParent._element.text
-        else:
-            newParent._element.text += oldParent._element.text
-        oldParent._element.text = ""
-        _base.TreeBuilder.reparentChildren(self, oldParent, newParent)
