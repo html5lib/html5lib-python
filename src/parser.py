@@ -35,11 +35,17 @@ class HTMLParser(object):
     """Main parser class"""
 
     def __init__(self, strict = False, tree=simpletree.TreeBuilder):
+        """HTML parser. Generates a tree structure from a stream of (possibly
+        malformed) HTML.  
+        strict - raise an exception when a parse error is encountered 
+        tree - a treebuilder class controlling the type of tree that will be 
+        returned (default - html5lib.simpletree.TreeBuilder)"""
+
         # Raise an exception on the first error encountered
         self.strict = strict
         self.errors = []
 
-        self.tree = tree()
+        self._treeCls = tree
 
         self.phases = {
             "initial": InitialPhase(self, self.tree),
@@ -70,7 +76,7 @@ class HTMLParser(object):
         issues have not yet been dealt with."""
 
         # XXX - need to ensure the tree is reset here
-        # Why? -- anne
+        self.tree = self._treeCls()
 
         # We don't actually support innerHTML yet but this should allow
         # assertations
