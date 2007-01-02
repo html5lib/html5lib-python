@@ -880,7 +880,8 @@ class InBodyPhase(Phase):
                     bookmark = self.tree.activeFormattingElements.\
                       index(node) + 1
                 # Step 7.5
-                if node.childNodes:
+                cite = node.parent
+                if node.hasContent():
                     clone = node.cloneNode()
                     # Replace node with clone
                     self.tree.activeFormattingElements[

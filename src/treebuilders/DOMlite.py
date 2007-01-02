@@ -59,6 +59,10 @@ class Node(object):
         newNode.value = self.value
         return newNode
 
+    def hasContent(self):
+        """Return true if the node has children or text"""
+        return bool(self.childNodes)
+
 class Document(Node):
     def __init__(self):
         Node.__init__(self, None)

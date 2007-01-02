@@ -18,6 +18,9 @@ class Element(object):
         self._element.text = ""
         self._element.tail = ""
 
+    def __repr__(self):
+        return "<%s %s>" % (self.__class__, self.name)
+
     def _setName(self, name):
         self._element.tag = name
     
@@ -49,6 +52,10 @@ class Element(object):
             self.insertChild(element)
 
     childNodes = property(_getChildNodes, _setChildNodes)
+
+    def hasContent(self):
+        """Return true if the node has children or text"""
+        return bool(self._element.text or self._element.getchildren())
 
     def appendChild(self, node):
         self._childNodes.append(node)
@@ -108,11 +115,16 @@ class Document(Element):
 
 def testSerializer(element):
     rv = []
+    finalText = None
     def serializeElement(element, indent=0):
         if element.tag is DocumentType:
             rv.append("|%s<!DOCTYPE %s>"%(' '*indent, element.text))
         elif element.tag is Document:
             rv.append("#document")
+            if element.text:
+                rv.append("|%s\"%s\""%(' '*(indent+2), element.text))
+            if element.tail:
+                finalText = element.tail
         elif element.tag is Comment:
             rv.append("|%s<!-- %s -->"%(' '*indent, element.text))
         else:
@@ -128,6 +140,10 @@ def testSerializer(element):
         if element.tail:
             rv.append("|%s\"%s\"" %(' '*(indent-2), element.tail))
     serializeElement(element, 0)
+
+    if finalText is not None:
+        rv.append("|%s\"%s\""%(' '*2, finalText))
+
     return "\n".join(rv)
 
 class TreeBuilder(base.TreeBuilder):
