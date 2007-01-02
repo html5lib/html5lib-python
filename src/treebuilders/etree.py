@@ -3,7 +3,7 @@ try:
 except ImportError:
     from elementtree import ElementTree
 
-import base
+import _base
 
 class Element(object):
     def __init__(self, name):
@@ -146,7 +146,7 @@ def testSerializer(element):
 
     return "\n".join(rv)
 
-class TreeBuilder(base.TreeBuilder):
+class TreeBuilder(_base.TreeBuilder):
     documentClass = Document
     doctypeClass = DocumentType
     elementClass = Element
@@ -164,4 +164,4 @@ class TreeBuilder(base.TreeBuilder):
         else:
             newParent._element.text += oldParent._element.text
         oldParent._element.text = ""
-        base.TreeBuilder.reparentChildren(self, oldParent, newParent)
+        _base.TreeBuilder.reparentChildren(self, oldParent, newParent)

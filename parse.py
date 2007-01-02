@@ -31,7 +31,7 @@ def parse():
     except IndexError:
         print "No filename provided. Use -h for help"
         sys.exit(1)
-    if hasattr(opts, "treebuilder"):
+    if opts.treebuilder is not None:
         try:
             #This isn't a great way to do this
             exec("import treebuilders.%s")%opts.treebuilder.split(".")[0]
@@ -42,7 +42,9 @@ def parse():
         except:
             treebuilder = treebuilders.DOMlite.TreeBuilder
     else:
-        treebuilder = treebuilders.DOMlite.TreeBuilder
+        import treebuilders.DOMlite
+        treebuilder = treebuilders.DOMlite
+
     p = parser.HTMLParser(tree=treebuilder)
 
     if opts.profile:
@@ -62,12 +64,16 @@ def parse():
         document = p.parse(f)
         t1 = time.time()
         print p.tree.testSerializer(document)
+        if opts.error:
+            print "\nParse errors:\n" + "\n".join(p.errors)
         t2 = time.time()
         print "\n\nRun took: %fs (plus %fs to print the output)"%(t1-t0, t2-t1)
     else:
         document = p.parse(f)
+        print document
         print p.tree.testSerializer(document)
-        print "\nParse errors:\n" + "\n".join(p.errors)
+        if opts.error:
+            print "\nParse errors:\n" + "\n".join(p.errors)
 
 def getOptParser():
     parser = OptionParser(usage=__doc__)
@@ -82,6 +88,9 @@ def getOptParser():
 
     parser.add_option("-b", "--treebuilder", action="store", type="string",
                       dest="treebuilder")
+
+    parser.add_option("-e", "--error", action="store_true", default=False,
+                      dest="error", help="Print a list of parse errors")
 
     return parser
 

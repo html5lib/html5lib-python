@@ -10,7 +10,12 @@ os.chdir(os.path.split(os.path.abspath(__file__))[0])
 sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
 
 import parser
-import treebuilders
+#Run tests over all treebuilders
+#XXX - it would be nice to automate finding all treebuilders or to allow running just one
+from treebuilders import DOMlite, etree
+
+treetypes = {"DOMlite":DOMlite.TreeBuilder, 
+             "ElementTree":etree.TreeBuilder}
 
 def parseTestcase(testString):
     testString = testString.split("\n")
@@ -52,14 +57,14 @@ def convertTreeDump(treedump):
     return "\n".join(rv)
 
 class TestCase(unittest.TestCase):
-    def runParserTest(self, input, output, errors):
+    def runParserTest(self, input, output, errors, treeClass):
         #XXX - move this out into the setup function
         #concatenate all consecutive character tokens into a single token
-        p = parser.HTMLParser()
+        p = parser.HTMLParser(tree = treeClass)
         document = p.parse(StringIO.StringIO(input))
         errorMsg = "\n".join(["\n\nExpected:", output, "\nRecieved:",
-          convertTreeDump(p.tree.testSerializer(document))])
-        self.assertEquals(output, 
+                              convertTreeDump(p.tree.testSerializer(document))])
+        self.assertEquals(output,
                           convertTreeDump(p.tree.testSerializer(document)),
                           errorMsg)
 #         errorMsg2 = "\n".join(["\n\nInput errors:\n" + "\n".join(errors),
@@ -67,24 +72,25 @@ class TestCase(unittest.TestCase):
 #         self.assertEquals(len(p.errors), len(errors), errorMsg2)
 
 def test_parser():
-    for filename in glob.glob('tree-construction/*.dat'):
-        f = open(filename)
-        tests = f.read().split("#data\n")
-        for test in tests:
-            if test == "":
-                continue
-            test = "#data\n" + test
-            input, output, errors = parseTestcase(test)
-            yield TestCase.runParserTest, input, output, errors
+    for name, cls in treetypes.iteritems():
+        for filename in glob.glob('tree-construction/*.dat'):
+            f = open(filename)
+            tests = f.read().split("#data\n")
+            for test in tests:
+                if test == "":
+                    continue
+                test = "#data\n" + test
+                input, output, errors = parseTestcase(test)
+                yield TestCase.runParserTest, input, output, errors, name, cls
 
 def buildTestSuite():
     tests = 0
-    for func, input, output, errors in test_parser():
+    for func, input, output, errors, treeName, treeCls in test_parser():
         tests += 1
         testName = 'test%d' % tests
         testFunc = lambda self, method=func, input=input, output=output, \
-            errors=errors: method(self, input, output, errors)
-        testFunc.__doc__ = 'Parser %s: %s' % (testName, input)
+            errors=errors, treeCls=treeCls: method(self, input, output, errors, treeCls)
+        testFunc.__doc__ = 'Parser %s Tree %s Input: %s'%(testName, treeName, input)
         instanceMethod = new.instancemethod(testFunc, None, TestCase)
         setattr(TestCase, testName, instanceMethod)
     return unittest.TestLoader().loadTestsFromTestCase(TestCase)
@@ -94,7 +100,4 @@ def main():
     unittest.main()
 
 if __name__ == "__main__":
-    # XXX Allow us to import the sibling module
-    os.chdir(os.path.split(os.path.abspath(__file__))[0])
-    sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
     main()

@@ -1,4 +1,4 @@
-import base
+import _base
 
 # Really crappy basic implementation of a DOM-core like thing
 class Node(object):
@@ -117,7 +117,7 @@ class CommentNode(Node):
     def __str__(self):
         return "<!-- %s -->" % self.data
 
-class TreeBuilder(base.TreeBuilder):
+class TreeBuilder(_base.TreeBuilder):
     documentClass = Document
     doctypeClass = DocumentType
     elementClass = Element
