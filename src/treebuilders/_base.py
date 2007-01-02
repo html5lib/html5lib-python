@@ -20,8 +20,84 @@ Marker = None
 #XXX - TODO; make the default interface more ElementTree-like
 #            rather than DOM-like
 
+class Node(object):
+    def __init__(self, name):
+        """Node representing an item in the tree.
+        name - The tag name associated with the node
+        parent - The parent of the current node (or None for the root node)
+        value - The value of the current node (applies to text nodes and 
+        comments
+        attributes - a dict holding name, value pairs for attributes of the node
+        childNodes - a list of child nodes of the current node. This must 
+        include all elements but not necessarily other node types
+        _flags - A list of miscellaneous flags that can be set on the node
+        """
+        self.name = name
+        self.parent = None
+        self.value = None
+        self.attributes = {}
+        self.childNodes = []
+        self._flags = []
+
+    def __str__(self):
+        attributesStr =  " ".join(["%s=\"%s\""%(name, value) 
+                                   for name, value in 
+                                   self.attributes.iteritems()])
+        if attributesStr:
+            return "<%s %s>"%(self.name,attributesStr)
+        else:
+            return "<%s>"%(self.name)
+
+    def __repr__(self):
+        return "<%s %s>" % (self.__class__, self.name)
+
+    def appendChild(self, node):
+        """Insert node as a child of the current node"""
+        raise NotImplementedError
+
+    def insertText(self, data, insertBefore=None):
+        """Insert data as text in the current node, positioned before the 
+        start of node insertBefore or to the end of the node's text.
+        """
+        raise NotImplementedError
+
+    def insertBefore(self, node, refNode):
+        """Insert node as a child of the current node, before refNode in the 
+        list of child nodes. Raises ValueError if refNode is not a child of 
+        the current node"""
+        raise NotImplementedError
+
+    def removeChild(self, node):
+        """Remove node from the children of the current node"""
+        raise NotImplementedError
+
+    def reparentChildren(self, newParent):
+        """Move all the children of the current node to newParent. 
+        This is needed so that trees that don't store text as nodes move the 
+        text in the correct way"""
+        #XXX - should this method be made more general?
+        for child in self.childNodes:
+            newParent.appendChild(child)
+        self.childNodes = []
+
+    def cloneNode(self):
+        """Return a shallow copy of the current node i.e. a node with the same
+        name and attributes but with no parent or child nodes"""
+        raise NotImplementedError
+
+
+    def hasContent(self):
+        """Return true if the node has children or text, false otherwise
+        """
+        raise NotImplementedError
+
 class TreeBuilder(object):
-    """Base treebuilder implementation"""
+    """Base treebuilder implementation
+    documentClass - the class to use for the bottommost node of a document
+    elementClass - the class to use for HTML Elements
+    commentClass - the class to use for comments
+    doctypeClass - the class to use for doctypes
+    """
 
     #Document class
     documentClass = None
@@ -231,15 +307,11 @@ class TreeBuilder(object):
             # self.processEndTag(name)
             self.generateImpliedEndTags(exclude)
 
-    def reparentChildren(self, oldParent, newParent):
-        """Move all the children of oldParent to newParent. This is needed do 
-        that trees that don't store text as nodes move the text in the correct 
-        way"""
-        #XXX - should this method be made more general?
-        for child in oldParent.childNodes:
-            newParent.appendChild(child)
-        oldParent.childNodes = []
-
     def getDocument(self):
         "Return the final tree"
         return self.document
+
+    def testSerializer(self, node):
+        """Serialize the subtree of node in the format required by unit tests
+        node - the node from which to start serializing"""
+        raise NotImplementedError

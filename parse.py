@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """usage: %prog [options] filename
 
-Parse a document to a DOMlite tree, with optional profiling
+Parse a document to a simpletree tree, with optional profiling
 """
 
 import sys
@@ -40,10 +40,10 @@ def parse():
             print "Treebuilder %s not found"%opts.treebuilder 
             raise
         except:
-            treebuilder = treebuilders.DOMlite.TreeBuilder
+            treebuilder = treebuilders.simpletree.TreeBuilder
     else:
-        import treebuilders.DOMlite
-        treebuilder = treebuilders.DOMlite
+        import treebuilders.simpletree
+        treebuilder = treebuilders.simpletree
 
     p = parser.HTMLParser(tree=treebuilder)
 

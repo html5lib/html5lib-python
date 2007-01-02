@@ -12,9 +12,9 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
 import parser
 #Run tests over all treebuilders
 #XXX - it would be nice to automate finding all treebuilders or to allow running just one
-from treebuilders import DOMlite, etree
+from treebuilders import simpletree, etree
 
-treetypes = {"DOMlite":DOMlite.TreeBuilder, 
+treetypes = {"simpletree":simpletree.TreeBuilder, 
              "ElementTree":etree.TreeBuilder}
 
 def parseTestcase(testString):
