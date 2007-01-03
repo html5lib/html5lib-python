@@ -12,14 +12,24 @@ os.chdir(os.path.split(os.path.abspath(__file__))[0])
 sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
 
 from tokenizer import HTMLTokenizer
+import constants
 
 class TokenizerTestParser(object):
+    def __init__(self, contentModelFlag, lastStartTag=None):
+        self.tokenizer = HTMLTokenizer
+        self._contentModelFlag = constants.contentModelFlags[contentModelFlag]
+        self._lastStartTag = lastStartTag
+
     def parse(self, stream, innerHTML=False):
+        tokenizer = self.tokenizer(stream)
         self.outputTokens = []
 
-        self.tokenizer = HTMLTokenizer(stream)
+        tokenizer.contentModelFlag = self._contentModelFlag
+        if self._lastStartTag is not None:
+            tokenizer.currentToken = {"type": "startTag", 
+                                      "name":self._lastStartTag}
 
-        for token in self.tokenizer:
+        for token in tokenizer:
             getattr(self, 'process%s' % token["type"])(token)
 
         return self.outputTokens
@@ -82,14 +92,20 @@ def tokensMatch(expectedTokens, recievedTokens):
 
 
 class TestCase(unittest.TestCase):
-    def runTokenizerTest(self, input, output):
+    def runTokenizerTest(self, test):
         #XXX - move this out into the setup function
         #concatenate all consecutive character tokens into a single token
-        output = concatenateCharacterTokens(output)
-        parser = TokenizerTestParser()
-        tokens = parser.parse(input)
+        output = concatenateCharacterTokens(test['output'])
+        if 'lastStartTag' not in test:
+            test['lastStartTag'] = None
+        parser = TokenizerTestParser(test['contentModelFlag'], 
+                                     test['lastStartTag'])
+            
+        tokens = parser.parse(test['input'])
         tokens = concatenateCharacterTokens(tokens)
-        errorMsg = "\n".join(["\n\nExpected:", str(output), "\nRecieved:",
+        errorMsg = "\n".join(["\n\nContent Model Flag:",
+                              test['contentModelFlag'] ,
+                              "\nExpected:", str(output), "\nRecieved:",
                              str(tokens)])
         self.assertEquals(tokensMatch(tokens, output), True, errorMsg)
 
@@ -98,19 +114,22 @@ def test_tokenizer():
     for filename in glob.glob('tokenizer/*.test'):
         tests = simplejson.load(file(filename))
         for test in tests['tests']:
-            yield (TestCase.runTokenizerTest, test['description'],
-                   test['input'], test['output'])
+            yield (TestCase.runTokenizerTest, test)
 
 def buildTestSuite():
     tests = 0
-    for func, desc, input, output in test_tokenizer():
-        tests += 1
-        testName = 'test%d' % tests
-        testFunc = lambda self, method=func, input=input, output=output: \
-            method(self, input, output)
-        testFunc.__doc__ = "\t".join([desc, str(input), str(output)])
-        instanceMethod = new.instancemethod(testFunc, None, TestCase)
-        setattr(TestCase, testName, instanceMethod)
+    for func, test in test_tokenizer():
+        if 'contentModelFlags' not in test:
+            test["contentModelFlags"] = ["PCDATA"]
+        for contentModelFlag in test["contentModelFlags"]:
+            tests += 1
+            testName = 'test%d' % tests
+            test["contentModelFlag"] = contentModelFlag
+            testFunc = lambda self, method=func, test=test: \
+                method(self, test)
+            testFunc.__doc__ = "\t".join([test['description'], str(test['input'])])
+            instanceMethod = new.instancemethod(testFunc, None, TestCase)
+            setattr(TestCase, testName, instanceMethod)
     return unittest.TestLoader().loadTestsFromTestCase(TestCase)
 
 def main():
