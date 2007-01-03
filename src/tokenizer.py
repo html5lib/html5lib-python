@@ -136,8 +136,10 @@ class HTMLTokenizer(object):
         # If the integer is between 127 and 160 (so 128 and bigger and 159 and
         # smaller) we need to do the "windows trick".
         if 127 < charAsInt < 160:
-            self.tokenQueue.append({"type": "ParseError", "data":
-              _("Entity used with illegal number (windows-1252 reference).")})
+            #XXX - removed parse error from windows 1252 entity for now
+            #we may want to reenable this later
+            #self.tokenQueue.append({"type": "ParseError", "data":
+            #  _("Entity used with illegal number (windows-1252 reference).")})
 
             charAsInt = entitiesWindows1252[charAsInt - 128]
 
