@@ -45,7 +45,7 @@ class HTMLParser(object):
         self.strict = strict
         self.errors = []
 
-        self._treeCls = tree
+        self.tree = tree()
 
         self.phases = {
             "initial": InitialPhase(self, self.tree),
@@ -76,7 +76,7 @@ class HTMLParser(object):
         issues have not yet been dealt with."""
 
         # XXX - need to ensure the tree is reset here
-        self.tree = self._treeCls()
+        
 
         # We don't actually support innerHTML yet but this should allow
         # assertations
