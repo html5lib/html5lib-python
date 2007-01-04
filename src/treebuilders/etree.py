@@ -151,6 +151,49 @@ def testSerializer(element):
 
     return "\n".join(rv)
 
+def write(element):
+    """Serialize an element and its child nodes to a string"""
+    rv = []
+    finalText = None
+    def serializeElement(element):
+        if element.tag is DocumentType:
+            rv.append("<!DOCTYPE %s>\n"%(element.text,))
+        elif element.tag is Document:
+            if element.text:
+                rv.append(element.text)
+            if element.tail:
+                finalText = element.tail
+
+            for child in element.getchildren():
+                serializeElement(child)
+
+        elif element.tag is Comment:
+            rv.append("<!-- %s -->\n"%(element.text,))
+        else:
+            if not element.attrib:
+                rv.append("<%s>"%(element.tag,))
+            else:
+                attr = " ".join(["%s=\"%s\""%(name, value) 
+                                 for name, value in element.attrib.iteritems()])
+                rv.append("<%s %s>"%(element.tag, attr))
+            if element.text:
+                rv.append(element.text)
+
+            for child in element.getchildren():
+                serializeElement(child)
+
+            rv.append("</%s>\n"%(element.tag,))
+
+        if element.tail:
+            rv.append(element.tail + "\n")
+
+    serializeElement(element)
+
+    if finalText is not None:
+        rv.append("%s\""%(' '*2, finalText))
+
+    return "".join(rv)
+
 class TreeBuilder(_base.TreeBuilder):
     documentClass = Document
     doctypeClass = DocumentType
