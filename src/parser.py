@@ -32,14 +32,17 @@ from constants import scopingElements, formattingElements, specialElements
 from constants import headingElements, tableInsertModeElements
 
 class HTMLParser(object):
-    """Main parser class"""
+    """HTML parser. Generates a tree structure from a stream of (possibly
+        malformed) HTML"""
 
     def __init__(self, strict = False, tree=simpletree.TreeBuilder):
-        """HTML parser. Generates a tree structure from a stream of (possibly
-        malformed) HTML.  
+        """
         strict - raise an exception when a parse error is encountered 
+        
         tree - a treebuilder class controlling the type of tree that will be 
-        returned (default - html5lib.simpletree.TreeBuilder)"""
+        returned. This class is almost always a subclass of 
+        html5lib.treebuilders._base.TreeBuilder
+        """
 
         # Raise an exception on the first error encountered
         self.strict = strict
@@ -72,11 +75,15 @@ class HTMLParser(object):
         self.lastPhase = None
 
     def parse(self, stream, innerHTML=False):
-        """Stream should be a stream of unicode bytes. Character encoding
-        issues have not yet been dealt with."""
-
-        # XXX - need to ensure the tree is reset here
+        """Parse a HTML document into a well-formed tree
         
+        stream - a filelike object or string containing the HTML to be parsed
+        
+        innerHTML - Are we parsing in innerHTML mode (note innerHTML=True 
+        is not yet supported)
+        """
+
+        self.tree.reset()
 
         # We don't actually support innerHTML yet but this should allow
         # assertations

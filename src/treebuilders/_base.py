@@ -112,6 +112,9 @@ class TreeBuilder(object):
     doctypeClass = None
 
     def __init__(self):
+        self.reset()
+    
+    def reset(self):
         self.openElements = []
         self.activeFormattingElements = []
 
