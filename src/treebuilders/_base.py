@@ -24,7 +24,7 @@ class Node(object):
     def __init__(self, name):
         """Node representing an item in the tree.
         name - The tag name associated with the node
-        parent - The parent of the current node (or None for the root node)
+        parent - The parent of the current node (or None for the document node)
         value - The value of the current node (applies to text nodes and 
         comments
         attributes - a dict holding name, value pairs for attributes of the node
@@ -52,7 +52,8 @@ class Node(object):
         return "<%s %s>" % (self.__class__, self.name)
 
     def appendChild(self, node):
-        """Insert node as a child of the current node"""
+        """Insert node as a child of the current node
+        """
         raise NotImplementedError
 
     def insertText(self, data, insertBefore=None):
@@ -68,13 +69,15 @@ class Node(object):
         raise NotImplementedError
 
     def removeChild(self, node):
-        """Remove node from the children of the current node"""
+        """Remove node from the children of the current node
+        """
         raise NotImplementedError
 
     def reparentChildren(self, newParent):
         """Move all the children of the current node to newParent. 
         This is needed so that trees that don't store text as nodes move the 
-        text in the correct way"""
+        text in the correct way
+        """
         #XXX - should this method be made more general?
         for child in self.childNodes:
             newParent.appendChild(child)
@@ -82,7 +85,8 @@ class Node(object):
 
     def cloneNode(self):
         """Return a shallow copy of the current node i.e. a node with the same
-        name and attributes but with no parent or child nodes"""
+        name and attributes but with no parent or child nodes
+        """
         raise NotImplementedError
 
 
