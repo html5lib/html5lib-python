@@ -30,6 +30,5 @@ setup(name='html5lib',
       maintainer='James Graham',
       maintainer_email='jg307@cam.ac.uk',
       packages=['html5lib', 'html5lib.treebuilders'],
-      package_dir = {'html5lib': 'src', 
-                     'html5lib.treebuilders': 'src/treebuilders'}
+      package_dir = {'html5lib': 'src'}
       )
