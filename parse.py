@@ -43,7 +43,7 @@ def parse():
             treebuilder = treebuilders.simpletree.TreeBuilder
     else:
         import treebuilders.simpletree
-        treebuilder = treebuilders.simpletree
+        treebuilder = treebuilders.simpletree.TreeBuilder
 
     p = parser.HTMLParser(tree=treebuilder)
 
