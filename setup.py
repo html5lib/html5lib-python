@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 long_description="""HTML parser designed to follow the WHATWG HTML5 
-specifiction. The parser is designed to handle all flavours of HTML and 
+specification. The parser is designed to handle all flavours of HTML and 
 parses invalid documents using well-defined error handling rules compatible
 with the behaviour of major desktop web browsers.
 
