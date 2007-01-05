@@ -27,7 +27,7 @@ elementtree = p.parse(f)
 
 Note: Because HTML documents support various features not in the
 default ElementTree (e.g. doctypes), we suppy our own simple
-serializer; html5lib.treebuilders.etree.write At present this does not
+serializer; html5lib.treebuilders.etree.tostring At present this does not
 have the encoding support offered by the elementtree serializer.
 
 """

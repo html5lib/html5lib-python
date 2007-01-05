@@ -46,9 +46,9 @@ class HTMLParser(object):
 
         # Raise an exception on the first error encountered
         self.strict = strict
-        self.errors = []
 
         self.tree = tree()
+        self.errors = []
 
         self.phases = {
             "initial": InitialPhase(self, self.tree),
@@ -69,10 +69,6 @@ class HTMLParser(object):
             "afterFrameset": AfterFramesetPhase(self, self.tree),
             "trailingEnd": TrailingEndPhase(self, self.tree)
         }
-        self.phase = self.phases["initial"]
-        # We only seem to have InBodyPhase testcases where the following is
-        # relevant ... need others too
-        self.lastPhase = None
 
     def parse(self, stream, innerHTML=False):
         """Parse a HTML document into a well-formed tree
@@ -84,6 +80,12 @@ class HTMLParser(object):
         """
 
         self.tree.reset()
+        self.errors = []
+
+        self.phase = self.phases["initial"]
+        # We only seem to have InBodyPhase testcases where the following is
+        # relevant ... need others too
+        self.lastPhase = None
 
         # We don't actually support innerHTML yet but this should allow
         # assertations

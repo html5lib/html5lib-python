@@ -5,6 +5,7 @@ setup(name='html5lib',
       license="MIT License",
       description='HTML parser based on the WHAT-WG Web Applications 1.0' 
                   '("HTML5") specifcation',
-      packages=['html5lib'],
-      package_dir = {'html5lib': 'src'}
+      packages=['html5lib', 'html5lib.treebuilders'],
+      package_dir = {'html5lib': 'src', 
+                     'html5lib.treebuilders': 'src/treebuilders'}
       )

@@ -151,13 +151,13 @@ def testSerializer(element):
 
     return "\n".join(rv)
 
-def write(element):
+def tostring(element):
     """Serialize an element and its child nodes to a string"""
     rv = []
     finalText = None
     def serializeElement(element):
         if element.tag is DocumentType:
-            rv.append("<!DOCTYPE %s>\n"%(element.text,))
+            rv.append("<!DOCTYPE %s>"%(element.text,))
         elif element.tag is Document:
             if element.text:
                 rv.append(element.text)
@@ -168,8 +168,9 @@ def write(element):
                 serializeElement(child)
 
         elif element.tag is Comment:
-            rv.append("<!-- %s -->\n"%(element.text,))
+            rv.append("<!--%s-->"%(element.text,))
         else:
+            #This is assumed to be an ordinary element
             if not element.attrib:
                 rv.append("<%s>"%(element.tag,))
             else:
@@ -182,10 +183,10 @@ def write(element):
             for child in element.getchildren():
                 serializeElement(child)
 
-            rv.append("</%s>\n"%(element.tag,))
+            rv.append("</%s>"%(element.tag,))
 
         if element.tail:
-            rv.append(element.tail + "\n")
+            rv.append(element.tail)
 
     serializeElement(element)
 
