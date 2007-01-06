@@ -39,7 +39,7 @@ class Node(object):
         self.childNodes = []
         self._flags = []
 
-    def __str__(self):
+    def __unicode__(self):
         attributesStr =  " ".join(["%s=\"%s\""%(name, value) 
                                    for name, value in 
                                    self.attributes.iteritems()])

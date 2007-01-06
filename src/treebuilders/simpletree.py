@@ -9,14 +9,14 @@ class Node(_base.Node):
         self.childNodes = []
         self._flags = []
 
-    def __str__(self):
+    def __unicode__(self):
         return self.name
 
     def __repr__(self):
         return "<%s %s>" % (self.__class__, self.name)
 
     def printTree(self, indent=0):
-        tree = '\n|%s%s' % (' '* indent, str(self))
+        tree = '\n|%s%s' % (' '* indent, unicode(self))
         for child in self.childNodes:
             tree += child.printTree(indent + 2)
         return tree
@@ -67,11 +67,11 @@ class Document(Node):
     def __init__(self):
         Node.__init__(self, None)
 
-    def __str__(self):
+    def __unicode__(self):
         return "#document"
 
     def printTree(self):
-        tree = str(self)
+        tree = unicode(self)
         for child in self.childNodes:
             tree += child.printTree(2)
         return tree
@@ -80,7 +80,7 @@ class DocumentType(Node):
     def __init__(self, name):
         Node.__init__(self, name)
 
-    def __str__(self):
+    def __unicode__(self):
         return "<!DOCTYPE %s>" % self.name
 
 class TextNode(Node):
@@ -88,7 +88,7 @@ class TextNode(Node):
         Node.__init__(self, None)
         self.value = value
 
-    def __str__(self):
+    def __unicode__(self):
         return "\"%s\"" % self.value
 
 class Element(Node):
@@ -96,11 +96,11 @@ class Element(Node):
         Node.__init__(self, name)
         self.attributes = {}
         
-    def __str__(self):
+    def __unicode__(self):
         return "<%s>" % self.name
 
     def printTree(self, indent):
-        tree = '\n|%s%s' % (' '*indent, str(self))
+        tree = '\n|%s%s' % (' '*indent, unicode(self))
         indent += 2
         if self.attributes:
             for name, value in self.attributes.iteritems():
@@ -114,7 +114,7 @@ class CommentNode(Node):
         Node.__init__(self, None)
         self.data = data
 
-    def __str__(self):
+    def __unicode__(self):
         return "<!-- %s -->" % self.data
 
 class TreeBuilder(_base.TreeBuilder):
