@@ -10,7 +10,7 @@ a custom tree similar to DOM and to ElementTree.
 """
 
 classifiers=[
-    'Development Status :: 4 - Beta',
+    'Development Status :: 3 - Alpha',
     'Intended Audience :: Developers',
     'License :: OSI Approved :: MIT License',
     'Operating System :: OS Independent',
