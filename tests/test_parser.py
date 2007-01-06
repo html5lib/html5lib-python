@@ -5,14 +5,10 @@ import StringIO
 import unittest
 import new
 
-# XXX Allow us to import the sibling module
-os.chdir(os.path.split(os.path.abspath(__file__))[0])
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
-
-import parser
+from html5lib import parser
 #Run tests over all treebuilders
 #XXX - it would be nice to automate finding all treebuilders or to allow running just one
-from treebuilders import simpletree, etree
+from html5lib.treebuilders import simpletree, etree
 
 treetypes = {"simpletree":simpletree.TreeBuilder, 
              "ElementTree":etree.TreeBuilder}
