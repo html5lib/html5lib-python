@@ -63,6 +63,7 @@ def parse():
         t0 = time.time()
         document = p.parse(f)
         t1 = time.time()
+        print p.tree.testSerializer(document)
         if opts.error:
             print "\nParse errors:\n" + "\n".join(p.errors)
         t2 = time.time()
