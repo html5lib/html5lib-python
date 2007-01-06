@@ -70,7 +70,6 @@ def parse():
         print "\n\nRun took: %fs (plus %fs to print the output)"%(t1-t0, t2-t1)
     else:
         document = p.parse(f)
-        print document
         print p.tree.testSerializer(document)
         if opts.error:
             print "\nParse errors:\n" + "\n".join(p.errors)
@@ -95,5 +94,4 @@ def getOptParser():
     return parser
 
 if __name__ == "__main__":
-    print os.path.abspath(os.curdir)
     parse()
