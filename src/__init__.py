@@ -31,4 +31,4 @@ serializer; html5lib.treebuilders.etree.tostring At present this does not
 have the encoding support offered by the elementtree serializer.
 
 """
-from parser import HTMLParser
+from html5parser import HTMLParser

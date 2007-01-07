@@ -5,7 +5,7 @@ import StringIO
 import unittest
 import new
 
-from html5lib import parser
+from html5lib import html5parser
 #Run tests over all treebuilders
 #XXX - it would be nice to automate finding all treebuilders or to allow running just one
 from html5lib.treebuilders import simpletree, etree
@@ -56,7 +56,7 @@ class TestCase(unittest.TestCase):
     def runParserTest(self, input, output, errors, treeClass):
         #XXX - move this out into the setup function
         #concatenate all consecutive character tokens into a single token
-        p = parser.HTMLParser(tree = treeClass)
+        p = html5parser.HTMLParser(tree = treeClass)
         document = p.parse(StringIO.StringIO(input))
         errorMsg = "\n".join(["\n\nExpected:", output, "\nRecieved:",
                               convertTreeDump(p.tree.testSerializer(document))])
