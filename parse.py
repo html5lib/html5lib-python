@@ -8,7 +8,7 @@ import sys
 import os
 from optparse import OptionParser
 
-from src import parser, treebuilders
+from src import html5parser, treebuilders
 
 def convertTreeDump(treedump):
     """convert the output of str(document) to something more readable
@@ -45,7 +45,7 @@ def parse():
         import treebuilders.simpletree
         treebuilder = treebuilders.simpletree.TreeBuilder
 
-    p = parser.HTMLParser(tree=treebuilder)
+    p = html5parser.HTMLParser(tree=treebuilder)
 
     if opts.profile:
         import hotshot
