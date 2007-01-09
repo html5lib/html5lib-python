@@ -9,7 +9,7 @@ _ = gettext.gettext
 
 from constants import contentModelFlags, spaceCharacters
 from constants import entitiesWindows1252, entities, voidElements
-from constants import asciiLowercase, asciiUppercase, asciiLetters
+from constants import asciiLowercase, asciiLetters
 from constants import digits, hexDigits, EOF
 
 from inputstream import HTMLInputStream
@@ -103,6 +103,10 @@ class HTMLTokenizer(object):
         else:
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Solidus (/) incorrectly placed in tag.")})
+
+        # XML/XHTML enablement hook
+        if self.currentToken["type"] == "StartTag" and data == u">":
+            self.currentToken["type"] = "EmptyTag"
 
         # The character we just consumed need to be put back on the stack so it
         # doesn't get lost...
@@ -259,17 +263,10 @@ class HTMLTokenizer(object):
         # internal usage.
 
         token = self.currentToken
-        # For start tags convert attribute list into a distinct dictionary
-        if token["type"] == "StartTag":
-            # We need to remove the duplicate attributes and convert attributes
-            # to a dict so that [["x", "y"], ["x", "z"]] becomes {"x": "y"}
 
-            # AT When Python 2.4 is widespread we should use
-            # dict(reversed(token.data))
-            token["data"] = dict(token["data"][::-1])
         # If an end tag has attributes it's a parse error and they should
         # be removed
-        elif token["type"] == "EndTag" and token["data"]:
+        if token["type"] == "EndTag" and token["data"]:
             self.tokenQueue.append({"type": "ParseError", "data":
               _("End tag contains unexpected attributes.")})
             token["data"] = {}
@@ -349,7 +346,7 @@ class HTMLTokenizer(object):
                 self.state = self.states["closeTagOpen"]
             elif data in asciiLetters:
                 self.currentToken =\
-                  {"type": "StartTag", "name": data.lower(), "data": []}
+                  {"type": "StartTag", "name": data, "data": []}
                 self.state = self.states["tagName"]
             elif data == u">":
                 # XXX In theory it could be something besides a tag name. But
@@ -405,7 +402,7 @@ class HTMLTokenizer(object):
             # the stack.
             self.stream.queue.extend(charStack)
 
-            if self.currentToken["name"] == "".join(charStack[:-1]).lower() \
+            if self.currentToken["name"].lower() == "".join(charStack[:-1]).lower() \
               and charStack[-1] in (spaceCharacters |
               frozenset((u">", u"/", u"<", EOF))):
                 # Because the characters are correct we can safely switch to
@@ -426,7 +423,7 @@ class HTMLTokenizer(object):
             data = self.stream.char()
             if data in asciiLetters:
                 self.currentToken =\
-                  {"type": "EndTag", "name": data.lower(), "data": []}
+                  {"type": "EndTag", "name": data, "data": []}
                 self.state = self.states["tagName"]
             elif data == u">":
                 self.tokenQueue.append({"type": "ParseError", "data":
@@ -449,12 +446,9 @@ class HTMLTokenizer(object):
         data = self.stream.char()
         if data in spaceCharacters:
             self.state = self.states["beforeAttributeName"]
-        elif data in asciiLowercase:
+        elif data in asciiLetters:
             self.currentToken["name"] += data +\
-              self.stream.charsUntil(asciiLowercase, True)
-        elif data in asciiUppercase:
-            self.currentToken["name"] += data.lower() +\
-              self.stream.charsUntil(asciiLetters, True).lower()
+              self.stream.charsUntil(asciiLetters, True)
         elif data == u">":
             self.emitCurrentToken()
         elif data == u"<" or data == EOF:
@@ -470,8 +464,8 @@ class HTMLTokenizer(object):
         data = self.stream.char()
         if data in spaceCharacters:
             self.stream.charsUntil(spaceCharacters, True)
-        elif data in asciiUppercase:
-            self.currentToken["data"].append([data.lower(), ""])
+        elif data in asciiLetters:
+            self.currentToken["data"].append([data, ""])
             self.state = self.states["attributeName"]
         elif data == u">":
             self.emitCurrentToken()
@@ -489,13 +483,9 @@ class HTMLTokenizer(object):
         leavingThisState = True
         if data == u"=":
             self.state = self.states["beforeAttributeValue"]
-        elif data in asciiLowercase:
+        elif data in asciiLetters:
             self.currentToken["data"][-1][0] += data +\
-              self.stream.charsUntil(asciiLowercase, True)
-            leavingThisState = False
-        elif data in asciiUppercase:
-            self.currentToken["data"][-1][0] += data.lower() +\
-              self.stream.charsUntil(asciiLetters, True).lower()
+              self.stream.charsUntil(asciiLetters, True)
             leavingThisState = False
         elif data == u">":
             # XXX If we emit here the attributes are converted to a dict
@@ -535,8 +525,8 @@ class HTMLTokenizer(object):
             self.state = self.states["beforeAttributeValue"]
         elif data == u">":
             self.emitCurrentToken()
-        elif data in asciiUppercase:
-            self.currentToken["data"].append([data.lower(), ""])
+        elif data in asciiLetters:
+            self.currentToken["data"].append([data, ""])
             self.state = self.states["attributeName"]
         elif data == u"/":
             self.processSolidusInTag()

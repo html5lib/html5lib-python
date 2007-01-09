@@ -1,4 +1,5 @@
 import _base
+from xml.sax.saxutils import escape
 
 # Really crappy basic implementation of a DOM-core like thing
 class Node(_base.Node):
@@ -76,6 +77,12 @@ class Document(Node):
             tree += child.printTree(2)
         return tree
 
+    def toxml(self, encoding="utf=8"):
+        result = ''
+        for child in self.childNodes:
+            result += child.toxml()
+        return result.encode(encoding)
+
 class DocumentType(Node):
     def __init__(self, name):
         Node.__init__(self, name)
@@ -90,6 +97,9 @@ class TextNode(Node):
 
     def __unicode__(self):
         return "\"%s\"" % self.value
+
+    def toxml(self):
+        return escape(self.value)
 
 class Element(Node):
     def __init__(self, name):
@@ -109,6 +119,20 @@ class Element(Node):
             tree += child.printTree(indent)
         return tree
 
+    def toxml(self):
+        result = '<' + self.name
+        if self.attributes:
+            for name,value in self.attributes.iteritems():
+                result += ' %s="%s"' % (name, escape(value,{'"':'&quot;'}))
+        if self.childNodes:
+            result += '>'
+            for child in self.childNodes:
+                result += child.toxml()
+            result += '</%s>' % self.name
+        else:
+            result += '/>'
+        return result
+
 class CommentNode(Node):
     def __init__(self, data):
         Node.__init__(self, None)
@@ -116,6 +140,8 @@ class CommentNode(Node):
 
     def __unicode__(self):
         return "<!-- %s -->" % self.data
+
+    toxml = __unicode__ 
 
 class TreeBuilder(_base.TreeBuilder):
     documentClass = Document

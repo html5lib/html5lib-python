@@ -40,6 +40,10 @@ class TokenizerTestParser(object):
     def processStartTag(self, token):
         self.outputTokens.append([u"StartTag", token["name"], token["data"]])
 
+    def processEmptyTag(self, token):
+        # TODO: convert tests to reflect EmptyTags
+        self.outputTokens.append([u"StartTag", token["name"], token["data"]])
+
     def processEndTag(self, token):
         self.outputTokens.append([u"EndTag", token["name"]])
 
@@ -76,6 +80,14 @@ def concatenateCharacterTokens(tokens):
             outputTokens.append(token)
     return outputTokens
 
+def normalizeTokens(tokens):
+    """ convert array of attributes to a dictionary """
+    # TODO: convert tests to reflect arrays
+    for token in tokens:
+        if token[0] == 'StartTag':
+            token[2] = dict(token[2][::-1])
+    return tokens
+
 def tokensMatch(expectedTokens, recievedTokens):
     """Test whether the test has passed or failed
 
@@ -101,7 +113,7 @@ class TestCase(unittest.TestCase):
         parser = TokenizerTestParser(test['contentModelFlag'], 
                                      test['lastStartTag'])
             
-        tokens = parser.parse(test['input'])
+        tokens = normalizeTokens(parser.parse(test['input']))
         tokens = concatenateCharacterTokens(tokens)
         errorMsg = "\n".join(["\n\nContent Model Flag:",
                               test['contentModelFlag'] ,

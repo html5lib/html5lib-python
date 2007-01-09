@@ -27,7 +27,7 @@ from treebuilders._base import Marker
 from treebuilders import simpletree
 
 import utils
-from constants import contentModelFlags, spaceCharacters
+from constants import contentModelFlags, spaceCharacters, asciiUpper2Lower
 from constants import scopingElements, formattingElements, specialElements
 from constants import headingElements, tableInsertModeElements
 
@@ -96,6 +96,7 @@ class HTMLParser(object):
         # XXX This is temporary for the moment so there isn't any other
         # changes needed for the parser to work with the iterable tokenizer
         for token in self.tokenizer:
+            token = self.normalizeToken(token)
             type = token["type"]
             method = getattr(self.phase, "process%s" % type, None)
             if type in ("Characters", "SpaceCharacters", "Comment"):
@@ -123,6 +124,31 @@ class HTMLParser(object):
     def atheistParseError(self):
         """This error is not an error"""
         pass
+
+    def normalizeToken(self, token):
+        """ HTML5 specific normalizations to the token stream """
+       
+        if token["type"] == "EmptyTag":
+            token["type"] = "StartTag"
+
+        if token["type"] == "StartTag":
+            token["name"] = token["name"].translate(asciiUpper2Lower)
+
+            # We need to remove the duplicate attributes and convert attributes
+            # to a dict so that [["x", "y"], ["x", "z"]] becomes {"x": "y"}
+
+            # AT When Python 2.4 is widespread we should use
+            # dict(reversed(token.data))
+            if token["data"]:
+                token["data"] = dict([(attr.translate(asciiUpper2Lower), value)
+                    for attr,value in token["data"][::-1]])
+            else:
+                token["data"] = {}
+
+        elif token["type"] == "EndTag":
+            token["name"] = token["name"].lower()
+
+        return token
 
     #XXX - almost everthing after this point should be moved into a
     #seperate treebuilder object

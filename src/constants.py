@@ -124,10 +124,12 @@ tableInsertModeElements = frozenset((
 ))
 
 asciiLowercase = frozenset(string.ascii_lowercase)
-asciiUppercase = frozenset(string.ascii_uppercase)
 asciiLetters = frozenset(string.ascii_letters)
 digits = frozenset(string.digits)
 hexDigits = frozenset(string.hexdigits)
+
+asciiUpper2Lower = dict([(ord(c),ord(c.lower()))
+    for c in string.ascii_uppercase])
 
 # Heading elements need to be ordered 
 headingElements = (
