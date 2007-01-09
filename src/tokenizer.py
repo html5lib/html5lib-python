@@ -8,7 +8,7 @@ import gettext
 _ = gettext.gettext
 
 from constants import contentModelFlags, spaceCharacters
-from constants import entitiesWindows1252, entities, voidElements
+from constants import entitiesWindows1252, entities
 from constants import asciiLowercase, asciiLetters
 from constants import digits, hexDigits, EOF
 
@@ -87,26 +87,18 @@ class HTMLTokenizer(object):
 
     # Below are various helper functions the tokenizer states use worked out.
     def processSolidusInTag(self):
-        """When a solidus (/) is encountered within a tag name what happens
-        depends on whether the current tag name matches that of a void element.
-        If it matches a void element atheists did the wrong thing and if it
-        doesn't it's wrong for everyone.
+        """If the next character is a '>', convert the currentToken into
+        an EmptyTag
         """
 
-        # We need to consume another character to make sure it's a ">" before
-        # throwing an atheist parse error.
+        # We need to consume another character to make sure it's a ">"
         data = self.stream.char()
 
-        if self.currentToken["name"] in voidElements and data == u">":
-            self.tokenQueue.append({"type": "AtheistParseError", "data":
-              _("Solidus (/) incorrectly placed in tag (atheists only).")})
+        if self.currentToken["type"] == "StartTag" and data == u">":
+            self.currentToken["type"] = "EmptyTag"
         else:
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Solidus (/) incorrectly placed in tag.")})
-
-        # XML/XHTML enablement hook
-        if self.currentToken["type"] == "StartTag" and data == u">":
-            self.currentToken["type"] = "EmptyTag"
 
         # The character we just consumed need to be put back on the stack so it
         # doesn't get lost...

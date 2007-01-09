@@ -29,7 +29,7 @@ from treebuilders import simpletree
 import utils
 from constants import contentModelFlags, spaceCharacters, asciiUpper2Lower
 from constants import scopingElements, formattingElements, specialElements
-from constants import headingElements, tableInsertModeElements
+from constants import headingElements, tableInsertModeElements, voidElements
 
 class HTMLParser(object):
     """HTML parser. Generates a tree structure from a stream of (possibly
@@ -105,10 +105,8 @@ class HTMLParser(object):
                 method(token["name"], token["data"])
             elif type == "EndTag":
                 method(token["name"])
-            elif type == "ParseError":
-                self.parseError(token["data"])
             else:
-                self.atheistParseError()
+                self.parseError(token["data"])
 
         # When the loop finishes it's EOF
         self.phase.processEOF()
@@ -129,6 +127,16 @@ class HTMLParser(object):
         """ HTML5 specific normalizations to the token stream """
        
         if token["type"] == "EmptyTag":
+            # When a solidus (/) is encountered within a tag name what happens
+            # depends on whether the current tag name matches that of a void
+            # element.  If it matches a void element atheists did the wrong
+            # thing and if it doesn't it's wrong for everyone.
+
+            if token["name"] in voidElements:
+                self.atheistParseError()
+            else:
+                self.parseError(_("Solidus (/) incorrectly placed in tag."))
+
             token["type"] = "StartTag"
 
         if token["type"] == "StartTag":

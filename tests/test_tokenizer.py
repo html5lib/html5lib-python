@@ -41,7 +41,8 @@ class TokenizerTestParser(object):
         self.outputTokens.append([u"StartTag", token["name"], token["data"]])
 
     def processEmptyTag(self, token):
-        # TODO: convert tests to reflect EmptyTags
+        if token["name"] not in constants.voidElements:
+            self.outputTokens.append(u"ParseError")
         self.outputTokens.append([u"StartTag", token["name"], token["data"]])
 
     def processEndTag(self, token):
@@ -62,10 +63,6 @@ class TokenizerTestParser(object):
 
     def processParseError(self, token):
         self.outputTokens.append(u"ParseError")
-
-    def processAtheistParseError(self, token):
-        """This error is not an error"""
-        pass
 
 def concatenateCharacterTokens(tokens):
     outputTokens = []
