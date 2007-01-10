@@ -33,13 +33,13 @@ def parse():
         sys.exit(1)
     if opts.treebuilder is not None:
         try:
-            #This isn't a great way to do this
-            exec("import treebuilders.%s")%opts.treebuilder.split(".")[0]
-            treebuilder = eval("treebuilders.%s"%opts.treebuilder)
-        except NameError:
-            print "Treebuilder %s not found"%opts.treebuilder 
+            treebuilder = __import__("treebuilders." + opts.treebuilder,
+                None,None,"treebuilders").TreeBuilder
+        except ImportError, name:
+            print "Treebuilder %s not found"%name
             raise
-        except:
+        except Exception, foo:
+            import treebuilders.simpletree
             treebuilder = treebuilders.simpletree.TreeBuilder
     else:
         import treebuilders.simpletree
@@ -63,14 +63,20 @@ def parse():
         t0 = time.time()
         document = p.parse(f)
         t1 = time.time()
-        print p.tree.testSerializer(document)
+        if opts.xml:
+            print document.toxml('utf-8')
+        else:
+            print p.tree.testSerializer(document).encode("utf-8")
         if opts.error:
             print "\nParse errors:\n" + "\n".join(p.errors)
         t2 = time.time()
         print "\n\nRun took: %fs (plus %fs to print the output)"%(t1-t0, t2-t1)
     else:
         document = p.parse(f)
-        print p.tree.testSerializer(document).encode("utf-8")
+        if opts.xml:
+            print document.toxml('utf-8')
+        else:
+            print p.tree.testSerializer(document).encode("utf-8")
         if opts.error:
             print "\nParse errors:\n" + "\n".join(p.errors)
 
@@ -90,6 +96,9 @@ def getOptParser():
 
     parser.add_option("-e", "--error", action="store_true", default=False,
                       dest="error", help="Print a list of parse errors")
+
+    parser.add_option("-x", "--xml", action="store_true", default=False,
+                      dest="xml", help="output as xml")
 
     return parser
 
