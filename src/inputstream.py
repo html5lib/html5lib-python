@@ -79,6 +79,13 @@ class HTMLInputStream(object):
                 return open(source)
             except: pass
 
+            # Try opening from the internet
+            try:
+                if source.startswith('http://'):
+                    import urllib
+                    source = urllib.urlopen(source).read()
+            except: pass
+
             # Otherwise treat source as a string and convert to a file object
             import cStringIO
             stream = cStringIO.StringIO(str(source))
