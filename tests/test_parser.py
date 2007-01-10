@@ -12,10 +12,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
 import html5parser
 #Run tests over all treebuilders
 #XXX - it would be nice to automate finding all treebuilders or to allow running just one
-from treebuilders import simpletree, etree
+from treebuilders import simpletree, etree, dom
 
 treetypes = {"simpletree":simpletree.TreeBuilder, 
-             "ElementTree":etree.TreeBuilder}
+             "ElementTree":etree.TreeBuilder,
+             "DOM":dom.TreeBuilder}
 
 def parseTestcase(testString):
     testString = testString.split("\n")

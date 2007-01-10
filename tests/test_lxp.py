@@ -5,7 +5,7 @@ if __name__ == '__main__':
   sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
 
 from liberalxmlparser import *
-from treebuilders import simpletree
+from treebuilders import dom
 
 import unittest, re
 
@@ -25,13 +25,14 @@ xmlelem = re.compile(r'<(\w+)((?: [-:\w]+="[^"]*")+)(/?)>')
 class Xhtml5Test(unittest.TestCase):
 
   def assertXmlEquals(self, input, expected=None, parser=XMLParser):
-    document = parser(tree=simpletree.TreeBuilder).parse(input)
+    document = parser(tree=dom.TreeBuilder).parse(input).documentElement
     if not expected:
        expected = xmlelem.sub(sortattrs, input)
        expected = re.sub('&#(\d+);', ncr, expected)
-       self.assertEquals(expected, xmlelem.sub(sortattrs, document.toxml()))
+       output = xmlelem.sub(sortattrs, document.toxml('utf-8'))
+       self.assertEquals(expected, output)
     else:
-       self.assertEquals(expected, document.toxml())
+       self.assertEquals(expected, document.toxml('utf-8'))
 
   def assertXhtmlEquals(self, input, expected=None, parser=XHTMLParser):
     self.assertXmlEquals(input, expected, parser)
