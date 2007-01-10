@@ -28,9 +28,21 @@ def parse():
 
     try:
         f = args[-1]
+        # Try opening from the internet
+        if f.startswith('http://'):
+            try:
+                import urllib
+                f = urllib.urlopen(f).read()
+            except: pass
+        else:
+            try:
+                # Try opening from file system
+                f = open(f)
+            except IOError: pass
     except IndexError:
         print "No filename provided. Use -h for help"
         sys.exit(1)
+
     if opts.treebuilder is not None:
         try:
             treebuilder = __import__("treebuilders." + opts.treebuilder,
