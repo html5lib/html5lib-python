@@ -70,13 +70,18 @@ class HTMLParser(object):
             "trailingEnd": TrailingEndPhase(self, self.tree)
         }
 
-    def parse(self, stream, innerHTML=False):
+    def parse(self, stream, encoding=None, innerHTML=False):
         """Parse a HTML document into a well-formed tree
         
         stream - a filelike object or string containing the HTML to be parsed
         
         innerHTML - Are we parsing in innerHTML mode (note innerHTML=True 
         is not yet supported)
+
+        The optional encoding parameter must be a string that indicates
+        the encoding.  If specified, that encoding will be used,
+        regardless of any BOM or later declaration (such as in a meta
+        element)
         """
 
         self.tree.reset()
@@ -91,7 +96,7 @@ class HTMLParser(object):
         # assertations
         self.innerHTML = innerHTML
 
-        self.tokenizer = tokenizer.HTMLTokenizer(stream)
+        self.tokenizer = tokenizer.HTMLTokenizer(stream, encoding)
 
         # XXX This is temporary for the moment so there isn't any other
         # changes needed for the parser to work with the iterable tokenizer

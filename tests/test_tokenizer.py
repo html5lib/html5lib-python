@@ -20,8 +20,8 @@ class TokenizerTestParser(object):
         self._contentModelFlag = constants.contentModelFlags[contentModelFlag]
         self._lastStartTag = lastStartTag
 
-    def parse(self, stream, innerHTML=False):
-        tokenizer = self.tokenizer(stream)
+    def parse(self, stream, encoding=None, innerHTML=False):
+        tokenizer = self.tokenizer(stream, encoding)
         self.outputTokens = []
 
         tokenizer.contentModelFlag = self._contentModelFlag
