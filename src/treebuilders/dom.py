@@ -1,12 +1,16 @@
 import _base
 from xml.dom import minidom, Node
 
+import re
+illegal_xml_chars = re.compile("[\x01-\x08\x0B\x0C\x0E-\x1F]")
+
 class AttrList:
     def __init__(self, element):
         self.element = element
     def __iter__(self):
         return self.element.attributes.items().__iter__()
     def __setitem__(self, name, value):
+        value=illegal_xml_chars.sub(u'\uFFFD',value)
         self.element.setAttribute(name, value)
     def items(self):
         return self.element.attributes.items()
@@ -21,6 +25,7 @@ class NodeBuilder(_base.Node):
         self.element.appendChild(node.element)
 
     def insertText(self, data, insertBefore=None):
+        data=illegal_xml_chars.sub(u'\uFFFD',data)
         text = self.element.ownerDocument.createTextNode(data)
         if insertBefore:
             self.element.insertBefore(text, insertBefore.element)
@@ -48,6 +53,7 @@ class NodeBuilder(_base.Node):
     def setAttributes(self, attributes):
         if attributes:
             for name, value in attributes.items():
+                value=illegal_xml_chars.sub(u'\uFFFD',value)
                 self.element.setAttribute(name, value)
 
     attributes = property(getAttributes, setAttributes)
@@ -83,6 +89,7 @@ class TreeBuilder(_base.TreeBuilder):
         return self.dom
 
     def insertText(self, data, parent=None):
+        data=illegal_xml_chars.sub(u'\uFFFD',data)
         if parent <> self:
             _base.TreeBuilder.insertText(self, data, parent)
         else:

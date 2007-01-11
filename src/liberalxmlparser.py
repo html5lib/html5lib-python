@@ -18,8 +18,8 @@ References:
  * Optional namespace support
  * Special case the output of XHTML <script> elements so that the empty
    element syntax is never used, even when the src attribute is provided.
-   Also investigate the use of <![CDATA[]>> to ensure dual HTML/XHTML
-   compatibility.
+   Also investigate the use of <![CDATA[]>> when tokenizer.contentModelFlag
+   indicates CDATA processsing to ensure dual HTML/XHTML compatibility.
  * Map illegal XML characters to U+FFFD, possibly with additional markup in
    the case of XHTML
  * Selectively lowercase only XHTML, but not foreign markup
