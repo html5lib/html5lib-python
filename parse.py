@@ -8,7 +8,7 @@ import sys
 import os
 from optparse import OptionParser
 
-from src import html5parser, treebuilders
+from src import html5parser
 
 def convertTreeDump(treedump):
     """convert the output of str(document) to something more readable
@@ -45,17 +45,17 @@ def parse():
 
     if opts.treebuilder is not None:
         try:
-            treebuilder = __import__("treebuilders." + opts.treebuilder,
-                None,None,"treebuilders").TreeBuilder
+            treebuilder = __import__("src.treebuilders." + opts.treebuilder,
+                None,None,"src").TreeBuilder
         except ImportError, name:
             print "Treebuilder %s not found"%name
             raise
         except Exception, foo:
-            import treebuilders.simpletree
-            treebuilder = treebuilders.simpletree.TreeBuilder
+            import src.treebuilders.simpletree
+            treebuilder = src.treebuilders.simpletree.TreeBuilder
     else:
-        import treebuilders.simpletree
-        treebuilder = treebuilders.simpletree.TreeBuilder
+        import src.treebuilders.simpletree
+        treebuilder = src.treebuilders.simpletree.TreeBuilder
 
     p = html5parser.HTMLParser(tree=treebuilder)
 
