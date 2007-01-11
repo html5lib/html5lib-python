@@ -1,16 +1,4 @@
-import sys
-import os
-
-#Insert the parent directory of the current file into the path
-_curDir = os.path.abspath(os.curdir)
-os.chdir(os.path.dirname(__file__))
-sys.path.insert(0, os.path.abspath(os.pardir))
-os.chdir(_curDir)
-del _curDir
-
-from constants import contentModelFlags, spaceCharacters
-from constants import scopingElements, formattingElements, specialElements
-from constants import headingElements, tableInsertModeElements
+from constants import scopingElements, tableInsertModeElements
 
 # The scope markers are inserted when entering buttons, object elements,
 # marquees, table cells, and table captions, and are used to prevent formatting

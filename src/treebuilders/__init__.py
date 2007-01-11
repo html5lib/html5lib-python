@@ -29,3 +29,8 @@ The supplied simpletree module provides a python-only implementation
 of a full treebuilder and is a useful reference for the semantics of
 the various methods.
 """
+
+import os.path
+__path__.append(os.path.dirname(__path__[0]))
+
+import dom, etree, simpletree
