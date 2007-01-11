@@ -90,7 +90,10 @@ def parse():
         else:
             print p.tree.testSerializer(document).encode("utf-8")
         if opts.error:
-            print "\nParse errors:\n" + "\n".join(p.errors)
+            errList=[]
+            for pos, message in p.errors:
+                errList.append("Line %i Col %i"%pos + " " + message)
+            print "\nParse errors:\n" + "\n".join(errList)
 
 def getOptParser():
     parser = OptionParser(usage=__doc__)

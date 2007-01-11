@@ -120,7 +120,7 @@ class HTMLParser(object):
 
     def parseError(self, data="XXX ERROR MESSAGE NEEDED"):
         # The idea is to make data mandatory.
-        self.errors.append(data)
+        self.errors.append((self.tokenizer.stream.position(), data))
         if self.strict:
             raise ParseError
 
