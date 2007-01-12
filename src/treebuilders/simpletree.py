@@ -13,6 +13,9 @@ class Node(_base.Node):
     def __unicode__(self):
         return self.name
 
+    def toxml(self):
+        raise NotImplementedError
+
     def __repr__(self):
         return "<%s %s>" % (self.__class__, self.name)
 
@@ -71,17 +74,17 @@ class Document(Node):
     def __unicode__(self):
         return "#document"
 
-    def printTree(self):
-        tree = unicode(self)
-        for child in self.childNodes:
-            tree += child.printTree(2)
-        return tree
-
     def toxml(self, encoding="utf=8"):
         result = ''
         for child in self.childNodes:
             result += child.toxml()
         return result.encode(encoding)
+
+    def printTree(self):
+        tree = unicode(self)
+        for child in self.childNodes:
+            tree += child.printTree(2)
+        return tree
 
 class DocumentType(Node):
     def __init__(self, name):
@@ -90,8 +93,7 @@ class DocumentType(Node):
     def __unicode__(self):
         return "<!DOCTYPE %s>" % self.name
 
-    def toxml(self):
-        return "";
+    toxml = __unicode__
 
 class TextNode(Node):
     def __init__(self, value):
@@ -112,16 +114,6 @@ class Element(Node):
     def __unicode__(self):
         return "<%s>" % self.name
 
-    def printTree(self, indent):
-        tree = '\n|%s%s' % (' '*indent, unicode(self))
-        indent += 2
-        if self.attributes:
-            for name, value in self.attributes.iteritems():
-                tree += '\n|%s%s="%s"' % (' ' * indent, name, value)
-        for child in self.childNodes:
-            tree += child.printTree(indent)
-        return tree
-
     def toxml(self):
         result = '<' + self.name
         if self.attributes:
@@ -136,6 +128,16 @@ class Element(Node):
             result += '/>'
         return result
 
+    def printTree(self, indent):
+        tree = '\n|%s%s' % (' '*indent, unicode(self))
+        indent += 2
+        if self.attributes:
+            for name, value in self.attributes.iteritems():
+                tree += '\n|%s%s="%s"' % (' ' * indent, name, value)
+        for child in self.childNodes:
+            tree += child.printTree(indent)
+        return tree
+
 class CommentNode(Node):
     def __init__(self, data):
         Node.__init__(self, None)
@@ -143,8 +145,8 @@ class CommentNode(Node):
 
     def __unicode__(self):
         return "<!-- %s -->" % self.data
-
-    toxml = __unicode__ 
+    
+    toxml = __unicode__
 
 class TreeBuilder(_base.TreeBuilder):
     documentClass = Document
