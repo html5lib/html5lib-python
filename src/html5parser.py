@@ -85,6 +85,7 @@ class HTMLParser(object):
         """
 
         self.tree.reset()
+        self.firstStartTag = False
         self.errors = []
 
         self.phase = self.phases["initial"]
@@ -161,7 +162,6 @@ class HTMLParser(object):
         elif token["type"] == "EndTag":
             if token["data"]:
                self.parseError(_("End tag contains unexpected attributes."))
-               token["data"] = {}
             token["name"] = token["name"].lower()
 
         return token
@@ -261,11 +261,14 @@ class Phase(object):
         self.startTagHandler[name](name, attributes)
 
     def startTagHtml(self, name, attributes):
+        if self.parser.firstStartTag == False and name == "html":
+           self.parser.parseError(_("html needs to be the first start tag."))
         # XXX Need a check here to see if the first start tag token emitted is
         # this token... If it's not, invoke self.parser.parseError().
         for attr, value in attributes.iteritems():
             if attr not in self.tree.openElements[0].attributes:
                 self.tree.openElements[0].attributes[attr] = value
+        self.parser.firstStartTag = False
 
     def processEndTag(self, name):
         self.endTagHandler[name](name)
@@ -333,6 +336,8 @@ class RootElementPhase(Phase):
         self.parser.phase.processCharacters(data)
 
     def processStartTag(self, name, attributes):
+        if name == "html":
+            self.parser.firstStartTag = True
         self.insertHtmlElement()
         self.parser.phase.processStartTag(name, attributes)
 
@@ -472,11 +477,12 @@ class InHeadPhase(Phase):
         if self.tree.openElements[-1].name == name:
             self.tree.openElements.pop()
         else:
-            self.parser.parseError(_("Unexpected end tag " + name +\
-              ". Ignored."))
+            self.parser.parseError(_("Unexpected end tag (" + name +\
+              "). Ignored."))
 
     def endTagOther(self, name):
-        self.parser.parseError(_("Unexpected end tag " + name + ". Ignored."))
+        self.parser.parseError(_("Unexpected end tag (" + name +\
+          "). Ignored."))
 
     def anythingElse(self):
         if self.tree.openElements[-1].name == "head":
@@ -1010,8 +1016,8 @@ class InBodyPhase(Phase):
         if self.tree.openElements[-1].name == name:
             self.tree.openElements.pop()
         else:
-            self.parser.parseError(_("Unexpected end tag " + name +\
-              ". Ignored."))
+            self.parser.parseError(_("Unexpected end tag (" + name +\
+              "). Ignored."))
 
     def endTagNew(self, name):
         """New HTML5 elements, "event-source", "section", "nav",
@@ -1026,8 +1032,8 @@ class InBodyPhase(Phase):
             if node.name == name:
                 self.tree.generateImpliedEndTags()
                 if self.tree.openElements[-1].name != name:
-                    self.parser.parseError(_("Unexpected end tag " + name +\
-                      "."))
+                    self.parser.parseError(_("Unexpected end tag (" + name +\
+                      ")."))
                 while self.tree.openElements.pop() != node:
                     pass
                 break

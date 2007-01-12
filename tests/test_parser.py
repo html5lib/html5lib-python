@@ -21,7 +21,7 @@ treetypes = {"simpletree":simpletree.TreeBuilder,
 
 #Run the parse error checks
 #XXX - ideally want this to be a command line argument
-checkParseErrors = False
+checkParseErrors = True
 
 def parseTestcase(testString):
     testString = testString.split("\n")
