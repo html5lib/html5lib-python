@@ -110,6 +110,9 @@ class HTMLTokenizer(object):
         If not present self.tokenQueue.append({"type": "ParseError"}) is invoked.
         """
 
+        # XXX More need to be done here. For instance, #13 should prolly be
+        # converted to #10 so we don't get \r (#13 is \r right?) in the DOM and
+        # such. Thoughts on this appreciated.
         allowed = digits
         radix = 10
         if isHex:
@@ -245,38 +248,21 @@ class HTMLTokenizer(object):
             self.currentToken["data"][-1][1] += u"&"
 
     def emitCurrentToken(self):
-        """This method is a generic handler for emitting the StartTag,
-        EndTag, Comment and Doctype. It also sets the state to
-        "data" because that's what's needed after a token has been emitted.
+        """This method is a generic handler for emitting the tags. It also sets
+        the state to "data" because that's what's needed after a token has been
+        emitted.
         """
-
-        # Although isinstance() is http://www.canonical.org/~kragen/isinstance/
-        # considered harmful it should be ok here given that the classes are for
-        # internal usage.
-
-        token = self.currentToken
 
         # If an end tag has attributes it's a parse error and they should
         # be removed
-        if token["type"] == "EndTag" and token["data"]:
+        if self.currentToken["type"] == "EndTag" and self.currentToken["data"]:
             self.tokenQueue.append({"type": "ParseError", "data":
               _("End tag contains unexpected attributes.")})
-            token["data"] = {}
+            self.currentToken["data"] = {}
 
         # Add token to the queue to be yielded
-        self.tokenQueue.append(token)
+        self.tokenQueue.append(self.currentToken)
         self.state = self.states["data"]
-
-    def emitCurrentTokenWithParseError(self, data=None):
-        # XXX if we want useful error messages we need to inline this method
-        """This method is equivalent to emitCurrentToken (well, it invokes it)
-        except that it also puts "data" back on the characters queue if a data
-        argument is provided and it throws a parse error."""
-        if data:
-            self.stream.queue.append(data)
-        self.tokenQueue.append({"type": "ParseError", "data":
-          _("XXX Something is wrong with the emitted token.")})
-        self.emitCurrentToken()
 
     def attributeValueQuotedStateHandler(self, quoteType):
         data = self.stream.char()
@@ -285,7 +271,9 @@ class HTMLTokenizer(object):
         elif data == u"&":
             self.processEntityInAttribute()
         elif data == EOF:
-            self.emitCurrentTokenWithParseError(data)
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected end of file in attribute value.")})
+            self.emitCurrentToken()
         else:
             self.currentToken["data"][-1][1] += data + self.stream.charsUntil(\
               (quoteType, u"&"))
@@ -358,8 +346,7 @@ class HTMLTokenizer(object):
                 # XXX
                 self.tokenQueue.append({"type": "ParseError", "data":
                   _("Expected tag name. Got something else instead")})
-                # XXX can't we do "<" + data here?
-                self.tokenQueue.append({"type": "Characters", "data": u"<"})
+                self.tokenQueue.append({"type": "Characters", "data": u"<" + data})
                 self.stream.queue.append(data)
                 self.state = self.states["data"]
         else:
@@ -427,7 +414,7 @@ class HTMLTokenizer(object):
                 self.tokenQueue.append({"type": "Characters", "data": u"</"})
                 self.state = self.states["data"]
             else:
-                # XXX data can be '...
+                # XXX data can be _'_...
                 self.tokenQueue.append({"type": "ParseError", "data":
                   _("Expected closing tag. Unexpected character '" + data + "' found.")})
                 self.stream.queue.append(data)
@@ -443,8 +430,15 @@ class HTMLTokenizer(object):
               self.stream.charsUntil(asciiLetters, True)
         elif data == u">":
             self.emitCurrentToken()
-        elif data == u"<" or data == EOF:
-            self.emitCurrentTokenWithParseError(data)
+        elif data == u"<":
+            self.stream.queue.append(data)
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected < character when getting the tag name.")})
+            self.emitCurrentToken()
+        elif data == EOF:
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected end of file in the tag name.")})
+            self.emitCurrentToken()
         elif data == u"/":
             self.processSolidusInTag()
             self.state = self.states["beforeAttributeName"]
@@ -463,8 +457,15 @@ class HTMLTokenizer(object):
             self.emitCurrentToken()
         elif data == u"/":
             self.processSolidusInTag()
-        elif data == u"<" or data == EOF:
-            self.emitCurrentTokenWithParseError(data)
+        elif data == u"<":
+            self.stream.queue.append(data)
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected < character. Expected attribute name instead.")})
+            self.emitCurrentToken()
+        elif data == EOF:
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected end of file. Expected attribute name instead.")})
+            self.emitCurrentToken()
         else:
             self.currentToken["data"].append([data, ""])
             self.state = self.states["attributeName"]
@@ -489,8 +490,16 @@ class HTMLTokenizer(object):
         elif data == u"/":
             self.processSolidusInTag()
             self.state = self.states["beforeAttributeName"]
-        elif data == u"<" or data == EOF:
-            self.emitCurrentTokenWithParseError(data)
+        elif data == u"<":
+            self.stream.queue.append(data)
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected < character in attribute name.")})
+            self.emitCurrentToken()
+            leavingThisState = False
+        elif data == EOF:
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected end of file in attribute name.")})
+            self.emitCurrentToken()
             leavingThisState = False
         else:
             self.currentToken["data"][-1][0] += data
@@ -523,8 +532,15 @@ class HTMLTokenizer(object):
         elif data == u"/":
             self.processSolidusInTag()
             self.state = self.states["beforeAttributeName"]
-        elif data == u"<" or data == EOF:
-            self.emitCurrentTokenWithParseError(data)
+        elif data == u"<":
+            self.stream.queue.append(data)
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected < character. Expected = or end of tag.")})
+            self.emitCurrentToken()
+        elif data == EOF:
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected end of file. Expected = or end of tag.")})
+            self.emitCurrentToken()
         else:
             self.currentToken["data"].append([data, ""])
             self.state = self.states["attributeName"]
@@ -543,8 +559,15 @@ class HTMLTokenizer(object):
             self.state = self.states["attributeValueSingleQuoted"]
         elif data == u">":
             self.emitCurrentToken()
-        elif data == u"<" or data == EOF:
-            self.emitCurrentTokenWithParseError(data)
+        elif data == u"<":
+            self.stream.queue.append(data)
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected < character. Expected attribute value.")})
+            self.emitCurrentToken()
+        elif data == EOF:
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected end of file. Expected attribute value.")})
+            self.emitCurrentToken()
         else:
             self.currentToken["data"][-1][1] += data
             self.state = self.states["attributeValueUnQuoted"]
@@ -569,8 +592,15 @@ class HTMLTokenizer(object):
             self.processEntityInAttribute()
         elif data == u">":
             self.emitCurrentToken()
-        elif data == u"<" or data == EOF:
-            self.emitCurrentTokenWithParseError(data)
+        elif data == u"<":
+            self.stream.queue.append(data)
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected < character in attribute value.")})
+            self.emitCurrentToken()
+        elif data == EOF:
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected end of file in attribute value.")})
+            self.emitCurrentToken()
         else:
             self.currentToken["data"][-1][1] += data + self.stream.charsUntil( \
               frozenset(("&", ">","<")) | spaceCharacters)
@@ -615,8 +645,10 @@ class HTMLTokenizer(object):
         if data == u"-":
             self.state = self.states["commentDash"]
         elif data == EOF:
-            # XXX EMIT
-            self.emitCurrentTokenWithParseError()
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected end of file in comment.")})
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.states["data"]
         else:
             self.currentToken["data"] += data + self.stream.charsUntil(u"-")
         return True
@@ -626,8 +658,10 @@ class HTMLTokenizer(object):
         if data == u"-":
             self.state = self.states["commentEnd"]
         elif data == EOF:
-            # XXX EMIT
-            self.emitCurrentTokenWithParseError()
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected end of file in comment (-)")})
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.states["data"]
         else:
             self.currentToken["data"] += u"-" + data +\
               self.stream.charsUntil(u"-")
@@ -640,15 +674,17 @@ class HTMLTokenizer(object):
     def commentEndState(self):
         data = self.stream.char()
         if data == u">":
-            # XXX EMIT
-            self.emitCurrentToken()
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.states["data"]
         elif data == u"-":
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Unexpected '-' after '--' found in comment.")})
             self.currentToken["data"] += data
         elif data == EOF:
-            # XXX EMIT
-            self.emitCurrentTokenWithParseError()
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected end of file in comment (--).")})
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.states["data"]
         else:
             # XXX
             self.tokenQueue.append({"type": "ParseError", "data":
@@ -678,11 +714,15 @@ class HTMLTokenizer(object):
         elif data == u">":
             # Character needs to be consumed per the specification so don't
             # invoke emitCurrentTokenWithParseError with "data" as argument.
-            # XXX EMIT
-            self.emitCurrentTokenWithParseError()
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected > character. Expected DOCTYPE name.")})
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.states["data"]
         elif data == EOF:
-            # XXX EMIT
-            self.emitCurrentTokenWithParseError()
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected end of file. Expected DOCTYPE name.")})
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.states["data"]
         else:
             self.currentToken["name"] = data
             self.state = self.states["doctypeName"]
@@ -698,8 +738,10 @@ class HTMLTokenizer(object):
             self.tokenQueue.append(self.currentToken)
             self.state = self.states["data"]
         elif data == EOF:
-            # XXX EMIT
-            self.emitCurrentTokenWithParseError()
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected end of file in DOCTYPE name.")})
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.states["data"]
         else:
             # We can't just uppercase everything that arrives here. For
             # instance, non-ASCII characters.
@@ -724,7 +766,11 @@ class HTMLTokenizer(object):
         elif data == EOF:
             self.currentToken["data"] = True
             # XXX EMIT
-            self.emitCurrentTokenWithParseError(data)
+            self.stream.queue.append(data)
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected end of file in DOCTYPE.")})
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.states["data"]
         else:
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Expected space or '>'. Got '" + data + "'")})
@@ -739,7 +785,11 @@ class HTMLTokenizer(object):
             self.state = self.states["data"]
         elif data == EOF:
             # XXX EMIT
-            self.emitCurrentTokenWithParseError(data)
+            self.stream.queue.append(data)
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected end of file in bogus doctype.")})
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.states["data"]
         else:
             pass
         return True
