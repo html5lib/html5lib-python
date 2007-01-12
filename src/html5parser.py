@@ -838,7 +838,7 @@ class InBodyPhase(Phase):
             self.tree.generateImpliedEndTags()
         if self.tree.openElements[-1].name != name:
              self.parser.parseError((u"End tag (" + name + ") seen too "
-             u"early. Expected other end tag."))
+               u"early. Expected other end tag."))
         if inScope:
             node = self.tree.openElements.pop()
             while node.name != name:
@@ -853,7 +853,8 @@ class InBodyPhase(Phase):
         if self.tree.elementInScope(name):
             self.tree.generateImpliedEndTags(name)
             if self.tree.openElements[-1].name != name:
-                self.parser.parseError()
+                self.parser.parseError((u"End tag (" + name + ") seen too "
+                  u"early. Expected other end tag."))
 
         if self.tree.elementInScope(name):
             node = self.tree.openElements.pop()
@@ -866,7 +867,8 @@ class InBodyPhase(Phase):
                 self.tree.generateImpliedEndTags()
                 break
         if self.tree.openElements[-1].name != name:
-            self.parser.parseError()
+            self.parser.parseError((u"Unexpected end tag (" + name + "). "
+                  u"Expected other end tag."))
 
         for item in headingElements:
             if self.tree.elementInScope(item):
@@ -878,23 +880,28 @@ class InBodyPhase(Phase):
     def endTagFormatting(self, name):
         """The much-feared adoption agency algorithm
         """
+        # http://www.whatwg.org/specs/web-apps/current-work/#adoptionAgency
+        # XXX Better parseError messages appreciated.
         while True:
             # Step 1 paragraph 1
             afeElement = self.tree.elementInActiveFormattingElements(name)
             if not afeElement or (afeElement in self.tree.openElements and
               not self.tree.elementInScope(afeElement.name)):
-                self.parser.parseError()
+                self.parser.parseError(_(u"End tag (" + name + ") violates "
+                  u" step 1, paragraph 1 of the adoption agency algorithm."))
                 return
 
             # Step 1 paragraph 2
             elif afeElement not in self.tree.openElements:
-                self.parser.parseError()
+                self.parser.parseError(_(u"End tag (" + name + ") violates "
+                  u" step 1, paragraph 2 of the adoption agency algorithm."))
                 self.tree.activeFormattingElements.remove(afeElement)
                 return
 
             # Step 1 paragraph 3
             if afeElement != self.tree.openElements[-1]:
-                self.parser.parseError()
+                self.parser.parseError(_(u"End tag (" + name + ") violates "
+                  u" step 1, paragraph 3 of the adoption agency algorithm."))
 
             # Step 2
             # Start of the adoption agency algorithm proper
