@@ -120,7 +120,7 @@ class HTMLParser(object):
         return self.tree.getDocument()
 
     def parseError(self, data="XXX ERROR MESSAGE NEEDED"):
-        # The idea is to make data mandatory.
+        # XXX The idea is to make data mandatory.
         self.errors.append((self.tokenizer.stream.position(), data))
         if self.strict:
             raise ParseError
@@ -165,10 +165,6 @@ class HTMLParser(object):
             token["name"] = token["name"].lower()
 
         return token
-
-    #XXX - almost everthing after this point should be moved into a
-    #seperate treebuilder object
-
 
     def resetInsertionMode(self):
         # The name of this method is mostly historical. (It's also used in the

@@ -319,7 +319,8 @@ class HTMLTokenizer(object):
                 # XXX In theory it could be something besides a tag name. But
                 # do we really care?
                 self.tokenQueue.append({"type": "ParseError", "data":
-                  _("Expected tag name. Got '?' instead (HTML doesn't support processing instructions).")})
+                  _("Expected tag name. Got '?' instead (HTML doesn't "
+                  "support processing instructions).")})
                 self.stream.queue.append(data)
                 self.state = self.states["bogusComment"]
             else:
