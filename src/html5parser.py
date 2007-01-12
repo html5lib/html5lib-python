@@ -463,7 +463,7 @@ class InHeadPhase(Phase):
         if self.tree.openElements[-1].name == "head":
             self.tree.openElements.pop()
         else:
-            self.parser.parseError()
+            self.parser.parseError(_(u"Unexpected end tag (head). Ignored."))
         self.parser.phase = self.parser.phases["afterHead"]
 
     def endTagHtml(self, name):
@@ -474,11 +474,11 @@ class InHeadPhase(Phase):
         if self.tree.openElements[-1].name == name:
             self.tree.openElements.pop()
         else:
-            self.parser.parseError(_("Unexpected end tag (" + name +\
+            self.parser.parseError(_(u"Unexpected end tag (" + name +\
               "). Ignored."))
 
     def endTagOther(self, name):
-        self.parser.parseError(_("Unexpected end tag (" + name +\
+        self.parser.parseError(_(u"Unexpected end tag (" + name +\
           "). Ignored."))
 
     def anythingElse(self):
@@ -517,7 +517,8 @@ class AfterHeadPhase(Phase):
         self.parser.phase = self.parser.phases["inFrameset"]
 
     def startTagFromHead(self, name, attributes):
-        self.parser.parseError()
+        self.parser.parseError(_(u"Unexpected start tag (" + name +\
+          ") that belongs in head. Moved."))
         self.parser.phase = self.parser.phases["inHead"]
         self.parser.phase.processStartTag(name, attributes)
 
@@ -618,12 +619,12 @@ class InBodyPhase(Phase):
         self.parser.phases["inHead"].processStartTag(name, attributes)
 
     def startTagFromHead(self, name, attributes):
-        self.parser.parseError(_("Unexpected start tag " + name +\
-          " that belongs in the head. Moved."))
+        self.parser.parseError(_(u"Unexpected start tag (" + name +\
+          ") that belongs in the head. Moved."))
         self.parser.phases["inHead"].processStartTag(name, attributes)
 
     def startTagBody(self, name, attributes):
-        self.parser.parseError(_("Unexpected start tag body"))
+        self.parser.parseError(_(u"Unexpected start tag (body)."))
         if len(self.tree.openElements) == 1 \
           or self.tree.openElements[1].name != "body":
             assert self.parser.innerHTML
@@ -687,7 +688,8 @@ class InBodyPhase(Phase):
     def startTagA(self, name, attributes):
         afeAElement = self.tree.elementInActiveFormattingElements("a")
         if afeAElement:
-            self.parser.parseError()
+            self.parser.parseError(_(u"Start tag a was in the list of active "
+              "formatting elements."))
             self.endTagFormatting("a")
             if afeAElement in self.tree.openElements:
                 self.tree.openElements.remove(afeAElement)
@@ -702,8 +704,8 @@ class InBodyPhase(Phase):
 
     def startTagButton(self, name, attributes):
         if self.tree.elementInScope("button"):
-            self.parser.parseError(_("Unexpected start tag button. Implying"
-              "button end tag."))
+            self.parser.parseError(_("Unexpected start tag (button) implied "
+              "end tag (button)."))
             self.processEndTag("button")
             self.parser.phase.processStartTag(name, attributes)
         else:
@@ -740,8 +742,8 @@ class InBodyPhase(Phase):
 
     def startTagImage(self, name, attributes):
         # No really...
-        self.parser.parseError(_("Unexpected start tag image. Use img "
-          "instead"))
+        self.parser.parseError(_(u"Unexpected start tag (image). Treated "
+          u"as img."))
         self.processStartTag("img", attributes)
 
     def startTagInput(self, name, attributes):
@@ -793,8 +795,8 @@ class InBodyPhase(Phase):
         "option", "optgroup", "tbody", "td", "tfoot", "th", "thead",
         "tr", "noscript"
         """
-        self.parser.parseError(_("Unexpected start tag (" + name +\
-          "). Ignored."))
+        self.parser.parseError(_(u"Unexpected start tag (" + name +\
+          u"). Ignored."))
 
     def startTagNew(self, name, other):
         """New HTML5 elements, "event-source", "section", "nav",
@@ -835,7 +837,8 @@ class InBodyPhase(Phase):
         if inScope:
             self.tree.generateImpliedEndTags()
         if self.tree.openElements[-1].name != name:
-             self.parser.parseError()
+             self.parser.parseError((u"End tag (" + name + ") seen too "
+             u"early. Expected other end tag."))
         if inScope:
             node = self.tree.openElements.pop()
             while node.name != name:
