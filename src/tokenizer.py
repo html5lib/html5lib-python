@@ -257,19 +257,6 @@ class HTMLTokenizer(object):
         self.tokenQueue.append(self.currentToken)
         self.state = self.states["data"]
 
-    def attributeValueQuotedStateHandler(self, quoteType):
-        data = self.stream.char()
-        if data == quoteType:
-            self.state = self.states["beforeAttributeName"]
-        elif data == u"&":
-            self.processEntityInAttribute()
-        elif data == EOF:
-            self.tokenQueue.append({"type": "ParseError", "data":
-              _("Unexpected end of file in attribute value.")})
-            self.emitCurrentToken()
-        else:
-            self.currentToken["data"][-1][1] += data + self.stream.charsUntil(\
-              (quoteType, u"&"))
 
     # Below are the various tokenizer states worked out.
 
@@ -567,14 +554,33 @@ class HTMLTokenizer(object):
         return True
 
     def attributeValueDoubleQuotedState(self):
-        # AT We could also let self.attributeValueQuotedStateHandler always
-        # return true and then return that directly here. Not sure what is
-        # faster or better...
-        self.attributeValueQuotedStateHandler(u"\"")
+        data = self.stream.char()
+        if data == "\"":
+            self.state = self.states["beforeAttributeName"]
+        elif data == u"&":
+            self.processEntityInAttribute()
+        elif data == EOF:
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected end of file in attribute value (\").")})
+            self.emitCurrentToken()
+        else:
+            self.currentToken["data"][-1][1] += data +\
+              self.stream.charsUntil(("\"", u"&"))
         return True
 
     def attributeValueSingleQuotedState(self):
-        self.attributeValueQuotedStateHandler(u"'")
+        data = self.stream.char()
+        if data == "'":
+            self.state = self.states["beforeAttributeName"]
+        elif data == u"&":
+            self.processEntityInAttribute()
+        elif data == EOF:
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected end of file in attribute value (').")})
+            self.emitCurrentToken()
+        else:
+            self.currentToken["data"][-1][1] += data +\
+              self.stream.charsUntil(("'", u"&"))
         return True
 
     def attributeValueUnQuotedState(self):

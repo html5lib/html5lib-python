@@ -46,6 +46,8 @@ class TokenizerTestParser(object):
         self.outputTokens.append([u"StartTag", token["name"], token["data"]])
 
     def processEndTag(self, token):
+        if token["data"]:
+            self.processParseError(None)
         self.outputTokens.append([u"EndTag", token["name"]])
 
     def processComment(self, token):
