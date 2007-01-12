@@ -1,4 +1,5 @@
 import _base
+from constants import voidElements
 from xml.sax.saxutils import escape
 
 # Really crappy basic implementation of a DOM-core like thing
@@ -75,11 +76,17 @@ class Document(Node):
         return "#document"
 
     def toxml(self, encoding="utf=8"):
-        result = ''
+        result = ""
         for child in self.childNodes:
             result += child.toxml()
         return result.encode(encoding)
 
+    def hilite(self, encoding="utf-8"):
+        result = "<pre>"
+        for child in self.childNodes:
+            result += child.hilite()
+        return result.encode(encoding) + "</pre>"
+    
     def printTree(self):
         tree = unicode(self)
         for child in self.childNodes:
@@ -94,6 +101,9 @@ class DocumentType(Node):
         return "<!DOCTYPE %s>" % self.name
 
     toxml = __unicode__
+    
+    def hilite(self):
+        return '<code class="markup doctype">&lt;!DOCTYPE %s></code>' % self.name
 
 class TextNode(Node):
     def __init__(self, value):
@@ -105,6 +115,8 @@ class TextNode(Node):
 
     def toxml(self):
         return escape(self.value)
+    
+    hilite = toxml
 
 class Element(Node):
     def __init__(self, name):
@@ -127,6 +139,19 @@ class Element(Node):
         else:
             result += '/>'
         return result
+    
+    def hilite(self):
+        result = '&lt;<code class="markup element-name">%s</code>' % self.name
+        if self.attributes:
+            for name, value in self.attributes.iteritems():
+                result += ' <code class="markup attribute-name">%s</code>=<code class="markup attribute-value">"%s"</code>' % (name, escape(value, {'"':'&quot;'}))
+        if self.childNodes:
+            result += ">"
+            for child in self.childNodes:
+                result += child.hilite()
+        elif self.name in voidElements:
+            return result + ">"
+        return result + '&lt;/<code class="markup element-name">%s</code>>' % self.name
 
     def printTree(self, indent):
         tree = '\n|%s%s' % (' '*indent, unicode(self))
@@ -146,7 +171,11 @@ class CommentNode(Node):
     def __unicode__(self):
         return "<!-- %s -->" % self.data
     
-    toxml = __unicode__
+    def toxml(self):
+        return "<!--%s-->" % self.data
+
+    def hilite(self):
+        return '<code class="markup comment">&lt;!--%s--></code>' % escape(self.data)
 
 class TreeBuilder(_base.TreeBuilder):
     documentClass = Document

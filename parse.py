@@ -86,7 +86,9 @@ def parse():
     else:
         document = p.parse(f)
         if opts.xml:
-            print document.toxml('utf-8')
+            print document.toxml("utf-8")
+        elif opts.hilite:
+            print document.hilite("utf-8")
         else:
             print p.tree.testSerializer(document).encode("utf-8")
         if opts.error:
@@ -113,7 +115,10 @@ def getOptParser():
                       dest="error", help="Print a list of parse errors")
 
     parser.add_option("-x", "--xml", action="store_true", default=False,
-                      dest="xml", help="output as xml")
+                      dest="xml", help="Output as xml")
+    
+    parser.add_option("", "--hilite", action="store_true", default=False,
+                      dest="hilite", help="Output as formatted highlighted code.")
 
     return parser
 
