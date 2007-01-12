@@ -1,8 +1,6 @@
-if __name__ == '__main__':
-  # XXX Allow us to import the sibling module
-  import os, sys
-  os.chdir(os.path.split(os.path.abspath(__file__))[0])
-  sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
+import os, sys
+os.chdir(os.path.split(os.path.abspath(__file__))[0])
+sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
 
 from liberalxmlparser import *
 from treebuilders import dom
