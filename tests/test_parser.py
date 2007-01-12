@@ -19,6 +19,10 @@ treetypes = {"simpletree":simpletree.TreeBuilder,
              "ElementTree":etree.TreeBuilder,
              "DOM":dom.TreeBuilder}
 
+#Run the parse error checks
+#XXX - ideally want this to be a command line argument
+checkParseErrors = False
+
 def parseTestcase(testString):
     testString = testString.split("\n")
     try:
@@ -69,9 +73,12 @@ class TestCase(unittest.TestCase):
         self.assertEquals(output,
                           convertTreeDump(p.tree.testSerializer(document)),
                           errorMsg)
-#         errorMsg2 = "\n".join(["\n\nInput errors:\n" + "\n".join(errors),
-#           "Actual errors:\n" + "\n".join(p.errors)])
-#         self.assertEquals(len(p.errors), len(errors), errorMsg2)
+        errStr = ["Line: %i Col: %i %s"%(line, col, message) for
+                  ((line,col), message) in p.errors]
+        errorMsg2 = "\n".join(["\n\nInput errors:\n" + "\n".join(errors),
+                               "Actual errors:\n" + "\n".join(errStr)])
+        if checkParseErrors:
+            self.assertEquals(len(p.errors), len(errors), errorMsg2)
 
 def test_parser():
     for name, cls in treetypes.iteritems():

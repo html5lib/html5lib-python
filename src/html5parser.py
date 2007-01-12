@@ -231,7 +231,11 @@ class Phase(object):
 
     def processEOF(self):
         self.tree.generateImpliedEndTags()
-        if self.parser.innerHTML == True and len(self.tree.openElements) > 1:
+        if (len(self.tree.openElements) > 2 or 
+            (len(self.tree.openElements) == 2 and 
+             self.tree.openElements[1].name != "body")):
+            self.parser.parseError(_("Unexpected end of file. Missing body or html closing tags"))
+        if self.parser.innerHTML and len(self.tree.openElements) > 1:
             # XXX No need to check for "body" because our EOF handling is not
             # per specification. (Specification needs an update.)
             #
@@ -1109,7 +1113,7 @@ class InTablePhase(Phase):
     def endTagTable(self, name):
         if self.tree.elementInScope("table", True):
             self.tree.generateImpliedEndTags()
-            if self.tree.openElements[-1].name == "table":
+            if self.tree.openElements[-1].name != "table":
                 self.parser.parseError()
             while self.tree.openElements[-1].name != "table":
                 self.tree.openElements.pop()
