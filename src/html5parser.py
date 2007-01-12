@@ -159,6 +159,9 @@ class HTMLParser(object):
                 token["data"] = {}
 
         elif token["type"] == "EndTag":
+            if token["data"]:
+               self.parseError(_("End tag contains unexpected attributes."))
+               self.token["data"] = {}
             token["name"] = token["name"].lower()
 
         return token

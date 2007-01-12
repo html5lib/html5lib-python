@@ -346,7 +346,7 @@ class HTMLTokenizer(object):
                 # XXX
                 self.tokenQueue.append({"type": "ParseError", "data":
                   _("Expected tag name. Got something else instead")})
-                self.tokenQueue.append({"type": "Characters", "data": u"<" + data})
+                self.tokenQueue.append({"type": "Characters", "data": u"<"})
                 self.stream.queue.append(data)
                 self.state = self.states["data"]
         else:
