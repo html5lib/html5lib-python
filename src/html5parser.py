@@ -234,17 +234,18 @@ class Phase(object):
 
     def processEOF(self):
         self.tree.generateImpliedEndTags()
-        if (len(self.tree.openElements) > 2 or 
-            (len(self.tree.openElements) == 2 and 
-             self.tree.openElements[1].name != "body")):
-            self.parser.parseError(_("Unexpected end of file. Missing body or html closing tags"))
-        if self.parser.innerHTML and len(self.tree.openElements) > 1:
-            # XXX No need to check for "body" because our EOF handling is not
-            # per specification. (Specification needs an update.)
-            #
-            # XXX Need to check this more carefully in the future.
-            self.parser.parseError()
-        # Stop parsing
+        if len(self.tree.openElements) > 2:
+            self.parser.parseError(_("Unexpected end of file. Missing closing "
+              "tags"))
+        elif len(self.tree.openElements) == 2 and\
+          self.tree.openElements[1].name != "body":
+            # This happens for framesets or something?
+            self.parser.parseError(_("XXXXX FRAMESET?"))
+        elif self.parser.innerHTML and len(self.tree.openElements) > 1 :
+            # XXX This is not what the specification says. Not sure what to do
+            # here.
+            self.parser.parseError(_("XXX innerHTML EOF"))
+        # Betting ends.
 
     def processComment(self, data):
         # For most phases the following is correct. Where it's not it will be
@@ -796,7 +797,8 @@ class InBodyPhase(Phase):
         "option", "optgroup", "tbody", "td", "tfoot", "th", "thead",
         "tr", "noscript"
         """
-        self.parser.parseError()
+        self.parser.parseError(_("Unexpected start tag (" + name +\
+          "). Ignored."))
 
     def startTagNew(self, name, other):
         """New HTML5 elements, "event-source", "section", "nav",
@@ -1133,7 +1135,8 @@ class InTablePhase(Phase):
             # innerHTML case
 
     def endTagIgnore(self, name):
-        self.parser.parseError()
+        self.parser.parseError(_("Unexpected end tag (" + name +\
+          "). Ignored."))
 
     def endTagOther(self, name):
         # Make all the special element rearranging voodoo kick in
@@ -1200,7 +1203,8 @@ class InCaptionPhase(Phase):
             self.parser.phase.processStartTag(name, attributes)
 
     def endTagIgnore(self, name):
-        self.parser.parseError()
+        self.parser.parseError(_("Unexpected end tag (" + name +\
+          "). Ignored."))
 
     def endTagOther(self, name):
         self.parser.phases["inBody"].processEndTag(name)
@@ -1334,7 +1338,8 @@ class InTableBodyPhase(Phase):
             self.parser.parseError()
 
     def endTagIgnore(self, name):
-        self.parser.parseError()
+        self.parser.parseError(_("Unexpected end tag (" + name +\
+          "). Ignored."))
 
     def endTagOther(self, name):
         self.parser.phases["inTable"].processEndTag(name)
@@ -1411,7 +1416,8 @@ class InRowPhase(Phase):
             self.parser.parseError()
 
     def endTagIgnore(self, name):
-        self.parser.parseError()
+        self.parser.parseError(_("Unexpected end tag (" + name +\
+          "). Ignored."))
 
     def endTagOther(self, name):
         self.parser.phases["inTable"].processEndTag(name)
@@ -1465,7 +1471,8 @@ class InCellPhase(Phase):
         if self.tree.elementInScope(name, True):
             self.tree.generateImpliedEndTags(name)
             if self.tree.openElements[-1].name != name:
-                self.parser.parseError()
+                self.parser.parseError("Got end tag (" + name +\
+                  ") while required end tags are missing.")
                 while True:
                     node = self.tree.openElements.pop()
                     if node.name == name:
@@ -1475,10 +1482,12 @@ class InCellPhase(Phase):
             self.tree.clearActiveFormattingElements()
             self.parser.phase = self.parser.phases["inRow"]
         else:
-            self.parser.parseError()
+            self.parser.parseError(_("Unexpected end tag (" + name +\
+              "). Ignored."))
 
     def endTagIgnore(self, name):
-        self.parser.parseError()
+        self.parser.parseError(_("Unexpected end tag (" + name +\
+          "). Ignored."))
 
     def endTagImply(self, name):
         if self.tree.elementInScope(name, True):
