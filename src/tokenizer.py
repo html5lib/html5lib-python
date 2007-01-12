@@ -253,13 +253,6 @@ class HTMLTokenizer(object):
         emitted.
         """
 
-        # If an end tag has attributes it's a parse error and they should
-        # be removed
-        if self.currentToken["type"] == "EndTag" and self.currentToken["data"]:
-            self.tokenQueue.append({"type": "ParseError", "data":
-              _("End tag contains unexpected attributes.")})
-            self.currentToken["data"] = {}
-
         # Add token to the queue to be yielded
         self.tokenQueue.append(self.currentToken)
         self.state = self.states["data"]
