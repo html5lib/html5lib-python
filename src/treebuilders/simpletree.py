@@ -90,6 +90,9 @@ class DocumentType(Node):
     def __unicode__(self):
         return "<!DOCTYPE %s>" % self.name
 
+    def toxml(self):
+        return "";
+
 class TextNode(Node):
     def __init__(self, value):
         Node.__init__(self, None)
