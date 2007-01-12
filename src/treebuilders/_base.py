@@ -1,4 +1,10 @@
 from constants import scopingElements, tableInsertModeElements
+try:
+    frozenset
+except NameError:
+    # Import from the sets module for python 2.3
+    from sets import Set as set
+    from sets import ImmutableSet as frozenset
 
 # The scope markers are inserted when entering buttons, object elements,
 # marquees, table cells, and table captions, and are used to prevent formatting
