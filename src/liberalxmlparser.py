@@ -51,6 +51,10 @@ class XHTMLParser(html5parser.HTMLParser):
                 token["data"] = {}
                 token["type"] = "EndTag"
 
+        elif token["type"] == "EndTag":
+            if token["data"]:
+               self.parseError(_("End tag contains unexpected attributes."))
+
         return token
 
 class XhmlRootPhase(html5parser.RootElementPhase):
