@@ -389,7 +389,8 @@ class InHeadPhase(Phase):
 
         self.startTagHandler =  utils.MethodDispatcher([
             ("html", self.startTagHtml),
-            (("title", "style"), self.startTagTitleStyle),
+            ("title", self.startTagTitle),
+            ("style", self.startTagStyle),
             ("script", self.startTagScript),
             (("base", "link", "meta"), self.startTagBaseLinkMeta),
             ("head", self.startTagHead)
@@ -430,25 +431,31 @@ class InHeadPhase(Phase):
         self.tree.headPointer = self.tree.openElements[-1]
         self.parser.phase = self.parser.phases["inHead"]
 
-    def startTagTitleStyle(self, name, attributes):
-        cmFlags = {"title":"RCDATA", "style":"CDATA"}
+    def startTagTitle(self, name, attributes):
         element = self.tree.createElement(name, attributes)
         self.appendToHead(element)
         self.tree.openElements.append(element)
-        self.parser.tokenizer.contentModelFlag =\
-          contentModelFlags[cmFlags[name]]
+        self.parser.tokenizer.contentModelFlag = contentModelFlags["RCDATA"]
+    
+    def startTagStyle(self, name, attributes):
+        element = self.tree.createElement(name, attributes)
+        if self.tree.headPointer is not None and\
+          self.parser.phase == self.parser.phases["inHead"]:
+            self.appendToHead(element)
+        else:
+            self.tree.openElements[-1].appendChild(element)
+        self.tree.openElements.append(element)
+        self.parser.tokenizer.contentModelFlag = contentModelFlags["CDATA"]
 
     def startTagScript(self, name, attributes):
         element = self.tree.createElement(name, attributes)
         element._flags.append("parser-inserted")
-
-        # XXX in theory we should check if we're actually in the InHead state
-        # here and if the headElementPointer is not zero but it seems to work
-        # without that being the case.
-        self.tree.openElements[-1].appendChild(element)
+        if self.tree.headPointer is not None and\
+          self.parser.phase == self.parser.phases["inHead"]:
+            self.appendToHead(element)
+        else:
+            self.tree.openElements[-1].appendChild(element)
         self.tree.openElements.append(element)
-
-        # XXX AT we could use self.tree.insertElement(name, attributes) ...
         self.parser.tokenizer.contentModelFlag = contentModelFlags["CDATA"]
 
     def startTagBaseLinkMeta(self, name, attributes):
@@ -518,7 +525,7 @@ class AfterHeadPhase(Phase):
 
     def startTagFromHead(self, name, attributes):
         self.parser.parseError(_(u"Unexpected start tag (" + name +\
-          ") that belongs in head. Moved."))
+          ") that can be in head. Moved."))
         self.parser.phase = self.parser.phases["inHead"]
         self.parser.phase.processStartTag(name, attributes)
 
@@ -542,8 +549,8 @@ class InBodyPhase(Phase):
         Phase.__init__(self, parser, tree)
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
-            ("script", self.startTagScript),
-            (("base", "link", "meta", "style", "title"),
+            (("script", "style"), self.startTagScriptStyle),
+            (("base", "link", "meta", "title"),
               self.startTagFromHead),
             ("body", self.startTagBody),
             (("address", "blockquote", "center", "dir", "div", "dl",
@@ -615,7 +622,7 @@ class InBodyPhase(Phase):
         self.tree.reconstructActiveFormattingElements()
         self.tree.insertText(data)
 
-    def startTagScript(self, name, attributes):
+    def startTagScriptStyle(self, name, attributes):
         self.parser.phases["inHead"].processStartTag(name, attributes)
 
     def startTagFromHead(self, name, attributes):
