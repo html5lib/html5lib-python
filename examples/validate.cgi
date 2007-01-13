@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+"""This is a toy example not a serious conformance checker. In
+particular, it only reports parse errors when reading the document; it
+does not report any of the other (many) possible types of conformance
+errors that may exist in a HTML5 document"""
+
 import sys
 import urllib2
 import cgi
