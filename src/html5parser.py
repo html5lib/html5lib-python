@@ -236,7 +236,8 @@ class Phase(object):
         elif len(self.tree.openElements) == 2 and\
           self.tree.openElements[1].name != "body":
             # This happens for framesets or something?
-            self.parser.parseError(_("XXXXX FRAMESET?"))
+            self.parser.parseError(_("Unexpected end of file. Expected end "
+              u"tag (" + self.tree.openElements[1].name + u") first."))
         elif self.parser.innerHTML and len(self.tree.openElements) > 1 :
             # XXX This is not what the specification says. Not sure what to do
             # here.
@@ -1651,6 +1652,10 @@ class AfterBodyPhase(Phase):
         if self.parser.innerHTML:
             self.parser.parseError()
         else:
+            # XXX: This may need to be done, not sure:
+            # Don't set lastPhase to the current phase but to the inBody phase
+            # instead. No need for extra parse errors if there's something
+            # after </html>.
             self.parser.lastPhase = self.parser.phase
             self.parser.phase = self.parser.phases["trailingEnd"]
 
