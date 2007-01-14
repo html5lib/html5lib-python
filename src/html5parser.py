@@ -381,7 +381,7 @@ class BeforeHeadPhase(Phase):
 
     def endTagOther(self, name):
         self.parser.parseError(_("Unexpected end tag (" + name +\
-          ") after the root element."))
+          ") after the (implied) root element."))
 
 class InHeadPhase(Phase):
     def __init__(self, parser, tree):
@@ -1054,7 +1054,8 @@ class InBodyPhase(Phase):
                 break
             else:
                 if node.name in specialElements | scopingElements:
-                    self.parser.parseError()
+                    self.parser.parseError(_(u"Unexpected end tag (" + name +\
+                      "). Ignored."))
                     break
 
 class InTablePhase(Phase):

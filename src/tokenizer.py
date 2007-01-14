@@ -230,7 +230,7 @@ class HTMLTokenizer(object):
                 # discarded or needs to be put back.
                 if not charStack[-1] == ";":
                     self.tokenQueue.append({"type": "ParseError", "data":
-                      _("Named entity did not  ';'.")})
+                      _("Named entity didn't end with ';'.")})
                     self.stream.queue.extend(charStack[entityLength:])
             else:
                 self.tokenQueue.append({"type": "ParseError", "data":
