@@ -5,7 +5,16 @@ import StringIO
 import unittest
 import new
 
-import simplejson
+try:
+    import simplejson
+except:
+    import re
+    class simplejson:
+        def load(f):
+            true, false = True, False
+            input=re.sub(r'(".*?(?<!\\)")',r'u\1',f.read().decode('utf-8'))
+            return eval(input)
+        load = staticmethod(load)
 
 #Allow us to import the parent module
 os.chdir(os.path.split(os.path.abspath(__file__))[0])
