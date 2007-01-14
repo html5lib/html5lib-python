@@ -839,7 +839,8 @@ class InBodyPhase(Phase):
             self.parser.parseError()
             return
         if self.tree.openElements[-1].name != "body":
-            self.parser.parseError()
+            self.parser.parseError(_("Unexpected end tag (body). Missing "
+              u"end tag (" + self.tree.openElements[-1].name + ")."))
         self.parser.phase = self.parser.phases["afterBody"]
 
     def endTagHtml(self, name):
@@ -1329,7 +1330,7 @@ class InTableBodyPhase(Phase):
 
     def startTagTableCell(self, name, attributes):
         self.parser.parseError(_(u"Unexpected table cell start tag (" +\
-          name + u") in the table body phase. Ignored."))
+          name + u") in the table body phase."))
         self.startTagTr("tr", {})
         self.parser.phase.processStartTag(name, attributes)
 
