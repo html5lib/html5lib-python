@@ -1028,7 +1028,7 @@ class InBodyPhase(Phase):
 
     def endTagNone(self, name):
         # This handles elements with no end tag.
-        self.parser.parseError(_(u"This tag (" + name + u")has no end tag"))
+        self.parser.parseError(_(u"This tag (" + name + u") has no end tag"))
 
     def endTagCdataTextAreaXmp(self, name):
         if self.tree.openElements[-1].name == name:
@@ -1738,17 +1738,20 @@ class TrailingEndPhase(Phase):
         self.parser.lastPhase.processCharacters(data)
 
     def processCharacters(self, data):
-        self.parser.parseError()
+        self.parser.parseError(_("Unexpected non-space characters. "u
+          "Expected end of file."))
         self.parser.phase = self.parser.lastPhase
         self.parser.phase.processCharacters(data)
 
     def processStartTag(self, name, attributes):
-        self.parser.parseError()
+        self.parser.parseError(_(u"Unexpected start tag (" + name +\
+          u"). Expected end of file."))
         self.parser.phase = self.parser.lastPhase
         self.parser.phase.processStartTag(name, attributes)
 
     def processEndTag(self, name):
-        self.parser.parseError()
+        self.parser.parseError(_(u"Unexpected end tag (" + name +\
+          u"). Expected end of file."))
         self.parser.phase = self.parser.lastPhase
         self.parser.phase.processEndTag(name)
 
