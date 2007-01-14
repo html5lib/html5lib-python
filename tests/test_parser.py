@@ -16,8 +16,12 @@ import html5parser
 from treebuilders import simpletree, etree, dom
 
 treetypes = {"simpletree":simpletree.TreeBuilder,
-             "ElementTree":etree.TreeBuilder,
              "DOM":dom.TreeBuilder}
+
+if hasattr(etree,'TreeBuilder'):
+    treetypes["ElementTree"]=etree.TreeBuilder
+else:
+    print 'module ElementTree not found, skipping etree tests'
 
 #Run the parse error checks
 #XXX - ideally want this to be a command line argument
