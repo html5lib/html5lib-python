@@ -1210,10 +1210,12 @@ class InCaptionPhase(Phase):
         if self.tree.elementInScope(name, True):
             # AT this code is quite similar to endTagTable in "InTable"
             self.tree.generateImpliedEndTags()
-            if self.tree.openElements[-1].name == "caption":
-                self.parser.parseError()
+            if self.tree.openElements[-1].name != "caption":
+                self.parser.parseError(_(u"Unexpected end tag (caption). "
+                  u"Missing end tags."))
             while self.tree.openElements[-1].name != "caption":
                 self.tree.openElements.pop()
+            self.tree.openElements.pop()
             self.tree.clearActiveFormattingElements()
             self.parser.phase = self.parser.phases["inTable"]
         else:
