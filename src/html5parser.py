@@ -1087,13 +1087,15 @@ class InTablePhase(Phase):
     def clearStackToTableContext(self):
         # "clear the stack back to a table context"
         while self.tree.openElements[-1].name not in ("table", "html"):
+            self.parser.parseError(_(u"Unexpected implied end tag (" +\
+              self.tree.openElements[-1].name + u") in the table phase."))
             self.tree.openElements.pop()
-            self.parser.parseError()
         # When the current node is <html> it's an innerHTML case
 
     # processing methods
     def processCharacters(self, data):
-        self.parser.parseError()
+        self.parser.parseError(_(u"Unexpected non-space characters in "
+          u"table context caused voodoo mode."))
         # Make all the special element rearranging voodoo kick in
         self.tree.insertFromTable = True
         # Process the character in the "in body" mode
@@ -1131,7 +1133,8 @@ class InTablePhase(Phase):
             self.parser.phase.processStartTag(name, attributes)
 
     def startTagOther(self, name, attributes):
-        self.parser.parseError()
+        self.parser.parseError(_(u"Unexpected start tag (" + name + u") in "
+          u"table context caused voodoo mode."))
         # Make all the special element rearranging voodoo kick in
         self.tree.insertFromTable = True
         # Process the start tag in the "in body" mode
@@ -1156,6 +1159,8 @@ class InTablePhase(Phase):
           "). Ignored."))
 
     def endTagOther(self, name):
+        self.parser.parseError(_(u"Unexpected end tag (" + name + u") in "
+          u"table context caused voodoo mode."))
         # Make all the special element rearranging voodoo kick in
         self.parser.insertFromTable = True
         # Process the end tag in the "in body" mode
@@ -1270,7 +1275,8 @@ class InColumnGroupPhase(Phase):
             self.parser.phase = self.parser.phases["inTable"]
 
     def endTagCol(self, name):
-        self.parser.parseError()
+        self.parser.parseError(_(u"Unexpected end tag (col). "
+          u"col has no end tag."))
 
     def endTagOther(self, name):
         self.endTagColgroup("colgroup")
@@ -1303,8 +1309,9 @@ class InTableBodyPhase(Phase):
     def clearStackToTableBodyContext(self):
         while self.tree.openElements[-1].name not in ("tbody", "tfoot",
           "thead", "html"):
+            self.parser.parseError(_(u"Unexpected implied end tag (" +\
+              self.tree.openElements[-1].name + u") in the table body phase."))
             self.tree.openElements.pop()
-            self.parser.parseError()
 
     # the rest
     def processCharacters(self,data):
@@ -1316,7 +1323,8 @@ class InTableBodyPhase(Phase):
         self.parser.phase = self.parser.phases["inRow"]
 
     def startTagTableCell(self, name, attributes):
-        self.parser.parseError()
+        self.parser.parseError(_(u"Unexpected table cell start tag (" +\
+          name + u") in the table body phase. Ignored."))
         self.startTagTr("tr", {})
         self.parser.phase.processStartTag(name, attributes)
 
@@ -1341,7 +1349,8 @@ class InTableBodyPhase(Phase):
             self.tree.openElements.pop()
             self.parser.phase = self.parser.phases["inTable"]
         else:
-            self.parser.parseError()
+            self.parser.parseError(_("Unexpected end tag (" + name +\
+              ") in the table body phase. Ignored."))
 
     def endTagTable(self, name):
         if self.tree.elementInScope("tbody", True) or \
@@ -1356,7 +1365,7 @@ class InTableBodyPhase(Phase):
 
     def endTagIgnore(self, name):
         self.parser.parseError(_("Unexpected end tag (" + name +\
-          "). Ignored."))
+          ") in the table body phase. Ignored."))
 
     def endTagOther(self, name):
         self.parser.phases["inTable"].processEndTag(name)
@@ -1386,8 +1395,9 @@ class InRowPhase(Phase):
     # helper methods (XXX unify this with other table helper methods)
     def clearStackToTableRowContext(self):
         while self.tree.openElements[-1].name not in ("tr", "html"):
+            self.parser.parseError(_(u"Unexpected implied end tag (" +\
+              self.tree.openElements[-1].name + u") in the row phase."))
             self.tree.openElements.pop()
-            self.parser.parseError()
 
     # the rest
     def processCharacters(self, data):
@@ -1434,7 +1444,7 @@ class InRowPhase(Phase):
 
     def endTagIgnore(self, name):
         self.parser.parseError(_("Unexpected end tag (" + name +\
-          "). Ignored."))
+          u") in the row phase. Ignored."))
 
     def endTagOther(self, name):
         self.parser.phases["inTable"].processEndTag(name)
@@ -1488,7 +1498,7 @@ class InCellPhase(Phase):
         if self.tree.elementInScope(name, True):
             self.tree.generateImpliedEndTags(name)
             if self.tree.openElements[-1].name != name:
-                self.parser.parseError("Got end tag (" + name +\
+                self.parser.parseError("Got table cell end tag (" + name +\
                   ") while required end tags are missing.")
                 while True:
                     node = self.tree.openElements.pop()
@@ -1560,7 +1570,8 @@ class InSelectPhase(Phase):
         self.tree.insertElement(name, attributes)
 
     def startTagSelect(self, name, attributes):
-        self.parser.parseError()
+        self.parser.parseError(_(u"Unexpected start tag (select) in the "
+          u"select phase implies select start tag."))
         self.endTagSelect("select")
 
     def startTagOther(self, name, attributes):
@@ -1571,7 +1582,8 @@ class InSelectPhase(Phase):
         if self.tree.openElements[-1].name == "option":
             self.tree.openElements.pop()
         else:
-            self.parser.parseError()
+            self.parser.parseError(_(u"Unexpected end tag (option) in the "
+              u"select phase. Ignored."))
 
     def endTagOptgroup(self, name):
         # </optgroup> implicitly closes <option>
@@ -1583,7 +1595,8 @@ class InSelectPhase(Phase):
             self.tree.openElements.pop()
         # But nothing else
         else:
-            self.parser.parseError()
+            self.parser.parseError(_(u"Unexpected end tag (optgroup) in the "
+              u"select phase. Ignored."))
 
     def endTagSelect(self, name):
         if self.tree.elementInScope(name, True):
@@ -1596,7 +1609,8 @@ class InSelectPhase(Phase):
             self.parser.parseError()
 
     def endTagTableElements(self, name):
-        self.parser.parseError()
+        self.parser.parseError(_(u"Unexpected table end tag (" + name +\
+          ") in the select phase."))
         if self.tree.elementInScope(name, True):
             self.endTagSelect()
             self.parser.phase.processEndTag(name)
