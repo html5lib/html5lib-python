@@ -277,7 +277,7 @@ class InitialPhase(Phase):
     # "quirks mode". It is expected that a future version of HTML5 will defin
     # this.
     def processEOF(self):
-        self.parser.parseError(_("No DOCTYPE seen."))
+        self.parser.parseError(_(u"Unexpected End of file. Expected DOCTYPE."))
         self.parser.phase = self.parser.phases["rootElement"]
         self.parser.phase.processEOF()
 
@@ -286,7 +286,7 @@ class InitialPhase(Phase):
 
     def processDoctype(self, name, error):
         if error:
-            self.parser.parseError(_("DOCTYPE is in error."))
+            self.parser.parseError(_("Erroneous DOCTYPE."))
         self.tree.insertDoctype(name)
         self.parser.phase = self.parser.phases["rootElement"]
 
@@ -294,17 +294,20 @@ class InitialPhase(Phase):
         self.tree.insertText(data, self.tree.document)
 
     def processCharacters(self, data):
-        self.parser.parseError(_("No DOCTYPE seen."))
+        self.parser.parseError(_(u"Unexpected non-space characters. "
+          u"Expected DOCTYPE."))
         self.parser.phase = self.parser.phases["rootElement"]
         self.parser.phase.processCharacters(data)
 
     def processStartTag(self, name, attributes):
-        self.parser.parseError(_("No DOCTYPE seen."))
+        self.parser.parseError(_(u"Unexpected start tag (" + name +\
+          u"). Expected DOCTYPE."))
         self.parser.phase = self.parser.phases["rootElement"]
         self.parser.phase.processStartTag(name, attributes)
 
     def processEndTag(self, name):
-        self.parser.parseError(_("No DOCTYPE seen."))
+        self.parser.parseError(_(u"Unexpected end tag (" + name +\
+          "). Expected DOCTYPE."))
         self.parser.phase = self.parser.phases["rootElement"]
         self.parser.phase.processEndTag(name)
 
