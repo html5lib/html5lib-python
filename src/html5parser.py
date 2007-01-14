@@ -231,8 +231,8 @@ class Phase(object):
     def processEOF(self):
         self.tree.generateImpliedEndTags()
         if len(self.tree.openElements) > 2:
-            self.parser.parseError(_("Unexpected end of file. Missing closing "
-              "tags"))
+            self.parser.parseError(_("Unexpected end of file. "
+              u"Missing closing tags."))
         elif len(self.tree.openElements) == 2 and\
           self.tree.openElements[1].name != "body":
             # This happens for framesets or something?
@@ -418,6 +418,8 @@ class InHeadPhase(Phase):
     # the real thing
     def processEOF(self):
         if self.tree.openElements[-1].name in ("title", "style", "script"):
+            self.parser.parseError(_(u"Unexpected end of file. "
+              u"Expected end tag (" + self.tree.openElements[-1].name + ")."))
             self.tree.openElements.pop()
         self.anythingElse()
         self.parser.phase.processEOF()
@@ -700,8 +702,8 @@ class InBodyPhase(Phase):
     def startTagA(self, name, attributes):
         afeAElement = self.tree.elementInActiveFormattingElements("a")
         if afeAElement:
-            self.parser.parseError(_(u"Start tag a was in the list of active "
-              "formatting elements."))
+            self.parser.parseError(_(u"Unexpected start tag (a) implies "
+              "end tag (a)."))
             self.endTagFormatting("a")
             if afeAElement in self.tree.openElements:
                 self.tree.openElements.remove(afeAElement)
