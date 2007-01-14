@@ -37,10 +37,10 @@ class HTMLParser(object):
 
     def __init__(self, strict = False, tree=simpletree.TreeBuilder):
         """
-        strict - raise an exception when a parse error is encountered 
-        
-        tree - a treebuilder class controlling the type of tree that will be 
-        returned. This class is almost always a subclass of 
+        strict - raise an exception when a parse error is encountered
+
+        tree - a treebuilder class controlling the type of tree that will be
+        returned. This class is almost always a subclass of
         html5lib.treebuilders._base.TreeBuilder
         """
 
@@ -72,10 +72,10 @@ class HTMLParser(object):
 
     def parse(self, stream, encoding=None, innerHTML=False):
         """Parse a HTML document into a well-formed tree
-        
+
         stream - a filelike object or string containing the HTML to be parsed
-        
-        innerHTML - Are we parsing in innerHTML mode (note innerHTML=True 
+
+        innerHTML - Are we parsing in innerHTML mode (note innerHTML=True
         is not yet supported)
 
         The optional encoding parameter must be a string that indicates
@@ -131,7 +131,7 @@ class HTMLParser(object):
 
     def normalizeToken(self, token):
         """ HTML5 specific normalizations to the token stream """
-       
+
         if token["type"] == "EmptyTag":
             # When a solidus (/) is encountered within a tag name what happens
             # depends on whether the current tag name matches that of a void
@@ -249,7 +249,7 @@ class Phase(object):
         self.tree.insertComment(data, self.tree.openElements[-1])
 
     def processDoctype(self, name, error):
-        self.parser.parseError()
+        self.parser.parseError(_("Unexpected DOCTYPE. Ignored."))
 
     def processSpaceCharacters(self, data):
         self.tree.insertText(data)
@@ -436,7 +436,7 @@ class InHeadPhase(Phase):
         self.appendToHead(element)
         self.tree.openElements.append(element)
         self.parser.tokenizer.contentModelFlag = contentModelFlags["RCDATA"]
-    
+
     def startTagStyle(self, name, attributes):
         element = self.tree.createElement(name, attributes)
         if self.tree.headPointer is not None and\
@@ -596,11 +596,12 @@ class InBodyPhase(Phase):
             (("a", "b", "big", "em", "font", "i", "nobr", "s", "small",
               "strike", "strong", "tt", "u"), self.endTagFormatting),
             (("marquee", "object", "button"), self.endTagButtonMarqueeObject),
-            (("caption", "col", "colgroup", "frame", "frameset", "head",
-              "option", "optgroup", "tbody", "td", "tfoot", "th", "thead",
-              "tr", "area", "basefont", "bgsound", "br", "embed", "hr",
-              "image", "img", "input", "isindex", "param", "select", "spacer",
-              "table",  "wbr"),self.endTagMisplacedNone),
+            (("head", "frameset", "select", "optgroup", "option", "table",
+              "caption", "colgroup", "col", "thead", "tfoot", "tbody", "tr",
+              "td", "th"), self.endTagMisplaced),
+            (("area", "basefont", "bgsound", "br", "embed", "hr", "image",
+              "img", "input", "isindex", "param", "spacer", "wbr", "frame"),
+              self.endTagNone),
             (("noframes", "noscript", "noembed", "textarea", "xmp", "iframe"),
               self.endTagCdataTextAreaXmp),
             (("event-source", "section", "nav", "article", "aside", "header",
@@ -647,7 +648,7 @@ class InBodyPhase(Phase):
 
     def startTagForm(self, name, attributes):
         if self.tree.formPointer:
-            self.parser.parseError()
+            self.parser.parseError("Unexpected start tag (form). Ignored.")
         else:
             if self.tree.elementInScope("p"):
                 self.endTagP("p")
@@ -685,7 +686,8 @@ class InBodyPhase(Phase):
             self.endTagP("p")
         for item in headingElements:
             if self.tree.elementInScope(item):
-                self.parser.parseError()
+                self.parser.parseError(_("Unexpected start tag (" + name +\
+                  ")."))
                 item = self.tree.openElements.pop()
                 while item.name not in headingElements:
                     item = self.tree.openElements.pop()
@@ -818,7 +820,7 @@ class InBodyPhase(Phase):
     def endTagP(self, name):
         self.tree.generateImpliedEndTags("p")
         if self.tree.openElements[-1].name != "p":
-            self.parser.parseError()
+            self.parser.parseError("Unexpected end tag (p).")
         while self.tree.elementInScope("p"):
             self.tree.openElements.pop()
 
@@ -1007,7 +1009,8 @@ class InBodyPhase(Phase):
         if self.tree.elementInScope(name):
             self.tree.generateImpliedEndTags()
         if self.tree.openElements[-1].name != name:
-            self.parser.parseError()
+            self.parser.parseError(_(u"Unexpected end tag (" + name +\
+              "). Expected other end tag first."))
 
         if self.tree.elementInScope(name):
             element = self.tree.openElements.pop()
@@ -1015,17 +1018,14 @@ class InBodyPhase(Phase):
                 element = self.tree.openElements.pop()
             self.tree.clearActiveFormattingElements()
 
-    def endTagMisplacedNone(self, name):
-        """ Elements that should be children of other elements that have a
-        different insertion mode or elements that have no end tag;
-        here they are ignored
-        "caption", "col", "colgroup", "frame", "frameset", "head",
-        "option", "optgroup", "tbody", "td", "tfoot", "th", "thead",
-        "tr", "noscript, "area", "basefont", "bgsound", "br", "embed",
-        "hr", "iframe", "image", "img", "input", "isindex", "noembed",
-        "noframes", "param", "select", "spacer", "table", "textarea", "wbr""
-        """
-        self.parser.parseError()
+    def endTagMisplaced(self, name):
+        # This handles elements with end tags in other insertion modes.
+        self.parser.parseError(_(u"Unexpected end tag (" + name +\
+          u"). Ignored."))
+
+    def endTagNone(self, name):
+        # This handles elements with no end tag.
+        self.parser.parseError(_(u"This tag (" + name + u")has no end tag"))
 
     def endTagCdataTextAreaXmp(self, name):
         if self.tree.openElements[-1].name == name:
