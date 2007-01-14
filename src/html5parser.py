@@ -1531,7 +1531,7 @@ class InSelectPhase(Phase):
             ("optgroup", self.startTagOptgroup),
             ("select", self.startTagSelect)
         ])
-        self.startTagHandler.default = self.processAnythingElse
+        self.startTagHandler.default = self.startTagOther
 
         self.endTagHandler = utils.MethodDispatcher([
             ("option", self.endTagOption),
@@ -1540,7 +1540,7 @@ class InSelectPhase(Phase):
             (("caption", "table", "tbody", "tfoot", "thead", "tr", "td",
               "th"), self.endTagTableElements)
         ])
-        self.endTagHandler.default = self.processAnythingElse
+        self.endTagHandler.default = self.endTagOther
 
     # http://www.whatwg.org/specs/web-apps/current-work/#in-select
     def processCharacters(self, data):
@@ -1562,6 +1562,10 @@ class InSelectPhase(Phase):
     def startTagSelect(self, name, attributes):
         self.parser.parseError()
         self.endTagSelect("select")
+
+    def startTagOther(self, name, attributes):
+        self.parser.parseError(_(u"Unexpected start tag token (" + name +\
+          u") in the select phase. Ignored."))
 
     def endTagOption(self, name):
         if self.tree.openElements[-1].name == "option":
@@ -1597,8 +1601,9 @@ class InSelectPhase(Phase):
             self.endTagSelect()
             self.parser.phase.processEndTag(name)
 
-    def processAnythingElse(self, name, attributes={}):
-        self.parser.parseError()
+    def endTagOther(self, name):
+        self.parser.parseError(_(u"Unexpected end tag token (" + name +\
+          u") in the select phase. Ignored."))
 
 
 class AfterBodyPhase(Phase):
@@ -1615,12 +1620,14 @@ class AfterBodyPhase(Phase):
         self.tree.insertComment(data, self.tree.openElements[0])
 
     def processCharacters(self, data):
-        self.parser.parseError()
+        self.parser.parseError(_(u"Unexpected non-space characters in the "
+          u"after body phase."))
         self.parser.phase = self.parser.phases["inBody"]
         self.parser.phase.processCharacters(data)
 
     def processStartTag(self, name, attributes):
-        self.parser.parseError()
+        self.parser.parseError(_(u"Unexpected start tag token (" + name +\
+          u") in the after body phase."))
         self.parser.phase = self.parser.phases["inBody"]
         self.parser.phase.processStartTag(name, attributes)
 
@@ -1632,7 +1639,8 @@ class AfterBodyPhase(Phase):
             self.parser.phase = self.parser.phases["trailingEnd"]
 
     def endTagOther(self, name):
-        self.parser.parseError()
+        self.parser.parseError(_(u"Unexpected end tag token (" + name +\
+          u") in the after body phase."))
         self.parser.phase = self.parser.phases["inBody"]
         self.parser.phase.processEndTag(name)
 
@@ -1656,8 +1664,8 @@ class InFramesetPhase(Phase):
         self.endTagHandler.default = self.endTagOther
 
     def processCharacters(self, data):
-        self.parser.parseError(_("Unepxected characters in the frameset phase. "
-          "Characters ignored."))
+        self.parser.parseError(_(u"Unepxected characters in "
+          u"the frameset phase. Characters ignored."))
 
     def startTagFrameset(self, name, attributes):
         self.tree.insertElement(name, attributes)
@@ -1670,14 +1678,14 @@ class InFramesetPhase(Phase):
         self.parser.phases["inBody"].processStartTag(name, attributes)
 
     def startTagOther(self, name, attributes):
-        self.parser.parseError(_("Unexpected start tag token (" + name +\
-          ") in the frameset phase."))
+        self.parser.parseError(_(u"Unexpected start tag token (" + name +\
+          u") in the frameset phase. Ignored"))
 
     def endTagFrameset(self, name):
         if self.tree.openElements[-1].name == "html":
             # innerHTML case
-            self.parser.parseError(_("Unexpected end tag token (frameset) in the"
-              "frameset phase (innerHTML)"))
+            self.parser.parseError(_(u"Unexpected end tag token (frameset)"
+              u"in the frameset phase (innerHTML)."))
         else:
             self.tree.openElements.pop()
         if not self.parser.innerHTML and\
@@ -1690,8 +1698,8 @@ class InFramesetPhase(Phase):
         self.parser.phases["inBody"].processEndTag(name)
 
     def endTagOther(self, name):
-        self.parser.parseError(_("Unexpected end tag token (" + name +
-          ") in the frameset phase."))
+        self.parser.parseError(_(u"Unexpected end tag token (" + name +
+          u") in the frameset phase. Ignored."))
 
 
 class AfterFramesetPhase(Phase):
@@ -1711,20 +1719,23 @@ class AfterFramesetPhase(Phase):
         self.endTagHandler.default = self.endTagOther
 
     def processCharacters(self, data):
-        self.parser.parseError()
+        self.parser.parseError(_(u"Unexpected non-space characters in the "
+          u"after frameset phase. Ignored."))
 
     def startTagNoframes(self, name, attributes):
         self.parser.phases["inBody"].processStartTag(name, attributes)
 
     def startTagOther(self, name, attributes):
-        self.parser.parseError()
+        self.parser.parseError(_(u"Unexpected start tag (" + name +\
+          u") in the after frameset phase. Ignored."))
 
     def endTagHtml(self, name):
         self.parser.lastPhase = self.parser.phase
         self.parser.phase = self.parser.phases["trailingEnd"]
 
     def endTagOther(self, name):
-        self.parser.parseError()
+        self.parser.parseError(_(u"Unexpected end tag (" + name +\
+          u") in the after frameset phase. Ignored."))
 
 
 class TrailingEndPhase(Phase):
@@ -1738,8 +1749,8 @@ class TrailingEndPhase(Phase):
         self.parser.lastPhase.processCharacters(data)
 
     def processCharacters(self, data):
-        self.parser.parseError(_("Unexpected non-space characters. "u
-          "Expected end of file."))
+        self.parser.parseError(_(u"Unexpected non-space characters. "
+          u"Expected end of file."))
         self.parser.phase = self.parser.lastPhase
         self.parser.phase.processCharacters(data)
 
