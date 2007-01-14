@@ -1659,6 +1659,7 @@ class AfterBodyPhase(Phase):
             # Don't set lastPhase to the current phase but to the inBody phase
             # instead. No need for extra parse errors if there's something
             # after </html>.
+            # Try "<!doctype html>X</html>X" for instance.
             self.parser.lastPhase = self.parser.phase
             self.parser.phase = self.parser.phases["trailingEnd"]
 
@@ -1770,7 +1771,7 @@ class TrailingEndPhase(Phase):
         self.parser.insertCommenr(data, self.tree.document)
 
     def processSpaceCharacters(self, data):
-        self.parser.lastPhase.processCharacters(data)
+        self.parser.lastPhase.processSpaceCharacters(data)
 
     def processCharacters(self, data):
         self.parser.parseError(_(u"Unexpected non-space characters. "
