@@ -24,7 +24,6 @@ else:
     print 'module ElementTree not found, skipping etree tests'
 
 #Run the parse error checks
-#XXX - ideally want this to be a command line argument
 checkParseErrors = True
 
 def parseTestcase(testString):
@@ -109,6 +108,13 @@ def buildTestSuite():
     return unittest.TestLoader().loadTestsFromTestCase(TestCase)
 
 def main():
+    # the following is temporary while the unit tests for parse errors are
+    # still in flux
+    if '-p' in sys.argv: # suppress check for parse errors
+        sys.argv.remove('-p')
+        global checkParseErrors
+        checkParseErrors = False
+       
     buildTestSuite()
     unittest.main()
 
