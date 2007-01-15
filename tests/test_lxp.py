@@ -165,6 +165,20 @@ class XhtmlTest(Xhtml5Test):
   </svg>
 </body></html>""")
 
+  def test_br(self):
+    self.assertXhtmlEquals("""<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>XLINK</title></head>
+<body>
+<br/>
+</body></html>""")
+
+  def test_strong(self):
+    self.assertXhtmlEquals("""<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>XLINK</title></head>
+<body>
+<strong></strong>
+</body></html>""")
+
 def buildTestSuite():
   return unittest.defaultTestLoader.loadTestsFromName(__name__)
 

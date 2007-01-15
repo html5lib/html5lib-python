@@ -11,30 +11,25 @@ References:
  * http://wiki.whatwg.org/wiki/HtmlVsXhtml
 
 @@TODO:
- * Build a Treebuilder that produces Python DOM objects:
-     http://docs.python.org/lib/module-xml.dom.html
  * Produce SAX events based on the produced DOM.  This is intended not to
    support streaming, but rather to support application level compatibility. 
  * Optional namespace support
- * Special case the output of XHTML <script> elements so that the empty
-   element syntax is never used, even when the src attribute is provided.
-   Also investigate the use of <![CDATA[]>> when tokenizer.contentModelFlag
+ * Investigate the use of <![CDATA[]]> when tokenizer.contentModelFlag
    indicates CDATA processsing to ensure dual HTML/XHTML compatibility.
- * Map illegal XML characters to U+FFFD, possibly with additional markup in
-   the case of XHTML
  * Selectively lowercase only XHTML, but not foreign markup
 """
 
 import html5parser
+from constants import voidElements
 import gettext
 _ = gettext.gettext
 
-class XHTMLParser(html5parser.HTMLParser):
-    """ liberal XMTHML parser """
+class XMLParser(html5parser.HTMLParser):
+    """ liberal XML parser """
 
     def __init__(self, *args, **kwargs):
         html5parser.HTMLParser.__init__(self, *args, **kwargs)
-        self.phases["rootElement"] = XhmlRootPhase(self, self.tree)
+        self.phases["initial"] = XmlRootPhase(self, self.tree)
 
     def normalizeToken(self, token):
         if token["type"] == "StartTag" or token["type"] == "EmptyTag":
@@ -57,19 +52,37 @@ class XHTMLParser(html5parser.HTMLParser):
 
         return token
 
+class XHTMLParser(XMLParser):
+    """ liberal XMTHML parser """
+
+    def __init__(self, *args, **kwargs):
+        html5parser.HTMLParser.__init__(self, *args, **kwargs)
+        self.phases["rootElement"] = XhmlRootPhase(self, self.tree)
+
+    def normalizeToken(self, token):
+        token = XMLParser.normalizeToken(self, token)
+
+        # ensure that non-void XHTML elements have content so that separate
+        # open and close tags are emitted
+        if token["type"]  == "EndTag" and \
+            token["name"] not in voidElements and \
+            token["name"] == self.tree.openElements[-1].name and \
+            not self.tree.openElements[-1].hasContent():
+            for e in self.tree.openElements:
+                if 'xmlns' in e.attributes.keys():
+                    if e.attributes['xmlns'] <> 'http://www.w3.org/1999/xhtml':
+                        break
+            else:
+                self.tree.insertText('')
+
+        return token
+
 class XhmlRootPhase(html5parser.RootElementPhase):
     def insertHtmlElement(self):
         element = self.tree.createElement("html", {'xmlns': 'http://www.w3.org/1999/xhtml'})
         self.tree.openElements.append(element)
         self.tree.document.appendChild(element)
         self.parser.phase = self.parser.phases["beforeHead"]
-
-class XMLParser(XHTMLParser):
-    """ liberal XML parser """
-
-    def __init__(self, *args, **kwargs):
-        XHTMLParser.__init__(self, *args, **kwargs)
-        self.phases["initial"] = XmlRootPhase(self, self.tree)
 
 class XmlRootPhase(html5parser.Phase):
     """ Prime the Xml parser """

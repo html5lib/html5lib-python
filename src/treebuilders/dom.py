@@ -14,6 +14,10 @@ class AttrList:
         self.element.setAttribute(name, value)
     def items(self):
         return self.element.attributes.items()
+    def keys(self):
+        return self.element.attributes.keys()
+    def __getitem__(self, name):
+        return self.element.getAttribute(name)
 
 class NodeBuilder(_base.Node):
     def __init__(self, element):
