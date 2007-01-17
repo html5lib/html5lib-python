@@ -13,11 +13,6 @@ class Element(_base.Node):
         self._childNodes = []
         self._flags = []
 
-        #Set the element text and tail to the empty string rather than None
-        #XXX - is this desirable or should we do it on a case by case basis?
-        self._element.text = ""
-        self._element.tail = ""
-
     def _setName(self, name):
         self._element.tag = name
     
@@ -70,17 +65,25 @@ class Element(_base.Node):
 
     def insertText(self, data, insertBefore=None):
         if not(len(self._element)):
+            if not self._element.text:
+                self._element.text = ""
             self._element.text += data
         elif insertBefore is None:
             #Insert the text as the tail of the last child element
+            if not self._element[-1].tail:
+                self._element[-1].tail = ""
             self._element[-1].tail += data
         else:
             #Insert the text before the specified node
             children = self._element.getchildren()
             index = children.index(insertBefore._element)
             if index > 0:
+                if not self._element[index-1].tail:
+                    self._element[index-1].tail = ""
                 self._element[index-1].tail += data
             else:
+                if not self._element.text:
+                    self._element.text = ""
                 self._element.text += data
 
     def cloneNode(self):
@@ -92,14 +95,19 @@ class Element(_base.Node):
         if newParent.childNodes:
             newParent.childNodes[-1]._element.tail += self._element.text
         else:
-            newParent._element.text += self._element.text
+            if not newParent._element.text:
+                newParent._element.text = ""
+            if self._element.text is not None:
+                newParent._element.text += self._element.text
         self._element.text = ""
         _base.Node.reparentChildren(self, newParent)
 
 class Comment(Element):
     def __init__(self, data):
-        Element.__init__(self, Comment)
-        self._element.text = data
+        #Use the superclass constructor to set all properties on the 
+        #wrapper element
+        Element.__init__(self, None)
+        self._element = ElementTree.Comment(data)
 
     def _getData(self):
         return self._element.text
@@ -130,7 +138,7 @@ def testSerializer(element):
                 rv.append("|%s\"%s\""%(' '*(indent+2), element.text))
             if element.tail:
                 finalText = element.tail
-        elif element.tag is Comment:
+        elif element.tag is ElementTree.Comment:
             rv.append("|%s<!-- %s -->"%(' '*indent, element.text))
         else:
             rv.append("|%s<%s>"%(' '*indent, element.tag))
@@ -167,7 +175,7 @@ def tostring(element):
             for child in element.getchildren():
                 serializeElement(child)
 
-        elif element.tag is Comment:
+        elif element.tag is ElementTree.Comment:
             rv.append("<!--%s-->"%(element.text,))
         else:
             #This is assumed to be an ordinary element
@@ -195,7 +203,7 @@ def tostring(element):
 
     return "".join(rv)
 
-class TreeBuilder(_base.TreeBuilder):
+class TreeBuilderFull(_base.TreeBuilder):
     documentClass = Document
     doctypeClass = DocumentType
     elementClass = Element
@@ -206,3 +214,7 @@ class TreeBuilder(_base.TreeBuilder):
 
     def getDocument(self):
         return self.document._element
+
+class TreeBuilder(TreeBuilderFull):
+    def getDocument(self):
+        return self.document._element.find("html")

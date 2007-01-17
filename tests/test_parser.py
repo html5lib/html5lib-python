@@ -19,12 +19,12 @@ treetypes = {"simpletree":simpletree.TreeBuilder,
              "DOM":dom.TreeBuilder}
 
 if hasattr(etree,'TreeBuilder'):
-    treetypes["ElementTree"]=etree.TreeBuilder
+    treetypes["ElementTree"]=etree.TreeBuilderFull
 else:
     print 'module ElementTree not found, skipping etree tests'
 
 #Run the parse error checks
-checkParseErrors = True
+checkParseErrors = False
 
 def parseTestcase(testString):
     testString = testString.split("\n")
