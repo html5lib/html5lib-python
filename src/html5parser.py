@@ -622,6 +622,14 @@ class InBodyPhase(Phase):
             self.tree.openElements[-1])
 
     # the real deal
+    def processSpaceCharactersPre(self, data):
+        #Sometimes (start of <pre> blocks) we want to drop leading newlines
+        self.processSpaceCharacters = Phase.processSpaceCharacters
+        if data.startswith("\n"):
+            data = data[1:]
+        if data:
+            self.tree.insertText(data)
+
     def processCharacters(self, data):
         # XXX The specification says to do this for every character at the
         # moment, but apparently that doesn't match the real world so we don't
@@ -651,6 +659,8 @@ class InBodyPhase(Phase):
         if self.tree.elementInScope("p"):
             self.endTagP("p")
         self.tree.insertElement(name, attributes)
+        if name == "pre":
+            self.processSpaceCharacters = self.processSpaceCharactersPre
 
     def startTagForm(self, name, attributes):
         if self.tree.formPointer:
