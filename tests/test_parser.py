@@ -19,7 +19,7 @@ treetypes = {"simpletree":simpletree.TreeBuilder,
              "DOM":dom.TreeBuilder}
 
 if hasattr(etree,'TreeBuilder'):
-    treetypes["ElementTree"]=etree.TreeBuilderFull
+    treetypes["ElementTree"]=etreefull.TreeBuilder
 else:
     print 'module ElementTree not found, skipping etree tests'
 
