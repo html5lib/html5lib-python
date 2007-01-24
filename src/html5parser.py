@@ -18,7 +18,6 @@ except NameError:
     # Import from the sets module for python 2.3
     from sets import Set as set
     from sets import ImmutableSet as frozenset
-import new
 import gettext
 _ = gettext.gettext
 
@@ -555,6 +554,10 @@ class InBodyPhase(Phase):
     # the crazy mode
     def __init__(self, parser, tree):
         Phase.__init__(self, parser, tree)
+
+        #Keep a ref to this for special handling of whitespace in <pre>
+        self.processSpaceCharactersNonPre = self.processSpaceCharacters
+
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
             (("script", "style"), self.startTagScriptStyle),
@@ -626,10 +629,9 @@ class InBodyPhase(Phase):
     # the real deal
     def processSpaceCharactersPre(self, data):
         #Sometimes (start of <pre> blocks) we want to drop leading newlines
-        self.processSpaceCharacters = new.instancemethod(
-            Phase.processSpaceCharacters, self)
-        if (data.startswith("\n") and not 
-            self.tree.openElements[-1].hasContent()):
+        self.processSpaceCharacters = self.processSpaceCharactersNonPre
+        if (data.startswith("\n") and self.tree.openElements[-1].name == "pre" 
+            and not self.tree.openElements[-1].hasContent()):
             data = data[1:]
         if data:
             self.tree.insertText(data)
@@ -865,8 +867,7 @@ class InBodyPhase(Phase):
     def endTagBlock(self, name):
         #Put us back in the right whitespace handling mode
         if name == "pre":
-            self.processSpaceCharacters = new.instancemethod(
-                Phase.processSpaceCharacters, self)
+            self.processSpaceCharacters = self.processSpaceCharactersNonPre
         inScope = self.tree.elementInScope(name)
         if inScope:
             self.tree.generateImpliedEndTags()
