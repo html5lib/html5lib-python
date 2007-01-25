@@ -13,12 +13,12 @@ import html5parser
 #Run tests over all treebuilders
 #XXX - it would be nice to automate finding all treebuilders or to allow running just one
 
-from treebuilders import simpletree, etree, dom
+from treebuilders import simpletree, etreefull, dom
 
 treetypes = {"simpletree":simpletree.TreeBuilder,
              "DOM":dom.TreeBuilder}
 
-if hasattr(etree,'TreeBuilder'):
+if hasattr(etreefull,'TreeBuilder'):
     treetypes["ElementTree"]=etreefull.TreeBuilder
 else:
     print 'module ElementTree not found, skipping etree tests'
