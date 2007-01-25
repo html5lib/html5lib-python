@@ -1,6 +1,7 @@
-import os, sys
-os.chdir(os.path.split(os.path.abspath(__file__))[0])
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
+if __name__ == '__main__':
+  import os, sys
+  os.chdir(os.path.split(os.path.abspath(__file__))[0])
+  sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
 
 from liberalxmlparser import *
 from treebuilders import dom
@@ -52,6 +53,14 @@ class BasicXhtml5Test(Xhtml5Test):
         '<head><title>mdash</title></head>' + 
         '<body>A '+ unichr(0x2014).encode('utf-8') + ' B</body>' +
       '</html>')
+
+class BasicXmlTest(Xhtml5Test):
+
+  def test_comment(self):
+    self.assertXmlEquals("<x><!-- foo --></x>")
+
+  def test_cdata(self):
+    self.assertXmlEquals("<x><![CDATA[foo]]></x>","<x>foo</x>")
 
 class OpmlTest(Xhtml5Test):
 

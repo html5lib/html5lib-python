@@ -50,6 +50,13 @@ class XMLParser(html5parser.HTMLParser):
             if token["data"]:
                self.parseError(_("End tag contains unexpected attributes."))
 
+        elif token["type"] == "Comment":
+            # Rescue CDATA from the comments
+            if (token["data"].startswith("[CDATA[") and
+                token["data"].endswith("]]")):
+                token["type"] = "Characters"
+                token["data"] = token["data"][7:-2]
+
         return token
 
 class XHTMLParser(XMLParser):
