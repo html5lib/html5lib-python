@@ -139,7 +139,7 @@ def dom2sax(node, handler, nsmap={'xml':XML_NAMESPACE}):
   if node.nodeType == Node.ELEMENT_NODE:
     if not nsmap:
       handler.startElement(node.nodeName, node.attributes)
-      for child in node.childNodes: dom2sax(child, handler)
+      for child in node.childNodes: dom2sax(child, handler, nsmap)
       handler.endElement(node.nodeName)
     else:
       attributes = dict(node.attributes.itemsNS()) 

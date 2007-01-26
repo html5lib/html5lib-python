@@ -30,13 +30,19 @@ class SAXTest(unittest.TestCase):
   def DOMParse(self, input):
     return XMLParser(tree=dom.TreeBuilder).parse(input)
 
+  def setNS(self, saxparser):
+    import xml.dom
+    saxparser.setFeature(xml.sax.handler.feature_namespaces, 1)
+    return {'xml':xml.dom.XML_NAMESPACE}
+
   def saxdiff(self, input):
     domhandler = SAXLogger()
-    dom.dom2sax(self.DOMParse(input), domhandler)
 
     saxhandler = SAXLogger()
     saxparser = xml.sax.make_parser(PREFERRED_XML_PARSERS)
-    saxparser.setFeature(xml.sax.handler.feature_namespaces, 1)
+
+    dom.dom2sax(self.DOMParse(input), domhandler, self.setNS(saxparser))
+
     saxparser.setContentHandler(saxhandler)
     source = xml.sax.xmlreader.InputSource()
     source.setByteStream(StringIO.StringIO(input))
@@ -84,6 +90,11 @@ class SAXTest(unittest.TestCase):
     </g>
   </svg>
 </body></html>""")
+
+# Repeat tests without namespace support
+class nonamespaceTest(SAXTest):
+  def setNS(self, saxparser):
+    return None
 
 # Redundantly rerun all tests using the "real" minidom parser, just to be
 # sure that the output is consistent

@@ -11,11 +11,6 @@ References:
  * http://wiki.whatwg.org/wiki/HtmlVsXhtml
 
 @@TODO:
- * Produce SAX events based on the produced DOM.  This is intended not to
-   support streaming, but rather to support application level compatibility. 
- * Optional namespace support
- * Investigate the use of <![CDATA[]]> when tokenizer.contentModelFlag
-   indicates CDATA processsing to ensure dual HTML/XHTML compatibility.
  * Selectively lowercase only XHTML, but not foreign markup
 """
 
