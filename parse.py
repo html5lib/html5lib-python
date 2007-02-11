@@ -40,7 +40,7 @@ def parse():
                 f = open(f)
             except IOError: pass
     except IndexError:
-        print "No filename provided. Use -h for help"
+        sys.stderr.write("No filename provided. Use -h for help")
         sys.exit(1)
 
     if opts.treebuilder is not None:
@@ -48,7 +48,7 @@ def parse():
             treebuilder = __import__("src.treebuilders." + opts.treebuilder,
                 None,None,"src").TreeBuilder
         except ImportError, name:
-            print "Treebuilder %s not found"%name
+            sys.stderr.write("Treebuilder %s not found"%name)
             raise
         except Exception, foo:
             import src.treebuilders.simpletree
@@ -78,27 +78,25 @@ def parse():
         t0 = time.time()
         document = p.parse(f)
         t1 = time.time()
-        if opts.xml:
-            print document.toxml('utf-8')
-        else:
-            print p.tree.testSerializer(document).encode("utf-8")
-        if opts.error:
-            print "\nParse errors:\n" + "\n".join(p.errors)
+        printOutput(p, document, opts)
         t2 = time.time()
-        print "\n\nRun took: %fs (plus %fs to print the output)"%(t1-t0, t2-t1)
+        sys.stdout.write("\n\nRun took: %fs (plus %fs to print the output)"%(t1-t0, t2-t1))
     else:
         document = p.parse(f)
-        if opts.xml:
-            print document.toxml("utf-8")
-        elif opts.hilite:
-            print document.hilite("utf-8")
-        else:
-            print p.tree.testSerializer(document).encode("utf-8")
-        if opts.error:
-            errList=[]
-            for pos, message in p.errors:
-                errList.append("Line %i Col %i"%pos + " " + message)
-            print "\nParse errors:\n" + "\n".join(errList)
+        printOutput(p, document, opts)
+
+def printOutput(parser, document, opts):
+    if opts.xml:
+        sys.stdout.write(document.toxml("utf-8"))
+    elif opts.hilite:
+        sys.stdout.write(document.hilite("utf-8"))
+    else:
+        sys.stdout.write(parser.tree.testSerializer(document).encode("utf-8"))
+    if opts.error:
+        errList=[]
+        for pos, message in parser.errors:
+            errList.append("Line %i Col %i"%pos + " " + message)
+        sys.stderr.write("\nParse errors:\n" + "\n".join(errList))
 
 def getOptParser():
     parser = OptionParser(usage=__doc__)
