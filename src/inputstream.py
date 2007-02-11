@@ -189,6 +189,7 @@ class HTMLInputStream(object):
         return "".join(charStack)
 
 if __name__ == "__main__":
+    #XXX Why is this code here? What is it for?
     stream = HTMLInputStream("../tests/utf-8-bom.html")
 
     c = stream.char()
