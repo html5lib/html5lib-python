@@ -21,7 +21,7 @@ treetypes = {"simpletree":simpletree.TreeBuilder,
 if hasattr(etreefull,'TreeBuilder'):
     treetypes["ElementTree"]=etreefull.TreeBuilder
 else:
-    print 'module ElementTree not found, skipping etree tests'
+    sys.stderr.write('module ElementTree not found, skipping etree tests')
 
 #Run the parse error checks
 checkParseErrors = False
@@ -30,7 +30,7 @@ def parseTestcase(testString):
     testString = testString.split("\n")
     try:
         if testString[0] != "#data":
-            print testString
+            sys.stderr.write(testString)
         assert testString[0] == "#data"
     except:
         raise
