@@ -1,7 +1,10 @@
 try:
     from xml.etree import ElementTree
 except ImportError:
-    from elementtree import ElementTree
+    try:
+        from elementtree import ElementTree
+    except:
+        pass
 
 import _base
 

@@ -124,6 +124,7 @@ tableInsertModeElements = frozenset((
 ))
 
 asciiLowercase = frozenset(string.ascii_lowercase)
+asciiUppercase = frozenset(string.ascii_uppercase)
 asciiLetters = frozenset(string.ascii_letters)
 digits = frozenset(string.digits)
 hexDigits = frozenset(string.hexdigits)

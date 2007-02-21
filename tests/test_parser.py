@@ -18,7 +18,7 @@ from treebuilders import simpletree, etreefull, dom
 treetypes = {"simpletree":simpletree.TreeBuilder,
              "DOM":dom.TreeBuilder}
 
-if hasattr(etreefull,'TreeBuilder'):
+if hasattr(etreefull, "ElementTree"):
     treetypes["ElementTree"]=etreefull.TreeBuilder
 else:
     sys.stderr.write('module ElementTree not found, skipping etree tests')
