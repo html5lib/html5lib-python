@@ -83,9 +83,9 @@ class HTMLInputStream(object):
 
         #If there is no BOM need to look for meta elements with encoding 
         #information
-        #encoding = self.detectEncodingMeta()
-        #if encoding is not None:
-        #    return encoding
+        encoding = self.detectEncodingMeta()
+        if encoding is not None:
+            return encoding
 
         #Guess with chardet, if avaliable
         try:
@@ -345,6 +345,7 @@ class EncodingParser(object):
         attrParser = AttrParser(self.data[self.position:])
         attr = attrParser.parse()
         self.position += attrParser.position
+        #print attr, attrParser.position, self.data[self.position]
         return attr
 
     def isValidEncoding(self, encoding):
@@ -426,6 +427,8 @@ class ContentAttrParser(FragmentParser):
 class AttrParser(FragmentParser):
     def parse(self):
         self.skip(list(spaceCharacters)+["/"])
+        if self.position == len(self.fragment):
+            return None
         if self.fragment[self.position] == "<":
             self.position -= 1
             return None
@@ -434,41 +437,63 @@ class AttrParser(FragmentParser):
         attrName = []
         attrValue = []
         spaceFound = False
+        #Step 5 attribute name
         while True:
-            if self.fragment[self.position] == "=" and attrName:   
+            if self.position == len(self.fragment):
+                    return "".join(attrName), ""
+            elif self.fragment[self.position] == "=" and attrName:   
                 break
             elif self.fragment[self.position] in spaceCharacters:
                 spaceFound=True
                 break
             elif self.fragment[self.position] in ("/", "<", ">"):
-                self.position -= 1
+                #self.position -= 1
                 return "".join(attrName), ""
             elif self.fragment[self.position] in asciiUppercase:
                 attrName.extend(self.fragment[self.position].lower())
             else:
                 attrName.extend(self.fragment[self.position])
+            #Step 6
             self.position += 1
+        #Step 7
         if spaceFound:
             self.skip()
+            if self.position == len(self.fragment):
+                return "".join(attrName), ""
+            #Step 8
             if self.fragment[self.position] != "=":
-                self.position -= 1
+                #self.position -= 1
                 return "".join(attrName), ""
         #XXX need to advance positon in both spaces and value case
+        #Step 9
         self.position += 1
+        #Step 10
         self.skip()
+        #XXX Need to exit if we go past the end of the fragment
+        if self.position == len(self.fragment):
+            return "".join(attrName), ""
+        #Step 11
         if self.fragment[self.position] in ("'", '"'):
+            #11.1
             quoteChar = self.fragment[self.position]
-            self.position += 1
             while True:
-                if self.fragment[self.position] == quoteChar:
+                #11.2
+                self.position += 1
+                if self.position == len(self.fragment):
                     return "".join(attrName), "".join(attrValue)
+                #11.3
+                elif self.fragment[self.position] == quoteChar:
+                    #XXX Not in spec
+                    self.position += 1    
+                    return "".join(attrName), "".join(attrValue)
+                #11.4
                 elif self.fragment[self.position] in asciiUppercase:
                     attrValue.extend(self.fragment[self.position].lower())
+                #11.5
                 else:
                     attrValue.extend(self.fragment[self.position])
-                self.position += 1
         elif self.fragment[self.position] in (">", '<'):
-                self.position -= 1
+                #self.position -= 1
                 return "".join(attrName), ""
         elif self.fragment[self.position] in asciiUppercase:
             attrValue.extend(self.fragment[self.position].lower())
@@ -477,10 +502,13 @@ class AttrParser(FragmentParser):
         #XXX I think this next bit is right but there is a bug in the spec
         while True:
             self.position +=1
-            if self.fragment[self.position] in (
+            if self.position == len(self.fragment):
+                    return "".join(attrName), "".join(attrValue)
+            elif self.fragment[self.position] in (
                 list(spaceCharacters) + [">", '<']):
-                self.position -= 1
-                return "".join(attrName), ""
+                #XXX this is wrong
+                #self.position -= 1
+                return "".join(attrName), "".join(attrValue)
             elif self.fragment[self.position] in asciiUppercase:
                 attrValue.extend(self.fragment[self.position].lower())
             else:
