@@ -4,13 +4,14 @@ import glob
 import StringIO
 import unittest
 import new
+import codecs
 
 # XXX Allow us to import the sibling module
 os.chdir(os.path.split(os.path.abspath(__file__))[0])
 sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
 
 import inputstream
-import codecs
+
 
 def parseTestcase(testString):
     testString = testString.split("\n")

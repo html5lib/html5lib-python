@@ -2,6 +2,7 @@ import codecs
 import re
 
 from constants import EOF, spaceCharacters, asciiLetters, asciiUppercase
+from constants import encodings
 from utils import MethodDispatcher
 
 class HTMLInputStream(object):
@@ -356,14 +357,8 @@ class EncodingParser(object):
         return attr
 
     def isValidEncoding(self, encoding):
-        """Determine if encoding is a valid encoding and, if it is, set it 
-        as the encoding on the inputstream"""
-        try:
-            codecs.lookup(encoding)
-            rv = True
-        except LookupError:
-            rv = False
-        return rv
+        """Determine if a string is a supported encoding"""
+        return encoding is not None and encoding.lower() in encodings
 
 class FragmentParser(object):
     """Helper object for parsing document fragments e.g. attributes and content
