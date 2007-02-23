@@ -37,7 +37,7 @@ class HTMLInputStream(object):
         #encoding information
         self.numBytesMeta = 512
         #Encoding to use if no other information can be found
-        self.defaultEncoding = "cp1252"
+        self.defaultEncoding = "windows-1252"
         #Detect encoding iff no explicit "transport level" encoding is supplied
         if encoding is None:
             encoding = self.detectEncoding()
@@ -46,7 +46,7 @@ class HTMLInputStream(object):
         # Read bytes from stream decoding them into Unicode
         uString = self.rawStream.read().decode(self.charEncoding, 'replace')
 
-        # Normalize new lines and null characters
+        # Normalize new ipythonlines and null characters
         uString = re.sub('\r\n?', '\n', uString)
         uString = re.sub('\x00', '\xFFFD', uString)
 
@@ -78,24 +78,31 @@ class HTMLInputStream(object):
         #First look for a BOM
         #This will also read past the BOM if present
         encoding = self.detectBOM()
-        if encoding is not None:
-            return encoding
 
         #If there is no BOM need to look for meta elements with encoding 
         #information
-        encoding = self.detectEncodingMeta()
-        if encoding is not None:
-            return encoding
+        if encoding is None:
+            encoding = self.detectEncodingMeta()
 
         #Guess with chardet, if avaliable
-        try:
-            import chardet
-            return chardet.detect(self.rawStream)['encoding']
-        except ImportError:
-            pass
+        if encoding is None:
+            try:
+                import chardet
+                encoding = chardet.detect(self.rawStream)['encoding']
+            except ImportError:
+                pass
 
         # If all else fails use the default encoding
-        return self.defaultEncoding
+        if encoding is None:
+            encoding = self.defaultEncoding
+        
+        #Substitute for equivalent encodings:
+        encodingSub = {"iso-8859-1":"windows-1252"}
+
+        if encoding.lower() in encodingSub:
+            encoding = encodingSub[encoding.lower()]
+        
+        return encoding
 
     def detectBOM(self):
         """Attempts to detect at BOM at the start of the stream. If
@@ -354,7 +361,7 @@ class EncodingParser(object):
         try:
             codecs.lookup(encoding)
             rv = True
-        except codecs.lookup_error:
+        except LookupError:
             rv = False
         return rv
 
