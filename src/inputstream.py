@@ -235,6 +235,8 @@ class EncodingParser(object):
             if not keepParsing:
                 break
             self.movePosition(1)
+        if self.encoding is not None:
+            self.encoding = self.encoding.strip()
         return self.encoding
 
     def readBytes(self, numBytes):
@@ -358,7 +360,7 @@ class EncodingParser(object):
 
     def isValidEncoding(self, encoding):
         """Determine if a string is a supported encoding"""
-        return encoding is not None and encoding.lower() in encodings
+        return encoding is not None and encoding.lower().strip() in encodings
 
 class FragmentParser(object):
     """Helper object for parsing document fragments e.g. attributes and content

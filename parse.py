@@ -86,12 +86,15 @@ def parse():
         printOutput(p, document, opts)
 
 def printOutput(parser, document, opts):
-    if opts.xml:
-        sys.stdout.write(document.toxml("utf-8"))
-    elif opts.hilite:
-        sys.stdout.write(document.hilite("utf-8"))
-    else:
-        sys.stdout.write(parser.tree.testSerializer(document).encode("utf-8"))
+    if opts.encoding:
+        print "Encoding:", parser.tokenizer.stream.charEncoding
+    if not opts.no_tree:
+        if opts.xml:
+            sys.stdout.write(document.toxml("utf-8"))
+        elif opts.hilite:
+            sys.stdout.write(document.hilite("utf-8"))
+        else:
+            sys.stdout.write(parser.tree.testSerializer(document).encode("utf-8"))
     if opts.error:
         errList=[]
         for pos, message in parser.errors:
@@ -104,11 +107,14 @@ def getOptParser():
     parser.add_option("-p", "--profile", action="store_true", default=False,
                       dest="profile", help="Use the hotshot profiler to "
                       "produce a detailed log of the run")
-
+    
     parser.add_option("-t", "--time",
                       action="store_true", default=False, dest="time",
                       help="Time the run using time.time (may not be accurate on all platforms, especially for short runs)")
-
+    
+    parser.add_option("", "--no-tree", action="store_true", default=False,
+                      dest="no_tree", help="Do not print output tree")
+    
     parser.add_option("-b", "--treebuilder", action="store", type="string",
                       dest="treebuilder")
 
@@ -120,7 +126,9 @@ def getOptParser():
     
     parser.add_option("", "--hilite", action="store_true", default=False,
                       dest="hilite", help="Output as formatted highlighted code.")
-
+    
+    parser.add_option("-c", "--encoding", action="store_true", default=False,
+                      dest="encoding", help="Print character encoding used")
     return parser
 
 if __name__ == "__main__":

@@ -1787,7 +1787,7 @@ class TrailingEndPhase(Phase):
         pass
 
     def processComment(self, data):
-        self.parser.insertCommenr(data, self.tree.document)
+        self.tree.insertComment(data, self.tree.document)
 
     def processSpaceCharacters(self, data):
         self.parser.lastPhase.processSpaceCharacters(data)
