@@ -8,7 +8,12 @@ import sys
 import os
 from optparse import OptionParser
 
+#RELEASE remove
 from src import html5parser, liberalxmlparser
+#END RELEASE
+#RELEASE add
+from html5lib import html5parser, liberalxmlparser
+#END RELEASE
 
 def convertTreeDump(treedump):
     """convert the output of str(document) to something more readable
