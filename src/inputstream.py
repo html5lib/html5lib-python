@@ -1,5 +1,6 @@
 import codecs
 import re
+import types
 
 from constants import EOF, spaceCharacters, asciiLetters, asciiUppercase
 from constants import encodings
@@ -39,8 +40,9 @@ class HTMLInputStream(object):
         self.numBytesMeta = 512
         #Encoding to use if no other information can be found
         self.defaultEncoding = "windows-1252"
+        
         #Detect encoding iff no explicit "transport level" encoding is supplied
-        if encoding is None:
+        if encoding is None or not isValidEncoding(encoding):
             encoding = self.detectEncoding()
         self.charEncoding = encoding
 
@@ -79,12 +81,10 @@ class HTMLInputStream(object):
         #First look for a BOM
         #This will also read past the BOM if present
         encoding = self.detectBOM()
-
         #If there is no BOM need to look for meta elements with encoding 
         #information
         if encoding is None:
             encoding = self.detectEncodingMeta()
-
         #Guess with chardet, if avaliable
         if encoding is None:
             try:
@@ -92,7 +92,6 @@ class HTMLInputStream(object):
                 encoding = chardet.detect(self.rawStream)['encoding']
             except ImportError:
                 pass
-
         # If all else fails use the default encoding
         if encoding is None:
             encoding = self.defaultEncoding
@@ -102,7 +101,7 @@ class HTMLInputStream(object):
 
         if encoding.lower() in encodingSub:
             encoding = encodingSub[encoding.lower()]
-        
+
         return encoding
 
     def detectBOM(self):
@@ -301,13 +300,13 @@ class EncodingParser(object):
             else:
                 if attr[0] == "charset":
                     tentativeEncoding = attr[1]
-                    if self.isValidEncoding(tentativeEncoding):
+                    if isValidEncoding(tentativeEncoding):
                         self.encoding = tentativeEncoding    
                         return False
                 elif attr[0] == "content":
                     contentParser = ContentAttrParser(attr[1])
                     tentativeEncoding = contentParser.parse()
-                    if self.isValidEncoding(tentativeEncoding):
+                    if isValidEncoding(tentativeEncoding):
                         self.encoding = tentativeEncoding    
                         return False
 
@@ -357,10 +356,6 @@ class EncodingParser(object):
         self.position += attrParser.position
         #print attr, attrParser.position, self.data[self.position]
         return attr
-
-    def isValidEncoding(self, encoding):
-        """Determine if a string is a supported encoding"""
-        return encoding is not None and encoding.lower().strip() in encodings
 
 class FragmentParser(object):
     """Helper object for parsing document fragments e.g. attributes and content
@@ -517,3 +512,8 @@ class AttrParser(FragmentParser):
                 attrValue.extend(self.fragment[self.position].lower())
             else:
                 attrValue.extend(self.fragment[self.position])
+
+def isValidEncoding(encoding):
+    """Determine if a string is a supported encoding"""
+    return (encoding is not None and type(encoding) == types.StringType and
+            encoding.lower().strip() in encodings)
