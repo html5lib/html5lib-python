@@ -3,6 +3,7 @@
 
 Parse a document to a simpletree tree, with optional profiling
 """
+#RELEASE move ./examples/
 
 import sys
 import os
@@ -71,7 +72,7 @@ def parse():
         import hotshot
         import hotshot.stats
         prof = hotshot.Profile('stats.prof')
-        prof.runcall(p.parse, f, False)
+        prof.runcall(p.parse, f)
         prof.close()
         # XXX - We should use a temp file here
         stats = hotshot.stats.load('stats.prof')
