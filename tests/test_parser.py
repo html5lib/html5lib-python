@@ -5,6 +5,7 @@ import StringIO
 import unittest
 import new
 
+#RELEASE remove
 # XXX Allow us to import the sibling module
 os.chdir(os.path.split(os.path.abspath(__file__))[0])
 sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
@@ -14,6 +15,13 @@ import html5parser
 #XXX - it would be nice to automate finding all treebuilders or to allow running just one
 
 from treebuilders import simpletree, etreefull, dom
+#END RELEASE
+
+#RELEASE add
+#import html5lib
+#from html5lib import html5parser
+#from html5lib.treebuilders import simpletree, etreefull, dom
+#END RELEASE
 
 treetypes = {"simpletree":simpletree.TreeBuilder,
              "DOM":dom.TreeBuilder}

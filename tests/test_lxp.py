@@ -1,3 +1,4 @@
+#RELEASE remove
 if __name__ == '__main__':
   import os, sys
   os.chdir(os.path.split(os.path.abspath(__file__))[0])
@@ -5,6 +6,13 @@ if __name__ == '__main__':
 
 from liberalxmlparser import *
 from treebuilders import dom
+#END RELEASE
+
+#RELEASE add
+#import html5lib
+#from html5lib.treebuilders import dom
+#from html5lib.liberalxmlparser import *
+#END RELEASE
 
 import unittest, re
 

@@ -6,12 +6,18 @@ import unittest
 import new
 import codecs
 
+#RELEASE remove
 # XXX Allow us to import the sibling module
 os.chdir(os.path.split(os.path.abspath(__file__))[0])
 sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
 
 import inputstream
+#END RELEASE
 
+#RELEASE add
+#import html5lib
+#from html5lib import inputstream
+#END RELEASE
 
 def parseTestcase(testString):
     testString = testString.split("\n")
