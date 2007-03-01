@@ -12,7 +12,7 @@ from optparse import OptionParser
 from src import html5parser, liberalxmlparser
 #END RELEASE
 #RELEASE add
-from html5lib import html5parser, liberalxmlparser
+#from html5lib import html5parser, liberalxmlparser
 #END RELEASE
 
 def convertTreeDump(treedump):

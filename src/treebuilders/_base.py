@@ -303,9 +303,8 @@ class TreeBuilder(object):
         if (name in frozenset(("dd", "dt", "li", "p", "td", "th", "tr"))
             and name != exclude):
             self.openElements.pop()
-            # XXX Until someone has broven that the above breaks stuff I think
-            # we should keep it in.
-            # self.processEndTag(name)
+            # XXX This is not entirely what the specification says. We should
+            # investigate it more closely.
             self.generateImpliedEndTags(exclude)
 
     def getDocument(self):

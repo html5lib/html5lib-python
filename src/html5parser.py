@@ -840,7 +840,8 @@ class InBodyPhase(Phase):
         self.tree.insertElement(name, attributes)
 
     def endTagP(self, name):
-        self.tree.generateImpliedEndTags("p")
+        if self.tree.elementInScope("p"):
+            self.tree.generateImpliedEndTags("p")
         if self.tree.openElements[-1].name != "p":
             self.parser.parseError("Unexpected end tag (p).")
         while self.tree.elementInScope("p"):
@@ -1150,7 +1151,8 @@ class InTablePhase(Phase):
         self.parser.phase.processStartTag(name, attributes)
 
     def startTagTable(self, name, attributes):
-        self.parser.parseError()
+        self.parser.parseError(_(u"Unexpected start tag (table) in table "
+          u"phase. Implies end tag (table)."))
         self.parser.phase.processEndTag("table")
         if not self.parser.innerHTML:
             self.parser.phase.processStartTag(name, attributes)
@@ -1168,14 +1170,16 @@ class InTablePhase(Phase):
         if self.tree.elementInScope("table", True):
             self.tree.generateImpliedEndTags()
             if self.tree.openElements[-1].name != "table":
-                self.parser.parseError()
+                self.parser.parseError(_(u"Unexpected end tag (table). "
+                  u"Expected end tag (" + self.tree.openElements[-1].name +\
+                  u")."))
             while self.tree.openElements[-1].name != "table":
                 self.tree.openElements.pop()
             self.tree.openElements.pop()
             self.parser.resetInsertionMode()
         else:
-            self.parser.parseError()
             # innerHTML case
+            self.parser.parseError()
 
     def endTagIgnore(self, name):
         self.parser.parseError(_("Unexpected end tag (" + name +\
