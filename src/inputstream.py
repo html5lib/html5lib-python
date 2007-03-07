@@ -51,7 +51,7 @@ class HTMLInputStream(object):
 
         # Normalize new ipythonlines and null characters
         uString = re.sub('\r\n?', '\n', uString)
-        uString = re.sub('\x00', '\xFFFD', uString)
+        uString = re.sub('\x00', u'\uFFFD', uString)
 
         # Convert the unicode string into a list to be used as the data stream
         self.dataStream = uString

@@ -81,7 +81,7 @@ class Spider(object):
                 except KeyError:
                     pass
         
-        #Remove all non-http URLs and add a sutiable base URL where that is
+        #Remove all non-http URLs and a dd a sutiable base URL where that is
         #missing
         newUrls = set()
         for url in urls:
@@ -99,7 +99,7 @@ class Spider(object):
             try:
                 resp, content = self.http.request(url, "HEAD")
                 responseHeaders[url] = resp
-            except AttributeError:
+            except AttributeError, KeyError:
                 #Don't know why this happens
                 pass
             
