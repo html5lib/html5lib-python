@@ -306,6 +306,7 @@ class EncodingParser(object):
                 elif attr[0] == "content":
                     contentParser = ContentAttrParser(attr[1])
                     tentativeEncoding = contentParser.parse()
+                    self.position += contentParser.position
                     if isValidEncoding(tentativeEncoding):
                         self.encoding = tentativeEncoding    
                         return False
@@ -404,10 +405,10 @@ class ContentAttrParser(FragmentParser):
             if self.fragment[self.position] in ('"', "'"):
                 quoteMark = self.fragment[self.position]
                 self.position += 1
-                oldPosition = self.positon
-                endQuotePosition = selfBytes(quoteMark)
-                if endQuotePosition > -1:
-                    return value[position:position+endQuotePosition]
+                oldPosition = self.position
+                self.findNext(quoteMark)
+                if self.position < len(self.fragment):
+                    return self.fragment[oldPosition:self.position]
                 else:
                     self.position = oldPosition
                     #No matching end quote => no charset
@@ -439,7 +440,7 @@ class AttrParser(FragmentParser):
         #Step 5 attribute name
         while True:
             if self.position == len(self.fragment):
-                    return "".join(attrName), ""
+                    return None
             elif self.fragment[self.position] == "=" and attrName:   
                 break
             elif self.fragment[self.position] in spaceCharacters:
@@ -461,7 +462,7 @@ class AttrParser(FragmentParser):
                 return "".join(attrName), ""
             #Step 8
             if self.fragment[self.position] != "=":
-                #self.position -= 1
+                self.position -= 1
                 return "".join(attrName), ""
         #XXX need to advance positon in both spaces and value case
         #Step 9
@@ -470,7 +471,7 @@ class AttrParser(FragmentParser):
         self.skip()
         #XXX Need to exit if we go past the end of the fragment
         if self.position == len(self.fragment):
-            return "".join(attrName), ""
+            return None
         #Step 11
         if self.fragment[self.position] in ("'", '"'):
             #11.1
@@ -479,10 +480,9 @@ class AttrParser(FragmentParser):
                 #11.2
                 self.position += 1
                 if self.position == len(self.fragment):
-                    return "".join(attrName), "".join(attrValue)
+                    return None
                 #11.3
                 elif self.fragment[self.position] == quoteChar:
-                    #XXX Not in spec
                     self.position += 1    
                     return "".join(attrName), "".join(attrValue)
                 #11.4
@@ -492,21 +492,17 @@ class AttrParser(FragmentParser):
                 else:
                     attrValue.extend(self.fragment[self.position])
         elif self.fragment[self.position] in (">", '<'):
-                #self.position -= 1
                 return "".join(attrName), ""
         elif self.fragment[self.position] in asciiUppercase:
             attrValue.extend(self.fragment[self.position].lower())
         else:
             attrValue.extend(self.fragment[self.position])
-        #XXX I think this next bit is right but there is a bug in the spec
         while True:
             self.position +=1
             if self.position == len(self.fragment):
-                    return "".join(attrName), "".join(attrValue)
+                    return None
             elif self.fragment[self.position] in (
                 list(spaceCharacters) + [">", '<']):
-                #XXX this is wrong
-                #self.position -= 1
                 return "".join(attrName), "".join(attrValue)
             elif self.fragment[self.position] in asciiUppercase:
                 attrValue.extend(self.fragment[self.position].lower())

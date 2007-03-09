@@ -9,7 +9,8 @@ import zipfile
 
 exclude = [".svn", "*.pyc", "*~", "__basedir__/utils",
            "__basedir__/setup_base.py", "*.prof", "#*", "__basedir__/build",
-           '__basedir__/tests/performance', '*.out']
+           '__basedir__/tests/performance', '*.out',
+           '__basedir__/tests/sites', '__basedir__/tests/*.html']
 
 class Package(object):
 
