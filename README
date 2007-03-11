@@ -18,25 +18,13 @@ runtests.py in the tests/ directory
 Simple usage follows this pattern:
 
 import html5lib
-
 f = open("mydocument.html")
-
 parser = html5lib.HTMLParser()
 document = parser.parse(f)
 
-By default, the returned document is a simple DOM-like structure which
-can be navigated using the .parent and .childNode attributes on each
-element. 
 
-It is also possible to generate an ElementTree tree, this requires the use of the "tree" argument to the parser:
-
-from html5lib.treebuilders import etree
-parser = html5lib.HTMLParser(tree=etree.TreeBuilder)
-
-Intrepid users may write their own treebuilder implementations - see
-help(html5lib.treebuilders) for more information
-
-More documentation is avaliable in the docstrings.
+More documentation is avaliable in the docstrings or from
+http://code.google.com/p/html5lib/wiki/UserDocumentation
 
  = Bugs =
 
