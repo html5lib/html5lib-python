@@ -111,7 +111,9 @@ class XmlElementPhase(html5parser.Phase):
     def endTagOther(self, name):
         for node in self.tree.openElements[::-1]:
             if node.name == name:
-                self.tree.generateImpliedEndTags()
+                #XXX Something is wrong here... The next (commented) line is
+                #html-only
+                #self.tree.generateImpliedEndTags()
                 if self.tree.openElements[-1].name != name:
                     self.parser.parseError(_("Unexpected end tag " + name +\
                       "."))
