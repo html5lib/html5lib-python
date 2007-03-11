@@ -42,7 +42,7 @@ class TestCase(unittest.TestCase):
     def runEncodingTest(self, input, encoding):
         #XXX - move this out into the setup function
         #concatenate all consecutive character tokens into a single token
-        stream = inputstream.HTMLInputStream(input)
+        stream = inputstream.HTMLInputStream(input, chardet=False)
         
         errorMsg = "\n".join(["\n\nInput", input,"\nExpected:", encoding,
                               "\nRecieved:", stream.charEncoding])

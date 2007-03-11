@@ -14,7 +14,7 @@ class HTMLInputStream(object):
 
     """
 
-    def __init__(self, source, encoding=None, chardet=False):
+    def __init__(self, source, encoding=None, chardet=True):
         """Initialises the HTMLInputStream.
 
         HTMLInputStream(source, [encoding]) -> Normalized stream from source
