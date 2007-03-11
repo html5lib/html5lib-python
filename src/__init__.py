@@ -9,7 +9,7 @@ Example usage:
 import html5lib
 f = open("my_document.html")
 p = html5lib.HTMLParser()
-tree = p.parse(f)
+tree = p.parse(f) 
 """
 from html5parser import HTMLParser
 from liberalxmlparser import XMLParser, XHTMLParser
