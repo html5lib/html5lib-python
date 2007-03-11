@@ -86,9 +86,8 @@ def buildTestSuite():
         print "chardet not found, skipping chardet tests"
     return testSuite
 
-def main():   
-    buildTestSuite()
-    unittest.main()
+def main():
+    unittest.main(defaultTest="buildTestSuite")
 
 if __name__ == "__main__":
     main()
