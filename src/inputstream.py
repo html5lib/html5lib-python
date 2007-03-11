@@ -14,7 +14,7 @@ class HTMLInputStream(object):
 
     """
 
-    def __init__(self, source, encoding=None):
+    def __init__(self, source, encoding=None, chardet=False):
         """Initialises the HTMLInputStream.
 
         HTMLInputStream(source, [encoding]) -> Normalized stream from source
@@ -40,6 +40,9 @@ class HTMLInputStream(object):
         self.numBytesMeta = 512
         #Encoding to use if no other information can be found
         self.defaultEncoding = "windows-1252"
+        
+        #Autodetect encoding if no other information can be found?
+        self.chardet = chardet
         
         #Detect encoding iff no explicit "transport level" encoding is supplied
         if encoding is None or not isValidEncoding(encoding):
@@ -86,10 +89,12 @@ class HTMLInputStream(object):
         if encoding is None:
             encoding = self.detectEncodingMeta()
         #Guess with chardet, if avaliable
-        if encoding is None:
+        if encoding is None and self.chardet:
             try:
                 import chardet
-                encoding = chardet.detect(self.rawStream)['encoding']
+                buffer = self.rawStream.read()
+                encoding = chardet.detect(buffer)['encoding']
+                self.rawStream = self.openStream(buffer)
             except ImportError:
                 pass
         # If all else fails use the default encoding
@@ -208,13 +213,81 @@ class HTMLInputStream(object):
         self.queue.insert(0, charStack.pop())
         return "".join(charStack)
 
+class EncodingBytes(str):
+    """String-like object with an assosiated position and various extra methods
+    If the position is ever greater than the string length then an exception is
+    raised"""
+    def __init__(self, value):
+        str.__init__(self, value)
+        self._position=-1
+    
+    def __iter__(self):
+        return self
+    
+    def next(self):
+        self._position += 1
+        rv = self[self.position]
+        return rv
+    
+    def setPosition(self, position):
+        if self._position >= len(self):
+            raise StopIteration
+        self._position = position
+    
+    def getPosition(self):
+        if self._position >= len(self):
+            raise StopIteration
+        if self._position >= 0:
+            return self._position
+        else:
+            return None
+    
+    position = property(getPosition, setPosition)
+
+    def getCurrentByte(self):
+        return self[self.position]
+    
+    currentByte = property(getCurrentByte)
+
+    def skip(self, chars=spaceCharacters):
+        """Skip past a list of characters"""
+        while self.currentByte in chars:
+            self.position += 1
+
+    def matchBytes(self, bytes, lower=False):
+        """Look for a sequence of bytes at the start of a string. If the bytes 
+        are found return True and advance the position to the byte after the 
+        match. Otherwise return False and leave the position alone"""
+        data = self[self.position:self.position+len(bytes)]
+        if lower:
+            data = data.lower()
+        rv = data.startswith(bytes)
+        if rv == True:
+            self.position += len(bytes)
+        return rv
+    
+    def jumpTo(self, bytes):
+        """Look for the next sequence of bytes matching a given sequence. If
+        a match is found advance the position to the last byte of the match"""
+        newPosition = self[self.position:].find(bytes)
+        if newPosition > -1:
+            self._position += (newPosition + len(bytes)-1)
+            return True
+        else:
+            raise StopIteration
+    
+    def findNext(self, byteList):
+        """Move the pointer so it points to the next byte in a set of possible
+        bytes"""
+        while (self.currentByte not in byteList):
+            self.position += 1
+
 class EncodingParser(object):
     """Mini parser for detecting character encoding from meta elements"""
 
     def __init__(self, data):
         """string - the data to work on for encoding detection"""
-        self.data = data
-        self.position = 0
+        self.data = EncodingBytes(data)
         self.encoding = None
 
     def getEncoding(self):
@@ -225,70 +298,28 @@ class EncodingParser(object):
             ("<!",self.handleOther),
             ("<?",self.handleOther),
             ("<",self.handlePossibleStartTag))
-        while self.position < len(self.data):
+        for byte in self.data:
             keepParsing = True
             for key, method in methodDispatch:
-                if self.matchBytes(key, lower=True):
-                    keepParsing = method()
-                    break
+                if self.data.matchBytes(key, lower=True):
+                    try:
+                        keepParsing = method()    
+                        break
+                    except StopIteration:
+                        keepParsing=False
+                        break
             if not keepParsing:
                 break
-            self.movePosition(1)
         if self.encoding is not None:
             self.encoding = self.encoding.strip()
         return self.encoding
 
-    def readBytes(self, numBytes):
-        """Return numBytes bytes from current position in the stream and 
-        update the pointer to after those bytes"""
-        rv = self.data[self.position:self.position+numBytes]
-        self.position += numBytes
-        return rv
-
-    def movePosition(self, offset):
-        """Move offset bytes from the current read position"""
-        self.position += offset
-
-    def matchBytes(self, bytes, lower=False):
-        """Look for a sequence of bytes at the start of a string. If the bytes 
-        are found return True and advance the position to the byte after the 
-        match. Otherwise return False and leave the position alone"""
-        data = self.data[self.position:self.position+len(bytes)]
-        if lower:
-            data = data.lower()
-        rv = data.startswith(bytes)
-        if rv == True:
-            self.movePosition(len(bytes))
-        return rv
-
-    def findBytes(self, bytes):
-        """Look for the next sequence of bytes matching a given sequence. If
-        a match is found advance the position to the last byte of the match
-        or to the end of the string"""
-        newPosition = self.data[self.position:].find(bytes)
-        if newPosition > -1:
-            self.position += (newPosition + len(bytes)-1)
-            return True
-        else:
-            self.position = len(self.data)
-            return False
-    
-    def findNext(self, charList):
-        """Move the pointer so it points to the next byte in a set of possible
-        bytes"""
-        while (self.position < len(self.data) and
-               self.data[self.position] not in charList):
-            self.position += 1
-
     def handleComment(self):
         """Skip over comments"""
-        return self.findBytes("-->")
+        return self.data.jumpTo("-->")
 
     def handleMeta(self):
-        if self.position == len(self.data):
-            #We have <meta at the end of our sniffing stream
-            return False
-        elif self.data[self.position] not in spaceCharacters:
+        if self.data.currentByte not in spaceCharacters:
             #if we have <meta not followed by a space so just keep going
             return True
         #We have a valid meta element we want to search for attributes
@@ -304,9 +335,8 @@ class EncodingParser(object):
                         self.encoding = tentativeEncoding    
                         return False
                 elif attr[0] == "content":
-                    contentParser = ContentAttrParser(attr[1])
+                    contentParser = ContentAttrParser(EncodingBytes(attr[1]))
                     tentativeEncoding = contentParser.parse()
-                    self.position += contentParser.position
                     if isValidEncoding(tentativeEncoding):
                         self.encoding = tentativeEncoding    
                         return False
@@ -314,200 +344,144 @@ class EncodingParser(object):
     def handlePossibleStartTag(self):
         return self.handlePossibleTag(False)
 
-    def handlePossibleEndTag(self):     
+    def handlePossibleEndTag(self):
+        self.data.position+=1
         return self.handlePossibleTag(True)
 
     def handlePossibleTag(self, endTag):
-        if self.readBytes(1) not in asciiLetters:
+        if self.data.currentByte not in asciiLetters:
             #If the next byte is not an ascii letter either ignore this
             #fragment (possible start tag case) or treat it according to 
             #handleOther
             if endTag:
-                self.movePosition(-1)
+                self.data.position -= 1
                 self.handleOther()
-            else:
-                return
-
-
-        possibleChar =([str(char) for char in spaceCharacters] + 
-                        ["<", ">"])
-        self.findNext(possibleChar)
-        if self.position == len(self.data):
-            #If no match is found abort processing
-            return False
-        elif self.data[self.position] == "<":
-            #return to the first step in the overall "two step" algorithm
-            self.position -= 1    
             return True
+        
+        self.data.findNext(list(spaceCharacters) + ["<", ">"])
+        if self.data.currentByte == "<":
+            #return to the first step in the overall "two step" algorithm
+            #reprocessing the < byte
+            self.data.position -= 1    
         else:
             #Read all attributes
             attr = self.getAttribute()
             while attr is not None:
                 attr = self.getAttribute()
-            return True
+        return True
 
     def handleOther(self):
-        return self.findBytes(">")
+        return self.data.jumpTo(">")
 
     def getAttribute(self):
         """Return a name,value pair for the next attribute in the stream, 
         if one is found, or None"""
-        attrParser = AttrParser(self.data[self.position:])
-        attr = attrParser.parse()
-        self.position += attrParser.position
-        #print attr, attrParser.position, self.data[self.position]
-        return attr
-
-class FragmentParser(object):
-    """Helper object for parsing document fragments e.g. attributes and content
-    attribte values"""
-    def __init__(self, fragment):
-        self.position = 0
-        self.fragment = fragment
-    
-    def parse(self):
-        raise NotImplementedError
-    
-    def skip(self, chars=spaceCharacters):
-        while (self.position < len(self.fragment)
-               and self.fragment[self.position] in chars):
-            self.position += 1
-    
-    def startsWith(self, value):
-        return self.fragment[self.position:].startswith(value)
-    
-    def findNext(self, charList):
-        """Move the pointer so it points to the next byte in a set of possible
-        bytes"""
-        while (self.position < len(self.fragment) and
-               self.fragment[self.position] not in charList):
-            self.position += 1
-
-class ContentAttrParser(FragmentParser):
-    def parse(self):
-        #Skip to the first ";"
-        parts = self.fragment.split(";")
-        if len(parts) > 1:
-            self.fragment = parts[1]
-            self.skip()
-            #Check if the attr name is charset 
-            #otherwise return
-            if not self.startsWith("charset"):
-                return None
-            self.position += len("charset")
-            self.skip()
-            if not self.fragment[self.position] == "=":
-                #If there is no = sign keep looking for attrs
-                return None
-            self.position += 1
-            self.skip()
-            #Look for an encoding between matching quote marks
-            if self.fragment[self.position] in ('"', "'"):
-                quoteMark = self.fragment[self.position]
-                self.position += 1
-                oldPosition = self.position
-                self.findNext(quoteMark)
-                if self.position < len(self.fragment):
-                    return self.fragment[oldPosition:self.position]
-                else:
-                    self.position = oldPosition
-                    #No matching end quote => no charset
-                    return None
-            else:
-                #Unquoted value
-                startPosition = self.position
-                self.findNext(spaceCharacters)
-                if self.position != len(self.fragment):
-                    return self.fragment[startPosition:self.position]
-                else:
-                    #Return the whole remaining value
-                    return self.fragment[startPosition:]
-        
-
-class AttrParser(FragmentParser):
-    def parse(self):
-        self.skip(list(spaceCharacters)+["/"])
-        if self.position == len(self.fragment):
+        self.data.skip(list(spaceCharacters)+["/"])
+        if self.data.currentByte == "<":
+            self.data.position -= 1
             return None
-        if self.fragment[self.position] == "<":
-            self.position -= 1
-            return None
-        elif self.fragment[self.position] == ">":
+        elif self.data.currentByte == ">":
             return None
         attrName = []
         attrValue = []
         spaceFound = False
         #Step 5 attribute name
         while True:
-            if self.position == len(self.fragment):
-                    return None
-            elif self.fragment[self.position] == "=" and attrName:   
+            if self.data.currentByte == "=" and attrName:   
                 break
-            elif self.fragment[self.position] in spaceCharacters:
+            elif self.data.currentByte in spaceCharacters:
                 spaceFound=True
                 break
-            elif self.fragment[self.position] in ("/", "<", ">"):
-                #self.position -= 1
+            elif self.data.currentByte in ("/", "<", ">"):
                 return "".join(attrName), ""
-            elif self.fragment[self.position] in asciiUppercase:
-                attrName.extend(self.fragment[self.position].lower())
+            elif self.data.currentByte in asciiUppercase:
+                attrName.extend(self.data.currentByte.lower())
             else:
-                attrName.extend(self.fragment[self.position])
+                attrName.extend(self.data.currentByte)
             #Step 6
-            self.position += 1
+            self.data.position += 1
         #Step 7
         if spaceFound:
-            self.skip()
-            if self.position == len(self.fragment):
-                return "".join(attrName), ""
+            self.data.skip()
             #Step 8
-            if self.fragment[self.position] != "=":
-                self.position -= 1
+            if self.data.currentByte != "=":
+                self.data.position -= 1
                 return "".join(attrName), ""
-        #XXX need to advance positon in both spaces and value case
+        #XXX need to advance position in both spaces and value case
         #Step 9
-        self.position += 1
+        self.data.position += 1
         #Step 10
-        self.skip()
-        #XXX Need to exit if we go past the end of the fragment
-        if self.position == len(self.fragment):
-            return None
+        self.data.skip()
         #Step 11
-        if self.fragment[self.position] in ("'", '"'):
+        if self.data.currentByte in ("'", '"'):
             #11.1
-            quoteChar = self.fragment[self.position]
+            quoteChar = self.data.currentByte
             while True:
-                #11.2
-                self.position += 1
-                if self.position == len(self.fragment):
-                    return None
+                self.data.position+=1
                 #11.3
-                elif self.fragment[self.position] == quoteChar:
-                    self.position += 1    
+                if self.data.currentByte == quoteChar:
+                    self.data.position += 1
                     return "".join(attrName), "".join(attrValue)
                 #11.4
-                elif self.fragment[self.position] in asciiUppercase:
-                    attrValue.extend(self.fragment[self.position].lower())
+                elif self.data.currentByte in asciiUppercase:
+                    attrValue.extend(self.data.currentByte.lower())
                 #11.5
                 else:
-                    attrValue.extend(self.fragment[self.position])
-        elif self.fragment[self.position] in (">", '<'):
+                    attrValue.extend(self.data.currentByte)
+        elif self.data.currentByte in (">", '<'):
                 return "".join(attrName), ""
-        elif self.fragment[self.position] in asciiUppercase:
-            attrValue.extend(self.fragment[self.position].lower())
+        elif self.data.currentByte in asciiUppercase:
+            attrValue.extend(self.data.currentByte.lower())
         else:
-            attrValue.extend(self.fragment[self.position])
+            attrValue.extend(self.data.currentByte)
         while True:
-            self.position +=1
-            if self.position == len(self.fragment):
-                    return None
-            elif self.fragment[self.position] in (
+            self.data.position +=1
+            if self.data.currentByte in (
                 list(spaceCharacters) + [">", '<']):
                 return "".join(attrName), "".join(attrValue)
-            elif self.fragment[self.position] in asciiUppercase:
-                attrValue.extend(self.fragment[self.position].lower())
+            elif self.data.currentByte in asciiUppercase:
+                attrValue.extend(self.data.currentByte.lower())
             else:
-                attrValue.extend(self.fragment[self.position])
+                attrValue.extend(self.data.currentByte)
+
+
+class ContentAttrParser(object):
+    def __init__(self, data):
+        self.data = data
+    def parse(self):
+        try:
+            #Skip to the first ";"
+            self.data.jumpTo(";")
+            self.data.position += 1
+            self.data.skip()
+            #Check if the attr name is charset 
+            #otherwise return
+            self.data.jumpTo("charset")
+            self.data.position += 1
+            self.data.skip()
+            if not self.data.currentByte == "=":
+                #If there is no = sign keep looking for attrs
+                return None
+            self.data.position += 1
+            self.data.skip()
+            #Look for an encoding between matching quote marks
+            if self.data.currentByte in ('"', "'"):
+                quoteMark = self.data.currentByte
+                self.data.position += 1
+                oldPosition = self.data.position
+                self.data.jumpTo(quoteMark)
+                return self.data[oldPosition:self.data.position]
+            else:
+                #Unquoted value
+                oldPosition = self.data.position
+                try:
+                    self.data.findNext(spaceCharacters)
+                    return self.data[oldPosition:self.data.position]
+                except StopIteration:
+                    #Return the whole remaining value
+                    return self.data[oldPosition:]
+        except StopIteration:
+            return None
 
 def isValidEncoding(encoding):
     """Determine if a string is a supported encoding"""
