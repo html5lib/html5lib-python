@@ -70,6 +70,9 @@ class BasicXmlTest(Xhtml5Test):
   def test_cdata(self):
     self.assertXmlEquals("<x><![CDATA[foo]]></x>","<x>foo</x>")
 
+  def test_html_optional_close(self):
+    self.assertXmlEquals("<p>foo</p>","<p>foo</p>")
+
 class OpmlTest(Xhtml5Test):
 
   def test_mixedCaseElement(self):
