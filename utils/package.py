@@ -128,7 +128,8 @@ class Package(object):
         z = zipfile.ZipFile(os.path.join(self.outDir,
                                          "html5lib-%s.zip"%self.version), 'w')
         for f in self.outFiles:
-            z.write(f, f[len(self.outDir)+1:])
+            z.write(f, os.path.join("html5lib-%s"%self.version,
+                                    f[len(self.outDir)+1:]))
         z.close()
 
     def cleanup(self):
