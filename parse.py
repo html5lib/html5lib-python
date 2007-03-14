@@ -11,9 +11,11 @@ from optparse import OptionParser
 
 #RELEASE remove
 from src import html5parser, liberalxmlparser
+from src import treebuilders
 #END RELEASE
 #RELEASE add
 #from html5lib import html5parser, liberalxmlparser
+#from html5lib import treebuilders
 #END RELEASE
 
 def convertTreeDump(treedump):
@@ -51,17 +53,14 @@ def parse():
 
     if opts.treebuilder is not None:
         try:
-            treebuilder = __import__("src.treebuilders." + opts.treebuilder,
-                None,None,"src").TreeBuilder
+            treebuilder = eval("treebuilders." + opts.treebuilder).TreeBuilder
         except ImportError, name:
             sys.stderr.write("Treebuilder %s not found"%name)
             raise
         except Exception, foo:
-            import src.treebuilders.simpletree
-            treebuilder = src.treebuilders.simpletree.TreeBuilder
+            treebuilder = treebuilders.simpletree.TreeBuilder
     else:
-        import src.treebuilders.simpletree
-        treebuilder = src.treebuilders.simpletree.TreeBuilder
+        treebuilder = treebuilders.simpletree.TreeBuilder
 
     if opts.xml:
         p = liberalxmlparser.XHTMLParser(tree=treebuilder)
