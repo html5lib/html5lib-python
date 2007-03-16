@@ -70,8 +70,14 @@ class BasicXmlTest(Xhtml5Test):
   def test_cdata(self):
     self.assertXmlEquals("<x><![CDATA[foo]]></x>","<x>foo</x>")
 
-  def test_html_optional_close(self):
+  def test_simple_text(self):
     self.assertXmlEquals("<p>foo</p>","<p>foo</p>")
+
+  def test_optional_close(self):
+    self.assertXmlEquals("<p>foo","<p>foo</p>")
+
+  def test_html_mismatched(self):
+    self.assertXmlEquals("<b><i>foo</b></i>","<b><i>foo</i></b>")
 
 class OpmlTest(Xhtml5Test):
 
