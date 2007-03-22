@@ -434,9 +434,7 @@ class InHeadPhase(Phase):
             self.parser.phase.processCharacters(data)
 
     def startTagHead(self, name, attributes):
-        self.tree.insertElement(name, attributes)
-        self.tree.headPointer = self.tree.openElements[-1]
-        self.parser.phase = self.parser.phases["inHead"]
+        self.parser.parseError(_(u"Unexpected start tag head in existing head. Ignored"))
 
     def startTagTitle(self, name, attributes):
         element = self.tree.createElement(name, attributes)
