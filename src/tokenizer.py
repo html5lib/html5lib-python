@@ -338,13 +338,13 @@ class HTMLTokenizer(object):
                 self.state = self.states["closeTagOpen"]
             else:
                 self.tokenQueue.append({"type": "Characters", "data": u"<"})
-                self.stream.queue.append(data)
+                self.stream.queue.insert(0, data)
                 self.state = self.states["data"]
         return True
 
     def closeTagOpenState(self):
-        if self.contentModelFlag in (contentModelFlags["RCDATA"],\
-          contentModelFlags["CDATA"]):
+        if (self.contentModelFlag in (contentModelFlags["RCDATA"],
+            contentModelFlags["CDATA"])):
             charStack = []
 
             # So far we know that "</" has been consumed. We now need to know
