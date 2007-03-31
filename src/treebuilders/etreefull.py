@@ -129,6 +129,10 @@ class Document(Element):
     def __init__(self):
         Element.__init__(self, Document) 
 
+class DocumentFragment(Element):
+    def __init__(self):
+        Element.__init__(self, DocumentFragment)
+
 def testSerializer(element):
     rv = []
     finalText = None
@@ -211,9 +215,13 @@ class TreeBuilder(_base.TreeBuilder):
     doctypeClass = DocumentType
     elementClass = Element
     commentClass = Comment
+    fragmentClass = DocumentFragment
 
     def testSerializer(self, element):
         return testSerializer(element)
 
     def getDocument(self):
         return self.document._element
+    
+    def getFragment(self):
+        return _base.TreeBuilder.getFragment(self)._element

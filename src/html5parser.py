@@ -71,13 +71,10 @@ class HTMLParser(object):
             "trailingEnd": TrailingEndPhase(self, self.tree)
         }
 
-    def parse(self, stream, encoding=None, innerHTML=False):
+    def parse(self, stream, encoding=None):
         """Parse a HTML document into a well-formed tree
 
         stream - a filelike object or string containing the HTML to be parsed
-
-        innerHTML - Are we parsing in innerHTML mode (note innerHTML=True
-        is not yet supported)
 
         The optional encoding parameter must be a string that indicates
         the encoding.  If specified, that encoding will be used,
@@ -96,7 +93,7 @@ class HTMLParser(object):
 
         # We don't actually support innerHTML yet but this should allow
         # assertations
-        self.innerHTML = innerHTML
+        self.innerHTML = False
 
         self.tokenizer = tokenizer.HTMLTokenizer(stream, encoding)
 
@@ -119,6 +116,65 @@ class HTMLParser(object):
         self.phase.processEOF()
 
         return self.tree.getDocument()
+    
+    def parseFragment(self, stream, container=None, encoding=None):
+        """Parse a HTML fragment into a well-formed tree fragment
+        
+        container - name of the element we're setting the innerHTML property
+        if set to None, default to 'div'
+
+        stream - a filelike object or string containing the HTML to be parsed
+
+        The optional encoding parameter must be a string that indicates
+        the encoding.  If specified, that encoding will be used,
+        regardless of any BOM or later declaration (such as in a meta
+        element)
+        """
+
+        self.tree.reset()
+        self.firstStartTag = False
+        self.errors = []
+
+        self.innerHTML = container and container.lower() or 'div'
+
+        self.tokenizer = tokenizer.HTMLTokenizer(stream, encoding)
+        if self.innerHTML in ('title', 'textarea'):
+            self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["RCDATA"]
+        elif self.innerHTML in ('style', 'script', 'xmp', 'iframe', 'noembed', 'noframes', 'noscript'):
+            self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["CDATA"]
+        elif self.innerHTML == 'plaintext':
+            self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["PLAINTEXT"]
+        else:
+            # contentModelFlag already is PCDATA
+            #self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["PCDATA"]
+            pass
+
+        self.phase = self.phases["rootElement"]
+        self.phase.insertHtmlElement()
+        self.resetInsertionMode()
+        # We only seem to have InBodyPhase testcases where the following is
+        # relevant ... need others too
+        self.lastPhase = None
+
+        # XXX This is temporary for the moment so there isn't any other
+        # changes needed for the parser to work with the iterable tokenizer
+        for token in self.tokenizer:
+            token = self.normalizeToken(token)
+            type = token["type"]
+            method = getattr(self.phase, "process%s" % type, None)
+            if type in ("Characters", "SpaceCharacters", "Comment"):
+                method(token["data"])
+            elif type in ("StartTag", "Doctype"):
+                method(token["name"], token["data"])
+            elif type == "EndTag":
+                method(token["name"])
+            else:
+                self.parseError(token["data"])
+
+        # When the loop finishes it's EOF
+        self.phase.processEOF()
+
+        return self.tree.getFragment()
 
     def parseError(self, data="XXX ERROR MESSAGE NEEDED"):
         # XXX The idea is to make data mandatory.
@@ -187,28 +243,29 @@ class HTMLParser(object):
             "frameset":"inFrameset"
         }
         for node in self.tree.openElements[::-1]:
+            nodeName = node.name
             if node == self.tree.openElements[0]:
                 last = True
-                if node.name not in ['td', 'th']:
+                if nodeName not in ['td', 'th']:
                     # XXX
                     assert self.innerHTML
-                    raise NotImplementedError
+                    nodeName = self.innerHTML
             # Check for conditions that should only happen in the innerHTML
             # case
-            if node.name in ("select", "colgroup", "head", "frameset"):
+            if nodeName in ("select", "colgroup", "head", "frameset"):
                 # XXX
                 assert self.innerHTML
-            if node.name in newModes:
-                self.phase = self.phases[newModes[node.name]]
+            if nodeName in newModes:
+                self.phase = self.phases[newModes[nodeName]]
                 break
-            elif node.name == "html":
+            elif nodeName == "html":
                 if self.tree.headPointer is None:
                     self.phase = self.phases["beforeHead"]
                 else:
                    self.phase = self.phases["afterHead"]
                 break
             elif last:
-                self.phase = self.phases["body"]
+                self.phase = self.phases["inBody"]
                 break
 
 class Phase(object):
@@ -453,10 +510,11 @@ class InHeadPhase(Phase):
         self.parser.tokenizer.contentModelFlag = contentModelFlags["CDATA"]
 
     def startTagScript(self, name, attributes):
+        #XXX Inner HTML case may be wrong
         element = self.tree.createElement(name, attributes)
         element._flags.append("parser-inserted")
-        if self.tree.headPointer is not None and\
-          self.parser.phase == self.parser.phases["inHead"]:
+        if (self.tree.headPointer is not None and
+            self.parser.phase == self.parser.phases["inHead"]):
             self.appendToHead(element)
         else:
             self.tree.openElements[-1].appendChild(element)
@@ -651,8 +709,8 @@ class InBodyPhase(Phase):
 
     def startTagBody(self, name, attributes):
         self.parser.parseError(_(u"Unexpected start tag (body)."))
-        if len(self.tree.openElements) == 1 \
-          or self.tree.openElements[1].name != "body":
+        if (len(self.tree.openElements) == 1
+            or self.tree.openElements[1].name != "body"):
             assert self.parser.innerHTML
         else:
             for attr, value in attributes.iteritems():
@@ -1177,6 +1235,7 @@ class InTablePhase(Phase):
             self.parser.resetInsertionMode()
         else:
             # innerHTML case
+            assert self.parser.innerHTML
             self.parser.parseError()
 
     def endTagIgnore(self, name):
@@ -1213,23 +1272,25 @@ class InCaptionPhase(Phase):
         ])
         self.endTagHandler.default = self.endTagOther
 
+    def ignoreEndTagCaption(self):
+        return not self.tree.elementInScope("caption", True)
+
     def processCharacters(self, data):
         self.parser.phases["inBody"].processCharacters(data)
 
     def startTagTableElement(self, name, attributes):
         self.parser.parseError()
+        #XXX Have to duplicate logic here to find out if the tag is ignored
+        ignoreEndTag = self.ignoreEndTagCaption()
         self.parser.phase.processEndTag("caption")
-        # XXX how do we know the tag is _always_ ignored in the innerHTML
-        # case and therefore shouldn't be processed again? I'm not sure this
-        # strategy makes sense...
-        if not self.parser.innerHTML:
+        if not ignoreEndTag:
             self.parser.phase.processStartTag(name, attributes)
 
     def startTagOther(self, name, attributes):
         self.parser.phases["inBody"].processStartTag(name, attributes)
 
     def endTagCaption(self, name):
-        if self.tree.elementInScope(name, True):
+        if not self.ignoreEndTagCaption():
             # AT this code is quite similar to endTagTable in "InTable"
             self.tree.generateImpliedEndTags()
             if self.tree.openElements[-1].name != "caption":
@@ -1242,13 +1303,14 @@ class InCaptionPhase(Phase):
             self.parser.phase = self.parser.phases["inTable"]
         else:
             # innerHTML case
+            assert self.parser.innerHTML
             self.parser.parseError()
 
     def endTagTable(self, name):
         self.parser.parseError()
+        ignoreEndTag = self.ignoreEndTagCaption()
         self.parser.phase.processEndTag("caption")
-        # XXX ...
-        if not self.parser.innerHTML:
+        if not ignoreEndTag:
             self.parser.phase.processStartTag(name, attributes)
 
     def endTagIgnore(self, name):
@@ -1277,10 +1339,13 @@ class InColumnGroupPhase(Phase):
         ])
         self.endTagHandler.default = self.endTagOther
 
+    def ignoreEndTagColgroup(self):
+        return self.tree.openElements[-1].name == "html"
+
     def processCharacters(self, data):
+        ignoreEndTag = self.ignoreEndTagColgroup()
         self.endTagColgroup("colgroup")
-        # XXX
-        if not self.parser.innerHTML:
+        if not ignoreEndTag:
             self.parser.phase.processCharacters(data)
 
     def startTagCol(self, name ,attributes):
@@ -1288,14 +1353,15 @@ class InColumnGroupPhase(Phase):
         self.tree.openElements.pop()
 
     def startTagOther(self, name, attributes):
+        ignoreEndTag = self.ignoreEndTagColgroup()
         self.endTagColgroup("colgroup")
-        # XXX how can be sure it's always ignored?
-        if not self.parser.innerHTML:
+        if not ignoreEndTag:
             self.parser.phase.processStartTag(name, attributes)
 
     def endTagColgroup(self, name):
-        if self.tree.openElements[-1].name == "html":
+        if self.ignoreEndTagColgroup():
             # innerHTML case
+            assert self.parser.innerHTML
             self.parser.parseError()
         else:
             self.tree.openElements.pop()
@@ -1306,9 +1372,9 @@ class InColumnGroupPhase(Phase):
           u"col has no end tag."))
 
     def endTagOther(self, name):
+        ignoreEndTag = self.ignoreEndTagColgroup()
         self.endTagColgroup("colgroup")
-        # XXX how can be sure it's always ignored?
-        if not self.parser.innerHTML:
+        if not ignoreEndTag:
             self.parser.phase.processEndTag(name)
 
 
@@ -1357,9 +1423,9 @@ class InTableBodyPhase(Phase):
 
     def startTagTableOther(self, name, attributes):
         # XXX AT Any ideas on how to share this with endTagTable?
-        if self.tree.elementInScope("tbody", True) or \
-          self.tree.elementInScope("thead", True) or \
-          self.tree.elementInScope("tfoot", True):
+        if (self.tree.elementInScope("tbody", True) or
+            self.tree.elementInScope("thead", True) or
+            self.tree.elementInScope("tfoot", True)):
             self.clearStackToTableBodyContext()
             self.endTagTableRowGroup(self.tree.openElements[-1].name)
             self.parser.phase.processStartTag(name, attributes)
@@ -1380,9 +1446,9 @@ class InTableBodyPhase(Phase):
               ") in the table body phase. Ignored."))
 
     def endTagTable(self, name):
-        if self.tree.elementInScope("tbody", True) or \
-          self.tree.elementInScope("thead", True) or \
-          self.tree.elementInScope("tfoot", True):
+        if (self.tree.elementInScope("tbody", True) or
+            self.tree.elementInScope("thead", True) or
+            self.tree.elementInScope("tfoot", True)):
             self.clearStackToTableBodyContext()
             self.endTagTableRowGroup(self.tree.openElements[-1].name)
             self.parser.phase.processEndTag(name)
@@ -1426,6 +1492,9 @@ class InRowPhase(Phase):
               self.tree.openElements[-1].name + u") in the row phase."))
             self.tree.openElements.pop()
 
+    def ignoreEndTagTr(self):
+        return not self.tree.elementInScope("tr", tableVariant=True)
+
     # the rest
     def processCharacters(self, data):
         self.parser.phases["inTable"].processCharacters(data)
@@ -1437,28 +1506,31 @@ class InRowPhase(Phase):
         self.tree.activeFormattingElements.append(Marker)
 
     def startTagTableOther(self, name, attributes):
+        ignoreEndTag = self.ignoreEndTagTr()
         self.endTagTr("tr")
         # XXX how are we sure it's always ignored in the innerHTML case?
-        if not self.parser.innerHTML:
+        if not ignoreEndTag:
             self.parser.phase.processStartTag(name, attributes)
 
     def startTagOther(self, name, attributes):
         self.parser.phases["inTable"].processStartTag(name, attributes)
 
     def endTagTr(self, name):
-        if self.tree.elementInScope("tr", True):
+        if not self.ignoreEndTagTr():
             self.clearStackToTableRowContext()
             self.tree.openElements.pop()
             self.parser.phase = self.parser.phases["inTableBody"]
         else:
             # innerHTML case
+            assert self.parser.innerHTML
             self.parser.parseError()
 
     def endTagTable(self, name):
+        ignoreEndTag = self.ignoreEndTagTr()
         self.endTagTr("tr")
         # Reprocess the current tag if the tr end tag was not ignored
         # XXX how are we sure it's always ignored in the innerHTML case?
-        if not self.parser.innerHTML:
+        if not ignoreEndTag:
             self.parser.phase.processEndTag(name)
 
     def endTagTableRowGroup(self, name):
@@ -1549,6 +1621,7 @@ class InCellPhase(Phase):
             self.parser.phase.processEndTag(name)
         else:
             # sometimes innerHTML case
+            assert self.parser.innerHTML
             self.parser.parseError()
 
     def endTagOther(self, name):
@@ -1626,7 +1699,7 @@ class InSelectPhase(Phase):
               u"select phase. Ignored."))
 
     def endTagSelect(self, name):
-        if self.tree.elementInScope(name, True):
+        if self.tree.elementInScope("select", True):
             node = self.tree.openElements.pop()
             while node.name != "select":
                 node = self.tree.openElements.pop()
@@ -1734,8 +1807,8 @@ class InFramesetPhase(Phase):
               u"in the frameset phase (innerHTML)."))
         else:
             self.tree.openElements.pop()
-        if not self.parser.innerHTML and\
-          self.tree.openElements[-1].name != "frameset":
+        if (not self.parser.innerHTML and
+            self.tree.openElements[-1].name != "frameset"):
             # If we're not in innerHTML mode and the the current node is not a
             # "frameset" element (anymore) then switch.
             self.parser.phase = self.parser.phases["afterFrameset"]

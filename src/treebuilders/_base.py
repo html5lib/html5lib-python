@@ -108,6 +108,9 @@ class TreeBuilder(object):
 
     #The class to use for creating doctypes
     doctypeClass = None
+    
+    #Fragment class
+    fragmentClass = None
 
     def __init__(self):
         self.reset()
@@ -294,7 +297,6 @@ class TreeBuilder(object):
                 fosterParent = self.openElements[
                     self.openElements.index(lastTable) - 1]
         else:
-            assert self.innerHTML
             fosterParent = self.openElements[0]
         return fosterParent, insertBefore
 
@@ -310,6 +312,13 @@ class TreeBuilder(object):
     def getDocument(self):
         "Return the final tree"
         return self.document
+    
+    def getFragment(self):
+        "Return the final fragment"
+        #assert self.innerHTML
+        fragment = self.fragmentClass()
+        self.openElements[0].reparentChildren(fragment)
+        return fragment
 
     def testSerializer(self, node):
         """Serialize the subtree of node in the format required by unit tests

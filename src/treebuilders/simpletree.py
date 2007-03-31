@@ -11,6 +11,12 @@ class Node(_base.Node):
         self.childNodes = []
         self._flags = []
 
+    def __iter__(self):
+        for node in self.childNodes:
+            yield node
+            for item in node:
+                yield item
+
     def __unicode__(self):
         return self.name
 
@@ -177,11 +183,16 @@ class CommentNode(Node):
     def hilite(self):
         return '<code class="markup comment">&lt;!--%s--></code>' % escape(self.data)
 
+class DocumentFragment(Document):
+    def __unicode__(self):
+        return "#document-fragment"
+
 class TreeBuilder(_base.TreeBuilder):
     documentClass = Document
     doctypeClass = DocumentType
     elementClass = Element
     commentClass = CommentNode
+    fragmentClass = DocumentFragment
     
     def testSerializer(self, node):
         return node.printTree()
