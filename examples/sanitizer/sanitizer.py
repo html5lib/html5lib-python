@@ -6,8 +6,11 @@ import urlparse
 
 #RELEASE remove
 # XXX Allow us to import the sibling module
-os.chdir(os.path.split(os.path.abspath(__file__))[0])
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
+curdir = os.path.abspath(os.curdir)
+os.chdir(os.path.join(
+    os.path.split(os.path.abspath(__file__))[0], os.pardir, os.pardir))
+sys.path.insert(0, os.path.abspath("src"))
+os.chdir(curdir)
 
 import html5parser
 from treebuilders import simpletree
@@ -70,16 +73,16 @@ class HTMLSanitizer(object):
             setattr(self, property, value)
     
     
-    def sanitize(self, fragment):
+    def sanitize(self, fragment, escapeRemovedMarkup=True):
         """Remove unsafe markup from a fragment of HTML and return a string
         containing the sanitized markup.
         """
         
         tree = self.parser.parseFragment(fragment)
-        tree = self._sanitizeTree(tree)
+        tree = self._sanitizeTree(tree, escapeRemovedMarkup)
         return tree.toxml()
     
-    def _sanitizeTree(self, tree):
+    def _sanitizeTree(self, tree, escapeRemovedMarkup):
         tree_copy = copy.copy(tree)
         #Set up a correspondence between the nodes in the original tree and the
         #ones in the new tree
@@ -88,16 +91,22 @@ class HTMLSanitizer(object):
         #Iterate over a copy of the tree
         for nodeCopy in tree_copy:
             node = nodeCopy._orig
-            print node.name, node.name in self.acceptable_elements
             #XXX Need to nead with non-nodes
             if (isinstance(node, simpletree.TextNode) or
                 isinstance(node, simpletree.DocumentFragment)):
                 continue
-            #XXX Need to remove the dependence on parent 
+            
             elif (node.name not in self.acceptable_elements):
+                if escapeRemovedMarkup:
+                    #Insert a text node corresponding to the start tag
+                    node.parent.insertBefore(self.nodeToText(node), node)
                 for child in node.childNodes:
                     node.parent.insertBefore(child, node)
-                    node.parent.removeChild(node)    
+                if escapeRemovedMarkup:
+                    #Insert a text node corresponding to the start tag
+                    node.parent.insertBefore(self.nodeToText(node, endTag=True),
+                                             node)
+                node.parent.removeChild(node)
 
             for attrib in node.attributes.keys()[:]:
                 if attrib not in self.acceptable_attributes:
@@ -110,3 +119,16 @@ class HTMLSanitizer(object):
     
     def acceptableURI(self, uri):
         return urlparse.urlparse(uri)[0] in self.acceptable_schemes
+    
+    def nodeToText(self, node, endTag=False):
+        """Create an unescaped text node containing a serialization of node's
+        start or end tag. Must be unescape to prevent double escaping"""
+        
+        if not endTag:
+            nodeStr = ("<" + node.name +
+                       " ".join(["%s='%s'"%(key, value, True)
+                                 for key,value in node.attributes.iteritems()])
+                        + ">")
+        else:
+            nodeStr = "</" + node.name + ">"
+        return simpletree.TextNode(nodeStr)
