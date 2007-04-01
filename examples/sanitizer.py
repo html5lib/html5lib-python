@@ -2,6 +2,7 @@ import os
 import sys
 import itertools
 import copy
+import urlparse
 
 #RELEASE remove
 # XXX Allow us to import the sibling module
@@ -20,7 +21,9 @@ from treebuilders import simpletree
 
 class HTMLSanitizer(object):
 
-    default_acceptable_elements = ('a', 'abbr', 'acronym', 'address', 'area',
+    defaults = { 
+    
+    "acceptable_elements":('a', 'abbr', 'acronym', 'address', 'area',
       'b', 'big', 'blockquote', 'br', 'button', 'caption', 'center', 'cite',
       'code', 'col', 'colgroup', 'dd', 'del', 'dfn', 'dir', 'div', 'dl', 'dt',
       'em', 'fieldset', 'font', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
@@ -28,9 +31,9 @@ class HTMLSanitizer(object):
       'menu', 'ol', 'optgroup', 'option', 'p', 'pre', 'q', 's', 'samp',
       'select', 'small', 'span', 'strike', 'strong', 'sub', 'sup', 'table',
       'tbody', 'td', 'textarea', 'tfoot', 'th', 'thead', 'tr', 'tt', 'u',
-      'ul', 'var')
+      'ul', 'var'),
 
-    default_acceptable_attributes = ('abbr', 'accept', 'accept-charset',
+    "acceptable_attributes":('abbr', 'accept', 'accept-charset',
       'accesskey', 'action', 'align', 'alt', 'axis', 'border', 'cellpadding',
       'cellspacing', 'char', 'charoff', 'charset', 'checked', 'cite', 'class',
       'clear', 'cols', 'colspan', 'color', 'compact', 'coords', 'datetime',
@@ -40,19 +43,41 @@ class HTMLSanitizer(object):
       'nohref', 'noshade', 'nowrap', 'prompt', 'readonly', 'rel', 'rev',
       'rows', 'rowspan', 'rules', 'scope', 'selected', 'shape', 'size',
       'span', 'src', 'start', 'summary', 'tabindex', 'target', 'title',
-      'type', 'usemap', 'valign', 'value', 'vspace', 'width', 'xml:lang')
-
-    def __init__(self, acceptable_elements=None, acceptable_attributes=None):
-        self.parser = html5parser.HTMLParser()
-        if acceptable_elements is None:
-            self.acceptable_elements = self.default_acceptable_elements
-        else:
-            self.acceptable_elements = acceptable_elements
+      'type', 'usemap', 'valign', 'value', 'vspace', 'width', 'xml:lang'),
         
-        if acceptable_attributes is None:
-            self.acceptable_attributes = self.default_acceptable_attributes
-        else:
-            self.acceptable_attributes = acceptable_attributes
+    "acceptable_schemes":('ed2k', 'ftp', 'http', 'https', 'irc',
+      'mailto', 'news', 'gopher', 'nntp', 'telnet', 'webcal',
+      'xmpp', 'callto', 'feed', 'urn', 'aim', 'rsync', 'tag',
+      'ssh', 'sftp', 'rtsp', 'afs'),
+    
+    "attr_val_is_uri":('href', 'src', 'action', 'longdesc')
+    }
+
+    def __init__(self, **kwargs):
+        """Class for filtering unsafe markup out of HTML.
+        
+        Extra keyword arguments:
+        acceptable_elements - Elements that should be allowed through the filter
+        acceptable_attributes - Attributes that should be allowed through the
+                                filter
+        acceptable_schemes - URI schemes that should be allowed
+        attr_val_is_uri - Attributes with URI values"""
+        
+        self.parser = html5parser.HTMLParser()
+        for property,value in self.defaults.iteritems():
+            if property in kwargs:
+                value = kwargs[property]
+            setattr(self, property, value)
+    
+    
+    def sanitize(self, fragment):
+        """Remove unsafe markup from a fragment of HTML and return a string
+        containing the sanitized markup.
+        """
+        
+        tree = self.parser.parseFragment(fragment)
+        tree = self._sanitizeTree(tree)
+        return tree.toxml()
     
     def _sanitizeTree(self, tree):
         tree_copy = copy.copy(tree)
@@ -77,10 +102,11 @@ class HTMLSanitizer(object):
             for attrib in node.attributes.keys()[:]:
                 if attrib not in self.acceptable_attributes:
                     del node.attributes[attrib]
+                elif (attrib in self.attr_val_is_uri and not
+                      self.acceptableURI(node.attributes[attrib])):
+                    del node.attributes[attrib]
         
         return tree
     
-    def sanitize(self, fragment):
-        tree = self.parser.parseFragment(fragment)
-        tree = self._sanitizeTree(tree)
-        return tree.toxml()
+    def acceptableURI(self, uri):
+        return urlparse.urlparse(uri)[0] in self.acceptable_schemes
