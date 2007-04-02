@@ -71,31 +71,39 @@ class HTMLParser(object):
             "trailingEnd": TrailingEndPhase(self, self.tree)
         }
 
-    def parse(self, stream, encoding=None):
-        """Parse a HTML document into a well-formed tree
-
-        stream - a filelike object or string containing the HTML to be parsed
-
-        The optional encoding parameter must be a string that indicates
-        the encoding.  If specified, that encoding will be used,
-        regardless of any BOM or later declaration (such as in a meta
-        element)
-        """
-
+    def _parse(self, stream, innerHTML=False, container="div",
+               encoding=None):
+        
         self.tree.reset()
         self.firstStartTag = False
         self.errors = []
 
-        self.phase = self.phases["initial"]
+        self.tokenizer = tokenizer.HTMLTokenizer(stream, encoding,
+                                                 parseMeta=innerHTML)
+
+        if innerHTML:
+            self.innerHTML = container.lower()
+
+            if self.innerHTML in ('title', 'textarea'):
+                self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["RCDATA"]
+            elif self.innerHTML in ('style', 'script', 'xmp', 'iframe', 'noembed', 'noframes', 'noscript'):
+                self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["CDATA"]
+            elif self.innerHTML == 'plaintext':
+                self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["PLAINTEXT"]
+            else:
+                # contentModelFlag already is PCDATA
+                #self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["PCDATA"]
+                pass
+            self.phase = self.phases["rootElement"]
+            self.phase.insertHtmlElement()
+            self.resetInsertionMode()
+        else:
+            self.innerHTML = False
+            self.phase = self.phases["initial"]
+
         # We only seem to have InBodyPhase testcases where the following is
         # relevant ... need others too
         self.lastPhase = None
-
-        # We don't actually support innerHTML yet but this should allow
-        # assertations
-        self.innerHTML = False
-
-        self.tokenizer = tokenizer.HTMLTokenizer(stream, encoding)
 
         # XXX This is temporary for the moment so there isn't any other
         # changes needed for the parser to work with the iterable tokenizer
@@ -115,9 +123,20 @@ class HTMLParser(object):
         # When the loop finishes it's EOF
         self.phase.processEOF()
 
+    def parse(self, stream, encoding=None):
+        """Parse a HTML document into a well-formed tree
+
+        stream - a filelike object or string containing the HTML to be parsed
+
+        The optional encoding parameter must be a string that indicates
+        the encoding.  If specified, that encoding will be used,
+        regardless of any BOM or later declaration (such as in a meta
+        element)
+        """
+        self._parse(stream, innerHTML=False, encoding=encoding)
         return self.tree.getDocument()
     
-    def parseFragment(self, stream, container=None, encoding=None):
+    def parseFragment(self, stream, container="div", encoding=None):
         """Parse a HTML fragment into a well-formed tree fragment
         
         container - name of the element we're setting the innerHTML property
@@ -130,50 +149,7 @@ class HTMLParser(object):
         regardless of any BOM or later declaration (such as in a meta
         element)
         """
-
-        self.tree.reset()
-        self.firstStartTag = False
-        self.errors = []
-
-        self.innerHTML = container and container.lower() or 'div'
-
-        self.tokenizer = tokenizer.HTMLTokenizer(stream, encoding)
-        if self.innerHTML in ('title', 'textarea'):
-            self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["RCDATA"]
-        elif self.innerHTML in ('style', 'script', 'xmp', 'iframe', 'noembed', 'noframes', 'noscript'):
-            self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["CDATA"]
-        elif self.innerHTML == 'plaintext':
-            self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["PLAINTEXT"]
-        else:
-            # contentModelFlag already is PCDATA
-            #self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["PCDATA"]
-            pass
-
-        self.phase = self.phases["rootElement"]
-        self.phase.insertHtmlElement()
-        self.resetInsertionMode()
-        # We only seem to have InBodyPhase testcases where the following is
-        # relevant ... need others too
-        self.lastPhase = None
-
-        # XXX This is temporary for the moment so there isn't any other
-        # changes needed for the parser to work with the iterable tokenizer
-        for token in self.tokenizer:
-            token = self.normalizeToken(token)
-            type = token["type"]
-            method = getattr(self.phase, "process%s" % type, None)
-            if type in ("Characters", "SpaceCharacters", "Comment"):
-                method(token["data"])
-            elif type in ("StartTag", "Doctype"):
-                method(token["name"], token["data"])
-            elif type == "EndTag":
-                method(token["name"])
-            else:
-                self.parseError(token["data"])
-
-        # When the loop finishes it's EOF
-        self.phase.processEOF()
-
+        self._parse(stream, True, container=container, encoding=encoding)
         return self.tree.getFragment()
 
     def parseError(self, data="XXX ERROR MESSAGE NEEDED"):

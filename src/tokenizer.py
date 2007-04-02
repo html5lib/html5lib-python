@@ -32,8 +32,8 @@ class HTMLTokenizer(object):
 
     # XXX need to fix documentation
 
-    def __init__(self, stream, encoding=None):
-        self.stream = HTMLInputStream(stream, encoding)
+    def __init__(self, stream, encoding=None, parseMeta=True):
+        self.stream = HTMLInputStream(stream, encoding, parseMeta)
 
         self.states = {
             "data":self.dataState,

@@ -14,7 +14,7 @@ class HTMLInputStream(object):
 
     """
 
-    def __init__(self, source, encoding=None, chardet=True):
+    def __init__(self, source, encoding=None, parseMeta=True, chardet=True):
         """Initialises the HTMLInputStream.
 
         HTMLInputStream(source, [encoding]) -> Normalized stream from source
@@ -26,6 +26,8 @@ class HTMLInputStream(object):
         the encoding.  If specified, that encoding will be used,
         regardless of any BOM or later declaration (such as in a meta
         element)
+        
+        parseMeta - Look for a <meta> element containing encoding information
 
         """
         # List of where new lines occur
@@ -41,12 +43,9 @@ class HTMLInputStream(object):
         #Encoding to use if no other information can be found
         self.defaultEncoding = "windows-1252"
         
-        #Autodetect encoding if no other information can be found?
-        self.chardet = chardet
-        
         #Detect encoding iff no explicit "transport level" encoding is supplied
         if encoding is None or not isValidEncoding(encoding):
-            encoding = self.detectEncoding()
+            encoding = self.detectEncoding(parseMeta, chardet)
         self.charEncoding = encoding
 
         # Read bytes from stream decoding them into Unicode
@@ -79,17 +78,17 @@ class HTMLInputStream(object):
             stream = cStringIO.StringIO(str(source))
         return stream
 
-    def detectEncoding(self):
+    def detectEncoding(self, parseMeta=True, chardet=True):
 
         #First look for a BOM
         #This will also read past the BOM if present
         encoding = self.detectBOM()
         #If there is no BOM need to look for meta elements with encoding 
         #information
-        if encoding is None:
+        if encoding is None and parseMeta:
             encoding = self.detectEncodingMeta()
         #Guess with chardet, if avaliable
-        if encoding is None and self.chardet:
+        if encoding is None and chardet:
             try:
                 import chardet
                 buffer = self.rawStream.read()
