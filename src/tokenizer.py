@@ -345,24 +345,26 @@ class HTMLTokenizer(object):
     def closeTagOpenState(self):
         if (self.contentModelFlag in (contentModelFlags["RCDATA"],
             contentModelFlags["CDATA"])):
-            charStack = []
+            if self.currentToken:
+                charStack = []
 
-            # So far we know that "</" has been consumed. We now need to know
-            # whether the next few characters match the name of last emitted
-            # start tag which also happens to be the currentToken. We also need
-            # to have the character directly after the characters that could
-            # match the start tag name.
-            for x in xrange(len(self.currentToken["name"]) + 1):
-                charStack.append(self.stream.char())
-                # Make sure we don't get hit by EOF
-                if charStack[-1] == EOF:
-                    break
+                # So far we know that "</" has been consumed. We now need to know
+                # whether the next few characters match the name of last emitted
+                # start tag which also happens to be the currentToken. We also need
+                # to have the character directly after the characters that could
+                # match the start tag name.
+                for x in xrange(len(self.currentToken["name"]) + 1):
+                    charStack.append(self.stream.char())
+                    # Make sure we don't get hit by EOF
+                    if charStack[-1] == EOF:
+                        break
 
-            # Since this is just for checking. We put the characters back on
-            # the stack.
-            self.stream.queue.extend(charStack)
+                # Since this is just for checking. We put the characters back on
+                # the stack.
+                self.stream.queue.extend(charStack)
 
-            if self.currentToken["name"].lower() == "".join(charStack[:-1]).lower() \
+            if self.currentToken \
+              and self.currentToken["name"].lower() == "".join(charStack[:-1]).lower() \
               and charStack[-1] in (spaceCharacters |
               frozenset((u">", u"/", u"<", EOF))):
                 # Because the characters are correct we can safely switch to

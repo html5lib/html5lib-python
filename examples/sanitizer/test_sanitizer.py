@@ -33,8 +33,9 @@ def attrs_allowed():
 
 def attrs_forbidden():
     for attrName in sanitizer.HTMLSanitizer.defaults['acceptable_attributes']:
+        attrName=attrName+"X"
         yield (TestCase.fragmentEqual,
-               "<p #{%}='display: none;'>foo <bad>bar</bad> baz</p>",
+               "<p %(attrName)s='display: none;'>foo <bad>bar</bad> baz</p>"%{"attrName":attrName},
                "<p>foo &lt;bad>bar&lt;/bad> baz</p>")
 
 def buildTestSuite():

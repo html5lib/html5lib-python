@@ -88,6 +88,7 @@ def parse():
         sys.stdout.write("\n\nRun took: %fs (plus %fs to print the output)"%(t1-t0, t2-t1))
     else:
         document = p.parse(f)
+        print document
         printOutput(p, document, opts)
 
 def printOutput(parser, document, opts):

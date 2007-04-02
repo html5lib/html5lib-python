@@ -37,18 +37,20 @@ checkParseErrors = False
 def parseTestcase(testString):
     testString = testString.split("\n")
     try:
-        if testString[0] != "#data":
+        if testString[0] != "#data" and not testString[0].startswith("#data: "):
             sys.stderr.write(testString)
-        assert testString[0] == "#data"
+        assert testString[0] == "#data" or testString[0].startswith("#data: ")
     except:
         raise
+    innerHTML = False
     input = []
     output = []
     errors = []
     currentList = input
     for line in testString:
         if line and not (line.startswith("#errors") or
-          line.startswith("#document") or line.startswith("#data")):
+          line.startswith("#document") or line.startswith("#data") or
+          line.startswith("#document-fragment")):
             if currentList is output:
                 if line.startswith("|"):
                     currentList.append(line[2:])
@@ -58,9 +60,14 @@ def parseTestcase(testString):
                 currentList.append(line)
         elif line == "#errors":
             currentList = errors
-        elif line == "#document":
+        elif line == "#document" or line.startswith("#document-fragment"):
+            if line.startswith("#document-fragment"):
+                innerHTML = line[19:]
+                if not innerHTML:
+                    sys.stderr.write(testString)
+                assert innerHTML
             currentList = output
-    return "\n".join(input), "\n".join(output), errors
+    return innerHTML, "\n".join(input), "\n".join(output), errors
 
 def convertTreeDump(treedump):
     """convert the output of str(document) to the format used in the testcases"""
@@ -74,11 +81,14 @@ def convertTreeDump(treedump):
     return "\n".join(rv)
 
 class TestCase(unittest.TestCase):
-    def runParserTest(self, input, output, errors, treeClass):
+    def runParserTest(self, innerHTML, input, output, errors, treeClass):
         #XXX - move this out into the setup function
         #concatenate all consecutive character tokens into a single token
         p = html5parser.HTMLParser(tree = treeClass)
-        document = p.parse(StringIO.StringIO(input))
+        if innerHTML:
+            document = p.parseFragment(StringIO.StringIO(input), innerHTML)
+        else:
+            document = p.parse(StringIO.StringIO(input))
         errorMsg = "\n".join(["\n\nExpected:", output, "\nRecieved:",
                               convertTreeDump(p.tree.testSerializer(document))])
         self.assertEquals(output,
@@ -100,16 +110,16 @@ def test_parser():
                 if test == "":
                     continue
                 test = "#data\n" + test
-                input, output, errors = parseTestcase(test)
-                yield TestCase.runParserTest, input, output, errors, name, cls
+                innerHTML, input, output, errors = parseTestcase(test)
+                yield TestCase.runParserTest, innerHTML, input, output, errors, name, cls
 
 def buildTestSuite():
     tests = 0
-    for func, input, output, errors, treeName, treeCls in test_parser():
+    for func, innerHTML, input, output, errors, treeName, treeCls in test_parser():
         tests += 1
         testName = 'test%d' % tests
-        testFunc = lambda self, method=func, input=input, output=output, \
-            errors=errors, treeCls=treeCls: method(self, input, output, errors, treeCls)
+        testFunc = lambda self, method=func, innerHTML=innerHTML, input=input, output=output, \
+            errors=errors, treeCls=treeCls: method(self, innerHTML, input, output, errors, treeCls)
         testFunc.__doc__ = 'Parser %s Tree %s Input: %s'%(testName, treeName, input)
         instanceMethod = new.instancemethod(testFunc, None, TestCase)
         setattr(TestCase, testName, instanceMethod)
