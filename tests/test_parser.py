@@ -37,9 +37,9 @@ checkParseErrors = False
 def parseTestcase(testString):
     testString = testString.split("\n")
     try:
-        if testString[0] != "#data" and not testString[0].startswith("#data: "):
+        if testString[0] != "#data":
             sys.stderr.write(testString)
-        assert testString[0] == "#data" or testString[0].startswith("#data: ")
+        assert testString[0] == "#data"
     except:
         raise
     innerHTML = False
