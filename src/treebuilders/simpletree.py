@@ -196,7 +196,7 @@ class HTMLSerializer(object):
         rv = self.serializeNode(node)
         for child in node.childNodes:
             rv += self.serialize(child)
-        if isinstance(node, Element):
+        if node.type == Element.type and node.name not in voidElements:
             rv += "</%s>\n"%node.name
         return rv
     
