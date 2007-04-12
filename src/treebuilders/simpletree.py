@@ -210,7 +210,7 @@ class HTMLSerializer(object):
                                  node.attributes.iteritems()])
             rv += ">"
         elif node.type == CommentNode.type:
-            rv = "<!-- %s -->" % escape(self.data)        
+            rv = "<!-- %s -->" % escape(node.data)        
         elif node.type == DocumentType.type:
             rv = "<!DOCTYPE %s>" % node.name
         else:

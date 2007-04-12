@@ -118,7 +118,9 @@ class HTMLSanitizer(object):
         return tree
     
     def acceptableURI(self, uri):
-        return urlparse.urlparse(uri)[0] in self.acceptable_schemes
+        #This is wrong
+        parsedURI = urlparse.urlparse(uri) 
+        return parsedURI[0] in self.acceptable_schemes or not parsedURI[0]
     
     def nodeToText(self, node, endTag=False):
         """Create an unescaped text node containing a serialization of node's
