@@ -1287,7 +1287,7 @@ class InCaptionPhase(Phase):
         ignoreEndTag = self.ignoreEndTagCaption()
         self.parser.phase.processEndTag("caption")
         if not ignoreEndTag:
-            self.parser.phase.processStartTag(name, attributes)
+            self.parser.phase.processEndTag(name)
 
     def endTagIgnore(self, name):
         self.parser.parseError(_("Unexpected end tag (" + name +\
@@ -1597,7 +1597,6 @@ class InCellPhase(Phase):
             self.parser.phase.processEndTag(name)
         else:
             # sometimes innerHTML case
-            assert self.parser.innerHTML
             self.parser.parseError()
 
     def endTagOther(self, name):
@@ -1688,7 +1687,7 @@ class InSelectPhase(Phase):
         self.parser.parseError(_(u"Unexpected table end tag (" + name +\
           ") in the select phase."))
         if self.tree.elementInScope(name, True):
-            self.endTagSelect()
+            self.endTagSelect("select")
             self.parser.phase.processEndTag(name)
 
     def endTagOther(self, name):
