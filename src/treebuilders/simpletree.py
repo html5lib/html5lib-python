@@ -98,6 +98,11 @@ class Document(Node):
             tree += child.printTree(2)
         return tree
 
+class DocumentFragment(Document):
+    type = 2
+    def __unicode__(self):
+        return "#document-fragment"
+
 class DocumentType(Node):
     type = 3
     def __init__(self, name):
@@ -126,7 +131,7 @@ class TextNode(Node):
     hilite = toxml
 
 class Element(Node):
-    type = 3
+    type = 5
     def __init__(self, name):
         Node.__init__(self, name)
         self.attributes = {}
@@ -172,7 +177,7 @@ class Element(Node):
         return tree
 
 class CommentNode(Node):
-    type = 5
+    type = 6
     def __init__(self, data):
         Node.__init__(self, None)
         self.data = data
@@ -185,11 +190,6 @@ class CommentNode(Node):
 
     def hilite(self):
         return '<code class="markup comment">&lt;!--%s--></code>' % escape(self.data)
-
-class DocumentFragment(Document):
-    type = 2
-    def __unicode__(self):
-        return "#document-fragment"
 
 class HTMLSerializer(object):
     def serialize(self, node):
