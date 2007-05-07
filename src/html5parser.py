@@ -20,6 +20,7 @@ except NameError:
     from sets import ImmutableSet as frozenset
 import gettext
 _ = gettext.gettext
+import sys
 
 import tokenizer
 
@@ -861,11 +862,13 @@ class InBodyPhase(Phase):
         self.parser.parseError(_(u"Unexpected start tag (" + name +\
           u"). Ignored."))
 
-    def startTagNew(self, name, other):
+    def startTagNew(self, name, attributes):
         """New HTML5 elements, "event-source", "section", "nav",
         "article", "aside", "header", "footer", "datagrid", "command"
         """
-        raise NotImplementedError
+        sys.stderr.write("Warning: Undefined behaviour for tag %s"%name)
+        self.startTagOther(name, attributes)
+        #raise NotImplementedError
 
     def startTagOther(self, name, attributes):
         self.tree.reconstructActiveFormattingElements()
