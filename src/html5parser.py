@@ -866,7 +866,7 @@ class InBodyPhase(Phase):
         """New HTML5 elements, "event-source", "section", "nav",
         "article", "aside", "header", "footer", "datagrid", "command"
         """
-        sys.stderr.write("Warning: Undefined behaviour for tag %s"%name)
+        sys.stderr.write("Warning: Undefined behaviour for start tag %s"%name)
         self.startTagOther(name, attributes)
         #raise NotImplementedError
 
@@ -1100,7 +1100,9 @@ class InBodyPhase(Phase):
         """New HTML5 elements, "event-source", "section", "nav",
         "article", "aside", "header", "footer", "datagrid", "command"
         """
-        raise NotImplementedError
+        sys.stderr.write("Warning: Undefined behaviour for end tag %s"%name)
+        self.endTagOther(name)
+        #raise NotImplementedError
 
     def endTagOther(self, name):
         # XXX This logic should be moved into the treebuilder
