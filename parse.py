@@ -48,14 +48,14 @@ def parse():
                 f = open(f)
             except IOError: pass
     except IndexError:
-        sys.stderr.write("No filename provided. Use -h for help")
+        sys.stderr.write("No filename provided. Use -h for help\n")
         sys.exit(1)
 
     if opts.treebuilder is not None:
         try:
             treebuilder = eval("treebuilders." + opts.treebuilder).TreeBuilder
         except ImportError, name:
-            sys.stderr.write("Treebuilder %s not found"%name)
+            sys.stderr.write("Treebuilder %s not found\n"%name)
             raise
         except Exception, foo:
             treebuilder = treebuilders.simpletree.TreeBuilder
@@ -104,7 +104,7 @@ def printOutput(parser, document, opts):
         errList=[]
         for pos, message in parser.errors:
             errList.append("Line %i Col %i"%pos + " " + message)
-        sys.stderr.write("\nParse errors:\n" + "\n".join(errList))
+        sys.stderr.write("\nParse errors:\n" + "\n".join(errList)+"\n")
 
 def getOptParser():
     parser = OptionParser(usage=__doc__)
