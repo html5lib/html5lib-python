@@ -14,7 +14,7 @@ import html5parser
 #Run tests over all treebuilders
 #XXX - it would be nice to automate finding all treebuilders or to allow running just one
 
-from treebuilders import simpletree, etreefull, dom
+import treebuilders
 #END RELEASE
 
 #RELEASE add
@@ -23,13 +23,38 @@ from treebuilders import simpletree, etreefull, dom
 #from html5lib.treebuilders import simpletree, etreefull, dom
 #END RELEASE
 
-treetypes = {"simpletree":simpletree.TreeBuilder,
-             "DOM":dom.TreeBuilder}
+treeTypes = {"simpletree":treebuilders.getTreebuilder("simpletree"),
+             "DOM":treebuilders.getTreebuilder("dom")}
 
-if hasattr(etreefull, "ElementTree"):
-    treetypes["ElementTree"]=etreefull.TreeBuilder
-else:
-    sys.stderr.write('module ElementTree not found, skipping etree tests')
+#Try whatever etree implementations are avaliable from a list that are
+#"supposed" to work
+try:
+    import xml.etree.ElementTree as ElementTree
+    treeTypes['ElementTree'] = treebuilders.getTreebuilder("etree", ElementTree, fullTree=True)
+except ImportError:
+    try:
+        import elementtree.ElementTree as ElementTree
+        treeTypes['ElementTree'] = treebuilders.getTreebuilder("etree", ElementTree, fullTree=True)
+    except ImportError:
+        pass
+
+try:
+    import xml.etree.cElementTree as cElementTree
+    treeTypes['cElementTree'] = treebuilders.getTreebuilder("etree", cElementTree, fullTree=True)
+except ImportError:
+    try:
+        import cElementTree
+        treeTypes['cElementTree'] = treebuilders.getTreebuilder("etree", cElementTree, fullTree=True)
+    except ImportError:
+        pass
+    
+try:
+    import lxml.etree as lxml
+    treeTypes['lxml'] = treebuilders.getTreebuilder("etree", lxml, fullTree=True)
+except ImportError:
+    pass
+
+sys.stderr.write('Testing trees '+ " ".join(treeTypes.keys()))
 
 #Run the parse error checks
 checkParseErrors = False
@@ -102,7 +127,7 @@ class TestCase(unittest.TestCase):
             self.assertEquals(len(p.errors), len(errors), errorMsg2)
 
 def test_parser():
-    for name, cls in treetypes.iteritems():
+    for name, cls in treeTypes.iteritems():
         for filename in glob.glob('tree-construction/*.dat'):
             f = open(filename)
             tests = f.read().split("#data\n")

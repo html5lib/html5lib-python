@@ -35,8 +35,12 @@ __path__.append(os.path.dirname(__path__[0]))
 
 import dom
 import simpletree
+import etree
 
-try:
-    import etree
-except:
-    pass
+
+def getTreebuilder(treeType, implementation=None, **kwargs):
+    treeType = treeType.lower()
+    if treeType in ("dom", "simpletree"):
+        return globals()[treeType].TreeBuilder
+    elif "name == etree":
+        return etree.getETreeModule(implementation, **kwargs).TreeBuilder
