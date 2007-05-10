@@ -42,8 +42,8 @@ class HTMLParser(object):
         strict - raise an exception when a parse error is encountered
 
         tree - a treebuilder class controlling the type of tree that will be
-        returned. This class is almost always a subclass of
-        html5lib.treebuilders._base.TreeBuilder
+        returned. Built in treebuilders can be accessed through
+        html5lib.treebuilders.getTreeBuilder(treeType)
         """
 
         # Raise an exception on the first error encountered

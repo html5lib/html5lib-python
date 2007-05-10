@@ -38,7 +38,23 @@ import simpletree
 import etree
 
 
-def getTreebuilder(treeType, implementation=None, **kwargs):
+def getTreeBuilder(treeType, implementation=None, **kwargs):
+    """Get a TreeBuilder class for various types of tree with built-in support
+    
+    treeType - the name of the tree type required (case-insensitive). Supported
+               values are "simpletree", "dom", "etree"
+               
+               "simpletree" - a built-in DOM-ish tree type with support for some
+                              more pythonic idioms.
+                "dom" - The xml.dom.minidom DOM implementation
+                "etree" - A generic builder for tree implementations exposing an
+                          elementtree-like interface (known to work with
+                          ElementTree, cElementTree and lxml.etree).
+               
+    implementation - (Currently applies to the "etree" tree type only). A module
+                      implementing the tree type e.g. xml.etree.ElementTree or
+                      lxml.etree."""
+    
     treeType = treeType.lower()
     if treeType in ("dom", "simpletree"):
         return globals()[treeType].TreeBuilder

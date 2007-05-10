@@ -1,11 +1,18 @@
 import _base
 import new
 
+moduleCache = {}
+
 def getETreeModule(ElementTreeImplementation, fullTree=False):
-    mod = new.module("_" + ElementTreeImplementation.__name__+"builder")
-    objs = getETreeBuilder(ElementTreeImplementation, fullTree)
-    mod.__dict__.update(objs)
-    return mod
+    name = "_" + ElementTreeImplementation.__name__+"builder"
+    if name in moduleCache:
+        return moduleCache[name]
+    else:
+        mod = new.module("_" + ElementTreeImplementation.__name__+"builder")
+        objs = getETreeBuilder(ElementTreeImplementation, fullTree)
+        mod.__dict__.update(objs)
+        moduleCache[name] = mod    
+        return mod
 
 def getETreeBuilder(ElementTreeImplementation, fullTree=False):
     ElementTree = ElementTreeImplementation
