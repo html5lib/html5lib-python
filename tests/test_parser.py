@@ -69,14 +69,14 @@ def parseTestcase(testString):
         raise
     innerHTML = False
     input = []
-    output = []
+    expected = []
     errors = []
     currentList = input
     for line in testString:
         if line and not (line.startswith("#errors") or
           line.startswith("#document") or line.startswith("#data") or
           line.startswith("#document-fragment")):
-            if currentList is output:
+            if currentList is expected:
                 if line.startswith("|"):
                     currentList.append(line[2:])
                 else:
@@ -91,8 +91,8 @@ def parseTestcase(testString):
                 if not innerHTML:
                     sys.stderr.write(testString)
                 assert innerHTML
-            currentList = output
-    return innerHTML, "\n".join(input), "\n".join(output), errors
+            currentList = expected
+    return innerHTML, "\n".join(input), "\n".join(expected), errors
 
 def convertTreeDump(treedump):
     """convert the output of str(document) to the format used in the testcases"""
@@ -105,8 +105,15 @@ def convertTreeDump(treedump):
             rv.append(line)
     return "\n".join(rv)
 
+import re
+attrlist = re.compile(r"^(\s+)\w+=.*(\n\1\w+=.*)+",re.M)
+def sortattrs(x):
+  lines = x.group(0).split("\n")
+  lines.sort()
+  return "\n".join(lines)
+
 class TestCase(unittest.TestCase):
-    def runParserTest(self, innerHTML, input, output, errors, treeClass):
+    def runParserTest(self, innerHTML, input, expected, errors, treeClass):
         #XXX - move this out into the setup function
         #concatenate all consecutive character tokens into a single token
         p = html5parser.HTMLParser(tree = treeClass)
@@ -114,11 +121,12 @@ class TestCase(unittest.TestCase):
             document = p.parseFragment(StringIO.StringIO(input), innerHTML)
         else:
             document = p.parse(StringIO.StringIO(input))
-        errorMsg = "\n".join(["\n\nExpected:", output, "\nRecieved:",
-                              convertTreeDump(p.tree.testSerializer(document))])
-        self.assertEquals(output,
-                          convertTreeDump(p.tree.testSerializer(document)),
-                          errorMsg)
+        output = convertTreeDump(p.tree.testSerializer(document))
+        output = attrlist.sub(sortattrs, output)
+        expected = attrlist.sub(sortattrs, expected)
+        errorMsg = "\n".join(["\n\nExpected:", expected,
+                                 "\nRecieved:", output])
+        self.assertEquals(expected, output, errorMsg)
         errStr = ["Line: %i Col: %i %s"%(line, col, message) for
                   ((line,col), message) in p.errors]
         errorMsg2 = "\n".join(["\n\nInput errors:\n" + "\n".join(errors),
@@ -135,16 +143,16 @@ def test_parser():
                 if test == "":
                     continue
                 test = "#data\n" + test
-                innerHTML, input, output, errors = parseTestcase(test)
-                yield TestCase.runParserTest, innerHTML, input, output, errors, name, cls
+                innerHTML, input, expected, errors = parseTestcase(test)
+                yield TestCase.runParserTest, innerHTML, input, expected, errors, name, cls
 
 def buildTestSuite():
     tests = 0
-    for func, innerHTML, input, output, errors, treeName, treeCls in test_parser():
+    for func, innerHTML, input, expected, errors, treeName, treeCls in test_parser():
         tests += 1
         testName = 'test%d' % tests
-        testFunc = lambda self, method=func, innerHTML=innerHTML, input=input, output=output, \
-            errors=errors, treeCls=treeCls: method(self, innerHTML, input, output, errors, treeCls)
+        testFunc = lambda self, method=func, innerHTML=innerHTML, input=input, expected=expected, \
+            errors=errors, treeCls=treeCls: method(self, innerHTML, input, expected, errors, treeCls)
         testFunc.__doc__ = 'Parser %s Tree %s Input: %s'%(testName, treeName, input)
         instanceMethod = new.instancemethod(testFunc, None, TestCase)
         setattr(TestCase, testName, instanceMethod)
