@@ -80,9 +80,11 @@ class TreeBuilder(_base.TreeBuilder):
         setattr(self.dom, 'hilite', method)
         return self
 
-    def doctypeClass(self,name):
+    def insertDoctype(self, name):
         domimpl = minidom.getDOMImplementation()
-        return NodeBuilder(domimpl.createDocumentType(name,None,None))
+        doctype = domimpl.createDocumentType(name,None,None)
+        self.document.appendChild(NodeBuilder(doctype))
+        doctype.ownerDocument = self.dom
 
     def elementClass(self, name):
         return NodeBuilder(self.dom.createElement(name))
