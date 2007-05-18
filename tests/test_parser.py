@@ -54,7 +54,7 @@ try:
 except ImportError:
     pass
 
-sys.stderr.write('Testing trees '+ " ".join(treeTypes.keys()))
+sys.stdout.write('Testing trees '+ " ".join(treeTypes.keys()) + "\n")
 
 #Run the parse error checks
 checkParseErrors = False
