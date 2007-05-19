@@ -17,7 +17,8 @@ def main():
         import test_parser
         test_parser.checkParseErrors = False
 
-    unittest.TextTestRunner().run(buildTestSuite())
+    results = unittest.TextTestRunner().run(buildTestSuite())
+    if not results.wasSuccessful(): sys.exit(1)
 
 if __name__ == "__main__":
     #Allow us to import the parent module

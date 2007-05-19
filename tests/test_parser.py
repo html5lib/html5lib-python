@@ -113,47 +113,49 @@ def sortattrs(x):
   return "\n".join(lines)
 
 class TestCase(unittest.TestCase):
-    def runParserTest(self, innerHTML, input, expected, errors, treeClass):
-        #XXX - move this out into the setup function
-        #concatenate all consecutive character tokens into a single token
-        p = html5parser.HTMLParser(tree = treeClass)
-        if innerHTML:
-            document = p.parseFragment(StringIO.StringIO(input), innerHTML)
-        else:
-            document = p.parse(StringIO.StringIO(input))
-        output = convertTreeDump(p.tree.testSerializer(document))
-        output = attrlist.sub(sortattrs, output)
-        expected = attrlist.sub(sortattrs, expected)
-        errorMsg = "\n".join(["\n\nExpected:", expected,
-                                 "\nRecieved:", output])
-        self.assertEquals(expected, output, errorMsg)
-        errStr = ["Line: %i Col: %i %s"%(line, col, message) for
-                  ((line,col), message) in p.errors]
-        errorMsg2 = "\n".join(["\n\nInput errors:\n" + "\n".join(errors),
-                               "Actual errors:\n" + "\n".join(errStr)])
-        if checkParseErrors:
-            self.assertEquals(len(p.errors), len(errors), errorMsg2)
-
+    def runParserTest(self, innerHTML, input, expected, errors):
+        for treeName, treeClass in treeTypes.iteritems():
+            #XXX - move this out into the setup function
+            #concatenate all consecutive character tokens into a single token
+            p = html5parser.HTMLParser(tree = treeClass)
+            if innerHTML:
+                document = p.parseFragment(StringIO.StringIO(input), innerHTML)
+            else:
+                document = p.parse(StringIO.StringIO(input))
+            output = convertTreeDump(p.tree.testSerializer(document))
+            output = attrlist.sub(sortattrs, output)
+            expected = attrlist.sub(sortattrs, expected)
+            errorMsg = "\n".join(["\n\nTree:", treeName,
+                                     "\nExpected:", expected,
+                                     "\nRecieved:", output])
+            self.assertEquals(expected, output, errorMsg)
+            errStr = ["Line: %i Col: %i %s"%(line, col, message) for
+                      ((line,col), message) in p.errors]
+            errorMsg2 = "\n".join(["\n\nInput errors:\n" + "\n".join(errors),
+                                   "Actual errors:\n" + "\n".join(errStr)])
+            if checkParseErrors:
+                self.assertEquals(len(p.errors), len(errors), errorMsg2)
+    
 def test_parser():
-    for name, cls in treeTypes.iteritems():
-        for filename in glob.glob('tree-construction/*.dat'):
-            f = open(filename)
-            tests = f.read().split("#data\n")
-            for test in tests:
-                if test == "":
-                    continue
-                test = "#data\n" + test
-                innerHTML, input, expected, errors = parseTestcase(test)
-                yield TestCase.runParserTest, innerHTML, input, expected, errors, name, cls
+    for filename in glob.glob('tree-construction/*.dat'):
+        f = open(filename)
+        tests = f.read().split("#data\n")
+        for test in tests:
+            if test == "":
+                continue
+            test = "#data\n" + test
+            innerHTML, input, expected, errors = parseTestcase(test)
+            yield TestCase.runParserTest, innerHTML, input, expected, errors
 
 def buildTestSuite():
     tests = 0
-    for func, innerHTML, input, expected, errors, treeName, treeCls in test_parser():
+    for func, innerHTML, input, expected, errors in test_parser():
         tests += 1
         testName = 'test%d' % tests
-        testFunc = lambda self, method=func, innerHTML=innerHTML, input=input, expected=expected, \
-            errors=errors, treeCls=treeCls: method(self, innerHTML, input, expected, errors, treeCls)
-        testFunc.__doc__ = 'Parser %s Tree %s Input: %s'%(testName, treeName, input)
+        testFunc = lambda self, method=func, innerHTML=innerHTML, input=input, \
+            expected=expected, errors=errors: \
+            method(self, innerHTML, input, expected, errors)
+        testFunc.__doc__ = 'Parser %s Input: %s'%(testName, input)
         instanceMethod = new.instancemethod(testFunc, None, TestCase)
         setattr(TestCase, testName, instanceMethod)
     return unittest.TestLoader().loadTestsFromTestCase(TestCase)
