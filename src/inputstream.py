@@ -123,14 +123,16 @@ class HTMLInputStream(object):
         string = self.rawStream.read(4)
 
         # Try detecting the BOM using bytes from the string
-        encoding = bomDict.get(string[:3])       # UTF-8
+        encoding = bomDict.get(string[:3])         # UTF-8
         seek = 3
         if not encoding:
-            encoding = bomDict.get(string[:2])   # UTF-16
-            seek = 2
+            # Need to detect UTF-32 before UTF-16
+            encoding = bomDict.get(string)         # UTF-32
+            seek = 4
             if not encoding:
-                encoding = bomDict.get(string)   # UTF-32
-                seek = 4
+                encoding = bomDict.get(string[:2]) # UTF-16
+                seek = 2
+
 
         #AT - move this to the caller?
         # Set the read position past the BOM if one was found, otherwise
