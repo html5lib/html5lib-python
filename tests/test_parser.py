@@ -54,6 +54,12 @@ try:
 except ImportError:
     pass
 
+try:
+    import BeautifulSoup
+    treeTypes["beautifulsoup"] = treebuilders.getTreeBuilder("beautifulsoup", fullTree=True)
+except ImportError:
+    pass
+
 sys.stdout.write('Testing trees '+ " ".join(treeTypes.keys()) + "\n")
 
 #Run the parse error checks
