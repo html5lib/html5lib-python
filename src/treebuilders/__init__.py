@@ -36,13 +36,17 @@ __path__.append(os.path.dirname(__path__[0]))
 import dom
 import simpletree
 import etree
+try:
+    import soup as beautifulsoup
+except:
+    pass
 
 
 def getTreeBuilder(treeType, implementation=None, **kwargs):
     """Get a TreeBuilder class for various types of tree with built-in support
     
     treeType - the name of the tree type required (case-insensitive). Supported
-               values are "simpletree", "dom", "etree"
+               values are "simpletree", "dom", "etree" and "beautifulsoup"
                
                "simpletree" - a built-in DOM-ish tree type with support for some
                               more pythonic idioms.
@@ -50,13 +54,14 @@ def getTreeBuilder(treeType, implementation=None, **kwargs):
                 "etree" - A generic builder for tree implementations exposing an
                           elementtree-like interface (known to work with
                           ElementTree, cElementTree and lxml.etree).
+                "beautifulsoup" - Beautiful soup (if installed)
                
     implementation - (Currently applies to the "etree" tree type only). A module
                       implementing the tree type e.g. xml.etree.ElementTree or
                       lxml.etree."""
     
     treeType = treeType.lower()
-    if treeType in ("dom", "simpletree"):
+    if treeType in ("dom", "simpletree", "beautifulsoup"):
         return globals()[treeType].TreeBuilder
-    elif "name == etree":
+    elif treeType == "etree":
         return etree.getETreeModule(implementation, **kwargs).TreeBuilder

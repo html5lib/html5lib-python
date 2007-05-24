@@ -1,5 +1,6 @@
 import _base
 import new
+import copy
 
 moduleCache = {}
 
@@ -99,7 +100,8 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
     
         def cloneNode(self):
             element = Element(self.name)
-            element.attributes = self.attributes
+            for name, value in self.attributes.iteritems():
+                element.attributes[name] = value
             return element
     
         def reparentChildren(self, newParent):
