@@ -15,7 +15,7 @@ class TreeWalker(_base.TreeWalker):
             previous = event
         for token in self.tokens(previous, None):
             yield token
-    
+
     def tokens(self, event, next):
         type, node = event
         if type == START_ELEMENT:
@@ -26,21 +26,21 @@ class TreeWalker(_base.TreeWalker):
                     yield token
             else:
                 yield self.startTag(name, node.attributes.items())
-        
+
         elif type == END_ELEMENT:
             name = node.nodeName
             if name not in voidElements:
                 yield self.endTag(name)
-        
+
         elif type == COMMENT:
             yield self.comment(node.nodeValue)
-        
+
         elif type in (IGNORABLE_WHITESPACE, CHARACTERS):
             for token in self.text(node.nodeValue):
                 yield token
-        
+
         else:
             yield self.unknown(type)
-    
+
     def walkChildren(self, node):
         raise Exception(_("PullDOM tree walker's walkChildren should never be called"))
