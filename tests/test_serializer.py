@@ -92,6 +92,13 @@ def buildTestSuite():
     return unittest.TestLoader().loadTestsFromTestCase(TestCase)
 
 def main():
+    # the following is temporary while the unit tests for parse errors are
+    # still in flux
+    if '-p' in sys.argv: # suppress check for serialize errors
+        sys.argv.remove('-p')
+        global checkSerializeErrors
+        checkSerializeErrors = False
+       
     buildTestSuite()
     unittest.main()
 

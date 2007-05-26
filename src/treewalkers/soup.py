@@ -22,7 +22,8 @@ class TreeWalker(_base.TreeWalker):
                 yield token
 
         elif isinstance(node, Tag): # Element
-            for token in self.element(node):
+            for token in self.element(node, node.name, \
+              node.attrs.items(), node.contents):
                 yield token
 
         else:

@@ -1,3 +1,6 @@
+import gettext
+_ = gettext.gettext
+
 from constants import voidElements, spaceCharacters
 spaceCharacters = u"".join(spaceCharacters)
 
@@ -9,7 +12,7 @@ class TreeWalker(object):
         raise NodeImplementedError
 
     def error(self, msg):
-        yield {"type": "SerializeError", "data": msg}
+        return {"type": "SerializeError", "data": msg}
 
     def normalizeAttrs(self, attrs):
         if not attrs:
@@ -18,14 +21,14 @@ class TreeWalker(object):
             attrs = attrs.items()
         return attrs
 
-    def element(self, name, attrs, hasChildren):
+    def element(self, node, name, attrs, hasChildren):
         if name in voidElements:
             for token in self.emptyTag(name, attrs, hasChildren):
                 yield token
         else:
             yield self.startTag(name, attrs)
             if hasChildren:
-                for token in self.serializeChildren(node):
+                for token in self.walkChildren(node):
                     yield token
             yield self.endTag(name)
 
@@ -47,14 +50,13 @@ class TreeWalker(object):
         left = data[:len(data)-len(middle)]
         if left:
             yield {"type": "SpaceCharacters", "data": left}
+        data = middle
+        middle = data.rstrip(spaceCharacters)
+        right = data[len(middle):]
         if middle:
-            data = middle
-            middle = data.rstrip(spaceCharacters)
-            right = data[len(data)-len(middle):]
-            if middle:
-                yield {"type": "Characters", "data": middle}
-            if right:
-                yield {"type": "SpaceCharacters", "data": right}
+            yield {"type": "Characters", "data": middle}
+        if right:
+            yield {"type": "SpaceCharacters", "data": right}
 
     def comment(self, data):
         return {"type": "Comment", "data": data}

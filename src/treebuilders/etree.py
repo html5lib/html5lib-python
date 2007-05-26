@@ -244,6 +244,6 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                 return self.document._element.find("html")
         
         def getFragment(self):
-            return ElementTree.ElementTree(_base.TreeBuilder.getFragment(self)._element)
+            return _base.TreeBuilder.getFragment(self)._element
         
     return locals()

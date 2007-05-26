@@ -5,6 +5,7 @@ import new
 import copy
 
 import _base
+from constants import voidElements
 
 moduleCache = {}
 
@@ -24,8 +25,8 @@ def getETreeBuilder(ElementTreeImplementation):
 
     class TreeWalker(_base.TreeWalker):
         def walk(self, node):
-            if type(element) == type(ElementTree.ElementTree):
-                element = element.getroot()
+            if not(hasattr(node, "tag")):
+                node = node.getroot()
 
             if node.tag in ("<DOCUMENT_ROOT>", "<DOCUMENT_FRAGMENT>"):
                 for token in self.walkChildren(node):
@@ -33,19 +34,24 @@ def getETreeBuilder(ElementTreeImplementation):
 
             elif node.tag == "<!DOCTYPE>":
                 yield self.doctype(node.text)
-                if node.tail:
-                    for token in self.text(node.tail):
-                        yield token
 
             elif type(node.tag) == type(ElementTree.Comment):
                 yield self.comment(node.text)
-                if node.tail:
-                    for token in self.text(node.tail):
-                        yield token
 
             else:
                 #This is assumed to be an ordinary element
-                for token in self.element(node):
+                if node.tag in voidElements:
+                    for token in self.emptyTag(node.tag, \
+                      node.attrib.items(), len(node) or node.text):
+                        yield token
+                else:
+                    yield self.startTag(node.tag, node.attrib.items())
+                    for token in self.walkChildren(node):
+                        yield token
+                    yield self.endTag(node.tag)
+
+            if node.tail:
+                for token in self.text(node.tail):
                     yield token
 
         def walkChildren(self, node):
@@ -54,9 +60,6 @@ def getETreeBuilder(ElementTreeImplementation):
                     yield token
             for childNode in node.getchildren():
                 for token in self.walk(childNode):
-                    yield token
-            if node.tail:
-                for token in self.text(node.tail):
                     yield token
 
     return locals()

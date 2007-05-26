@@ -60,8 +60,6 @@ try:
 except ImportError:
     pass
 
-sys.stdout.write('Testing trees '+ " ".join(treeTypes.keys()) + "\n")
-
 #Run the parse error checks
 checkParseErrors = False
 
@@ -141,6 +139,7 @@ class TestCase(unittest.TestCase):
             self.assertEquals(len(p.errors), len(errors), errorMsg2)
 
 def test_parser():
+    sys.stdout.write('Testing tree builders '+ " ".join(treeTypes.keys()) + "\n")
     for name, cls in treeTypes.iteritems():
         for filename in glob.glob('tree-construction/*.dat'):
             f = open(filename)

@@ -7,7 +7,7 @@ class TreeWalker(_base.TreeWalker):
     def walk(self, node):
         # testing node.type allows us not to import treebuilders.simpletree
         if node.type in (1, 2): # Document or DocumentFragment
-            for token in self.serializeChildren(node):
+            for token in self.walkChildren(node):
                 yield token
 
         elif node.type == 3: # DocumentType
@@ -18,7 +18,7 @@ class TreeWalker(_base.TreeWalker):
                 yield token
 
         elif node.type == 5: # Element
-            for token in self.element(node.name, \
+            for token in self.element(node, node.name, \
               node.attributes.items(), node.childNodes):
                 yield token
 
