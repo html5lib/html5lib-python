@@ -158,6 +158,26 @@ voidElements = frozenset((
     "input"
 ))
 
+booleanAttributes = {
+    "": frozenset(("irrelevant",)),
+    "style": frozenset(("scoped",)),
+    "img": frozenset(("ismap",)),
+    "audio": frozenset(("autoplay","controls")),
+    "video": frozenset(("autoplay","controls")),
+    "script": frozenset(("defer", "async")),
+    "details": frozenset(("open",)),
+    "datagrid": frozenset(("multiple", "disabled")),
+    "command": frozenset(("hidden", "disabled", "checked", "default")),
+    "menu": frozenset(("autosubmit",)),
+    "fieldset": frozenset(("disabled", "readonly")),
+    "option": frozenset(("disabled", "readonly", "selected")),
+    "optgroup": frozenset(("disabled", "readonly")),
+    "button": frozenset(("disabled", "autofocus")),
+    "input": frozenset(("disabled", "readonly", "required", "autofocus", "checked", "ismap")),
+    "select": frozenset(("disabled", "readonly", "autofocus", "multiple")),
+    "output": frozenset(("disabled", "readonly")),
+}
+
 # entitiesWindows1252 has to be _ordered_ and needs to have an index. It
 # therefore can't be a frozenset.
 entitiesWindows1252 = (
