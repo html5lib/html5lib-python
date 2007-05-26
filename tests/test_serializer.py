@@ -23,9 +23,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
 
 import html5parser
 import serializer
-#Run tests over all treewalkers
-#XXX - it would be nice to automate finding all treewalkers or to allow running just one
-
 import treewalkers
 #END RELEASE
 
@@ -33,46 +30,6 @@ import treewalkers
 #import html5lib
 #from html5lib import html5parser, serializer, treewalkers
 #END RELEASE
-
-treeTypes = {"simpletree":treewalkers.getTreeWalker("simpletree"),
-             "DOM":treewalkers.getTreeWalker("dom"),
-             "PullDOM":treewalkers.getTreeWalker("pulldom")}
-
-#Try whatever etree implementations are available from a list that are
-#"supposed" to work
-try:
-    import xml.etree.ElementTree as ElementTree
-    treeTypes['ElementTree'] = treewalkers.getTreeWalker("etree", ElementTree)
-except ImportError:
-    try:
-        import elementtree.ElementTree as ElementTree
-        treeTypes['ElementTree'] = treewalkers.getTreeWalker("etree", ElementTree)
-    except ImportError:
-        pass
-
-try:
-    import xml.etree.cElementTree as cElementTree
-    treeTypes['cElementTree'] = treewalkers.getTreeWalker("etree", cElementTree)
-except ImportError:
-    try:
-        import cElementTree
-        treeTypes['cElementTree'] = treewalkers.getTreeWalker("etree", cElementTree)
-    except ImportError:
-        pass
-    
-try:
-    import lxml.etree as lxml
-    treeTypes['lxml'] = treewalkers.getTreeWalker("etree", lxml)
-except ImportError:
-    pass
-
-try:
-    import BeautifulSoup
-    treeTypes["beautifulsoup"] = treewalkers.getTreeWalker("beautifulsoup")
-except ImportError:
-    pass
-
-sys.stdout.write('Testing trees '+ " ".join(treeTypes.keys()) + "\n")
 
 #Run the serialize error checks
 checkSerializeErrors = False
