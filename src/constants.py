@@ -119,8 +119,8 @@ spaceCharacters = frozenset((
 tableInsertModeElements = frozenset((
     "table",
     "tbody",
-    "tfoot", 
-    "thead", 
+    "tfoot",
+    "thead",
     "tr"
 ))
 
@@ -133,7 +133,7 @@ hexDigits = frozenset(string.hexdigits)
 asciiUpper2Lower = dict([(ord(c),ord(c.lower()))
     for c in string.ascii_uppercase])
 
-# Heading elements need to be ordered 
+# Heading elements need to be ordered
 headingElements = (
     "h1",
     "h2",

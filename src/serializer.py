@@ -20,15 +20,15 @@ def _slide(iterator):
 
 class HTMLSerializer(object):
     cdata_elements = frozenset(("style", "script", "xmp", "iframe", "noembed", "noframes", "noscript"))
-    
+
     quote_attr_values = False
     quote_char = '"'
     minimize_boolean_attributes = True
-    
+
     trailing_solidus = " /"
-    
+
     omit_optional_tags = True
-    
+
     def __init__(self, **kwargs):
         for attr in ("quote_attr_values", "quote_char",
           "minimize_boolean_attributes", "trailing_solidus",
@@ -36,7 +36,7 @@ class HTMLSerializer(object):
             if attr in kwargs:
                 setattr(self, attr, kwargs[attr])
         self.errors = []
-    
+
     def serialize(self, treewalker):
         in_cdata = False
         self.errors = []
@@ -46,7 +46,7 @@ class HTMLSerializer(object):
             type = token["type"]
             if type == "Doctype":
                 yield u"<!DOCTYPE %s>" % token["name"]
-            
+
             elif type in ("Characters", "SpaceCharacters"):
                 if type == "SpaceCharacters" or in_cdata:
                     if in_cdata and token["data"].find("</") >= 0:
@@ -57,7 +57,7 @@ class HTMLSerializer(object):
                         .replace("&", "&amp;") \
                         .replace("<", "&lt;")  \
                         .replace(">", "&gt;")  \
-            
+
             elif type in ("StartTag", "EmptyTag"):
                 name = token["name"]
                 if name in self.cdata_elements:
@@ -95,7 +95,7 @@ class HTMLSerializer(object):
                 if name in voidElements and self.include_trailing_slashes:
                     attributes.append(" /")
                 yield u"<%s%s>" % (name, u"".join(attributes))
-            
+
             elif type == "EndTag":
                 name = token["name"]
                 if name in self.cdata_elements:
@@ -103,19 +103,19 @@ class HTMLSerializer(object):
                 elif in_cdata:
                     self.serializeError(_("Unexpected child element of a CDATA element"))
                 yield u"</%s>" % name
-            
+
             elif type == "Comment":
                 data = token["data"]
                 if data.find("--") >= 0:
                     self.serializeError(_("Comment contains --"))
                 yield u"<!--%s-->" % token["data"]
-            
+
             else:
                 self.serializeError(token["data"])
-    
+
     def render(self, treewalker, encoding='UTF-8', errors="strict"):
         u''.join(list(self.serialize(treewalker))).encode(encoding, errors)
-    
+
     def filter(self, treewalker):
         for token, next in _slide(treewalker):
             type = token["type"]
@@ -127,7 +127,7 @@ class HTMLSerializer(object):
                     yield token
             else:
                 yield token
-    
+
     def serializeError(self, data="XXX ERROR MESSAGE NEEDED"):
         # XXX The idea is to make data mandatory.
         self.errors.append(data)
@@ -185,7 +185,7 @@ class HTMLSerializer(object):
                 return False
         # TODO
         return False
-    
+
     def _is_optional_end(self, tagname, next_event):
         type, data = next_event
         if tagname in ('html', 'head', 'body'):
@@ -282,7 +282,7 @@ class HTMLSerializer(object):
                 return type == "EndTag" or type is None
         # TODO
         return False
-    
+
 def SerializeError(Exception):
     """Error in serialized tree"""
     pass

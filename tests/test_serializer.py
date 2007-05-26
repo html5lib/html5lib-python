@@ -40,7 +40,7 @@ class TestCase(unittest.TestCase, treewalkers._base.TreeWalker):
         func.__doc__ = "\t".join([description, str(input), str(options)])
         setattr(cls, name, new.instancemethod(func, None, cls))
     addTest = classmethod(addTest)
-    
+
     def mockTest(self, expected, input, options):
         exception = None
         result = self.serialize_html(input, options)
@@ -51,12 +51,12 @@ class TestCase(unittest.TestCase, treewalkers._base.TreeWalker):
                 exception = ex
         if exception is not None:
             raise exception
-    
+
     def serialize_html(self, input, options):
         return u''.join(serializer.HTMLSerializer( \
             **dict([(str(k),v) for k,v in options.iteritems()])).
                 serialize(self.normalizeTokens(input)))
-    
+
     def normalizeTokens(self, tokens):
         for token in tokens:
             type = token[0]
