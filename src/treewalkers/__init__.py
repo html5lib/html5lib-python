@@ -14,6 +14,7 @@ __path__.append(os.path.dirname(__path__[0]))
 import dom
 import simpletree
 import etree
+import pulldom
 try:
     import soup as beautifulsoup
 except:
@@ -29,6 +30,7 @@ def getTreeWalker(treeType, implementation=None, **kwargs):
                "simpletree" - a built-in DOM-ish tree type with support for some
                               more pythonic idioms.
                 "dom" - The xml.dom.minidom DOM implementation
+                "pulldom" - The xml.dom.pulldom event stream
                 "etree" - A generic builder for tree implementations exposing an
                           elementtree-like interface (known to work with
                           ElementTree, cElementTree and lxml.etree).
@@ -39,7 +41,7 @@ def getTreeWalker(treeType, implementation=None, **kwargs):
                       lxml.etree."""
     
     treeType = treeType.lower()
-    if treeType in ("dom", "simpletree", "beautifulsoup"):
+    if treeType in ("dom", "pulldom", "simpletree", "beautifulsoup"):
         return globals()[treeType].TreeWalker
     elif treeType == "etree":
         return etree.getETreeModule(implementation, **kwargs).TreeWalker

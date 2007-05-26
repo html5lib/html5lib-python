@@ -1,43 +1,34 @@
 import gettext
 _ = gettext.gettext
 
-from constants import voidElements, spaceCharacters
+import _base
 
-spaceCharacters = u''.join(spaceCharacters)
-
-class TreeWalker(object):
-    def serialize(self, node):
+class TreeWalker(_base.TreeWalker):
+    def walk(self, node):
         # testing node.type allows us not to import treebuilders.simpletree
         if node.type in (1, 2): # Document or DocumentFragment
-            for childNode in node.childNodes:
-                for token in self.serialize(childNode):
-                    yield token
+            for token in self.serializeChildren(node):
+                yield token
         
         elif node.type == 3: # DocumentType
-            yield {"type": "Doctype", "name": node.name, "data": False}
+            yield self.doctype(node.name)
         
         elif node.type == 4: # TextNode
-            yield {"type": node.value.lstrip(spaceCharacters) and "Characters" or "SpaceCharacters",
-                    "data": node.value}
+            for token in self.text(node.value):
+                yield token
         
         elif node.type == 5: # Element
-            if node.name in voidElements:
-                yield {"type": "EmptyTag", "name": node.name,
-                        "data": node.attributes.items()}
-                if node.childNodes:
-                    yield {"type": "SerializeError",
-                            "data": _("Void element has children")}
-            else:
-                yield {"type": "StartTag", "name": node.name,
-                        "data": node.attributes.items()}
-                for childNode in node.childNodes:
-                    for token in self.serialize(childNode):
-                        yield token
-                yield {"type": "EndTag", "name": node.name, "data": []}
+            for token in self.element(node.name, \
+              node.attributes.items(), node.childNodes):
+                yield token
         
         elif node.type == 6: # CommentNode
-            yield {"type": "Comment", "data": node.data}
+            yield self.comment(node.data)
         
         else:
-            yield {"type": "SerializeError",
-                    "data": _("Unknown node type: " + node.type)}
+            yield self.unknown(node.type)
+    
+    def walkChildren(self, node):
+        for childNode in node.childNodes:
+            for token in self.walk(childNode):
+                yield token

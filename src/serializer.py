@@ -1,5 +1,3 @@
-from constants import voidElements, booleanAttributes
-
 try:
     frozenset
 except NameError:
@@ -8,6 +6,9 @@ except NameError:
 
 import gettext
 _ = gettext.gettext
+
+from constants import voidElements, booleanAttributes, spaceCharacters
+spaceCharacters = u"".join(spaceCharacters)
 
 def _slide(iterator):
     previous = None
@@ -64,6 +65,8 @@ class HTMLSerializer(object):
                 elif in_cdata:
                     self.serializeError(_("Unexpected child element of a CDATA element"))
                 attrs = token["data"]
+                if hasattr(attrs, "items"):
+                    attrs = attrs.items()
                 attrs.sort()
                 attributes = []
                 for k,v in attrs:
