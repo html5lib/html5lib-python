@@ -25,14 +25,14 @@ class HTMLSerializer(object):
     quote_char = '"'
     minimize_boolean_attributes = True
 
+    use_trailing_solidus = False
     trailing_solidus = " /"
 
     omit_optional_tags = True
 
     def __init__(self, **kwargs):
-        for attr in ("quote_attr_values", "quote_char",
-          "minimize_boolean_attributes", "trailing_solidus",
-          "omit_optional_tags"):
+        for attr in ("quote_attr_values", "quote_char", "minimize_boolean_attributes",
+          "trailing_solidus", "use_trailing_solidus", "omit_optional_tags"):
             if attr in kwargs:
                 setattr(self, attr, kwargs[attr])
         self.errors = []
@@ -77,7 +77,7 @@ class HTMLSerializer(object):
                       and k not in booleanAttributes.get("", tuple())):
                         attributes.append("=")
                         v = v.replace("&", "&amp;")
-                        if self.quote_attr_values:
+                        if self.quote_attr_values or not v:
                             quote_attr = True
                         else:
                             quote_attr = reduce(lambda x,y: x or y in v,
@@ -92,8 +92,8 @@ class HTMLSerializer(object):
                             attributes.append(self.quote_char)
                         else:
                             attributes.append(v)
-                if name in voidElements and self.include_trailing_slashes:
-                    attributes.append(" /")
+                if name in voidElements and self.use_trailing_solidus:
+                    attributes.append(self.trailing_solidus)
                 yield u"<%s%s>" % (name, u"".join(attributes))
 
             elif type == "EndTag":
@@ -186,8 +186,8 @@ class HTMLSerializer(object):
         # TODO
         return False
 
-    def _is_optional_end(self, tagname, next_event):
-        type, data = next_event
+    def is_optional_end(self, tagname, next):
+        type = next and next["type"] or None
         if tagname in ('html', 'head', 'body'):
             # An html element's end tag may be omitted if the html element
             # is not immediately followed by a space character or a comment.

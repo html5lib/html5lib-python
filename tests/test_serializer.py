@@ -65,12 +65,13 @@ class TestCase(unittest.TestCase, treewalkers._base.TreeWalker):
             elif type == "EndTag":
                 yield self.endTag(token[1])
             elif type == "EmptyTag":
-                yield self.emptyTag(token[1])
+                for token in self.emptyTag(token[1], token[2]):
+                    yield token
             elif type == "Comment":
                 yield self.comment(token[1])
-            elif type == "Characters":
-                for textToken in self.text(token[1]):
-                    yield textToken
+            elif type in ("Characters", "SpaceCharacters"):
+                for token in self.text(token[1]):
+                    yield token
             elif type == "Doctype":
                 yield self.doctype(token[1])
             else:
@@ -88,7 +89,7 @@ def buildTestSuite():
         tests += 1
         testName = 'test%d' % tests
         TestCase.addTest(testName, test["expected"], test["input"], \
-            test["description"], test["options"])
+            test["description"], test.get("options", {}))
     return unittest.TestLoader().loadTestsFromTestCase(TestCase)
 
 def main():
