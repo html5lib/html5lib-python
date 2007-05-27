@@ -38,11 +38,42 @@ import treebuilders
 #from html5lib import html5parser, serializer, treewalkers, treebuilders
 #END RELEASE
 
+def PullDOMAdapter(node):
+    from xml.dom import Node
+    from xml.dom.pulldom import START_ELEMENT, END_ELEMENT, COMMENT, CHARACTERS
+
+    if node.nodeType in (Node.DOCUMENT_NODE, Node.DOCUMENT_FRAGMENT_NODE):
+        for childNode in node.childNodes:
+            for event in PullDOMAdapter(childNode):
+                yield event
+
+    elif node.nodeType == Node.DOCUMENT_TYPE_NODE:
+        raise NotImplementedError("DOCTYPE nodes are not supported by PullDOM")
+
+    elif node.nodeType == Node.COMMENT_NODE:
+        yield COMMENT, node
+
+    elif node.nodeType in (Node.TEXT_NODE, Node.CDATA_SECTION_NODE):
+        yield CHARACTERS, node
+
+    elif node.nodeType == Node.ELEMENT_NODE:
+        yield START_ELEMENT, node
+        for childNode in node.childNodes:
+            for event in PullDOMAdapter(childNode):
+                yield event
+        yield END_ELEMENT, node
+
+    else:
+        raise NotImplementedError("Node type not supported: " + str(node.nodeType))
+
 treeTypes = {
-"simpletree":  (treebuilders.getTreeBuilder("simpletree"),
-                treewalkers.getTreeWalker("simpletree")),
-"DOM":         (treebuilders.getTreeBuilder("dom"),
-                treewalkers.getTreeWalker("dom")),
+"simpletree":  {"builder": treebuilders.getTreeBuilder("simpletree"),
+                "walker":  treewalkers.getTreeWalker("simpletree")},
+"DOM":         {"builder": treebuilders.getTreeBuilder("dom"),
+                "walker":  treewalkers.getTreeWalker("dom")},
+"PullDOM":     {"builder": treebuilders.getTreeBuilder("dom"),
+                "adapter": PullDOMAdapter,
+                "walker":  treewalkers.getTreeWalker("pulldom")},
 }
 
 #Try whatever etree implementations are available from a list that are
@@ -50,44 +81,44 @@ treeTypes = {
 try:
     import xml.etree.ElementTree as ElementTree
     treeTypes['ElementTree'] = \
-        (treebuilders.getTreeBuilder("etree", ElementTree),
-         treewalkers.getTreeWalker("etree", ElementTree))
+        {"builder": treebuilders.getTreeBuilder("etree", ElementTree),
+         "walker":  treewalkers.getTreeWalker("etree", ElementTree)}
 except ImportError:
     try:
         import elementtree.ElementTree as ElementTree
         treeTypes['ElementTree'] = \
-            (treebuilders.getTreeBuilder("etree", ElementTree),
-             treewalkers.getTreeWalker("etree", ElementTree))
+            {"builder": treebuilders.getTreeBuilder("etree", ElementTree),
+             "walker":  treewalkers.getTreeWalker("etree", ElementTree)}
     except ImportError:
         pass
 
 try:
     import xml.etree.cElementTree as cElementTree
     treeTypes['cElementTree'] = \
-        (treebuilders.getTreeBuilder("etree", cElementTree),
-         treewalkers.getTreeWalker("etree", cElementTree))
+        {"builder": treebuilders.getTreeBuilder("etree", cElementTree),
+         "walker":  treewalkers.getTreeWalker("etree", cElementTree)}
 except ImportError:
     try:
         import cElementTree
         treeTypes['cElementTree'] = \
-            (treebuilders.getTreeBuilder("etree", cElementTree),
-             treewalkers.getTreeWalker("etree", cElementTree))
+            {"builder": treebuilders.getTreeBuilder("etree", cElementTree),
+             "walker":  treewalkers.getTreeWalker("etree", cElementTree)}
     except ImportError:
         pass
     
 try:
     import lxml.etree as lxml
     treeTypes['lxml'] = \
-        (treebuilders.getTreeBuilder("etree", lxml),
-         treewalkers.getTreeWalker("etree", lxml))
+        {"builder": treebuilders.getTreeBuilder("etree", lxml),
+         "walker":  treewalkers.getTreeWalker("etree", lxml)}
 except ImportError:
     pass
 
 try:
     import BeautifulSoup
     treeTypes["beautifulsoup"] = \
-        (treebuilders.getTreeBuilder("beautifulsoup"),
-         treewalkers.getTreeWalker("beautifulsoup"))
+        {"builder": treebuilders.getTreeBuilder("beautifulsoup"),
+         "walker":  treewalkers.getTreeWalker("beautifulsoup")}
 except ImportError:
     pass
 
@@ -146,12 +177,14 @@ def sortattrs(x):
 
 class TestCase(unittest.TestCase):
     def runTest(self, innerHTML, input, expected, errors, treeClass):
-        p = html5parser.HTMLParser(tree = treeClass[0])
+        p = html5parser.HTMLParser(tree = treeClass["builder"])
+
         if innerHTML:
             document = p.parseFragment(StringIO.StringIO(input), innerHTML)
         else:
             document = p.parse(StringIO.StringIO(input))
-        output = convertTokens(treeClass[1]().walk(document))
+        document = treeClass.get("adapter", lambda x: x)(document)
+        output = convertTokens(treeClass["walker"]().walk(document))
         output = attrlist.sub(sortattrs, output)
         expected = attrlist.sub(sortattrs, expected)
         errorMsg = "\n".join(["\n\nExpected:", expected,
