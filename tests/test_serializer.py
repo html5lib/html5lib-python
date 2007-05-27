@@ -49,8 +49,11 @@ class TestCase(unittest.TestCase, treewalkers._base.TreeWalker):
                 self.assertEquals(alternative, result)
             except AssertionError, ex:
                 exception = ex
-        if exception is not None:
-            raise exception
+            else:
+                break
+        else:
+            if exception is not None:
+                raise exception
 
     def serialize_html(self, input, options):
         return u''.join(serializer.HTMLSerializer( \
