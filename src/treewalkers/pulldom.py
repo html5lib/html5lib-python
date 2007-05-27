@@ -7,14 +7,23 @@ from constants import voidElements
 
 class TreeWalker(_base.TreeWalker):
     def walk(self, stream):
+        ignore_until = None
         previous = None
         for event in stream:
-            if previous is not None:
+            if previous is not None and \
+              (ignore_until is None or previous[1] is ignore_until):
+                if previous[1] is ignore_until:
+                    ignore_until = None
                 for token in self.tokens(previous, event):
                     yield token
+                    if token["type"] == "EmptyTag":
+                        ignore_until = previous[1]
             previous = event
-        for token in self.tokens(previous, None):
-            yield token
+        if ignore_until is None or previous[1] is ignore_until:
+            for token in self.tokens(previous, None):
+                yield token
+        elif ignore_until is not None:
+            raise ValueError("Illformed DOM event stream: void element without END_ELEMENT")
 
     def tokens(self, event, next):
         type, node = event
