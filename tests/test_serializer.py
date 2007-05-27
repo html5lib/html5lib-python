@@ -47,13 +47,13 @@ class TestCase(unittest.TestCase, treewalkers._base.TreeWalker):
         for alternative in expected:
             try:
                 self.assertEquals(alternative, result)
-            except AssertionError, ex:
-                exception = ex
+            except AssertionError:
+                pass
             else:
                 break
         else:
-            if exception is not None:
-                raise exception
+            options["omit_optional_tags"] = False
+            self.assertEquals(self.serialize_html(input, options), result)
 
     def serialize_html(self, input, options):
         return u''.join(serializer.HTMLSerializer( \
