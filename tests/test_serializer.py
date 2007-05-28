@@ -13,7 +13,7 @@ except:
         def load(f):
             true, false = True, False
             input=re.sub(r'(".*?(?<!\\)")',r'u\1',f.read().decode('utf-8'))
-            return eval(input)
+            return eval(input.replace('\r',''))
         load = staticmethod(load)
 
 #RELEASE remove
@@ -44,10 +44,7 @@ class TestCase(unittest.TestCase, treewalkers._base.TreeWalker):
     def mockTest(self, expected, input, options):
         exception = None
         result = self.serialize_html(input, options)
-        for alternative in expected:
-            if alternative == result:
-                break
-        else:
+        if result not in expected:
             if options.get("omit_optional_tags", True):
                 options["omit_optional_tags"] = False
                 self.assertEquals(self.serialize_html(input, options), result)
