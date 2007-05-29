@@ -50,6 +50,3 @@ class TreeWalker(_base.TreeWalker):
 
         else:
             yield self.unknown(type)
-
-    def walkChildren(self, node):
-        raise Exception(_("PullDOM tree walker's walkChildren should never be called"))

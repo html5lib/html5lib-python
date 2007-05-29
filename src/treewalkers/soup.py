@@ -5,31 +5,32 @@ from BeautifulSoup import BeautifulSoup, Declaration, Comment
 
 import _base
 
-class TreeWalker(_base.TreeWalker):
-    def walk(self, node):
+class TreeWalker(_base.NonRecursiveTreeWalker):
+    def getNodeDetails(self, node):
         if isinstance(node, BeautifulSoup): # Document or DocumentFragment
-            for token in self.walkChildren(childNode):
-                yield token
+            return (_base.DOCUMENT,)
 
         elif isinstance(node, Declaration): # DocumentType
-            yield self.doctype(node.string)
+            return _base.DOCTYPE, node.string
 
         elif isinstance(node, Comment):
-            yield self.comment(node.data)
+            return _base.COMMENT, node.data
 
         elif isinstance(node, unicode): # TextNode
-            for token in self.text(node):
-                yield token
+            return _base.TEXT, node
 
         elif isinstance(node, Tag): # Element
-            for token in self.element(node, node.name, \
-              node.attrs.items(), node.contents):
-                yield token
+            return _base.ELEMENT, node.name, \
+              node.attrs.items(), node.contents
 
         else:
-            yield self.unknown(node.__class__.__name__)
+            return _base.UNKNOWN, node.__class__.__name__
 
-    def walkChildren(self, node):
-        for childNode in node.contents:
-            for token in self.walk(childNode):
-                yield token
+    def getFirstChild(self, node):
+        return node.contents[0]
+
+    def getNextSibling(self, node):
+        return node.nextSibling
+
+    def getParentNode(self, node):
+        return node.parent

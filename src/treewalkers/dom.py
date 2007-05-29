@@ -5,31 +5,33 @@ _ = gettext.gettext
 
 import _base
 
-class TreeWalker(_base.TreeWalker):
-    def walk(self, node):
+from constants import voidElements
+
+class TreeWalker(_base.NonRecursiveTreeWalker):
+    def getNodeDetails(self, node):
         if node.nodeType == Node.DOCUMENT_TYPE_NODE:
-            yield self.doctype(node.nodeName)
+            return _base.DOCTYPE, node.nodeName
 
         elif node.nodeType in (Node.TEXT_NODE, Node.CDATA_SECTION_NODE):
-            for token in self.text(node.nodeValue):
-                yield token
+            return _base.TEXT, node.nodeValue
 
         elif node.nodeType == Node.ELEMENT_NODE:
-            for token in self.element(node, node.nodeName, \
-              node.attributes.items(), node.childNodes):
-                yield token
+            return _base.ELEMENT, node.nodeName, node.attributes.items(), node.hasChildNodes
 
         elif node.nodeType == Node.COMMENT_NODE:
-            yield self.comment(node.nodeValue)
+            return _base.COMMENT, node.nodeValue
 
         elif node.nodeType in (Node.DOCUMENT_NODE, Node.DOCUMENT_FRAGMENT_NODE):
-            for token in self.walkChildren(node):
-                yield token
+            return (_base.DOCUMENT,)
 
         else:
-            yield self.unknown(node.nodeType)
+            return _base.UNKNOWN, node.nodeType
 
-    def walkChildren(self, node):
-        for childNode in node.childNodes:
-            for token in self.walk(childNode):
-                yield token
+    def getFirstChild(self, node):
+        return node.firstChild
+
+    def getNextSibling(self, node):
+        return node.nextSibling
+
+    def getParentNode(self, node):
+        return node.parentNode

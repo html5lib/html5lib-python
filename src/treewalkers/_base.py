@@ -8,9 +8,6 @@ class TreeWalker(object):
     def walk(self, node):
         raise NotImplementedError
 
-    def walkChildren(self, node):
-        raise NodeImplementedError
-
     def error(self, msg):
         return {"type": "SerializeError", "data": msg}
 
@@ -20,17 +17,6 @@ class TreeWalker(object):
         elif hasattr(attrs, 'items'):
             attrs = attrs.items()
         return attrs
-
-    def element(self, node, name, attrs, hasChildren):
-        if name in voidElements:
-            for token in self.emptyTag(name, attrs, hasChildren):
-                yield token
-        else:
-            yield self.startTag(name, attrs)
-            if hasChildren:
-                for token in self.walkChildren(node):
-                    yield token
-            yield self.endTag(name)
 
     def emptyTag(self, name, attrs, hasChildren=False):
         yield {"type": "EmptyTag", "name": name, \
@@ -66,3 +52,92 @@ class TreeWalker(object):
 
     def unknown(self, nodeType):
         return self.error(_("Unknown node type: ") + nodeType)
+
+class RecursiveTreeWalker(TreeWalker):
+    def walkChildren(self, node):
+        raise NodeImplementedError
+
+    def element(self, node, name, attrs, hasChildren):
+        if name in voidElements:
+            for token in self.emptyTag(name, attrs, hasChildren):
+                yield token
+        else:
+            yield self.startTag(name, attrs)
+            if hasChildren:
+                for token in self.walkChildren(node):
+                    yield token
+            yield self.endTag(name)
+
+from xml.dom import Node
+
+DOCUMENT = Node.DOCUMENT_NODE
+DOCTYPE = Node.DOCUMENT_TYPE_NODE
+TEXT = Node.TEXT_NODE
+ELEMENT = Node.ELEMENT_NODE
+COMMENT = Node.COMMENT_NODE
+UNKNOWN = "<#UNKNOWN#>"
+
+class NonRecursiveTreeWalker(TreeWalker):
+    def getNodeDetails(self, node):
+        raise NotImplementedError
+    
+    def getFirstChild(self, node):
+        raise NotImplementedError
+    
+    def getNextSibling(self, node):
+        raise NotImplementedError
+    
+    def getParentNode(self, node):
+        raise NotImplementedError
+
+    def walk(self, node):
+        currentNode = node
+        while currentNode is not None:
+            details = self.getNodeDetails(currentNode)
+            type, details = details[0], details[1:]
+            hasChildren = False
+
+            if type == DOCTYPE:
+                yield self.doctype(*details)
+
+            elif type == TEXT:
+                for token in self.text(*details):
+                    yield token
+
+            elif type == ELEMENT:
+                name, attributes, hasChildren = details
+                if name in voidElements:
+                    for token in self.emptyTag(name, attributes, hasChildren):
+                        yield token
+                    hasChildren = False
+                else:
+                    yield self.startTag(name, attributes)
+
+            elif type == COMMENT:
+                yield self.comment(details[0])
+
+            elif type == DOCUMENT:
+                hasChildren = True
+
+            else:
+                yield self.unknown(details[0])
+            
+            firstChild = hasChildren and self.getFirstChild(currentNode) or None
+            if firstChild is not None:
+                currentNode = firstChild
+            else:
+                while currentNode is not None:
+                    details = self.getNodeDetails(currentNode)
+                    type, details = details[0], details[1:]
+                    if type == ELEMENT:
+                        name, attributes, hasChildren = details
+                        if name not in voidElements:
+                            yield self.endTag(name)
+                    nextSibling = self.getNextSibling(currentNode)
+                    if nextSibling is not None:
+                        currentNode = nextSibling
+                        break
+                    if node is currentNode:
+                        currentNode = None
+                    else:
+                        currentNode = self.getParentNode(currentNode)
