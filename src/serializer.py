@@ -7,8 +7,39 @@ except NameError:
 import gettext
 _ = gettext.gettext
 
-from constants import voidElements, booleanAttributes, spaceCharacters
+from constants import voidElements, booleanAttributes, spaceCharacters, entities
+
 spaceCharacters = u"".join(spaceCharacters)
+
+default_entity_map = {}
+for k, v in entities.items():
+    if v != "&" and default_entity_map.get(v) != k.lower():
+        # prefer &lt; over &LT; and similarly for &amp;, &gt;, etc.
+        default_entity_map[v] = k
+
+try:
+    from codecs import register_error, xmlcharrefreplace_errors
+except ImportError:
+    unicode_encode_errors = "strict"
+else:
+    unicode_encode_errors = "htmlentityreplace"
+
+    def htmlentityreplace_errors(ex):
+        if isinstance(ex, UnicodeEncodeError):
+            res = []
+            for c in ex.object[ex.start:ex.end]:
+                c = default_entity_map.get(c)
+                if c:
+                    res.append(c)
+                else:
+                    res.append(c.encode(ex.encoding, "xmlcharrefreplace"))
+            return (u"".join(res), ex.end)
+        else:
+            return xmlcharrefreplace_errors(ex)
+
+    register_error(unicode_encode_errors, htmlentityreplace_errors)
+
+    del register_error, xmlcharrefreplace_errors
 
 def _slide(iterator):
     previous = None
@@ -23,40 +54,57 @@ class HTMLSerializer(object):
 
     quote_attr_values = False
     quote_char = '"'
+    use_best_quote_char = True
     minimize_boolean_attributes = True
 
     use_trailing_solidus = False
-    trailing_solidus = " /"
+    space_before_trailing_solidus = True
 
     omit_optional_tags = True
 
+    strip_whitespace = False
+
     def __init__(self, **kwargs):
-        for attr in ("quote_attr_values", "quote_char", "minimize_boolean_attributes",
-          "trailing_solidus", "use_trailing_solidus", "omit_optional_tags"):
+        for attr in ("quote_attr_values", "quote_char", "use_best_quote_char",
+          "minimize_boolean_attributes", "use_trailing_solidus",
+          "space_before_trailing_solidus", "omit_optional_tags",
+          "strip_whitespace"):
             if attr in kwargs:
                 setattr(self, attr, kwargs[attr])
         self.errors = []
 
-    def serialize(self, treewalker):
+    def serialize(self, treewalker, encoding=None):
         in_cdata = False
         self.errors = []
+        if self.strip_whitespace:
+            treewalker = self.filter_whitespace(treewalker)
         if self.omit_optional_tags:
-            treewalker = self.filter(treewalker)
+            treewalker = self.filter_optional_tags(treewalker)
         for token in treewalker:
             type = token["type"]
             if type == "Doctype":
-                yield u"<!DOCTYPE %s>" % token["name"]
+                doctype = u"<!DOCTYPE %s>" % token["name"]
+                if encoding:
+                    yield doctype.encode(encoding)
+                else:
+                    yield doctype
 
             elif type in ("Characters", "SpaceCharacters"):
                 if type == "SpaceCharacters" or in_cdata:
                     if in_cdata and token["data"].find("</") >= 0:
                         self.serializeError(_("Unexpected </ in CDATA"))
-                    yield token["data"]
+                    if encoding:
+                        yield token["data"].encode(encoding, errors or "strict")
+                    else:
+                        yield token["data"]
+                elif encoding:
+                    yield token["data"].replace("&", "&amp;") \
+                        .encode(encoding, unicode_encode_errors)
                 else:
                     yield token["data"] \
                         .replace("&", "&amp;") \
                         .replace("<", "&lt;")  \
-                        .replace(">", "&gt;")  \
+                        .replace(">", "&gt;")
 
             elif type in ("StartTag", "EmptyTag"):
                 name = token["name"]
@@ -70,31 +118,48 @@ class HTMLSerializer(object):
                 attrs.sort()
                 attributes = []
                 for k,v in attrs:
+                    if encoding:
+                        k = k.encode(encoding)
                     attributes.append(' ')
+
                     attributes.append(k)
                     if not self.minimize_boolean_attributes or \
                       (k not in booleanAttributes.get(name, tuple()) \
                       and k not in booleanAttributes.get("", tuple())):
                         attributes.append("=")
-                        v = v.replace("&", "&amp;")
                         if self.quote_attr_values or not v:
                             quote_attr = True
                         else:
                             quote_attr = reduce(lambda x,y: x or y in v,
                                 spaceCharacters + "<>\"'", False)
+                        v = v.replace("&", "&amp;")
+                        if encoding:
+                            v = v.encode(encoding, unicode_encode_errors)
                         if quote_attr:
-                            if self.quote_char == '"':
-                                v = v.replace('"', "&quot;")
+                            quote_char = self.quote_char
+                            if self.use_best_quote_char:
+                                if "'" in v and '"' not in v:
+                                    quote_char = "'"
+                                elif '"' in v and "'" not in v:
+                                    quote_char = '"'
+                            if quote_char == "'":
+                                v = v.replace("'", "&#39;")
                             else:
-                                v = v.replace(self.quote_char, "&#%u;" % ord(self.quote_char))
-                            attributes.append(self.quote_char)
+                                v = v.replace('"', "&quot;")
+                            attributes.append(quote_char)
                             attributes.append(v)
-                            attributes.append(self.quote_char)
+                            attributes.append(quote_char)
                         else:
                             attributes.append(v)
                 if name in voidElements and self.use_trailing_solidus:
-                    attributes.append(self.trailing_solidus)
-                yield u"<%s%s>" % (name, u"".join(attributes))
+                    if self.space_before_trailing_solidus:
+                        attributes.append(" /")
+                    else:
+                        attributes.append("/")
+                if encoding:
+                    yield "<%s%s>" % (name.encode(encoding), "".join(attributes))
+                else:
+                    yield u"<%s%s>" % (name, u"".join(attributes))
 
             elif type == "EndTag":
                 name = token["name"]
@@ -102,21 +167,49 @@ class HTMLSerializer(object):
                     in_cdata = False
                 elif in_cdata:
                     self.serializeError(_("Unexpected child element of a CDATA element"))
-                yield u"</%s>" % name
+                end_tag = u"</%s>" % name
+                if encoding:
+                    end_tag = end_tag.encode(encoding)
+                yield end_tag
 
             elif type == "Comment":
                 data = token["data"]
                 if data.find("--") >= 0:
                     self.serializeError(_("Comment contains --"))
-                yield u"<!--%s-->" % token["data"]
+                comment = u"<!--%s-->" % token["data"]
+                if encoding:
+                    comment = comment.encode(encoding, unicode_encode_errors)
+                yield comment
 
             else:
                 self.serializeError(token["data"])
 
-    def render(self, treewalker, encoding='UTF-8', errors="strict"):
-        u''.join(list(self.serialize(treewalker))).encode(encoding, errors)
+    def render(self, treewalker, encoding=None):
+        if encoding:
+            return "".join(list(self.serialize(treewalker, encoding)))
+        else:
+            return u"".join(list(self.serialize(treewalker)))
 
-    def filter(self, treewalker):
+    def serializeError(self, data="XXX ERROR MESSAGE NEEDED"):
+        # XXX The idea is to make data mandatory.
+        self.errors.append(data)
+        if self.strict:
+            raise SerializeError
+
+    def filter_inject_meta_charset(self, treewalker):
+        done = False
+        for token in treewalker:
+            if not done and token["type"] == "StartTag" \
+              and token["name"].lower() == "head":
+                yield {"type": "EmptyTag", "name": "meta", \
+                    "data": {"charset": encoding}}
+            yield token
+
+    def filter_whitespace(self, treewalker):
+        # TODO
+        return treewalker
+
+    def filter_optional_tags(self, treewalker):
         for token, next in _slide(treewalker):
             type = token["type"]
             if type == "StartTag":
@@ -127,12 +220,6 @@ class HTMLSerializer(object):
                     yield token
             else:
                 yield token
-
-    def serializeError(self, data="XXX ERROR MESSAGE NEEDED"):
-        # XXX The idea is to make data mandatory.
-        self.errors.append(data)
-        if self.strict:
-            raise SerializeError
 
     def is_optional_start(self, tagname, next):
         type = next and next["type"] or None

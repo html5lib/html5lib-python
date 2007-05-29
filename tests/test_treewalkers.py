@@ -25,7 +25,6 @@ os.chdir(os.path.split(os.path.abspath(__file__))[0])
 sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
 
 import html5parser
-import serializer
 #Run tests over all treewalkers/treebuilders pairs
 #XXX - it would be nice to automate finding all treewalkers or to allow running just one
 
