@@ -9,11 +9,9 @@ class TreeWalker(object):
         self.tree = tree
 
     def __iter__(self):
-        for node in self.walk():
-            yield node
-
-    def walk(self):
         raise NotImplementedError
+
+    walk = __iter__
 
     def error(self, msg):
         return {"type": "SerializeError", "data": msg}
