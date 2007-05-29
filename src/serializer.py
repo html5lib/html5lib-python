@@ -7,15 +7,9 @@ except NameError:
 import gettext
 _ = gettext.gettext
 
-from constants import voidElements, booleanAttributes, spaceCharacters, entities
+from constants import voidElements, booleanAttributes, spaceCharacters
 
 spaceCharacters = u"".join(spaceCharacters)
-
-default_entity_map = {}
-for k, v in entities.items():
-    if v != "&" and default_entity_map.get(v) != k.lower():
-        # prefer &lt; over &LT; and similarly for &amp;, &gt;, etc.
-        default_entity_map[v] = k
 
 try:
     from codecs import register_error, xmlcharrefreplace_errors
@@ -24,13 +18,23 @@ except ImportError:
 else:
     unicode_encode_errors = "htmlentityreplace"
 
+    from constants import entities
+
+    encode_entity_map = {}
+    for k, v in entities.items():
+        if v != "&" and encode_entity_map.get(v) != k.lower():
+            # prefer &lt; over &LT; and similarly for &amp;, &gt;, etc.
+            encode_entity_map[v] = k
+
     def htmlentityreplace_errors(ex):
         if isinstance(ex, UnicodeEncodeError):
             res = []
             for c in ex.object[ex.start:ex.end]:
-                c = default_entity_map.get(c)
+                c = encode_entity_map.get(c)
                 if c:
+                    res.append("&")
                     res.append(c)
+                    res.append(";")
                 else:
                     res.append(c.encode(ex.encoding, "xmlcharrefreplace"))
             return (u"".join(res), ex.end)
@@ -39,7 +43,7 @@ else:
 
     register_error(unicode_encode_errors, htmlentityreplace_errors)
 
-    del register_error, xmlcharrefreplace_errors
+    del register_error
 
 def _slide(iterator):
     previous = None
@@ -64,11 +68,13 @@ class HTMLSerializer(object):
 
     strip_whitespace = False
 
+    inject_meta_charset = True
+
     def __init__(self, **kwargs):
         for attr in ("quote_attr_values", "quote_char", "use_best_quote_char",
           "minimize_boolean_attributes", "use_trailing_solidus",
           "space_before_trailing_solidus", "omit_optional_tags",
-          "strip_whitespace"):
+          "strip_whitespace", "inject_meta_charset"):
             if attr in kwargs:
                 setattr(self, attr, kwargs[attr])
         self.errors = []
@@ -76,6 +82,8 @@ class HTMLSerializer(object):
     def serialize(self, treewalker, encoding=None):
         in_cdata = False
         self.errors = []
+        if encoding and self.inject_meta_charset:
+            treewalker = self.filter_inject_meta_charset(treewalker, encoding)
         if self.strip_whitespace:
             treewalker = self.filter_whitespace(treewalker)
         if self.omit_optional_tags:
@@ -196,7 +204,7 @@ class HTMLSerializer(object):
         if self.strict:
             raise SerializeError
 
-    def filter_inject_meta_charset(self, treewalker):
+    def filter_inject_meta_charset(self, treewalker, encoding):
         done = False
         for token in treewalker:
             if not done and token["type"] == "StartTag" \
@@ -206,8 +214,7 @@ class HTMLSerializer(object):
             yield token
 
     def filter_whitespace(self, treewalker):
-        # TODO
-        return treewalker
+        raise NotImplementedError
 
     def filter_optional_tags(self, treewalker):
         for token, next in _slide(treewalker):
@@ -254,7 +261,7 @@ class HTMLSerializer(object):
             if type == "StartTag":
                 # XXX: we do not look at the preceding event, so instead we never
                 # omit the colgroup element's end tag when it is immediately
-                # followed by another colgroup element. See _is_optional_end.
+                # followed by another colgroup element. See is_optional_end.
                 return next["name"] == "col"
             else:
                 return False
@@ -266,11 +273,10 @@ class HTMLSerializer(object):
             if type == "StartTag":
                 # XXX: we do not look at the preceding event, so instead we never
                 # omit the thead and tfoot elements' end tag when they are
-                # immediately followed by a tbody element. See _is_optional_end.
+                # immediately followed by a tbody element. See is_optional_end.
                 return next["name"] == 'tr'
             else:
                 return False
-        # TODO
         return False
 
     def is_optional_end(self, tagname, next):
@@ -328,7 +334,7 @@ class HTMLSerializer(object):
                 return False
             elif type == "StartTag":
                 # XXX: we also look for an immediately following colgroup
-                # element. See _is_optional_start.
+                # element. See is_optional_start.
                 return next["name"] != 'colgroup'
             else:
                 return True
@@ -342,7 +348,7 @@ class HTMLSerializer(object):
             # is immediately followed by a tbody element, or if there is no
             # more content in the parent element.
             # XXX: we never omit the end tag when the following element is
-            # a tbody. See _is_optional_start.
+            # a tbody. See is_optional_start.
             if type == "StartTag":
                 return next["name"] == 'tfoot'
             elif tagname == 'tbody':
@@ -354,7 +360,7 @@ class HTMLSerializer(object):
             # is immediately followed by a tbody element, or if there is no
             # more content in the parent element.
             # XXX: we never omit the end tag when the following element is
-            # a tbody. See _is_optional_start.
+            # a tbody. See is_optional_start.
             return type == "EndTag" or type is None
         elif tagname in ('td', 'th'):
             # A td element's end tag may be omitted if the td element is
@@ -367,7 +373,6 @@ class HTMLSerializer(object):
                 return next["name"] in ('td', 'th')
             else:
                 return type == "EndTag" or type is None
-        # TODO
         return False
 
 def SerializeError(Exception):
