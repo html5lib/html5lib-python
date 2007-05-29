@@ -23,18 +23,19 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
 
 import html5parser
 import serializer
-import treewalkers
+from treewalkers._base import TreeWalker
 #END RELEASE
 
 #RELEASE add
 #import html5lib
-#from html5lib import html5parser, serializer, treewalkers
+#from html5lib import html5parser, serializer
+#from html5lib.treewalkers._base import TreeWalker
 #END RELEASE
 
 #Run the serialize error checks
 checkSerializeErrors = False
 
-class TestCase(unittest.TestCase, treewalkers._base.TreeWalker):
+class TestCase(unittest.TestCase, TreeWalker):
     def addTest(cls, name, expected, input, description, options):
         func = lambda self: self.mockTest(expected, input, options)
         func.__doc__ = "\t".join([description, str(input), str(options)])

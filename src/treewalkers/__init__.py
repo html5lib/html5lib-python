@@ -11,15 +11,7 @@ returning an iterator generating tokens.
 import os.path
 __path__.append(os.path.dirname(__path__[0]))
 
-import dom
-import simpletree
-import etree
-import pulldom
-try:
-    import soup as beautifulsoup
-except:
-    pass
-
+treeWalkerCache = {}
 
 def getTreeWalker(treeType, implementation=None, **kwargs):
     """Get a TreeWalker class for various types of tree with built-in support
@@ -41,7 +33,14 @@ def getTreeWalker(treeType, implementation=None, **kwargs):
                       lxml.etree."""
 
     treeType = treeType.lower()
-    if treeType in ("dom", "pulldom", "simpletree", "beautifulsoup"):
-        return globals()[treeType].TreeWalker
-    elif treeType == "etree":
-        return etree.getETreeModule(implementation, **kwargs).TreeWalker
+    if treeType not in treeWalkerCache:
+        if treeType in ("dom", "pulldom", "simpletree"):
+            mod = __import__(treeType, globals())
+            treeWalkerCache[treeType] = mod.TreeWalker
+        elif treeType == "beautifulsoup":
+            import soup
+            treeWalkerCache[treeType] = soup.TreeWalker
+        elif treeType == "etree":
+            import etree
+            treeWalkerCache[treeType] = etree.getETreeModule(implementation, **kwargs).TreeWalker
+    return treeWalkerCache.get(treeType)

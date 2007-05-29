@@ -33,14 +33,7 @@ the various methods.
 import os.path
 __path__.append(os.path.dirname(__path__[0]))
 
-import dom
-import simpletree
-import etree
-try:
-    import soup as beautifulsoup
-except:
-    pass
-
+treeBuilderCache = {}
 
 def getTreeBuilder(treeType, implementation=None, **kwargs):
     """Get a TreeBuilder class for various types of tree with built-in support
@@ -61,7 +54,14 @@ def getTreeBuilder(treeType, implementation=None, **kwargs):
                       lxml.etree."""
     
     treeType = treeType.lower()
-    if treeType in ("dom", "simpletree", "beautifulsoup"):
-        return globals()[treeType].TreeBuilder
-    elif treeType == "etree":
-        return etree.getETreeModule(implementation, **kwargs).TreeBuilder
+    if treeType not in treeBuilderCache:
+        if treeType in ("dom", "simpletree"):
+            mod = __import__(treeType, globals())
+            treeBuilderCache[treeType] = mod.TreeBuilder
+        elif treeType == "beautifulsoup":
+            import soup
+            treeBuilderCache[treeType] = soup.TreeBuilder
+        elif treeType == "etree":
+            import etree
+            treeBuilderCache[treeType] = etree.getETreeModule(implementation, **kwargs).TreeBuilder
+    return treeBuilderCache.get(treeType)
