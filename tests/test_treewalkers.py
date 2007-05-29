@@ -184,7 +184,7 @@ class TestCase(unittest.TestCase):
             document = p.parse(StringIO.StringIO(input))
         document = treeClass.get("adapter", lambda x: x)(document)
         try:
-            output = convertTokens(treeClass["walker"]().walk(document))
+            output = convertTokens(treeClass["walker"](document))
             output = attrlist.sub(sortattrs, output)
             expected = attrlist.sub(sortattrs, expected)
             errorMsg = "\n".join(["\n\nExpected:", expected,
