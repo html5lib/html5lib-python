@@ -6,10 +6,10 @@ import _base
 from constants import voidElements
 
 class TreeWalker(_base.TreeWalker):
-    def walk(self, stream):
+    def walk(self):
         ignore_until = None
         previous = None
-        for event in stream:
+        for event in self.tree:
             if previous is not None and \
               (ignore_until is None or previous[1] is ignore_until):
                 if previous[1] is ignore_until:

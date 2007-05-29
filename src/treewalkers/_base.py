@@ -5,7 +5,14 @@ from constants import voidElements, spaceCharacters
 spaceCharacters = u"".join(spaceCharacters)
 
 class TreeWalker(object):
-    def walk(self, node):
+    def __init__(self, tree):
+        self.tree = tree
+
+    def __iter__(self):
+        for node in self.walk():
+            yield node
+
+    def walk(self):
         raise NotImplementedError
 
     def error(self, msg):
@@ -90,8 +97,8 @@ class NonRecursiveTreeWalker(TreeWalker):
     def getParentNode(self, node):
         raise NotImplementedError
 
-    def walk(self, node):
-        currentNode = node
+    def walk(self):
+        currentNode = self.tree
         while currentNode is not None:
             details = self.getNodeDetails(currentNode)
             type, details = details[0], details[1:]
@@ -137,7 +144,7 @@ class NonRecursiveTreeWalker(TreeWalker):
                     if nextSibling is not None:
                         currentNode = nextSibling
                         break
-                    if node is currentNode:
+                    if self.tree is currentNode:
                         currentNode = None
                     else:
                         currentNode = self.getParentNode(currentNode)
