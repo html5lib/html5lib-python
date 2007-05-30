@@ -35,7 +35,28 @@ from treewalkers._base import TreeWalker
 #Run the serialize error checks
 checkSerializeErrors = False
 
-class TestCase(unittest.TestCase, TreeWalker):
+class JsonWalker(TreeWalker):
+    def __iter__(self):
+        for token in self.tree:
+            type = token[0]
+            if type == "StartTag":
+                yield self.startTag(token[1], token[2])
+            elif type == "EndTag":
+                yield self.endTag(token[1])
+            elif type == "EmptyTag":
+                for token in self.emptyTag(token[1], token[2]):
+                    yield token
+            elif type == "Comment":
+                yield self.comment(token[1])
+            elif type in ("Characters", "SpaceCharacters"):
+                for token in self.text(token[1]):
+                    yield token
+            elif type == "Doctype":
+                yield self.doctype(token[1])
+            else:
+                raise ValueError("Unknown token type: " + type)
+
+class TestCase(unittest.TestCase):
     def addTest(cls, name, expected, input, description, options):
         func = lambda self: self.mockTest(expected, input, options)
         func.__doc__ = "\t".join([description, str(input), str(options)])
@@ -54,27 +75,7 @@ class TestCase(unittest.TestCase, TreeWalker):
     def serialize_html(self, input, options):
         return u''.join(serializer.HTMLSerializer( \
             **dict([(str(k),v) for k,v in options.iteritems()])).
-                serialize(self.normalizeTokens(input)))
-
-    def normalizeTokens(self, tokens):
-        for token in tokens:
-            type = token[0]
-            if type == "StartTag":
-                yield self.startTag(token[1], token[2])
-            elif type == "EndTag":
-                yield self.endTag(token[1])
-            elif type == "EmptyTag":
-                for token in self.emptyTag(token[1], token[2]):
-                    yield token
-            elif type == "Comment":
-                yield self.comment(token[1])
-            elif type in ("Characters", "SpaceCharacters"):
-                for token in self.text(token[1]):
-                    yield token
-            elif type == "Doctype":
-                yield self.doctype(token[1])
-            else:
-                raise ValueError("Unknown token type: " + type)
+                serialize(JsonWalker(input)))
 
 def test_serializer():
     for filename in glob.glob('serializer/*.test'):
