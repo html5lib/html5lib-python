@@ -97,6 +97,11 @@ class SanitizeTest(unittest.TestCase):
      self.assertEqual(u'<img/>',
        self.sanitize_html("""<img src='vbscript:msgbox("XSS")' />"""))
 
+  def test_should_handle_astral_plane_characters(self):
+    self.assertEqual(u"<p>\U0001d4b5 \U0001d538</p>",
+      self.sanitize_html("<p>&#x1d4b5; &#x1d538;</p>"))
+
+
 for i,img_hack in enumerate(
   ["""<img src="javascript:alert('XSS');" />""",
    """<img src=javascript:alert('XSS') />""",

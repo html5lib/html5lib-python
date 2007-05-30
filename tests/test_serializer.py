@@ -43,7 +43,6 @@ class TestCase(unittest.TestCase, TreeWalker):
     addTest = classmethod(addTest)
 
     def mockTest(self, expected, input, options):
-        exception = None
         result = self.serialize_html(input, options)
         if result not in expected:
             if options.get("omit_optional_tags", True):
