@@ -77,7 +77,6 @@ class TestCase(unittest.TestCase):
 
 def test_serializer():
     for filename in glob.glob('serializer/*.test'):
-        if filename.find('optionaltags')>=0: continue # TODO
         tests = simplejson.load(file(filename))
         for test in tests['tests']:
             yield test
