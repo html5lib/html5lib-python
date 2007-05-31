@@ -147,9 +147,9 @@ class HTMLSerializer(object):
                             quote_char = self.quote_char
                             if self.use_best_quote_char:
                                 if "'" in v and '"' not in v:
-                                    quote_char = "'"
-                                elif '"' in v and "'" not in v:
                                     quote_char = '"'
+                                elif '"' in v and "'" not in v:
+                                    quote_char = "'"
                             if quote_char == "'":
                                 v = v.replace("'", "&#39;")
                             else:
