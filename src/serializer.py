@@ -71,6 +71,8 @@ class HTMLSerializer(object):
     inject_meta_charset = True
 
     def __init__(self, **kwargs):
+        if kwargs.has_key('quote_char'):
+            self.use_best_quote_char = False
         for attr in ("quote_attr_values", "quote_char", "use_best_quote_char",
           "minimize_boolean_attributes", "use_trailing_solidus",
           "space_before_trailing_solidus", "omit_optional_tags",
