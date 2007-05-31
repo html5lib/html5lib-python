@@ -26,20 +26,20 @@ else:
             # prefer &lt; over &LT; and similarly for &amp;, &gt;, etc.
             encode_entity_map[v] = k
 
-    def htmlentityreplace_errors(ex):
-        if isinstance(ex, UnicodeEncodeError):
+    def htmlentityreplace_errors(exc):
+        if isinstance(exc, (UnicodeEncodeError, UnicodeTranslateError)):
             res = []
-            for c in ex.object[ex.start:ex.end]:
+            for c in ex.object[exc.start:exc.end]:
                 c = encode_entity_map.get(c)
                 if c:
                     res.append("&")
                     res.append(c)
                     res.append(";")
                 else:
-                    res.append(c.encode(ex.encoding, "xmlcharrefreplace"))
-            return (u"".join(res), ex.end)
+                    res.append(c.encode(exc.encoding, "xmlcharrefreplace"))
+            return (u"".join(res), exc.end)
         else:
-            return xmlcharrefreplace_errors(ex)
+            return xmlcharrefreplace_errors(exc)
 
     register_error(unicode_encode_errors, htmlentityreplace_errors)
 
