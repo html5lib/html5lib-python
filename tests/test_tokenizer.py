@@ -13,7 +13,7 @@ except:
         def load(f):
             true, false = True, False
             input=re.sub(r'(".*?(?<!\\)")',r'u\1',f.read().decode('utf-8'))
-            return eval(input)
+            return eval(input.replace('\r',''))
         load = staticmethod(load)
 
 #RELEASE remove
