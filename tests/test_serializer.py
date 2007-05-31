@@ -68,8 +68,8 @@ class TestCase(unittest.TestCase):
         if result not in expected:
             if options.get("omit_optional_tags", True):
                 options["omit_optional_tags"] = False
-                self.assertEquals(self.serialize_html(input, options), result)
-            else:
+                result = self.serialize_html(input, options)
+            if result not in expected:
                 self.fail("Expected: %s, Received: %s" % (expected, result))
 
     def serialize_html(self, input, options):
@@ -79,6 +79,7 @@ class TestCase(unittest.TestCase):
 
 def test_serializer():
     for filename in glob.glob('serializer/*.test'):
+        if filename.find('core')<0: continue
         tests = simplejson.load(file(filename))
         for test in tests['tests']:
             yield test
