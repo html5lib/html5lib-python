@@ -95,7 +95,7 @@ class NonRecursiveTreeWalker(TreeWalker):
     def getParentNode(self, node):
         raise NotImplementedError
 
-    def walk(self):
+    def __iter__(self):
         currentNode = self.tree
         while currentNode is not None:
             details = self.getNodeDetails(currentNode)

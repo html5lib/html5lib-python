@@ -249,6 +249,7 @@ class HTMLSerializer(object):
             if attr in kwargs:
                 setattr(self, attr, kwargs[attr])
         self.errors = []
+        self.strict = False
 
     def serialize(self, treewalker, encoding=None):
         in_cdata = False

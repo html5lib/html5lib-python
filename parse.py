@@ -11,11 +11,11 @@ from optparse import OptionParser
 
 #RELEASE remove
 from src import html5parser, liberalxmlparser
-from src import treebuilders
+from src import treebuilders, serializer, treewalkers
 #END RELEASE
 #RELEASE add
 #from html5lib import html5parser, liberalxmlparser
-#from html5lib import treebuilders
+#from html5lib import treebuilders, serializer, treewalkers
 #END RELEASE
 
 def convertTreeDump(treedump):
@@ -51,16 +51,7 @@ def parse():
         sys.stderr.write("No filename provided. Use -h for help\n")
         sys.exit(1)
 
-    if opts.treebuilder is not None:
-        try:
-            treebuilder = eval("treebuilders." + opts.treebuilder).TreeBuilder
-        except ImportError, name:
-            sys.stderr.write("Treebuilder %s not found\n"%name)
-            raise
-        except Exception, foo:
-            treebuilder = treebuilders.simpletree.TreeBuilder
-    else:
-        treebuilder = treebuilders.simpletree.TreeBuilder
+    treebuilder = treebuilders.getTreeBuilder(opts.treebuilder)
 
     if opts.xml:
         p = liberalxmlparser.XHTMLParser(tree=treebuilder)
@@ -96,6 +87,10 @@ def printOutput(parser, document, opts):
     if not opts.no_tree:
         if opts.xml:
             sys.stdout.write(document.toxml("utf-8"))
+        elif opts.html:
+            tokens = treewalkers.getTreeWalker(opts.treebuilder)(document)
+            for text in serializer.HTMLSerializer().serialize(tokens):
+                sys.stdout.write(text.encode('utf-8'))
         elif opts.hilite:
             sys.stdout.write(document.hilite("utf-8"))
         else:
@@ -121,13 +116,16 @@ def getOptParser():
                       dest="no_tree", help="Do not print output tree")
     
     parser.add_option("-b", "--treebuilder", action="store", type="string",
-                      dest="treebuilder")
+                      dest="treebuilder", default="simpleTree")
 
     parser.add_option("-e", "--error", action="store_true", default=False,
                       dest="error", help="Print a list of parse errors")
 
     parser.add_option("-x", "--xml", action="store_true", default=False,
                       dest="xml", help="Output as xml")
+    
+    parser.add_option("", "--html", action="store_true", default=False,
+                      dest="html", help="Output as html")
     
     parser.add_option("", "--hilite", action="store_true", default=False,
                       dest="hilite", help="Output as formatted highlighted code.")
