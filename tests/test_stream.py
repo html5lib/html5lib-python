@@ -48,7 +48,10 @@ class HTMLInputStreamTest(unittest.TestCase):
     def test_newlines(self):
         stream = HTMLInputStream(codecs.BOM_UTF8 + "a\nbb\r\nccc\rdddd")
         self.assertEquals(stream.tell, 0)
-        self.assertEquals(stream.charsUntil('x'),u"a\nbb\nccc\ndddd")
+        self.assertEquals(stream.charsUntil('c'),u"a\nbb\n")
+        self.assertEquals(stream.tell, 6)
+        self.assertEquals(stream.position(), (3,1))
+        self.assertEquals(stream.charsUntil('x'),u"ccc\ndddd")
         self.assertEquals(stream.tell, 14)
         self.assertEquals(stream.position(), (4,5))
         self.assertEquals(stream.newLines, [0,1,4,8])
