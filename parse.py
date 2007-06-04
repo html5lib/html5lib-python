@@ -89,8 +89,8 @@ def printOutput(parser, document, opts):
             sys.stdout.write(document.toxml("utf-8"))
         elif opts.html:
             tokens = treewalkers.getTreeWalker(opts.treebuilder)(document)
-            for text in serializer.HTMLSerializer().serialize(tokens):
-                sys.stdout.write(text.encode('utf-8'))
+            for text in serializer.HTMLSerializer().serialize(tokens, encoding='utf-8'):
+                sys.stdout.write(text)
         elif opts.hilite:
             sys.stdout.write(document.hilite("utf-8"))
         else:
