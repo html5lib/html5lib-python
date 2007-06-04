@@ -18,18 +18,6 @@ from src import treebuilders, serializer, treewalkers
 #from html5lib import treebuilders, serializer, treewalkers
 #END RELEASE
 
-def convertTreeDump(treedump):
-    """convert the output of str(document) to something more readable
-    """
-    treedump = treedump.split("\n")[1:]
-    rv = []
-    for line in treedump:
-        if line.startswith("|"):
-            rv.append(line[3:])
-        else:
-            rv.append(line)
-    return "\n".join(rv)
-
 def parse():
     optParser = getOptParser()
     opts,args = optParser.parse_args()
