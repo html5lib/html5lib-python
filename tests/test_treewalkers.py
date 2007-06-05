@@ -110,50 +110,52 @@ try:
 except ImportError:
     pass
 
-if "ElementTree" in locals():
-    try:
-        from genshi.core import Attrs, QName
-        from genshi.core import START, END, DOCTYPE, TEXT, COMMENT
+try:
+    from genshi.core import QName, Attrs
+    from genshi.core import START, END, TEXT, COMMENT, DOCTYPE
 
-        def GenshiAdapter(tree):
-            if not(hasattr(tree, "tag")):
-                tree = tree.getroot()
-    
-            if tree.tag in ("<DOCUMENT_ROOT>", "<DOCUMENT_FRAGMENT>"):
-                if tree.text:
-                    yield TEXT, tree.text, (None, -1, -1)
-                for child in tree.getchildren():
-                    for item in GenshiAdapter(child):
-                        yield item
+    def GenshiAdapter(tree):
+        text = None
+        for token in treewalkers.getTreeWalker("simpletree")(tree):
+            type = token["type"]
+            if type in ("Characters", "SpaceCharacters"):
+                if text is None:
+                    text = token["data"]
+                else:
+                    text += token["data"]
+            elif text is not None:
+                yield TEXT, text, (None, -1, -1)
+                text = None
 
-            elif tree.tag == "<!DOCTYPE>":
-                yield DOCTYPE, QName(tree.text), (None, -1, -1)
+            if type in ("StartTag", "EmptyTag"):
+                yield (START,
+                       (QName(token["name"]),
+                        Attrs([(QName(attr),value) for attr,value in token["data"]])),
+                       (None, -1, -1))
+                if type == "EmptyTag":
+                    type = "EndTag"
 
-            elif type(tree.tag) == type(ElementTree.Comment):
-                yield COMMENT, tree.text, (None, -1, -1)
+            if type == "EndTag":
+                yield END, QName(token["name"]), (None, -1, -1)
+
+            elif type == "Comment":
+                yield COMMENT, token["data"], (None, -1, -1)
+
+            elif type == "Doctype":
+                yield DOCTYPE, token["name"], (None, -1, -1)
 
             else:
-                tag_name = QName(tree.tag.lstrip('{'))
-                attrs = Attrs([(QName(attr.lstrip('{')), value)
-                               for attr, value in tree.items()])
-    
-                yield START, (tag_name, attrs), (None, -1, -1)
-                if tree.text:
-                    yield TEXT, tree.text, (None, -1, -1)
-                for child in tree.getchildren():
-                    for item in GenshiAdapter(child):
-                        yield item
-                yield END, tag_name, (None, -1, -1)
+                pass # FIXME: What to do?
 
-            if tree.tail:
-                yield TEXT, tree.tail, (None, -1, -1)
+        if text is not None:
+            yield TEXT, text, (None, -1, -1)
 
-        treeTypes["genshi"] = \
-            {"builder": treebuilders.getTreeBuilder("etree", ElementTree),
-             "adapter": GenshiAdapter,
-             "walker":  treewalkers.getTreeWalker("genshi")}
-    except ImportError:
-        pass
+    treeTypes["genshi"] = \
+        {"builder": treebuilders.getTreeBuilder("simpletree"),
+         "adapter": GenshiAdapter,
+         "walker":  treewalkers.getTreeWalker("genshi")}
+except ImportError:
+    pass
 
 def concatenateCharacterTokens(tokens):
     charactersToken = None

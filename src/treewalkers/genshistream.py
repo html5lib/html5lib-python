@@ -25,11 +25,12 @@ class TreeWalker(_base.TreeWalker):
                 if previous[0] == END:
                     depth -= 1
             previous = event
-        if ignore_until is None or ignore_until <= depth:
-            for token in self.tokens(previous, None):
-                yield token
-        elif ignore_until is not None:
-            raise ValueError("Illformed DOM event stream: void element without END_ELEMENT")
+        if previous is not None:
+            if ignore_until is None or ignore_until <= depth:
+                for token in self.tokens(previous, None):
+                    yield token
+            elif ignore_until is not None:
+                raise ValueError("Illformed DOM event stream: void element without END_ELEMENT")
 
     def tokens(self, event, next):
         kind, data, pos = event
