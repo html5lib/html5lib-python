@@ -45,6 +45,9 @@ else:
 
     del register_error
 
+def escape_text(text, encoding):
+    return text.replace("&", "&amp;").encode(encoding, unicode_encode_errors)
+
 class OptionalTagFilter:
     def __init__(self, source):
         self.source = source
@@ -246,8 +249,7 @@ class HTMLSerializer(object):
           "minimize_boolean_attributes", "use_trailing_solidus",
           "space_before_trailing_solidus", "omit_optional_tags",
           "strip_whitespace", "inject_meta_charset"):
-            if attr in kwargs:
-                setattr(self, attr, kwargs[attr])
+            setattr(self, attr, kwargs.get(attr, getattr(self, attr)))
         self.errors = []
         self.strict = False
 
@@ -274,12 +276,11 @@ class HTMLSerializer(object):
                     if in_cdata and token["data"].find("</") >= 0:
                         self.serializeError(_("Unexpected </ in CDATA"))
                     if encoding:
-                        yield token["data"].encode(encoding, errors or "strict")
+                        yield token["data"].encode(encoding, "strict")
                     else:
                         yield token["data"]
                 elif encoding:
-                    yield token["data"].replace("&", "&amp;") \
-                        .encode(encoding, unicode_encode_errors)
+                    yield escape_text(token["data"], encoding)
                 else:
                     yield token["data"] \
                         .replace("&", "&amp;") \
@@ -299,7 +300,7 @@ class HTMLSerializer(object):
                 attributes = []
                 for k,v in attrs:
                     if encoding:
-                        k = k.encode(encoding)
+                        k = k.encode(encoding, "strict")
                     attributes.append(' ')
 
                     attributes.append(k)
@@ -310,11 +311,12 @@ class HTMLSerializer(object):
                         if self.quote_attr_values or not v:
                             quote_attr = True
                         else:
-                            quote_attr = reduce(lambda x,y: x or y in v,
+                            quote_attr = reduce(lambda x,y: x or (y in v),
                                 spaceCharacters + "<>\"'", False)
-                        v = v.replace("&", "&amp;")
                         if encoding:
-                            v = v.encode(encoding, unicode_encode_errors)
+                            v = escape_text(v, encoding)
+                        else:
+                            v = v.replace("&", "&amp;")
                         if quote_attr:
                             quote_char = self.quote_char
                             if self.use_best_quote_char:
@@ -337,7 +339,7 @@ class HTMLSerializer(object):
                     else:
                         attributes.append("/")
                 if encoding:
-                    yield "<%s%s>" % (name.encode(encoding), "".join(attributes))
+                    yield "<%s%s>" % (name.encode(encoding, "strict"), "".join(attributes))
                 else:
                     yield u"<%s%s>" % (name, u"".join(attributes))
 
@@ -349,7 +351,7 @@ class HTMLSerializer(object):
                     self.serializeError(_("Unexpected child element of a CDATA element"))
                 end_tag = u"</%s>" % name
                 if encoding:
-                    end_tag = end_tag.encode(encoding)
+                    end_tag = end_tag.encode(encoding, "strict")
                 yield end_tag
 
             elif type == "Comment":
