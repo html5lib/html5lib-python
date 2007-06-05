@@ -11,8 +11,6 @@ class TreeWalker(object):
     def __iter__(self):
         raise NotImplementedError
 
-    walk = __iter__
-
     def error(self, msg):
         return {"type": "SerializeError", "data": msg}
 

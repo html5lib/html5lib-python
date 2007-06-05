@@ -6,7 +6,7 @@ import _base
 from constants import voidElements
 
 class TreeWalker(_base.TreeWalker):
-    def walk(self):
+    def __iter__(self):
         ignore_until = None
         previous = None
         for event in self.tree:
@@ -31,7 +31,7 @@ class TreeWalker(_base.TreeWalker):
             name = node.nodeName
             if name in voidElements:
                 for token in self.emptyTag(name, \
-                  node.attributes.items(), not event or event[1] is not node):
+                  node.attributes.items(), not next or next[1] is not node):
                     yield token
             else:
                 yield self.startTag(name, node.attributes.items())
