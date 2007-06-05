@@ -27,6 +27,7 @@ def getTreeWalker(treeType, implementation=None, **kwargs):
                           elementtree-like interface (known to work with
                           ElementTree, cElementTree and lxml.etree).
                 "beautifulsoup" - Beautiful soup (if installed)
+                "genshi" - a Genshi stream
 
     implementation - (Currently applies to the "etree" tree type only). A module
                       implementing the tree type e.g. xml.etree.ElementTree or
@@ -37,6 +38,9 @@ def getTreeWalker(treeType, implementation=None, **kwargs):
         if treeType in ("dom", "pulldom", "simpletree"):
             mod = __import__(treeType, globals())
             treeWalkerCache[treeType] = mod.TreeWalker
+        elif treeType == "genshi":
+            import genshistream
+            treeWalkerCache[treeType] = genshistream.TreeWalker
         elif treeType == "beautifulsoup":
             import soup
             treeWalkerCache[treeType] = soup.TreeWalker

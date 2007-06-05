@@ -81,24 +81,24 @@ except ImportError:
         pass
 
 try:
-    import xml.etree.cElementTree as cElementTree
+    import xml.etree.cElementTree as ElementTree
     treeTypes['cElementTree'] = \
-        {"builder": treebuilders.getTreeBuilder("etree", cElementTree),
-         "walker":  treewalkers.getTreeWalker("etree", cElementTree)}
+        {"builder": treebuilders.getTreeBuilder("etree", ElementTree),
+         "walker":  treewalkers.getTreeWalker("etree", ElementTree)}
 except ImportError:
     try:
-        import cElementTree
+        import cElementTree as ElementTree
         treeTypes['cElementTree'] = \
-            {"builder": treebuilders.getTreeBuilder("etree", cElementTree),
-             "walker":  treewalkers.getTreeWalker("etree", cElementTree)}
+            {"builder": treebuilders.getTreeBuilder("etree", ElementTree),
+             "walker":  treewalkers.getTreeWalker("etree", ElementTree)}
     except ImportError:
         pass
 
 try:
-    import lxml.etree as lxml
+    import lxml.etree as ElementTree
     treeTypes['lxml'] = \
-        {"builder": treebuilders.getTreeBuilder("etree", lxml),
-         "walker":  treewalkers.getTreeWalker("etree", lxml)}
+        {"builder": treebuilders.getTreeBuilder("etree", ElementTree),
+         "walker":  treewalkers.getTreeWalker("etree", ElementTree)}
 except ImportError:
     pass
 
@@ -109,6 +109,51 @@ try:
          "walker":  treewalkers.getTreeWalker("beautifulsoup")}
 except ImportError:
     pass
+
+if "ElementTree" in locals():
+    try:
+        from genshi.core import Attrs, QName
+        from genshi.core import START, END, DOCTYPE, TEXT, COMMENT
+
+        def GenshiAdapter(tree):
+            if not(hasattr(tree, "tag")):
+                tree = tree.getroot()
+    
+            if tree.tag in ("<DOCUMENT_ROOT>", "<DOCUMENT_FRAGMENT>"):
+                if tree.text:
+                    yield TEXT, tree.text, (None, -1, -1)
+                for child in tree.getchildren():
+                    for item in GenshiAdapter(child):
+                        yield item
+
+            elif tree.tag == "<!DOCTYPE>":
+                yield DOCTYPE, QName(tree.text), (None, -1, -1)
+
+            elif type(tree.tag) == type(ElementTree.Comment):
+                yield COMMENT, tree.text, (None, -1, -1)
+
+            else:
+                tag_name = QName(tree.tag.lstrip('{'))
+                attrs = Attrs([(QName(attr.lstrip('{')), value)
+                               for attr, value in tree.items()])
+    
+                yield START, (tag_name, attrs), (None, -1, -1)
+                if tree.text:
+                    yield TEXT, tree.text, (None, -1, -1)
+                for child in tree.getchildren():
+                    for item in GenshiAdapter(child):
+                        yield item
+                yield END, tag_name, (None, -1, -1)
+
+            if tree.tail:
+                yield TEXT, tree.tail, (None, -1, -1)
+
+        treeTypes["genshi"] = \
+            {"builder": treebuilders.getTreeBuilder("etree", ElementTree),
+             "adapter": GenshiAdapter,
+             "walker":  treewalkers.getTreeWalker("genshi")}
+    except ImportError:
+        pass
 
 def concatenateCharacterTokens(tokens):
     charactersToken = None
