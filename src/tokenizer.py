@@ -77,7 +77,6 @@ class HTMLTokenizer(object):
         to return we yield the token which pauses processing until the next token
         is requested.
         """
-        self.stream.reset()
         self.tokenQueue = []
         # Start processing. When EOF is reached self.state will return False
         # instead of True and the loop will terminate.

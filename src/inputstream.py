@@ -64,7 +64,7 @@ class HTMLInputStream(object):
         self.queue = []
 
         # Reset position in the list to read from
-        self.reset()
+        self.tell = 0
 
     def openStream(self, source):
         """Produces a file object from source.
@@ -122,7 +122,6 @@ class HTMLInputStream(object):
         }
 
         # Go to beginning of file and read in 4 bytes
-        self.rawStream.seek(0)
         string = self.rawStream.read(4)
 
         # Try detecting the BOM using bytes from the string
@@ -162,10 +161,6 @@ class HTMLInputStream(object):
                 break
         col = tell - self.newLines[line-1] - 1
         return (line, col)
-
-    def reset(self):
-        """Resets the position in the stream back to the start."""
-        self.tell = 0
 
     def char(self):
         """ Read one character from the stream or queue if available. Return
