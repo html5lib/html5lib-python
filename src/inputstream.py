@@ -31,9 +31,9 @@ class HTMLInputStream(object):
 
         """
         # List of where new lines occur
-        self.newLines = []
+        self.newLines = [0]
 
-      # Raw Stream
+        # Raw Stream
         self.rawStream = self.openStream(source)
 
         # Encoding Information
@@ -47,15 +47,18 @@ class HTMLInputStream(object):
         if encoding is None or not isValidEncoding(encoding):
             encoding = self.detectEncoding(parseMeta, chardet)
         self.charEncoding = encoding
+        self.win1252 = False
 
         # Read bytes from stream decoding them into Unicode
-        uString = self.rawStream.read().decode(self.charEncoding, 'replace')
-
-        # Normalize new ipythonlines and null characters
-        uString = re.sub('\r\n?', '\n', uString)
-        uString = re.sub('\x00', u'\uFFFD', uString)
+        uString = self.rawStream.read()
 
         # Convert the unicode string into a list to be used as the data stream
+        if self.charEncoding == 'windows-1252':
+            self.win1252 = True
+        else:
+            self.win1252 = False
+            uString = uString.decode(self.charEncoding, 'replace')
+
         self.dataStream = uString
 
         self.queue = []
@@ -148,20 +151,8 @@ class HTMLInputStream(object):
         self.rawStream.seek(0)
         return parser.getEncoding()
 
-    def determineNewLines(self):
-        # Looks through the stream to find where new lines occur so
-        # the position method can tell where it is.
-        self.newLines.append(0)
-        for i in xrange(len(self.dataStream)):
-            if self.dataStream[i] == u"\n":
-                self.newLines.append(i)
-
     def position(self):
         """Returns (line, col) of the current position in the stream."""
-        # Generate list of new lines first time around
-        if not self.newLines:
-            self.determineNewLines()
-
         line = 0
         tell = self.tell
         for pos in self.newLines:
@@ -184,8 +175,22 @@ class HTMLInputStream(object):
             return self.queue.pop(0)
         else:
             try:
+                c = self.dataStream[self.tell]
                 self.tell += 1
-                return self.dataStream[self.tell - 1]
+                if self.win1252 and c >= '\x80': c=c.decode('windows-1252')
+
+                # Normalize newlines and null characters
+                if c == '\x00': c = u'\uFFFD'
+                if c == '\r':
+                    if self.tell < len(self.dataStream) and \
+                      self.dataStream[self.tell] == '\n':
+                        self.tell += 1
+                    c = '\n'
+
+                # record where newlines occur so that the position method
+                # can tell where it is
+                if c == '\n': self.newLines.append(self.tell - 1)
+                return c
             except:
                 return EOF
 
@@ -196,22 +201,17 @@ class HTMLInputStream(object):
         """
         charStack = [self.char()]
 
-        # First from the queue
-        while charStack[-1] and (charStack[-1] in characters) == opposite \
-          and self.queue:
-            charStack.append(self.queue.pop(0))
-
-        # Then the rest
         while charStack[-1] and (charStack[-1] in characters) == opposite:
-            try:
-                self.tell += 1
-                charStack.append(self.dataStream[self.tell - 1])
-            except:
-                charStack.append(EOF)
+            charStack.append(self.char())
 
         # Put the character stopped on back to the front of the queue
         # from where it came.
-        self.queue.insert(0, charStack.pop())
+        c = charStack.pop()
+        if c != EOF and self.tell <= len(self.dataStream) and \
+          self.dataStream[self.tell - 1] == c[0]:
+            self.tell -= 1
+        else:
+            self.queue.insert(0, c)
         return "".join(charStack)
 
 class EncodingBytes(str):

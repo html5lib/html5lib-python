@@ -31,9 +31,11 @@ class HTMLInputStreamTest(unittest.TestCase):
         self.assertEquals(stream.char(), u'\u2018')
 
     def test_char_win1252(self):
-        stream = HTMLInputStream(u'\u2018'.encode('windows-1252'))
+        stream = HTMLInputStream(u"\xa9\xf1\u2019".encode('windows-1252'))
         self.assertEquals(stream.charEncoding, 'windows-1252')
-        self.assertEquals(stream.char(), u'\u2018')
+        self.assertEquals(stream.char(), u"\xa9")
+        self.assertEquals(stream.char(), u"\xf1")
+        self.assertEquals(stream.char(), u"\u2019")
 
     def test_bom(self):
         stream = HTMLInputStream(codecs.BOM_UTF8 + "'")
@@ -50,11 +52,11 @@ class HTMLInputStreamTest(unittest.TestCase):
         self.assertEquals(stream.tell, 0)
         self.assertEquals(stream.charsUntil('c'),u"a\nbb\n")
         self.assertEquals(stream.tell, 6)
-        self.assertEquals(stream.position(), (3,1))
+        self.assertEquals(stream.position(), (3,0))
         self.assertEquals(stream.charsUntil('x'),u"ccc\ndddd")
         self.assertEquals(stream.tell, 14)
-        self.assertEquals(stream.position(), (4,5))
-        self.assertEquals(stream.newLines, [0,1,4,8])
+        self.assertEquals(stream.position(), (4,4))
+        self.assertEquals(stream.newLines, [0,1,5,9])
 
 def buildTestSuite():
     return unittest.defaultTestLoader.loadTestsFromName(__name__)
