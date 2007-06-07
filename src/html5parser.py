@@ -661,11 +661,13 @@ class InBodyPhase(Phase):
             self.tree.openElements[-1])
 
     # the real deal
-    def processSpaceCharactersPre(self, data):
-        #Sometimes (start of <pre> blocks) we want to drop leading newlines
+    def processSpaceCharactersDropNewline(self, data):
+        # Sometimes (start of <pre> and <textarea> blocks) we want to drop
+        # leading newlines
         self.processSpaceCharacters = self.processSpaceCharactersNonPre
-        if (data.startswith("\n") and self.tree.openElements[-1].name == "pre" 
-            and not self.tree.openElements[-1].hasContent()):
+        if (data.startswith("\n") and (self.tree.openElements[-1].name == "pre"
+          or self.tree.openElements[-1].name == "textarea")
+          and not self.tree.openElements[-1].hasContent()):
             data = data[1:]
         if data:
             self.tree.insertText(data)
@@ -700,7 +702,7 @@ class InBodyPhase(Phase):
             self.endTagP("p")
         self.tree.insertElement(name, attributes)
         if name == "pre":
-            self.processSpaceCharacters = self.processSpaceCharactersPre
+            self.processSpaceCharacters = self.processSpaceCharactersDropNewline
 
     def startTagForm(self, name, attributes):
         if self.tree.formPointer:
@@ -842,6 +844,7 @@ class InBodyPhase(Phase):
         # XXX Form element pointer checking here as well...
         self.tree.insertElement(name, attributes)
         self.parser.tokenizer.contentModelFlag = contentModelFlags["RCDATA"]
+        self.processSpaceCharacters = self.processSpaceCharactersDropNewline
 
     def startTagCdata(self, name, attributes):
         """iframe, noembed noframes, noscript(if scripting enabled)"""
