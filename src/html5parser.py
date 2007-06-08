@@ -31,7 +31,8 @@ from treebuilders import simpletree
 import utils
 from constants import contentModelFlags, spaceCharacters, asciiUpper2Lower
 from constants import scopingElements, formattingElements, specialElements
-from constants import headingElements, tableInsertModeElements, voidElements
+from constants import headingElements, tableInsertModeElements
+from constants import cdataElements, rcdataElements, voidElements
 
 class HTMLParser(object):
     """HTML parser. Generates a tree structure from a stream of (possibly
@@ -86,9 +87,9 @@ class HTMLParser(object):
         if innerHTML:
             self.innerHTML = container.lower()
 
-            if self.innerHTML in ('title', 'textarea'):
+            if self.innerHTML in cdataElements:
                 self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["RCDATA"]
-            elif self.innerHTML in ('style', 'script', 'xmp', 'iframe', 'noembed', 'noframes', 'noscript'):
+            elif self.innerHTML in rcdataElements:
                 self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["CDATA"]
             elif self.innerHTML == 'plaintext':
                 self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["PLAINTEXT"]

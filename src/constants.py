@@ -158,6 +158,18 @@ voidElements = frozenset((
     "input"
 ))
 
+cdataElements = frozenset(('title', 'textarea'))
+
+rcdataElements = frozenset((
+    'style',
+    'script',
+    'xmp',
+    'iframe',
+    'noembed',
+    'noframes',
+    'noscript'
+))
+
 booleanAttributes = {
     "": frozenset(("irrelevant",)),
     "style": frozenset(("scoped",)),
