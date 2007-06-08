@@ -19,11 +19,13 @@ import html5parser
 
 import treewalkers
 import treebuilders
+from filters.lint import Filter as LintFilter
 #END RELEASE
 
 #RELEASE add
 #import html5lib
 #from html5lib import html5parser, serializer, treewalkers, treebuilders
+#from html5lib.filters.lint import Filter as LintFilter
 #END RELEASE
 
 def PullDOMAdapter(node):
@@ -220,7 +222,7 @@ class TestCase(unittest.TestCase):
             document = p.parse(StringIO.StringIO(input))
         document = treeClass.get("adapter", lambda x: x)(document)
         try:
-            output = convertTokens(treeClass["walker"](document))
+            output = convertTokens(LintFilter(treeClass["walker"](document)))
             output = attrlist.sub(sortattrs, output)
             expected = attrlist.sub(sortattrs, expected)
             errorMsg = "\n".join(["\n\nExpected:", expected,
