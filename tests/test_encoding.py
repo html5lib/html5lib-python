@@ -19,75 +19,38 @@ import inputstream
 #from html5lib import inputstream
 #END RELEASE
 
-def parseTestcase(testString):
-    testString = testString.split("\n")
-    try:
-        if testString[0] != "#data":
-            sys.stderr.write(testString)
-        assert testString[0] == "#data"
-    except:
-        raise
-    input = []
-    encoding = []
-    currentList = input
-    for line in testString:
-        if line and not (line.startswith("#encoding") or
-                         line.startswith("#data")):
-            currentList.append(line)
-        elif line.startswith("#encoding"):
-            currentList = encoding
-    return "\n".join(input), encoding[0]
+import re, glob, unittest, inputstream
 
-class TestCase(unittest.TestCase):
-    def runEncodingTest(self, input, encoding):
-        #XXX - move this out into the setup function
-        #concatenate all consecutive character tokens into a single token
-        stream = inputstream.HTMLInputStream(input, chardet=False)
-        
-        errorMsg = "\n".join(["\n\nInput", input,"\nExpected:", encoding,
-                              "\nRecieved:", stream.charEncoding])
-        self.assertEquals(encoding.lower(), stream.charEncoding.lower(),
-                          errorMsg)
-
-class ChardetTest(unittest.TestCase):
-    def testChardet(self):
-        f = open("encoding/chardet/test_big5.txt")
-        stream = inputstream.HTMLInputStream(f.read(), chardet=True)
-        self.assertEquals("big5", stream.charEncoding.lower(),
-                          "Chardet failed: expected big5 got "+
-                          stream.charEncoding.lower())
-
-def test_encoding():
-    for filename in glob.glob('encoding/*.dat'):
-        f = open(filename)
-        tests = f.read().split("#data\n")
-        for test in tests:
-            if test == "":
-                continue
-            test = "#data\n" + test
-            input, encoding = parseTestcase(test)
-            yield TestCase.runEncodingTest, input, encoding
+class Html5EncodingTestCase(unittest.TestCase): pass
 
 def buildTestSuite():
-    tests = 0
-    for func, input, encoding in test_encoding():
-        tests += 1
-        testName = 'test%d' % tests
-        testFunc = lambda self, method=func, input=input, encoding=encoding, \
-            : method(self, input, encoding)
-        testFunc.__doc__ = 'Encoding %s'%(testName)
-        instanceMethod = new.instancemethod(testFunc, None, TestCase)
-        setattr(TestCase, testName, instanceMethod)
-    testSuite = unittest.TestLoader().loadTestsFromTestCase(TestCase)
+    for filename in glob.glob("encoding/*.dat"):
+        test_name = os.path.basename(filename).replace('.dat',''). \
+            replace('-','')
+        for idx,(data,encoding) in enumerate(re.compile(
+                "^#data\s*\n(.*?)\n#encoding\s*\n(.*?)\n",
+                re.DOTALL|re.MULTILINE).findall(open(filename).read())):
+            def encodingTest(self):
+                stream = inputstream.HTMLInputStream(data,chardet=False)
+                assert encoding == stream.charEncoding.lower()
+            setattr(Html5EncodingTestCase, 'test_%s_%d' % (test_name, idx+1),
+                encodingTest)
+
     try:
         import chardet
-        testSuite.addTest(ChardetTest('testChardet'))  
+        def test_chardet(self):
+            data = open("encoding/chardet/test_big5.txt").read()
+            encoding = inputstream.HTMLInputStream(data).charEncoding
+            assert encoding.lower() == "big5"
+        setattr(Html5EncodingTestCase, 'test_chardet', test_chardet)
     except ImportError:
         print "chardet not found, skipping chardet tests"
-    return testSuite
+
+    return unittest.defaultTestLoader.loadTestsFromName(__name__)
 
 def main():
-    unittest.main(defaultTest="buildTestSuite")
+    buildTestSuite()
+    unittest.main()
 
 if __name__ == "__main__":
     main()
