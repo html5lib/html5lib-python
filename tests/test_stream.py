@@ -17,7 +17,7 @@ from inputstream import HTMLInputStream
 class HTMLInputStreamTest(unittest.TestCase):
 
     def test_char_ascii(self):
-        stream = HTMLInputStream("'")
+        stream = HTMLInputStream("'", encoding='ascii')
         self.assertEquals(stream.charEncoding, 'ascii')
         self.assertEquals(stream.char(), "'")
 
@@ -26,7 +26,7 @@ class HTMLInputStreamTest(unittest.TestCase):
         self.assertEquals(stream.char(), u'\ufffd')
 
     def test_char_utf8(self):
-        stream = HTMLInputStream(u'\u2018'.encode('utf-8'))
+        stream = HTMLInputStream(u'\u2018'.encode('utf-8'), encoding='utf-8')
         self.assertEquals(stream.charEncoding, 'utf-8')
         self.assertEquals(stream.char(), u'\u2018')
 
