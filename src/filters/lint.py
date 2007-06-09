@@ -19,7 +19,7 @@ class Filter(_base.Filter):
                 name = token["name"]
                 if contentModelFlag != "PCDATA":
                     raise LintError(_("StartTag not in PCDATA content model flag: %s") % name)
-                if not isinstance(name, basestring):
+                if not isinstance(name, unicode):
                     raise LintError(_(u"Tag name is not a string: %r") % name)
                 if not name:
                     raise LintError(_(u"Empty tag name"))
@@ -30,11 +30,11 @@ class Filter(_base.Filter):
                 if type == "StartTag":
                     open_elements.append(name)
                 for name, value in token["data"]:
-                    if not isinstance(name, basestring):
+                    if not isinstance(name, unicode):
                         raise LintError(_("Attribute name is not a string: %r") % name)
                     if not name:
                         raise LintError(_(u"Empty attribute name"))
-                    if not isinstance(value, basestring):
+                    if not isinstance(value, unicode):
                         raise LintError(_("Attribute value is not a string: %r") % value)
                 if name in cdataElements:
                     contentModelFlag = "CDATA"
@@ -45,7 +45,7 @@ class Filter(_base.Filter):
 
             elif type == "EndTag":
                 name = token["name"]
-                if not isinstance(name, basestring):
+                if not isinstance(name, unicode):
                     raise LintError(_(u"Tag name is not a string: %r") % name)
                 if not name:
                     raise LintError(_(u"Empty tag name"))
@@ -62,7 +62,7 @@ class Filter(_base.Filter):
 
             elif type in ("Characters", "SpaceCharacters"):
                 data = token["data"]
-                if not isinstance(data, basestring):
+                if not isinstance(data, unicode):
                     raise LintError(_("Attribute name is not a string: %r") % data)
                 if not data:
                     raise LintError(_(u"%s token with empty data") % type)
@@ -75,7 +75,7 @@ class Filter(_base.Filter):
                 name = token["name"]
                 if contentModelFlag != "PCDATA":
                     raise LintError(_("Doctype not in PCDATA content model flag: %s") % name)
-                if not isinstance(name, basestring):
+                if not isinstance(name, unicode):
                     raise LintError(_(u"Tag name is not a string: %r") % name)
                 if not name:
                     raise LintError(_(u"Empty tag name"))

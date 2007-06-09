@@ -19,22 +19,23 @@ class TreeWalker(object):
             attrs = []
         elif hasattr(attrs, 'items'):
             attrs = attrs.items()
-        return attrs
+        return [(unicode(name),unicode(value)) for name,value in attrs]
 
     def emptyTag(self, name, attrs, hasChildren=False):
-        yield {"type": "EmptyTag", "name": name, \
+        yield {"type": "EmptyTag", "name": unicode(name), \
                 "data": self.normalizeAttrs(attrs)}
         if hasChildren:
             yield self.error(_("Void element has children"))
 
     def startTag(self, name, attrs):
-        return {"type": "StartTag", "name": name, \
+        return {"type": "StartTag", "name": unicode(name), \
                  "data": self.normalizeAttrs(attrs)}
 
     def endTag(self, name):
-        return {"type": "EndTag", "name": name, "data": []}
+        return {"type": "EndTag", "name": unicode(name), "data": []}
 
     def text(self, data):
+        data = unicode(data)
         middle = data.lstrip(spaceCharacters)
         left = data[:len(data)-len(middle)]
         if left:
@@ -48,10 +49,10 @@ class TreeWalker(object):
             yield {"type": "SpaceCharacters", "data": right}
 
     def comment(self, data):
-        return {"type": "Comment", "data": data}
+        return {"type": "Comment", "data": unicode(data)}
 
     def doctype(self, name):
-        return {"type": "Doctype", "name": name, "data": name.upper() == "HTML"}
+        return {"type": "Doctype", "name": unicode(name), "data": name.upper() == "HTML"}
 
     def unknown(self, nodeType):
         return self.error(_("Unknown node type: ") + nodeType)
