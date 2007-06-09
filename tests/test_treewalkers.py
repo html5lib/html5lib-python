@@ -19,13 +19,13 @@ import html5parser
 
 import treewalkers
 import treebuilders
-from filters.lint import Filter as LintFilter
+from filters.lint import Filter as LintFilter, LintError
 #END RELEASE
 
 #RELEASE add
 #import html5lib
 #from html5lib import html5parser, serializer, treewalkers, treebuilders
-#from html5lib.filters.lint import Filter as LintFilter
+#from html5lib.filters.lint import Filter as LintFilter, LintError
 #END RELEASE
 
 def PullDOMAdapter(node):
@@ -228,6 +228,8 @@ class TestCase(unittest.TestCase):
             errorMsg = "\n".join(["\n\nExpected:", expected,
                                      "\nRecieved:", output])
             self.assertEquals(expected, output, errorMsg)
+        except LintError, le:
+            self.fail(le.message)
         except NotImplementedError:
             pass # Amnesty for those that confess...
 

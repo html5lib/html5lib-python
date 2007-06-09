@@ -17,6 +17,8 @@ class Filter(_base.Filter):
             type = token["type"]
             if type in ("StartTag", "EmptyTag"):
                 name = token["name"]
+                if contentModelFlag != "PCDATA":
+                    raise LintError(_("StartTag not in PCDATA content model flag: %s") % name)
                 if not isinstance(name, basestring):
                     raise LintError(_(u"Tag name is not a string: %r") % name)
                 if not name:
@@ -25,6 +27,8 @@ class Filter(_base.Filter):
                     raise LintError(_(u"Void element reported as StartTag token: %s") % name)
                 elif type == "EmptyTag" and name not in voidElements:
                     raise LintError(_(u"Non-void element reported as EmptyTag token: %s") % token["name"])
+                if type == "StartTag":
+                    open_elements.append(name)
                 for name, value in token["data"]:
                     if not isinstance(name, basestring):
                         raise LintError(_("Attribute name is not a string: %r") % name)
@@ -32,12 +36,11 @@ class Filter(_base.Filter):
                         raise LintError(_(u"Empty attribute name"))
                     if not isinstance(value, basestring):
                         raise LintError(_("Attribute value is not a string: %r") % value)
-                open_elements.append(name)
                 if name in cdataElements:
                     contentModelFlag = "CDATA"
                 elif name in rcdataElements:
                     contentModelFlag = "RCDATA"
-                elif name == "textarea":
+                elif name == "plaintext":
                     contentModelFlag = "PLAINTEXT"
 
             elif type == "EndTag":
@@ -48,15 +51,14 @@ class Filter(_base.Filter):
                     raise LintError(_(u"Empty tag name"))
                 if name in voidElements:
                     raise LintError(_(u"Void element reported as EndTag token: %s") % name)
-                if open_elements.pop() != name:
-                    raise LintError(_(u"EndTag does not match StartTag: %s") % name)
+                start_name = open_elements.pop()
+                if start_name != name:
+                    raise LintError(_(u"EndTag (%s) does not match StartTag (%s)") % (name, start_name))
                 contentModelFlag = "PCDATA"
 
             elif type == "Comment":
-                pass
-                # XXX: This make tests fail
-                # if token["data"].find("--") >= 0:
-                #     raise LintError(_(u"Comment contains double-dash"))
+                if contentModelFlag != "PCDATA":
+                    raise LintError(_("Comment not in PCDATA content model flag"))
 
             elif type in ("Characters", "SpaceCharacters"):
                 data = token["data"]
@@ -71,11 +73,16 @@ class Filter(_base.Filter):
 
             elif type == "Doctype":
                 name = token["name"]
+                if contentModelFlag != "PCDATA":
+                    raise LintError(_("Doctype not in PCDATA content model flag: %s") % name)
                 if not isinstance(name, basestring):
                     raise LintError(_(u"Tag name is not a string: %r") % name)
                 if not name:
                     raise LintError(_(u"Empty tag name"))
                 # XXX: what to do with token["data"] ?
+
+            elif type in ("ParseError", "SerializeError"):
+                pass
 
             else:
                 raise LintError(_(u"Unknown token type: %s") % type)
