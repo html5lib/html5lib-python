@@ -185,7 +185,7 @@ class HTMLInputStream(object):
                 # record where newlines occur so that the position method
                 # can tell where it is
                 if c == '\n': self.newLines.append(self.tell - 1)
-                return c
+                return unicode(c)
             except:
                 return EOF
 
