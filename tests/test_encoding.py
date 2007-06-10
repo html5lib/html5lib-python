@@ -1,15 +1,13 @@
 import sys
 import os
 import glob
-import StringIO
 import unittest
-import new
-import codecs
 
 #RELEASE remove
-# XXX Allow us to import the sibling module
-os.chdir(os.path.split(os.path.abspath(__file__))[0])
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
+if __name__ == '__main__':
+    # XXX Allow us to import the sibling module
+    os.chdir(os.path.split(os.path.abspath(__file__))[0])
+    sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
 
 import inputstream
 #END RELEASE
@@ -30,9 +28,9 @@ def buildTestSuite():
         for idx,(data,encoding) in enumerate(re.compile(
                 "^#data\s*\n(.*?)\n#encoding\s*\n(.*?)\n",
                 re.DOTALL|re.MULTILINE).findall(open(filename).read())):
-            def encodingTest(self):
+            def encodingTest(self, data=data, encoding=encoding):
                 stream = inputstream.HTMLInputStream(data,chardet=False)
-                assert encoding == stream.charEncoding.lower()
+                self.assertEquals(encoding.lower(), stream.charEncoding)
             setattr(Html5EncodingTestCase, 'test_%s_%d' % (test_name, idx+1),
                 encodingTest)
 
