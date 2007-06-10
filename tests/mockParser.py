@@ -1,9 +1,10 @@
 import sys, hotshot, hotshot.stats
 import os
 
-#Allow us to import from the src directory
-os.chdir(os.path.split(os.path.abspath(__file__))[0])
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
+if __name__ == '__main__':
+    #Allow us to import from the src directory
+    os.chdir(os.path.split(os.path.abspath(__file__))[0])
+    sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
 
 from tokenizer import HTMLTokenizer
 

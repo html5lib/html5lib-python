@@ -1,9 +1,7 @@
 import sys
 import os
 import glob
-import StringIO
 import unittest
-import new
 
 try:
     import simplejson
@@ -156,8 +154,7 @@ def buildTestSuite():
             testFunc = lambda self, method=func, test=test: \
                 method(self, test)
             testFunc.__doc__ = "\t".join([test['description'], str(test['input'])])
-            instanceMethod = new.instancemethod(testFunc, None, TestCase)
-            setattr(TestCase, testName, instanceMethod)
+            setattr(TestCase, testName, testFunc)
     return unittest.TestLoader().loadTestsFromTestCase(TestCase)
 
 def main():

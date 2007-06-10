@@ -1,9 +1,10 @@
-import os,sys,unittest,new
+import os,sys,unittest
 
 #RELEASE remove
-# XXX Allow us to import the sibling module
-os.chdir(os.path.split(os.path.abspath(__file__))[0])
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
+if __name__ == '__main__':
+    # XXX Allow us to import the sibling module
+    os.chdir(os.path.split(os.path.abspath(__file__))[0])
+    sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
 
 import html5parser, sanitizer, constants
 #END RELEASE
@@ -11,12 +12,11 @@ import html5parser, sanitizer, constants
 #RELEASE add
 #from html5lib import html5parser, sanitizer, constants
 #END RELEASE
-#!/usr/bin/env ruby
 
 class SanitizeTest(unittest.TestCase):
   def addTest(cls, name, expected, input):
-    func = lambda self: self.assertEqual(expected, self.sanitize_html(input))
-    setattr(cls, name, new.instancemethod(func, None, cls))
+    setattr(cls, name, 
+      lambda self: self.assertEqual(expected, self.sanitize_html(input)))
   addTest = classmethod(addTest)
 
   def sanitize_html(self,stream):

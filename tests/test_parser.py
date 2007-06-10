@@ -3,12 +3,12 @@ import os
 import glob
 import StringIO
 import unittest
-import new
 
 #RELEASE remove
-# XXX Allow us to import the sibling module
-os.chdir(os.path.split(os.path.abspath(__file__))[0])
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
+if __name__ == '__main__':
+    # XXX Allow us to import the sibling module
+    os.chdir(os.path.split(os.path.abspath(__file__))[0])
+    sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
 
 import html5parser
 #Run tests over all treebuilders
@@ -159,8 +159,7 @@ def buildTestSuite():
         testFunc = lambda self, method=func, innerHTML=innerHTML, input=input, expected=expected, \
             errors=errors, treeCls=treeCls: method(self, innerHTML, input, expected, errors, treeCls)
         testFunc.__doc__ = 'Parser %s Tree %s Input: %s'%(testName, treeName, input)
-        instanceMethod = new.instancemethod(testFunc, None, TestCase)
-        setattr(TestCase, testName, instanceMethod)
+        setattr(TestCase, testName, testFunc)
     return unittest.TestLoader().loadTestsFromTestCase(TestCase)
 
 def main():

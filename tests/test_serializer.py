@@ -1,9 +1,7 @@
 import sys
 import os
 import glob
-import StringIO
 import unittest
-import new
 
 try:
     import simplejson
@@ -17,9 +15,10 @@ except:
         load = staticmethod(load)
 
 #RELEASE remove
-# XXX Allow us to import the sibling module
-os.chdir(os.path.split(os.path.abspath(__file__))[0])
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
+if __name__ == '__main__':
+    # XXX Allow us to import the sibling module
+    os.chdir(os.path.split(os.path.abspath(__file__))[0])
+    sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
 
 import html5parser
 import serializer
@@ -60,7 +59,7 @@ class TestCase(unittest.TestCase):
     def addTest(cls, name, expected, input, description, options):
         func = lambda self: self.mockTest(expected, input, options)
         func.__doc__ = "\t".join([description, str(input), str(options)])
-        setattr(cls, name, new.instancemethod(func, None, cls))
+        setattr(cls, name, func)
     addTest = classmethod(addTest)
 
     def mockTest(self, expected, input, options):

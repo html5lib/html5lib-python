@@ -3,15 +3,12 @@ import os
 import glob
 import StringIO
 import unittest
-import new
-
-sys.path.insert(0, os.path.split(os.path.abspath(__file__))[0])
-from test_parser import parseTestcase
 
 #RELEASE remove
-# XXX Allow us to import the sibling module
-os.chdir(os.path.split(os.path.abspath(__file__))[0])
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
+if __name__ == '__main__':
+    # XXX Allow us to import the sibling module
+    os.chdir(os.path.split(os.path.abspath(__file__))[0])
+    sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
 
 import html5parser
 #Run tests over all treewalkers/treebuilders pairs
@@ -27,6 +24,8 @@ from filters.lint import Filter as LintFilter, LintError
 #from html5lib import html5parser, serializer, treewalkers, treebuilders
 #from html5lib.filters.lint import Filter as LintFilter, LintError
 #END RELEASE
+
+from test_parser import parseTestcase
 
 def PullDOMAdapter(node):
     from xml.dom import Node
@@ -252,11 +251,11 @@ def buildTestSuite():
     for func, innerHTML, input, expected, errors, treeName, treeCls in test_treewalker():
         tests += 1
         testName = 'test%d' % tests
-        testFunc = lambda self, method=func, innerHTML=innerHTML, input=input, expected=expected, \
-            errors=errors, treeCls=treeCls: method(self, innerHTML, input, expected, errors, treeCls)
+        def testFunc(self, method=func, innerHTML=innerHTML, input=input,
+            expected=expected, errors=errors, treeCls=treeCls):
+            method(self, innerHTML, input, expected, errors, treeCls)
         testFunc.__doc__ = 'Parser %s Tree %s Input: %s'%(testName, treeName, input)
-        instanceMethod = new.instancemethod(testFunc, None, TestCase)
-        setattr(TestCase, testName, instanceMethod)
+        setattr(TestCase, testName, testFunc)
     return unittest.TestLoader().loadTestsFromTestCase(TestCase)
 
 def main():
