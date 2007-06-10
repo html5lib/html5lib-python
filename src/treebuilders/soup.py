@@ -60,7 +60,6 @@ class Element(_base.Node):
             self.appendChild(text)
 
     def insertBefore(self, node, refNode):
-        #XXX What exception should we throw here?
         index = self.element.contents.index(refNode.element)
         if (node.element.__class__ == NavigableString and self.element.contents
             and self.element.contents[index-1].__class__ == NavigableString):

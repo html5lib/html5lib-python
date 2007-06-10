@@ -1,7 +1,7 @@
 import gettext
 _ = gettext.gettext
 
-from BeautifulSoup import BeautifulSoup, Declaration, Comment
+from BeautifulSoup import BeautifulSoup, Declaration, Comment, Tag
 
 import _base
 
@@ -11,18 +11,18 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             return (_base.DOCUMENT,)
 
         elif isinstance(node, Declaration): # DocumentType
-            return _base.DOCTYPE, node.string
+            #Slice needed to remove markup added during unicode conversion
+            return _base.DOCTYPE, unicode(node.string)[2:-1]
 
         elif isinstance(node, Comment):
-            return _base.COMMENT, node.data
+            return _base.COMMENT, unicode(node.string)[4:-3]
 
         elif isinstance(node, unicode): # TextNode
             return _base.TEXT, node
 
         elif isinstance(node, Tag): # Element
             return _base.ELEMENT, node.name, \
-              node.attrs.items(), node.contents
-
+                dict(node.attrs).items(), node.contents
         else:
             return _base.UNKNOWN, node.__class__.__name__
 

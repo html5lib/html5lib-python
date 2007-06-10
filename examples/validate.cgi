@@ -6,78 +6,55 @@ does not report any of the other (many) possible types of conformance
 errors that may exist in a HTML5 document"""
 
 import sys
-import urllib2
 import cgi
+import copy
+
+import httplib2
+import lxml
+from genshi.template import MarkupTemplate
 
 import html5lib
+from html5lib import treebuilders
 
-htmlTemplate = u"""<html>
-<head>
-<title>%(title)s</title>
-</head>
-<body>
-<h1>%(title)s</h1>
-%(body)s
-</body>
-</html>"""
+class Resource(object):
+    http = httplib2.Http()
+    def __init__(self, uri):
+        self.uri = uri
+        self.content = None
+    
+    def load(self):
+        self.response, self.content = self.http.request(self.uri)
 
-def parseDocument(document):
-    """Parse the document and return a list of errors and a parse tree"""
-    p = html5lib.HTMLParser()
-    tree = p.parse(document)
-    return p.errors, cgi.escape(tree.printTree(), True)
+    def parse(self):
+        raise NotImplementedError
 
-def getDocument(uri):
-    if uri.startswith("http://") or uri.startswith("https://"):
-        #Why is string conversion necessary here?
-        document = "".join(urllib2.urlopen(uri).readlines())[:-1]
-        #print "<--!%s-->"%(document,)
-    else:
-        raise ValueError, "Unrecognised URI type"
-    return document
+class Schema(Resource):
+    def load(self):
+        #This will just be a network operation eventually
+        self.content = open(self.uri).read()
+    
+    def parse(self):
+        self.tree = lxml.etree.parse(self.content)
+        self.relaxng = lxml.etree.RelaxNG(self.tree)
 
-def writeValid(uri, treeStr):
-    bodyText = """<p><strong>%s is valid HTML5!</strong></p>
-<h2>Parse Tree:</h2>
-<pre>
-%s
-</pre>"""%(uri, treeStr)
-    writeOutput(htmlTemplate%{"title":"Validation Results", "body":bodyText})
+class Document(Resource):
+    
+    def parse(self):
+        parser = html5lib.HTMLParser(
+            tree=treebuilders.getTreeBuilder("etree", lxml.etree))
+        self.tree = parser.parse(self.content)
+        self.parseErrors = parser.parseErrors
+        self.hasSyntaxErrors = not(self.parseErrors)
+    
+    def check(self, schema):
+        self.hasConformaceErrors = schema.relaxng.validate(self.tree)
+        self.relaxErrors = schema.relaxng.error_log
 
-def writeInvalid(uri, treeStr, errors):
-    errList=[]
-    for pos, message in errors:
-        errList.append("Line %i Col %i"%pos + " " + message)
-    errStr = "<br>\n".join(errList)
-    bodyText = """<p><strong>%s is not valid HTML5</strong></p>
-<h2>Errors:</h2>
-%s
-<h2>Parse Tree:</h2>
-<pre>
-%s
-</pre>"""%(uri, errStr, treeStr)
-    writeOutput(htmlTemplate%{"title":"Validation Results", "body":bodyText})
-
-def writeErr(uri):
-    bodyText = "<p>Failed to load URI %s</p>"%(uri,)
-    writeOutput(htmlTemplate%{"title":"Error", "body":bodyText})
-
-def writeOutput(s):
-    print s.encode('utf-8')
-
-print "Content-type: text/html"
-print ""
-
-try:
-    form = cgi.FieldStorage()
-    uri = form.getvalue("uri")
-    document = getDocument(uri)
-except:
-    writeErr(uri)
-    sys.exit(1)
-
-errors, tree = parseDocument(document)
-if errors:
-    writeInvalid(uri, tree, errors)
-else:
-    writeValid(uri, tree)
+class Response(object):
+    templateFilename = "response.html"
+    def __init__(self):
+        self.template = MarkupTemplate(open(self.templateFilename).read())
+    
+    def render(self, document):
+        stream = self.template.generate(doc = document)
+        return stream.render(doctype=("html","",""))
