@@ -724,7 +724,11 @@ class InBodyPhase(Phase):
             if node.name in stopName:
                 for j in range(i+1):
                     self.tree.openElements.pop()
+                if i > 1:
+                    self.parser.parseError("Unexpected %s as descendant of %s"%
+                                           (name, name))
                 break
+        
 
             # Phrasing elements are all non special, non scoping, non
             # formatting elements
