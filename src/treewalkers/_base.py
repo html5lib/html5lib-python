@@ -126,7 +126,11 @@ class NonRecursiveTreeWalker(TreeWalker):
             else:
                 yield self.unknown(details[0])
             
-            firstChild = hasChildren and self.getFirstChild(currentNode) or None
+            if hasChildren:
+                firstChild = self.getFirstChild(currentNode)
+            else:
+                firstChild = None
+            
             if firstChild is not None:
                 currentNode = firstChild
             else:
