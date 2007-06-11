@@ -17,15 +17,15 @@ class Filter(_base.Filter):
     spacePreserveElements = frozenset(["pre", "textarea"] + list(rcdataElements))
     
     def __iter__(self):
-        preserve = False
+        preserve = 0
         for token in _base.Filter.__iter__(self):
             type = token["type"]
-            if not preserve and type == "StartTag" \
-              and token["name"] in self.spacePreserveElements:
-                preserve = True
+            if type == "StartTag" \
+              and (preserve or token["name"] in self.spacePreserveElements):
+                preserve += 1
 
-            elif type == "EndTag":
-                preserve = False
+            elif type == "EndTag" and preserve:
+                preserve -= 1
 
             elif not preserve and type == "SpaceCharacters":
                 continue
