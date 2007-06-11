@@ -135,7 +135,7 @@ class HTMLSanitizer(HTMLTokenizer):
             if token["type"] in ["StartTag", "EndTag", "EmptyTag"]:
                 if token["name"] in self.allowed_elements:
                     if token.has_key("data"):
-                        attrs = dict([[name,val] for name,val in token["data"][::-1] if name in self.allowed_attributes])
+                        attrs = dict([(name,val) for name,val in token["data"][::-1] if name in self.allowed_attributes])
                         for attr in self.attr_val_is_uri:
                             if not attrs.has_key(attr): continue
                             val_unescaped = re.sub("[\000-\040\177-\240\s]+", '', unescape(attrs[attr])).lower()
@@ -143,7 +143,7 @@ class HTMLSanitizer(HTMLTokenizer):
                                 del attrs[attr]
                         if attrs.has_key('style'):
                             attrs['style'] = self.sanitize_css(attrs['style'])
-                        token["data"] = attrs.items()
+                        token["data"] = [[name,val] for name,val in attrs.items()]
                     yield token
                 else:
                     if token["type"] == "EndTag":
