@@ -18,4 +18,4 @@ except:
         load = staticmethod(load)
 
 def html5lib_test_files(subdirectory, files='*.dat'):
-    return glob.glob(os.path.join(os.path.pardir,'testdata',subdirectory,files))
+    return glob.glob(os.path.join(os.path.pardir,os.path.pardir,'testdata',subdirectory,files))

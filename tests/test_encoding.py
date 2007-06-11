@@ -31,7 +31,7 @@ def buildTestSuite():
     try:
         import chardet
         def test_chardet(self):
-            data = open("../testdata/encoding/chardet/test_big5.txt").read()
+            data = open("../../testdata/encoding/chardet/test_big5.txt").read()
             encoding = inputstream.HTMLInputStream(data).charEncoding
             assert encoding.lower() == "big5"
         setattr(Html5EncodingTestCase, 'test_chardet', test_chardet)
