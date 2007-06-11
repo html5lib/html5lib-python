@@ -1,15 +1,9 @@
 import sys
-import os
-import glob
 import StringIO
 import unittest
+from support import html5lib_test_files
 
 #RELEASE remove
-if __name__ == '__main__':
-    # XXX Allow us to import the sibling module
-    os.chdir(os.path.split(os.path.abspath(__file__))[0])
-    sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
-
 import html5parser
 #Run tests over all treebuilders
 #XXX - it would be nice to automate finding all treebuilders or to allow running just one
@@ -141,7 +135,7 @@ class TestCase(unittest.TestCase):
 def test_parser():
     sys.stdout.write('Testing tree builders '+ " ".join(treeTypes.keys()) + "\n")
     for name, cls in treeTypes.iteritems():
-        for filename in glob.glob('tree-construction/*.dat'):
+        for filename in html5lib_test_files('tree-construction'):
             f = open(filename)
             tests = f.read().split("#data\n")
             for test in tests:

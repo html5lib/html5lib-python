@@ -1,15 +1,8 @@
 import sys
-import os
-import glob
 import StringIO
 import unittest
 
 #RELEASE remove
-if __name__ == '__main__':
-    # XXX Allow us to import the sibling module
-    os.chdir(os.path.split(os.path.abspath(__file__))[0])
-    sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
-
 import html5parser
 #Run tests over all treewalkers/treebuilders pairs
 #XXX - it would be nice to automate finding all treewalkers or to allow running just one
@@ -25,6 +18,7 @@ from filters.lint import Filter as LintFilter, LintError
 #from html5lib.filters.lint import Filter as LintFilter, LintError
 #END RELEASE
 
+from support import html5lib_test_files
 from test_parser import parseTestcase
 
 def PullDOMAdapter(node):
@@ -236,7 +230,7 @@ def test_treewalker():
     sys.stdout.write('Testing tree walkers '+ " ".join(treeTypes.keys()) + "\n")
 
     for name, cls in treeTypes.iteritems():
-        for filename in glob.glob('tree-construction/*.dat'):
+        for filename in html5lib_test_files('tree-construction'):
             f = open(filename)
             tests = f.read().split("#data\n")
             for test in tests:

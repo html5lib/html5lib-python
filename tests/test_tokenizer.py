@@ -1,6 +1,5 @@
-import glob
 import unittest
-from support import simplejson
+from support import simplejson, html5lib_test_files
 
 #RELEASE remove
 from tokenizer import HTMLTokenizer
@@ -121,7 +120,7 @@ class TestCase(unittest.TestCase):
 
 
 def test_tokenizer():
-    for filename in glob.glob('tokenizer/*.test'):
+    for filename in html5lib_test_files('tokenizer', '*.test'):
         tests = simplejson.load(file(filename))
         for test in tests['tests']:
             yield (TestCase.runTokenizerTest, test)

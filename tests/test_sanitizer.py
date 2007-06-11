@@ -1,5 +1,5 @@
-import os,sys,unittest,glob
-from support import simplejson
+import os,sys,unittest
+from support import simplejson, html5lib_test_files
 
 #RELEASE remove
 import html5parser, sanitizer, constants
@@ -73,7 +73,7 @@ for protocol in sanitizer.HTMLSanitizer.allowed_protocols:
       """<a href="%s">foo</a>""" % protocol)
 
 def buildTestSuite():
-    for filename in glob.glob("sanitizer/*.dat"):
+    for filename in html5lib_test_files("sanitizer"):
         for test in simplejson.load(file(filename)):
             SanitizeTest.addTest('test_' + test['name'], test['output'], test['input'])
 

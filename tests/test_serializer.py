@@ -1,25 +1,8 @@
 import sys
-import os
-import glob
 import unittest
-
-try:
-    import simplejson
-except:
-    import re
-    class simplejson:
-        def load(f):
-            true, false = True, False
-            input=re.sub(r'(".*?(?<!\\)")',r'u\1',f.read().decode('utf-8'))
-            return eval(input.replace('\r',''))
-        load = staticmethod(load)
+from support import simplejson, html5lib_test_files
 
 #RELEASE remove
-if __name__ == '__main__':
-    # XXX Allow us to import the sibling module
-    os.chdir(os.path.split(os.path.abspath(__file__))[0])
-    sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
-
 import html5parser
 import serializer
 from treewalkers._base import TreeWalker
@@ -75,7 +58,7 @@ class TestCase(unittest.TestCase):
                 serialize(JsonWalker(input)))
 
 def test_serializer():
-    for filename in glob.glob('serializer/*.test'):
+    for filename in html5lib_test_files('serializer', '*.test'):
         tests = simplejson.load(file(filename))
         for test in tests['tests']:
             yield test

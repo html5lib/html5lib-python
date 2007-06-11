@@ -1,14 +1,8 @@
-import sys
 import os
-import glob
 import unittest
+from support import html5lib_test_files
 
 #RELEASE remove
-if __name__ == '__main__':
-    # XXX Allow us to import the sibling module
-    os.chdir(os.path.split(os.path.abspath(__file__))[0])
-    sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
-
 import inputstream
 #END RELEASE
 
@@ -17,12 +11,12 @@ import inputstream
 #from html5lib import inputstream
 #END RELEASE
 
-import re, glob, unittest, inputstream
+import re, unittest, inputstream
 
 class Html5EncodingTestCase(unittest.TestCase): pass
 
 def buildTestSuite():
-    for filename in glob.glob("encoding/*.dat"):
+    for filename in html5lib_test_files("encoding"):
         test_name = os.path.basename(filename).replace('.dat',''). \
             replace('-','')
         for idx,(data,encoding) in enumerate(re.compile(
@@ -37,7 +31,7 @@ def buildTestSuite():
     try:
         import chardet
         def test_chardet(self):
-            data = open("encoding/chardet/test_big5.txt").read()
+            data = open("../testdata/encoding/chardet/test_big5.txt").read()
             encoding = inputstream.HTMLInputStream(data).charEncoding
             assert encoding.lower() == "big5"
         setattr(Html5EncodingTestCase, 'test_chardet', test_chardet)
