@@ -720,13 +720,17 @@ class InBodyPhase(Phase):
         stopNames = {"li":("li"), "dd":("dd", "dt"), "dt":("dd", "dt")}
         stopName = stopNames[name]
         # AT Use reversed in Python 2.4...
+        print (self.tree.openElements[::-1])
         for i, node in enumerate(self.tree.openElements[::-1]):
             if node.name in stopName:
+                poppedNodes = []
                 for j in range(i+1):
-                    self.tree.openElements.pop()
-                if i > 1:
-                    self.parser.parseError("Unexpected %s as descendant of %s"%
-                                           (name, name))
+                    poppedNodes.append(self.tree.openElements.pop())
+                if i >= 1:
+                    self.parser.parseError("Missing end tag%s (%s)"%
+                                           (i > 1 and "(s)" or "",
+                                            ", ".join([item.name for item in
+                                                       poppedNodes[:-1]])))
                 break
         
 
