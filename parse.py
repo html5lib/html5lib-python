@@ -46,11 +46,16 @@ def parse():
     else:
         p = html5parser.HTMLParser(tree=treebuilder)
 
+    if opts.fragment:
+        parseMethod = p.parseFragment
+    else:
+        parseMethod = p.parse
+
     if opts.profile:
         import hotshot
         import hotshot.stats
         prof = hotshot.Profile('stats.prof')
-        prof.runcall(p.parse, f)
+        prof.runcall(parseMethod, f)
         prof.close()
         # XXX - We should use a temp file here
         stats = hotshot.stats.load('stats.prof')
@@ -60,13 +65,13 @@ def parse():
     elif opts.time:
         import time
         t0 = time.time()
-        document = p.parse(f)
+        document = parseMethod(f)
         t1 = time.time()
         printOutput(p, document, opts)
         t2 = time.time()
         sys.stdout.write("\n\nRun took: %fs (plus %fs to print the output)"%(t1-t0, t2-t1))
     else:
-        document = p.parse(f)
+        document = parseMethod(f)
         printOutput(p, document, opts)
 
 def printOutput(parser, document, opts):
@@ -82,12 +87,15 @@ def printOutput(parser, document, opts):
         elif opts.hilite:
             sys.stdout.write(document.hilite("utf-8"))
         else:
-            sys.stdout.write(parser.tree.testSerializer(document).encode("utf-8"))
+            print document
+            if not hasattr(document,'__iter__'): document = [document]
+            for fragment in document:
+                print parser.tree.testSerializer(fragment).encode("utf-8")
     if opts.error:
         errList=[]
         for pos, message in parser.errors:
             errList.append("Line %i Col %i"%pos + " " + message)
-        sys.stderr.write("\nParse errors:\n" + "\n".join(errList)+"\n")
+        sys.stdout.write("\nParse errors:\n" + "\n".join(errList)+"\n")
 
 def getOptParser():
     parser = OptionParser(usage=__doc__)
@@ -108,6 +116,9 @@ def getOptParser():
 
     parser.add_option("-e", "--error", action="store_true", default=False,
                       dest="error", help="Print a list of parse errors")
+
+    parser.add_option("-f", "--fragment", action="store_true", default=False,
+                      dest="fragment", help="Parse as a fragment")
 
     parser.add_option("-x", "--xml", action="store_true", default=False,
                       dest="xml", help="Output as xml")
