@@ -87,8 +87,7 @@ def printOutput(parser, document, opts):
         elif opts.hilite:
             sys.stdout.write(document.hilite("utf-8"))
         else:
-            print document
-            if not hasattr(document,'__iter__'): document = [document]
+            if not hasattr(document,'__getitem__'): document = [document]
             for fragment in document:
                 print parser.tree.testSerializer(fragment).encode("utf-8")
     if opts.error:

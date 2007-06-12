@@ -162,7 +162,7 @@ def main():
     if '-p' in sys.argv: # suppress check for parse errors
         sys.argv.remove('-p')
         global checkParseErrors
-        checkParseErrors = False
+        checkParseErrors = True
        
     buildTestSuite()
     unittest.main()
