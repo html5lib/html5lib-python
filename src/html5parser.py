@@ -720,7 +720,6 @@ class InBodyPhase(Phase):
         stopNames = {"li":("li"), "dd":("dd", "dt"), "dt":("dd", "dt")}
         stopName = stopNames[name]
         # AT Use reversed in Python 2.4...
-        print (self.tree.openElements[::-1])
         for i, node in enumerate(self.tree.openElements[::-1]):
             if node.name in stopName:
                 poppedNodes = []
