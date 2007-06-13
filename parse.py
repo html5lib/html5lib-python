@@ -77,19 +77,22 @@ def parse():
 def printOutput(parser, document, opts):
     if opts.encoding:
         print "Encoding:", parser.tokenizer.stream.charEncoding
-    if not opts.no_tree:
-        if opts.xml:
-            sys.stdout.write(document.toxml("utf-8"))
-        elif opts.html:
-            tokens = treewalkers.getTreeWalker(opts.treebuilder)(document)
-            for text in serializer.HTMLSerializer().serialize(tokens, encoding='utf-8'):
-                sys.stdout.write(text)
-        elif opts.hilite:
-            sys.stdout.write(document.hilite("utf-8"))
-        else:
-            if not hasattr(document,'__getitem__'): document = [document]
-            for fragment in document:
-                print parser.tree.testSerializer(fragment).encode("utf-8")
+    if opts.xml:
+        sys.stdout.write(document.toxml("utf-8"))
+    elif opts.tree:
+        if not hasattr(document,'__getitem__'): document = [document]
+        for fragment in document:
+            print parser.tree.testSerializer(fragment).encode("utf-8")
+    elif opts.hilite:
+        sys.stdout.write(document.hilite("utf-8"))
+    elif opts.html:
+        kwargs = {}
+        for opt in ['inject_meta_charset', 'strip_whitespace', 'sanitize',
+                    'omit_optional_tags']:
+            kwargs[opt] = getattr(opts,opt)
+        tokens = treewalkers.getTreeWalker(opts.treebuilder)(document)
+        for text in serializer.HTMLSerializer(**kwargs).serialize(tokens, encoding='utf-8'):
+            sys.stdout.write(text)
     if opts.error:
         errList=[]
         for pos, message in parser.errors:
@@ -107,9 +110,6 @@ def getOptParser():
                       action="store_true", default=False, dest="time",
                       help="Time the run using time.time (may not be accurate on all platforms, especially for short runs)")
     
-    parser.add_option("", "--no-tree", action="store_true", default=False,
-                      dest="no_tree", help="Do not print output tree")
-    
     parser.add_option("-b", "--treebuilder", action="store", type="string",
                       dest="treebuilder", default="simpleTree")
 
@@ -119,17 +119,36 @@ def getOptParser():
     parser.add_option("-f", "--fragment", action="store_true", default=False,
                       dest="fragment", help="Parse as a fragment")
 
+    parser.add_option("", "--tree", action="store_true", default=False,
+                      dest="tree", help="Output as debug tree")
+    
     parser.add_option("-x", "--xml", action="store_true", default=False,
                       dest="xml", help="Output as xml")
     
-    parser.add_option("", "--html", action="store_true", default=False,
-                      dest="html", help="Output as html")
+    parser.add_option("", "--no-html", action="store_false", default=True,
+                      dest="html", help="Don't output html")
     
     parser.add_option("", "--hilite", action="store_true", default=False,
                       dest="hilite", help="Output as formatted highlighted code.")
     
     parser.add_option("-c", "--encoding", action="store_true", default=False,
                       dest="encoding", help="Print character encoding used")
+
+    parser.add_option("", "--inject-meta-charset", action="store_true",
+                      default=False, dest="inject_meta_charset",
+                      help="inject <meta charset>")
+
+    parser.add_option("", "--strip-whitespace", action="store_true",
+                      default=False, dest="strip_whitespace",
+                      help="strip whitespace")
+
+    parser.add_option("", "--omit-optional-tags", action="store_true",
+                      default=False, dest="omit_optional_tags",
+                      help="omit-optional-tags")
+
+    parser.add_option("", "--sanitize", action="store_true", default=False,
+                      dest="sanitize", help="sanitize")
+
     return parser
 
 if __name__ == "__main__":
