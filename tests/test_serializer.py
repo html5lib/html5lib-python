@@ -53,9 +53,9 @@ class TestCase(unittest.TestCase):
             self.fail("Expected: %s, Received: %s" % (expected, result))
 
     def serialize_html(self, input, options):
-        return u''.join(serializer.HTMLSerializer( \
-            **dict([(str(k),v) for k,v in options.iteritems()])).
-                serialize(JsonWalker(input)))
+        options = dict([(str(k),v) for k,v in options.iteritems()])
+        return u''.join(serializer.HTMLSerializer(**options).
+                serialize(JsonWalker(input),options.get("encoding",None)))
 
 def test_serializer():
     for filename in html5lib_test_files('serializer', '*.test'):
