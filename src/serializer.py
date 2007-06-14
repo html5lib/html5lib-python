@@ -9,6 +9,7 @@ _ = gettext.gettext
 
 from filters.whitespace import Filter as WhitespaceFilter
 from filters.optionaltags import Filter as OptionalTagFilter
+from filters.inject_meta_charset import Filter as InjectMetaCharsetFilter
 
 from constants import voidElements, booleanAttributes, spaceCharacters
 
@@ -83,7 +84,7 @@ class HTMLSerializer(object):
         in_cdata = False
         self.errors = []
         if encoding and self.inject_meta_charset:
-            treewalker = self.filter_inject_meta_charset(treewalker, encoding)
+            treewalker = InjectMetaCharsetFilter(treewalker, encoding)
         # XXX: WhitespaceFilter should be used before OptionalTagFilter
         # for maximum efficiently of this latter filter
         if self.strip_whitespace:
@@ -205,15 +206,6 @@ class HTMLSerializer(object):
         self.errors.append(data)
         if self.strict:
             raise SerializeError
-
-    def filter_inject_meta_charset(self, treewalker, encoding):
-        done = False
-        for token in treewalker:
-            if not done and token["type"] == "StartTag" \
-              and token["name"].lower() == "head":
-                yield {"type": "EmptyTag", "name": "meta", \
-                    "data": {"charset": encoding}}
-            yield token
 
 def SerializeError(Exception):
     """Error in serialized tree"""
