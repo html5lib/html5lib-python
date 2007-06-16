@@ -56,7 +56,7 @@ except ImportError:
     pass
 
 #Run the parse error checks
-checkParseErrors = False
+checkParseErrors = False # TODO
 
 def parseTestcase(testString):
     testString = testString.split("\n")
