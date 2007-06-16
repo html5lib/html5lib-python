@@ -1,3 +1,4 @@
+import os
 import sys
 import StringIO
 import unittest
@@ -218,38 +219,38 @@ class TestCase(unittest.TestCase):
             output = convertTokens(LintFilter(treeClass["walker"](document)))
             output = attrlist.sub(sortattrs, output)
             expected = attrlist.sub(sortattrs, expected)
-            errorMsg = "\n".join(["\n\nExpected:", expected,
-                                     "\nRecieved:", output])
-            self.assertEquals(expected, output, errorMsg)
+            self.assertEquals(expected, output, "\n".join([
+                "", "Input:", input,
+                "", "Expected:", expected,
+                "", "Recieved:", output
+            ]))
         except LintError, le:
             self.fail(le.message)
         except NotImplementedError:
             pass # Amnesty for those that confess...
 
-def test_treewalker():
+def buildTestSuite():
     sys.stdout.write('Testing tree walkers '+ " ".join(treeTypes.keys()) + "\n")
 
-    for name, cls in treeTypes.iteritems():
+    for treeName, treeCls in treeTypes.iteritems():
         for filename in html5lib_test_files('tree-construction'):
+            testName = os.path.basename(filename).replace(".dat","")
+            if testName == "tests5": continue # TODO
+
             f = open(filename)
             tests = f.read().split("#data\n")
-            for test in tests:
-                if test == "":
-                    continue
+
+            for index, test in enumerate(tests):
+                if test == "": continue
                 test = "#data\n" + test
                 innerHTML, input, expected, errors = parseTestcase(test)
-                yield TestCase.runTest, innerHTML, input, expected, errors, name, cls
 
-def buildTestSuite():
-    tests = 0
-    for func, innerHTML, input, expected, errors, treeName, treeCls in test_treewalker():
-        tests += 1
-        testName = 'test%d' % tests
-        def testFunc(self, method=func, innerHTML=innerHTML, input=input,
-            expected=expected, errors=errors, treeCls=treeCls):
-            method(self, innerHTML, input, expected, errors, treeCls)
-        testFunc.__doc__ = 'Parser %s Tree %s Input: %s'%(testName, treeName, input)
-        setattr(TestCase, testName, testFunc)
+                def testFunc(self, innerHTML=innerHTML, input=input,
+                    expected=expected, errors=errors, treeCls=treeCls):
+                    self.runTest(innerHTML, input, expected, errors, treeCls)
+                setattr(TestCase, "test_%s_%d_%s" % (testName,index+1,treeName),
+                     testFunc)
+
     return unittest.TestLoader().loadTestsFromTestCase(TestCase)
 
 def main():

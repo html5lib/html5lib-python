@@ -1,3 +1,4 @@
+import os
 import sys
 import StringIO
 import unittest
@@ -133,27 +134,30 @@ class TestCase(unittest.TestCase):
             self.assertEquals(len(p.errors), len(errors), errorMsg2)
 
 def test_parser():
-    sys.stdout.write('Testing tree builders '+ " ".join(treeTypes.keys()) + "\n")
-    for name, cls in treeTypes.iteritems():
-        for filename in html5lib_test_files('tree-construction'):
-            f = open(filename)
-            tests = f.read().split("#data\n")
-            for test in tests:
-                if test == "":
-                    continue
-                test = "#data\n" + test
-                innerHTML, input, expected, errors = parseTestcase(test)
-                yield TestCase.runParserTest, innerHTML, input, expected, errors, name, cls
+                yield innerHTML, input, expected, errors, treeName, treeCls
 
 def buildTestSuite():
-    tests = 0
-    for func, innerHTML, input, expected, errors, treeName, treeCls in test_parser():
-        tests += 1
-        testName = 'test%d' % tests
-        testFunc = lambda self, method=func, innerHTML=innerHTML, input=input, expected=expected, \
-            errors=errors, treeCls=treeCls: method(self, innerHTML, input, expected, errors, treeCls)
-        testFunc.__doc__ = 'Parser %s Tree %s Input: %s'%(testName, treeName, input)
-        setattr(TestCase, testName, testFunc)
+    sys.stdout.write('Testing tree builders '+ " ".join(treeTypes.keys()) + "\n")
+
+    for treeName, treeCls in treeTypes.iteritems():
+        for filename in html5lib_test_files('tree-construction'):
+            testName = os.path.basename(filename).replace(".dat","")
+            if testName == "tests5": continue # TODO
+
+            f = open(filename)
+            tests = f.read().split("#data\n")
+
+            for index, test in enumerate(tests):
+                if test == "": continue
+
+                test = "#data\n" + test
+                innerHTML, input, expected, errors = parseTestcase(test)
+
+                def testFunc(self, innerHTML=innerHTML, input=input,
+                    expected=expected, errors=errors, treeCls=treeCls): 
+                    return self.runParserTest(innerHTML, input, expected, errors, treeCls)
+                setattr(TestCase, "test_%s_%d_%s" % (testName,index+1,treeName),
+                     testFunc)
     return unittest.TestLoader().loadTestsFromTestCase(TestCase)
 
 def main():
