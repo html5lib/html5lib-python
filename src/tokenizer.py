@@ -755,8 +755,10 @@ class HTMLTokenizer(object):
         if data in spaceCharacters:
             pass
         elif data == "\"":
+            self.currentToken["publicId"] = ""
             self.state = self.states["doctypePublicIdentifierDoubleQuoted"]
         elif data == "'":
+            self.currentToken["publicId"] = ""
             self.state = self.states["doctypePublicIdentifierSingleQuoted"]
         elif data == ">":
             self.tokenQueue.append({"type": "ParseError", "data":
@@ -809,8 +811,10 @@ class HTMLTokenizer(object):
         if data in spaceCharacters:
             pass
         elif data == "\"":
+            self.currentToken["systemId"] = ""
             self.state = self.states["doctypeSystemIdentifierDoubleQuoted"]
         elif data == "'":
+            self.currentToken["systemId"] = ""
             self.state = self.states["doctypeSystemIdentifierSinglequoted"]
         elif data == ">":
             self.tokenQueue.append(self.currentToken)
@@ -831,10 +835,15 @@ class HTMLTokenizer(object):
         if data in spaceCharacters:
             pass
         elif data == "\"":
+            self.currentToken["systemId"] = ""
             self.state = self.states["doctypeSystemIdentifierDoubleQuoted"]
         elif data == "'":
+            self.currentToken["systemId"] = ""
             self.state = self.states["doctypeSystemIdentifierSinglequoted"]
         elif data == ">":
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected character in DOCTYPE.")})
+            self.currentToken["correct"] = False
             self.tokenQueue.append(self.currentToken)
             self.state = self.states["data"]
         elif data == EOF:
