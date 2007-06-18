@@ -3,14 +3,14 @@
 # * Phases and insertion modes are one concept in parser.py.
 # * EOF handling is slightly different to make sure <html>, <head> and <body>
 #   always exist.
-# * We also deal with content when there's no DOCTYPE.
-# It is expected that the specification will catch up with us in due course ;-)
+# * </br> creates a <br> element.
+#
+# We haven't updated DOCTYPE and entity handling yet.
 #
 # It should be trivial to add the following cases. However, we should probably
 # also look into comment handling and such then...
 # * A <p> element end tag creates an empty <p> element when there's no <p>
 #   element in scope.
-# * A <br> element end tag creates an empty <br> element.
 
 try:
     frozenset
@@ -395,7 +395,8 @@ class BeforeHeadPhase(Phase):
         self.startTagHandler.default = self.startTagOther
 
         self.endTagHandler = utils.MethodDispatcher([
-            ("html", self.endTagHtml)
+            ("html", self.endTagHtml),
+            ("br", self.endTagEmptyElement)
         ])
         self.endTagHandler.default = self.endTagOther
 
@@ -420,6 +421,10 @@ class BeforeHeadPhase(Phase):
         self.startTagHead("head", {})
         self.parser.phase.processEndTag(name)
 
+    def endTagEmptyElement(self, name):
+        self.startTagHead("head", {})
+        self.parser.phase.processEndTag(name)
+
     def endTagOther(self, name):
         self.parser.parseError(_("Unexpected end tag (" + name +\
           ") after the (implied) root element."))
@@ -441,6 +446,7 @@ class InHeadPhase(Phase):
         self. endTagHandler = utils.MethodDispatcher([
             ("head", self.endTagHead),
             ("html", self.endTagHtml),
+            ("br", self.endTagEmptyElement),
             (("title", "style", "script"), self.endTagTitleStyleScript)
         ])
         self.endTagHandler.default = self.endTagOther
@@ -526,6 +532,10 @@ class InHeadPhase(Phase):
             self.parser.parseError(_(u"Unexpected end tag (" + name +\
               "). Ignored."))
 
+    def endTagEmptyElement(self, name):
+        self.anythingElse()
+        self.parser.phase.processEndTag(name)
+    
     def endTagOther(self, name):
         self.parser.parseError(_(u"Unexpected end tag (" + name +\
           "). Ignored."))
@@ -645,7 +655,8 @@ class InBodyPhase(Phase):
             (("head", "frameset", "select", "optgroup", "option", "table",
               "caption", "colgroup", "col", "thead", "tfoot", "tbody", "tr",
               "td", "th"), self.endTagMisplaced),
-            (("area", "basefont", "bgsound", "br", "embed", "hr", "image",
+            ("br", self.endTagBr),
+            (("area", "basefont", "bgsound", "embed", "hr", "image",
               "img", "input", "isindex", "param", "spacer", "wbr", "frame"),
               self.endTagNone),
             (("noframes", "noscript", "noembed", "textarea", "xmp", "iframe"),
@@ -1097,6 +1108,12 @@ class InBodyPhase(Phase):
         self.parser.parseError(_(u"Unexpected end tag (" + name +\
           u"). Ignored."))
 
+    def endTagBr(self, name):
+        self.parser.parseError(_(u"Unexpected end tag (br). Treated as br element."))
+        self.tree.reconstructActiveFormattingElements()
+        self.tree.insertElement(name, {})
+        self.tree.openElements.pop()
+
     def endTagNone(self, name):
         # This handles elements with no end tag.
         self.parser.parseError(_(u"This tag (" + name + u") has no end tag"))
@@ -1239,10 +1256,10 @@ class InTablePhase(Phase):
         self.parser.parseError(_(u"Unexpected end tag (" + name + u") in "
           u"table context caused voodoo mode."))
         # Make all the special element rearranging voodoo kick in
-        self.parser.insertFromTable = True
+        self.tree.insertFromTable = True
         # Process the end tag in the "in body" mode
         self.parser.phases["inBody"].processEndTag(name)
-        self.parser.insertFromTable = False
+        self.tree.insertFromTable = False
 
 
 class InCaptionPhase(Phase):
