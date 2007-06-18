@@ -825,7 +825,7 @@ class InBodyPhase(Phase):
                     poppedNodes.append(self.tree.openElements.pop())
                 if i >= 1:
                     self.parser.parseError("Missing end tag%s (%s)"%
-                                           (i > 1 and "(s)" or "",
+                                           (i > 1 and "s" or "",
                                             ", ".join([item.name for item in
                                                        poppedNodes[:-1]])))
                 break
