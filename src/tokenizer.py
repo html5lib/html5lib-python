@@ -735,8 +735,8 @@ class HTMLTokenizer(object):
             self.tokenQueue.append(self.currentToken)
             self.state = self.states["data"]
         else:
-            charStack = []
-            for x in xrange(6):
+            charStack = [data]  
+            for x in xrange(5):
                 charStack.append(self.stream.char())
             if EOF not in charStack and\
               "".join(charStack).translate(asciiUpper2Lower) == "public":
@@ -816,7 +816,7 @@ class HTMLTokenizer(object):
             self.state = self.states["doctypeSystemIdentifierDoubleQuoted"]
         elif data == "'":
             self.currentToken["systemId"] = ""
-            self.state = self.states["doctypeSystemIdentifierSinglequoted"]
+            self.state = self.states["doctypeSystemIdentifierSingleQuoted"]
         elif data == ">":
             self.tokenQueue.append(self.currentToken)
             self.state = self.states["data"]
@@ -833,6 +833,7 @@ class HTMLTokenizer(object):
         return True
     
     def beforeDoctypeSystemIdentifierState(self):
+        data = self.stream.char()
         if data in spaceCharacters:
             pass
         elif data == "\"":
@@ -840,7 +841,7 @@ class HTMLTokenizer(object):
             self.state = self.states["doctypeSystemIdentifierDoubleQuoted"]
         elif data == "'":
             self.currentToken["systemId"] = ""
-            self.state = self.states["doctypeSystemIdentifierSinglequoted"]
+            self.state = self.states["doctypeSystemIdentifierSingleQuoted"]
         elif data == ">":
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Unexpected character in DOCTYPE.")})
