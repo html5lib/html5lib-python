@@ -34,6 +34,10 @@ for tag_name in sanitizer.HTMLSanitizer.allowed_elements:
         SanitizeTest.addTest("test_should_allow_%s_tag" % tag_name,
           "<img title=\"1\"/>foo &lt;bad&gt;bar&lt;/bad&gt; baz",
           "<%s title='1'>foo <bad>bar</bad> baz</%s>" % (tag_name,tag_name))
+    elif tag_name == 'br':
+        SanitizeTest.addTest("test_should_allow_%s_tag" % tag_name,
+          "<br title=\"1\"/>foo &lt;bad&gt;bar&lt;/bad&gt; baz<br/>",
+          "<%s title='1'>foo <bad>bar</bad> baz</%s>" % (tag_name,tag_name))
     elif tag_name in constants.voidElements:
         SanitizeTest.addTest("test_should_allow_%s_tag" % tag_name,
           "<%s title=\"1\"/>foo &lt;bad&gt;bar&lt;/bad&gt; baz" % tag_name,
