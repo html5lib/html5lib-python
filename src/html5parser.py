@@ -116,10 +116,12 @@ class HTMLParser(object):
             method = getattr(self.phase, "process%s" % type, None)
             if type in ("Characters", "SpaceCharacters", "Comment"):
                 method(token["data"])
-            elif type in ("StartTag", "Doctype"):
+            elif type == "StartTag":
                 method(token["name"], token["data"])
             elif type == "EndTag":
                 method(token["name"])
+            elif type == "Doctype":
+                method(token["name"], token["publicId"], token["systemId"], token["correct"])
             else:
                 self.parseError(token["data"])
 
@@ -161,10 +163,6 @@ class HTMLParser(object):
         if self.strict:
             raise ParseError
 
-    def atheistParseError(self):
-        """This error is not an error"""
-        pass
-
     def normalizeToken(self, token):
         """ HTML5 specific normalizations to the token stream """
 
@@ -174,9 +172,7 @@ class HTMLParser(object):
             # element.  If it matches a void element atheists did the wrong
             # thing and if it doesn't it's wrong for everyone.
 
-            if token["name"] in voidElements:
-                self.atheistParseError()
-            else:
+            if token["name"] not in voidElements:
                 self.parseError(_("Solidus (/) incorrectly placed in tag."))
 
             token["type"] = "StartTag"
@@ -286,7 +282,7 @@ class Phase(object):
         # overridden.
         self.tree.insertComment(data, self.tree.openElements[-1])
 
-    def processDoctype(self, name, error):
+    def processDoctype(self, name, publicId, systemId, correct):
         self.parser.parseError(_("Unexpected DOCTYPE. Ignored."))
 
     def processSpaceCharacters(self, data):
@@ -322,9 +318,11 @@ class InitialPhase(Phase):
     def processComment(self, data):
         self.tree.insertComment(data, self.tree.document)
 
-    def processDoctype(self, name, error):
-        if error:
+    def processDoctype(self, name, publicId, systemId, correct):
+        if name.translate(asciiUpper2Lower) != "html" or publicId != None or\
+          systemId != None:
             self.parser.parseError(_("Erroneous DOCTYPE."))
+        # XXX need to check quirks mode here
         self.tree.insertDoctype(name)
         self.parser.phase = self.parser.phases["rootElement"]
 

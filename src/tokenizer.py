@@ -608,8 +608,8 @@ class HTMLTokenizer(object):
             # Put in explicit EOF check
             if (not EOF in charStack and
                 "".join(charStack).upper() == u"DOCTYPE"):
-                self.currentToken = {"type":"Doctype", "name":"", "publicId":"",
-                  "systemId":"", "data":True}
+                self.currentToken = {"type":"Doctype", "name":"",
+                  "publicId":None, "systemId":None, "correct":True}
                 self.state = self.states["doctype"]
             else:
                 self.tokenQueue.append({"type": "ParseError", "data":
@@ -689,11 +689,13 @@ class HTMLTokenizer(object):
         elif data == u">":
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Unexpected > character. Expected DOCTYPE name.")})
+            self.currentToken["correct"] = False
             self.tokenQueue.append(self.currentToken)
             self.state = self.states["data"]
         elif data == EOF:
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Unexpected end of file. Expected DOCTYPE name.")})
+            self.currentToken["correct"] = False
             self.tokenQueue.append(self.currentToken)
             self.state = self.states["data"]
         else:
@@ -725,7 +727,7 @@ class HTMLTokenizer(object):
             self.tokenQueue.append(self.currentToken)
             self.state = self.states["data"]
         elif data == EOF:
-            self.currentToken["data"] = True
+            # XXX check spec ... self.currentToken["correct"] = False
             self.stream.queue.append(data)
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Unexpected end of file in DOCTYPE.")})
@@ -759,13 +761,13 @@ class HTMLTokenizer(object):
         elif data == ">":
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Unexpected end of DOCTYPE.")})
-            self.currentToken["data"] = True
+            self.currentToken["correct"] = False
             self.tokenQueue.append(self.currentToken)
             self.state = self.states["data"]
         elif data == EOF:
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Unexpected end of file in DOCTYPE.")})
-            self.currentToken["data"] = True
+            self.currentToken["correct"] = False
             self.tokenQueue.append(self.currentToken)
             self.state = self.states["data"]
         else:
@@ -781,7 +783,7 @@ class HTMLTokenizer(object):
         elif data == EOF:
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Unexpected end of file in DOCTYPE.")})
-            self.currentToken["data"] = True
+            self.currentToken["correct"] = False
             self.tokenQueue.append(self.currentToken)
             self.state = self.states["data"]
         else:
@@ -795,7 +797,7 @@ class HTMLTokenizer(object):
         elif data == EOF:
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Unexpected end of file in DOCTYPE.")})
-            self.currentToken["data"] = True
+            self.currentToken["correct"] = False
             self.tokenQueue.append(self.currentToken)
             self.state = self.states["data"]
         else:
@@ -816,7 +818,7 @@ class HTMLTokenizer(object):
         elif data == EOF:
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Unexpected end of file in DOCTYPE.")})
-            self.currentToken["data"] = True
+            self.currentToken["correct"] = False
             self.tokenQueue.append(self.currentToken)
             self.state = self.states["data"]
         else:
@@ -838,7 +840,7 @@ class HTMLTokenizer(object):
         elif data == EOF:
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Unexpected end of file in DOCTYPE.")})
-            self.currentToken["data"] = True
+            self.currentToken["correct"] = False
             self.tokenQueue.append(self.currentToken)
             self.state = self.states["data"]
         else:
@@ -854,7 +856,7 @@ class HTMLTokenizer(object):
         elif data == EOF:
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Unexpected end of file in DOCTYPE.")})
-            self.currentToken["data"] = True
+            self.currentToken["correct"] = False
             self.tokenQueue.append(self.currentToken)
             self.state = self.states["data"]
         else:
@@ -868,7 +870,7 @@ class HTMLTokenizer(object):
         elif data == EOF:
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Unexpected end of file in DOCTYPE.")})
-            self.currentToken["data"] = True
+            self.currentToken["correct"] = False
             self.tokenQueue.append(self.currentToken)
             self.state = self.states["data"]
         else:
@@ -885,7 +887,7 @@ class HTMLTokenizer(object):
         elif data == EOF:
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Unexpected end of file in DOCTYPE.")})
-            self.currentToken["data"] = True
+            self.currentToken["correct"] = False
             self.tokenQueue.append(self.currentToken)
             self.state = self.states["data"]
         else:
@@ -896,7 +898,7 @@ class HTMLTokenizer(object):
 
     def bogusDoctypeState(self):
         data = self.stream.char()
-        self.currentToken["data"] = True
+        self.currentToken["correct"] = False
         if data == u">":
             self.tokenQueue.append(self.currentToken)
             self.state = self.states["data"]
