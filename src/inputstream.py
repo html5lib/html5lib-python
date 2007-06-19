@@ -202,11 +202,17 @@ class HTMLInputStream(object):
         # Put the character stopped on back to the front of the queue
         # from where it came.
         c = charStack.pop()
-        if c != EOF and self.tell <= len(self.dataStream) and \
-          self.dataStream[self.tell - 1] == c[0]:
-            self.tell -= 1
-        else:
-            self.queue.insert(0, c)
+        self.queue.insert(0, c)
+        
+        # XXX the following is need for correct line number reporting apparently
+        # but it causes to break other tests with the fixes in tokenizer. I have
+        # no idea why...
+        #
+        #if c != EOF and self.tell <= len(self.dataStream) and \
+        #  self.dataStream[self.tell - 1] == c[0]:
+        #    self.tell -= 1
+        #else:
+        #    self.queue.insert(0, c)
         return "".join(charStack)
 
 class EncodingBytes(str):

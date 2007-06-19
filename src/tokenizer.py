@@ -70,6 +70,8 @@ class HTMLTokenizer(object):
 
         # Setup the initial tokenizer state
         self.contentModelFlag = contentModelFlags["PCDATA"]
+        self.escapeFlag = False
+        self.lastFourChars = []
         self.state = self.states["data"]
 
         # The current token being created
@@ -273,12 +275,30 @@ class HTMLTokenizer(object):
 
     def dataState(self):
         data = self.stream.char()
-        if data == u"&" and self.contentModelFlag in\
+        if self.contentModelFlag in\
+          (contentModelFlags["CDATA"], contentModelFlags["RCDATA"]):
+            if len(self.lastFourChars) == 4:
+                self.lastFourChars.pop(0)
+            self.lastFourChars.append(data)
+        if data == "&" and self.contentModelFlag in\
           (contentModelFlags["PCDATA"], contentModelFlags["RCDATA"]):
             self.state = self.states["entityData"]
-        elif data == u"<" and self.contentModelFlag !=\
-          contentModelFlags["PLAINTEXT"]:
+        elif data == "-" and self.contentModelFlag in\
+          (contentModelFlags["CDATA"], contentModelFlags["RCDATA"]) and\
+          self.escapeFlag == False and\
+          "".join(self.lastFourChars) == "<!--":
+            self.escapeFlag = True
+            self.tokenQueue.append({"type": "Characters", "data":data})
+        elif data == "<" and (self.contentModelFlag ==\
+          contentModelFlags["PCDATA"] or (self.contentModelFlag in
+          (contentModelFlags["CDATA"], contentModelFlags["RCDATA"]) and\
+          self.escapeFlag == False)):
             self.state = self.states["tagOpen"]
+        elif data == ">" and self.contentModelFlag in\
+          (contentModelFlags["CDATA"], contentModelFlags["RCDATA"]) and\
+          self.escapeFlag == True and "".join(self.lastFourChars)[1:] == "-->":
+            self.escapeFlag = False
+            self.tokenQueue.append({"type": "Characters", "data":data})
         elif data == EOF:
             # Tokenization ends.
             return False
@@ -292,7 +312,7 @@ class HTMLTokenizer(object):
               data + self.stream.charsUntil(spaceCharacters, True)})
         else:
             self.tokenQueue.append({"type": "Characters", "data": 
-              data + self.stream.charsUntil((u"&", u"<"))})
+              data + self.stream.charsUntil(("&", "<", ">", "-"))})
         return True
 
     def entityDataState(self):
