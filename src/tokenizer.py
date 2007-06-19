@@ -379,8 +379,6 @@ class HTMLTokenizer(object):
                 # emitting the end tag token.
                 self.contentModelFlag = contentModelFlags["PCDATA"]
             else:
-                self.tokenQueue.append({"type": "ParseError", "data":
-                  _("Expected closing tag after seeing '</'. None found.")})
                 self.tokenQueue.append({"type": "Characters", "data": u"</"})
                 self.state = self.states["data"]
 
@@ -388,27 +386,25 @@ class HTMLTokenizer(object):
                 # method to be walked through.
                 return True
 
-        if self.contentModelFlag == contentModelFlags["PCDATA"]:
-            data = self.stream.char()
-            if data in asciiLetters:
-                self.currentToken =\
-                  {"type": "EndTag", "name": data, "data": []}
-                self.state = self.states["tagName"]
-            elif data == u">":
-                self.tokenQueue.append({"type": "ParseError", "data":
-                  _("Expected closing tag. Got '>' instead. Ignoring '</>'.")})
-                self.state = self.states["data"]
-            elif data == EOF:
-                self.tokenQueue.append({"type": "ParseError", "data":
-                  _("Expected closing tag. Unexpected end of file.")})
-                self.tokenQueue.append({"type": "Characters", "data": u"</"})
-                self.state = self.states["data"]
-            else:
-                # XXX data can be _'_...
-                self.tokenQueue.append({"type": "ParseError", "data":
-                  _("Expected closing tag. Unexpected character '" + data + "' found.")})
-                self.stream.queue.append(data)
-                self.state = self.states["bogusComment"]
+        data = self.stream.char()
+        if data in asciiLetters:
+            self.currentToken = {"type":"EndTag", "name":data, "data":[]}
+            self.state = self.states["tagName"]
+        elif data == u">":
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Expected closing tag. Got '>' instead. Ignoring '</>'.")})
+            self.state = self.states["data"]
+        elif data == EOF:
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Expected closing tag. Unexpected end of file.")})
+            self.tokenQueue.append({"type": "Characters", "data": u"</"})
+            self.state = self.states["data"]
+        else:
+            # XXX data can be _'_...
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Expected closing tag. Unexpected character '" + data + "' found.")})
+            self.stream.queue.append(data)
+            self.state = self.states["bogusComment"]
         return True
 
     def tagNameState(self):

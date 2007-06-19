@@ -1,4 +1,5 @@
-import sys, hotshot, hotshot.stats
+import sys
+#import hotshot, hotshot.stats
 import os
 
 if __name__ == '__main__':
