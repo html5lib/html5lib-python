@@ -1,5 +1,4 @@
 import sys
-#import hotshot, hotshot.stats
 import os
 
 if __name__ == '__main__':
@@ -21,6 +20,7 @@ if __name__ == "__main__":
     x = HTMLParser()
     if len(sys.argv) > 1:
         if len(sys.argv) > 2:
+            import hotshot, hotshot.stats
             prof = hotshot.Profile('stats.prof')
             prof.runcall(x.parse, sys.argv[1], False)
             prof.close()

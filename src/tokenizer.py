@@ -205,7 +205,6 @@ class HTMLTokenizer(object):
                     self.stream.queue.extend(charStack)
                     self.tokenQueue.append({"type": "ParseError", "data":
                       _("Numeric entity expected but none found.")})
-        # Break out if we reach the end of the file
         else:
             # At this point in the process might have named entity. Entities
             # are stored in the global variable "entities".
