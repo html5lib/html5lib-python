@@ -142,7 +142,6 @@ def buildTestSuite():
     for treeName, treeCls in treeTypes.iteritems():
         for filename in html5lib_test_files('tree-construction'):
             testName = os.path.basename(filename).replace(".dat","")
-            if testName == "tests5": continue # TODO
 
             f = open(filename)
             tests = f.read().split("#data\n")
