@@ -26,9 +26,8 @@ except:
     import re
     class simplejson:
         def load(f):
-            true, false = True, False
+            true, false, null = True, False, None
             input = re.sub(r'(".*?(?<!\\)")',r'u\1',f.read().decode('utf-8'))
-            input = input.replace('null', 'None')
             return eval(input.replace('\r',''))
         load = staticmethod(load)
 
