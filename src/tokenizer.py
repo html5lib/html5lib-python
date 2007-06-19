@@ -50,8 +50,10 @@ class HTMLTokenizer(object):
             "attributeValueUnQuoted":self.attributeValueUnQuotedState,
             "bogusComment":self.bogusCommentState,
             "markupDeclarationOpen":self.markupDeclarationOpenState,
+            "commentStart":self.commentStartState,
+            "commentStartDash":self.commentStartDashState,
             "comment":self.commentState,
-            "commentDash":self.commentDashState,
+            "commentEndDash":self.commentEndDashState,
             "commentEnd":self.commentEndState,
             "doctype":self.doctypeState,
             "beforeDoctypeName":self.beforeDoctypeNameState,
@@ -616,7 +618,7 @@ class HTMLTokenizer(object):
         charStack = [self.stream.char(), self.stream.char()]
         if charStack == [u"-", u"-"]:
             self.currentToken = {"type": "Comment", "data": ""}
-            self.state = self.states["comment"]
+            self.state = self.states["commentStart"]
         else:
             for x in xrange(5):
                 charStack.append(self.stream.char())
@@ -633,10 +635,49 @@ class HTMLTokenizer(object):
                 self.state = self.states["bogusComment"]
         return True
 
+    def commentStartState(self):
+        data = self.stream.char()
+        if data == "-":
+            self.state = self.states["commentStartDash"]
+        elif data == ">":
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Incorrect comment.")})
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.states["data"]
+        elif data == EOF:
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected end of file in comment.")})
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.states["data"]
+        else:
+            self.currentToken["data"] += data + self.stream.charsUntil(u"-")
+            self.state = self.states["comment"]
+        return True
+    
+    def commentStartDashState(self):
+        data = self.stream.char()
+        if data == "-":
+            self.state = self.states["commentEnd"]
+        elif data == ">":
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Incorrect comment.")})
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.states["data"]
+        elif data == EOF:
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Unexpected end of file in comment.")})
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.states["data"]
+        else:
+            self.currentToken["data"] += data + self.stream.charsUntil(u"-")
+            self.state = self.states["comment"]
+        return True
+
+    
     def commentState(self):
         data = self.stream.char()
         if data == u"-":
-            self.state = self.states["commentDash"]
+            self.state = self.states["commentEndDash"]
         elif data == EOF:
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Unexpected end of file in comment.")})
@@ -646,7 +687,7 @@ class HTMLTokenizer(object):
             self.currentToken["data"] += data + self.stream.charsUntil(u"-")
         return True
 
-    def commentDashState(self):
+    def commentEndDashState(self):
         data = self.stream.char()
         if data == u"-":
             self.state = self.states["commentEnd"]
