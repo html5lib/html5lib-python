@@ -90,8 +90,11 @@ def printOutput(parser, document, opts):
     elif opts.html:
         kwargs = {}
         for opt in ['inject_meta_charset', 'strip_whitespace', 'sanitize',
-                    'omit_optional_tags']:
+                    'omit_optional_tags', 'quote_attr_values', 'quote_char',
+                    'use_best_quote_char', 'minimize_boolean_attributes',
+                    'use_trailing_solidus']:
             kwargs[opt] = getattr(opts,opt)
+        if not kwargs['quote_char']: del kwargs['quote_char']
         tokens = treewalkers.getTreeWalker(opts.treebuilder)(document)
         for text in serializer.HTMLSerializer(**kwargs).serialize(tokens, encoding='utf-8'):
             sys.stdout.write(text)
@@ -146,7 +149,28 @@ def getOptParser():
 
     parser.add_option("", "--omit-optional-tags", action="store_true",
                       default=False, dest="omit_optional_tags",
-                      help="omit-optional-tags")
+                      help="omit optional tags")
+
+    parser.add_option("", "--quote-attr-values", action="store_true",
+                      default=False, dest="quote_attr_values",
+                      help="quote attribute values")
+
+    parser.add_option("", "--use_best_quote_char", action="store_true",
+                      default=False, dest="use_best_quote_char",
+                      help="use best quote character")
+
+    parser.add_option("", "--quote-char", action="store",
+                      default=None, dest="quote_char",
+                      help="quote character")
+
+    parser.add_option("", "--no-minimize_boolean_attributes",
+                      action="store_false", default=True,
+                      dest="minimize_boolean_attributes",
+                      help="minimize boolean attributes")
+
+    parser.add_option("", "--use-trailing-solidus", action="store_true",
+                      default=False, dest="use_trailing_solidus",
+                      help="use trailing solidus")
 
     parser.add_option("", "--sanitize", action="store_true", default=False,
                       dest="sanitize", help="sanitize")
