@@ -848,14 +848,16 @@ class InBodyPhase(Phase):
     def startTagHeading(self, name, attributes):
         if self.tree.elementInScope("p"):
             self.endTagP("p")
-        for item in headingElements:
-            if self.tree.elementInScope(item):
-                self.parser.parseError(_("Unexpected start tag (" + name +\
-                  ")."))
-                item = self.tree.openElements.pop()
-                while item.name not in headingElements:
-                    item = self.tree.openElements.pop()
-                break
+        # Uncomment the following for IE7 behavior:
+        #
+        #for item in headingElements:
+        #    if self.tree.elementInScope(item):
+        #        self.parser.parseError(_("Unexpected start tag (" + name +\
+        #          ")."))
+        #        item = self.tree.openElements.pop()
+        #        while item.name not in headingElements:
+        #            item = self.tree.openElements.pop()
+        #        break
         self.tree.insertElement(name, attributes)
 
     def startTagA(self, name, attributes):
