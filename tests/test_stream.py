@@ -49,14 +49,12 @@ class HTMLInputStreamTest(unittest.TestCase):
 
     def test_newlines(self):
         stream = HTMLInputStream(codecs.BOM_UTF8 + "a\nbb\r\nccc\rdddd")
-        self.assertEquals(stream.tell, 0)
+        self.assertEquals(stream.position(), (1, 0))
         self.assertEquals(stream.charsUntil('c'),u"a\nbb\n")
-        self.assertEquals(stream.tell, 6)
         self.assertEquals(stream.position(), (3,0))
         self.assertEquals(stream.charsUntil('x'),u"ccc\ndddd")
-        self.assertEquals(stream.tell, 14)
         self.assertEquals(stream.position(), (4,4))
-        self.assertEquals(stream.newLines, [0,1,5,9])
+        self.assertEquals(stream.lineLengths, [1,2,3])
 
 def buildTestSuite():
     return unittest.defaultTestLoader.loadTestsFromName(__name__)

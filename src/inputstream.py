@@ -47,24 +47,13 @@ class HTMLInputStream(object):
         if encoding is None or not isValidEncoding(encoding):
             encoding = self.detectEncoding(parseMeta, chardet)
         self.charEncoding = encoding
-        self.win1252 = False
 
-        # Read bytes from stream decoding them into Unicode
-        uString = self.rawStream.read()
-
-        # Convert the unicode string into a list to be used as the data stream
-        if self.charEncoding == 'windows-1252':
-            self.win1252 = True
-        else:
-            self.win1252 = False
-            uString = uString.decode(self.charEncoding, 'replace')
-
-        self.dataStream = uString
+        self.dataStream = codecs.getreader(self.charEncoding)(self.rawStream, 'replace')
 
         self.queue = []
 
-        # Reset position in the list to read from
-        self.tell = 0
+        self.line = self.col = 0
+        self.lineLengths = []
 
     def openStream(self, source):
         """Produces a file object from source.
@@ -154,15 +143,15 @@ class HTMLInputStream(object):
 
     def position(self):
         """Returns (line, col) of the current position in the stream."""
-        line = 0
-        tell = self.tell
-        for pos in self.newLines:
-            if pos < tell:
-                line += 1
+        line, col = self.line, self.col
+        for c in self.queue[::-1]:
+            if c == '\n':
+                line -= 1
+                assert col == 0
+                col = self.lineLengths[line]
             else:
-                break
-        col = tell - self.newLines[line-1] - 1
-        return (line, col)
+                col -= 1
+        return (line + 1, col)
 
     def char(self):
         """ Read one character from the stream or queue if available. Return
@@ -171,25 +160,27 @@ class HTMLInputStream(object):
         if self.queue:
             return self.queue.pop(0)
         else:
-            try:
-                c = self.dataStream[self.tell]
-                self.tell += 1
-                if self.win1252 and c >= '\x80': c=c.decode('windows-1252')
-
-                # Normalize newlines and null characters
-                if c == '\x00': c = u'\uFFFD'
-                if c == '\r':
-                    if self.tell < len(self.dataStream) and \
-                      self.dataStream[self.tell] == '\n':
-                        self.tell += 1
-                    c = '\n'
-
-                # record where newlines occur so that the position method
-                # can tell where it is
-                if c == '\n': self.newLines.append(self.tell - 1)
-                return unicode(c)
-            except:
+            c = self.dataStream.read(1, 1)
+            if not c:
+                self.col += 1
                 return EOF
+
+            # Normalize newlines and null characters
+            if c == '\x00': c = u'\uFFFD'
+            if c == '\r':
+                c = self.dataStream.read(1, 1)
+                if c != '\n':
+                    self.queue.insert(0, unicode(c))
+                c = '\n'
+
+            # update position in stream
+            if c == '\n':
+                self.lineLengths.append(self.col)
+                self.line += 1
+                self.col = 0
+            else:
+                self.col += 1
+            return unicode(c)
 
     def charsUntil(self, characters, opposite = False):
         """ Returns a string of characters from the stream up to but not
@@ -204,12 +195,19 @@ class HTMLInputStream(object):
         # Put the character stopped on back to the front of the queue
         # from where it came.
         c = charStack.pop()
-        if c != EOF and self.tell > 0 and not self.queue and \
-          self.dataStream[self.tell - 1] == c[0]:
-            self.tell -= 1
-        else:
+        if c != EOF:
             self.queue.insert(0, c)
-        return "".join(charStack)
+        
+        # XXX the following is need for correct line number reporting apparently
+        # but it causes to break other tests with the fixes in tokenizer. I have
+        # no idea why...
+        #
+        #if c != EOF and self.tell <= len(self.dataStream) and \
+        #  self.dataStream[self.tell - 1] == c[0]:
+        #    self.tell -= 1
+        #else:
+        #    self.queue.insert(0, c)
+        return u"".join(charStack)
 
 class EncodingBytes(str):
     """String-like object with an assosiated position and various extra methods
