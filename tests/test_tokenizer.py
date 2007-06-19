@@ -1,3 +1,4 @@
+import os
 import unittest
 from support import simplejson, html5lib_test_files
 
@@ -114,30 +115,24 @@ class TestCase(unittest.TestCase):
         tokens = concatenateCharacterTokens(tokens)
         errorMsg = "\n".join(["\n\nContent Model Flag:",
                               test['contentModelFlag'] ,
-                              "\nExpected:", str(output), "\nRecieved:",
-                             str(tokens)])
+                              "\nInput:", str(test['input']),
+                              "\nExpected:", str(output),
+                              "\nRecieved:", str(tokens)])
         self.assertEquals(tokensMatch(tokens, output), True, errorMsg)
 
-
-def test_tokenizer():
+def buildTestSuite():
     for filename in html5lib_test_files('tokenizer', '*.test'):
         tests = simplejson.load(file(filename))
-        for test in tests['tests']:
-            yield (TestCase.runTokenizerTest, test)
-
-def buildTestSuite():
-    tests = 0
-    for func, test in test_tokenizer():
-        if 'contentModelFlags' not in test:
-            test["contentModelFlags"] = ["PCDATA"]
-        for contentModelFlag in test["contentModelFlags"]:
-            tests += 1
-            testName = 'test%d' % tests
-            test["contentModelFlag"] = contentModelFlag
-            testFunc = lambda self, method=func, test=test: \
-                method(self, test)
-            testFunc.__doc__ = "\t".join([test['description'], str(test['input'])])
-            setattr(TestCase, testName, testFunc)
+        testName = os.path.basename(filename).replace(".test","")
+        for index,test in enumerate(tests['tests']):
+            if 'contentModelFlags' not in test:
+                test["contentModelFlags"] = ["PCDATA"]
+            for contentModelFlag in test["contentModelFlags"]:
+                test["contentModelFlag"] = contentModelFlag
+                def testFunc(self, test=test):
+                    self.runTokenizerTest(test)
+                testFunc.__doc__ = "\t".join([testName, test['description']])
+                setattr(TestCase, 'test_%s_%d' % (testName, index), testFunc)
     return unittest.TestLoader().loadTestsFromTestCase(TestCase)
 
 def main():
