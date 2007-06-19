@@ -77,6 +77,8 @@ class HTMLInputStream(object):
             stream = source
         else:
             # Otherwise treat source as a string and convert to a file object
+            if isinstance(source, unicode):
+                source = source.encode('utf-8')
             import cStringIO
             stream = cStringIO.StringIO(str(source))
         return stream
