@@ -87,7 +87,7 @@ class HTMLInputStream(object):
                 import chardet
                 buffer = self.rawStream.read()
                 encoding = chardet.detect(buffer)['encoding']
-                self.rawStream = self.openStream(buffer)
+                self.seek(buffer, 0)
             except ImportError:
                 pass
         # If all else fails use the default encoding
@@ -127,18 +127,50 @@ class HTMLInputStream(object):
                 seek = 2
 
 
-        #AT - move this to the caller?
-        # Set the read position past the BOM if one was found, otherwise
-        # set it to the start of the stream
-        self.rawStream.seek(encoding and seek or 0)
+        self.seek(string, encoding and seek or 0)
 
         return encoding
+
+    def seek(self, buffer, n):
+        """Unget buffer[n:]"""
+        if hasattr(self.rawStream, 'unget'):
+            self.rawStream.unget(buffer[n:])
+            return 
+
+        try:
+            self.rawStream.seek(n)
+        except IOError:
+            class BufferedStream:
+                 def __init__(self, data, stream):
+                     self.data = data
+                     self.stream = stream
+                 def read(self, chars=-1):
+                     if chars == -1 or chars > len(self.data):
+                         result = self.data
+                         self.data = ''
+                         if chars == -1:
+                             return result + self.stream.read()
+                         else:
+                             return result + self.stream.read(chars-len(result))
+                     elif not self.data:
+                         return self.stream.read(chars)
+                     else:
+                         result = self.data[:chars]
+                         self.data = self.data[chars:]
+                         return result
+                 def unget(self, data):
+                     if self.data:
+                         self.data += data
+                     else:
+                         self.data = data
+            self.rawStream = BufferedStream(buffer[n:], self.rawStream)
 
     def detectEncodingMeta(self):
         """Report the encoding declared by the meta element
         """
-        parser = EncodingParser(self.rawStream.read(self.numBytesMeta))
-        self.rawStream.seek(0)
+        buffer = self.rawStream.read(self.numBytesMeta)
+        parser = EncodingParser(buffer)
+        self.seek(buffer, 0)
         return parser.getEncoding()
 
     def position(self):
@@ -198,15 +230,6 @@ class HTMLInputStream(object):
         if c != EOF:
             self.queue.insert(0, c)
         
-        # XXX the following is need for correct line number reporting apparently
-        # but it causes to break other tests with the fixes in tokenizer. I have
-        # no idea why...
-        #
-        #if c != EOF and self.tell <= len(self.dataStream) and \
-        #  self.dataStream[self.tell - 1] == c[0]:
-        #    self.tell -= 1
-        #else:
-        #    self.queue.insert(0, c)
         return u"".join(charStack)
 
 class EncodingBytes(str):

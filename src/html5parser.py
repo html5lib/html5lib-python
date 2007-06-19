@@ -82,7 +82,7 @@ class HTMLParser(object):
         self.errors = []
 
         self.tokenizer = self.tokenizer_class(stream, encoding,
-                                              parseMeta=innerHTML)
+                                              parseMeta=not innerHTML)
 
         if innerHTML:
             self.innerHTML = container.lower()

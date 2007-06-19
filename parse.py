@@ -30,6 +30,8 @@ def parse():
                 import urllib
                 f = urllib.urlopen(f).read()
             except: pass
+        elif f == '-':
+            f = sys.stdin
         else:
             try:
                 # Try opening from file system
