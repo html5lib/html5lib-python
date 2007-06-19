@@ -29,7 +29,13 @@ class SAXLogger:
   def startElement(self, name, attrs):
     self.log.append(['startElement', name, dict(attrs.items())])
   def startElementNS(self, name, qname, attrs):
+    if qname is None:
+      qname = name[1]
     self.log.append(['startElementNS', name, qname, dict(attrs.items())])
+  def endElementNS(self, name, qname):
+    if qname is None:
+      qname = name[1]
+    self.log.append(['endElementNS', name, qname])
   def __getattr__(self, name):
     def function(self, *args): self.log.append([name]+list(args))
     return new.instancemethod(function, self, SAXLogger)
@@ -74,30 +80,30 @@ class SAXTest(unittest.TestCase):
 
   def test_ns(self):
     self.saxdiff(
-"""<html xmlns="http://www.w3.org/1999/xhtml">
-<head><title>XLINK</title></head>
-<body>
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-    <defs xmlns:l="http://www.w3.org/1999/xlink">
-      <radialGradient id="s1" fx=".4" fy=".2" r=".7">
-        <stop stop-color="#FE8"/>
-        <stop stop-color="#D70" offset="1"/>
-      </radialGradient>
-      <radialGradient id="s2" fx=".8" fy=".5" l:href="#s1"/>
-      <radialGradient id="s3" fx=".5" fy=".9" l:href="#s1"/>
-      <radialGradient id="s4" fx=".1" fy=".5" l:href="#s1"/>
-    </defs>
-    <g stroke="#940">
-      <path d="M73,29c-37-40-62-24-52,4l6-7c-8-16,7-26,42,9z" fill="url(#s1)"/>
-      <path d="M47,8c33-16,48,21,9,47l-6-5c38-27,20-44,5-37z" fill="url(#s2)"/>
-      <path d="M77,32c22,30,10,57-39,51l-1-8c3,3,67,5,36-36z" fill="url(#s3)"/>
+'<html xmlns="http://www.w3.org/1999/xhtml">' +
+'<head><title>XLINK</title></head>' +
+'<body>' +
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+    '<defs xmlns:l="http://www.w3.org/1999/xlink">' +
+      '<radialGradient id="s1" fx=".4" fy=".2" r=".7">' +
+        '<stop stop-color="#FE8"/>' +
+        '<stop stop-color="#D70" offset="1"/>' +
+      '</radialGradient>' +
+      '<radialGradient id="s2" fx=".8" fy=".5" l:href="#s1"/>' +
+      '<radialGradient id="s3" fx=".5" fy=".9" l:href="#s1"/>' +
+      '<radialGradient id="s4" fx=".1" fy=".5" l:href="#s1"/>' +
+    '</defs>' +
+    '<g stroke="#940">' +
+      '<path d="M73,29c-37-40-62-24-52,4l6-7c-8-16,7-26,42,9z" fill="url(#s1)"/>' +
+      '<path d="M47,8c33-16,48,21,9,47l-6-5c38-27,20-44,5-37z" fill="url(#s2)"/>' +
+      '<path d="M77,32c22,30,10,57-39,51l-1-8c3,3,67,5,36-36z" fill="url(#s3)"/>' +
 
-      <path d="M58,84c-4,20-38-4-8-24l-6-5c-36,43,15,56,23,27z" fill="url(#s4)"/>
-      <path d="M40,14c-40,37-37,52-9,68l1-8c-16-13-29-21,16-56z" fill="url(#s1)"/>
-      <path d="M31,33c19,23,20,7,35,41l-9,1.7c-4-19-8-14-31-37z" fill="url(#s2)"/>
-    </g>
-  </svg>
-</body></html>""")
+      '<path d="M58,84c-4,20-38-4-8-24l-6-5c-36,43,15,56,23,27z" fill="url(#s4)"/>' +
+      '<path d="M40,14c-40,37-37,52-9,68l1-8c-16-13-29-21,16-56z" fill="url(#s1)"/>' +
+      '<path d="M31,33c19,23,20,7,35,41l-9,1.7c-4-19-8-14-31-37z" fill="url(#s2)"/>' +
+    '</g>' +
+  '</svg>' +
+'</body></html>')
 
 # Repeat tests without namespace support
 class nonamespaceTest(SAXTest):
