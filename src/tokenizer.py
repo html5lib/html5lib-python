@@ -176,7 +176,9 @@ class HTMLTokenizer(object):
     def consumeEntity(self):
         char = None
         charStack = [self.stream.char()]
-        if charStack[0] == u"#":
+        if charStack[0] in spaceCharacters or charStack[0] in (EOF, "<", "&"):
+            self.stream.queue.extend(charStack)
+        elif charStack[0] == u"#":
             # We might have a number entity here.
             charStack.extend([self.stream.char(), self.stream.char()])
             if EOF in charStack:
@@ -202,9 +204,6 @@ class HTMLTokenizer(object):
                     self.tokenQueue.append({"type": "ParseError", "data":
                       _("Numeric entity expected but none found.")})
         # Break out if we reach the end of the file
-        elif charStack[0] == EOF:
-            self.tokenQueue.append({"type": "ParseError", "data":
-              _("Entity expected. Got end of file instead.")})
         else:
             # At this point in the process might have named entity. Entities
             # are stored in the global variable "entities".
