@@ -12,6 +12,9 @@ from filters.optionaltags import Filter as OptionalTagFilter
 from filters.inject_meta_charset import Filter as InjectMetaCharsetFilter
 
 from constants import voidElements, booleanAttributes, spaceCharacters
+from constants import rcdataElements
+
+from xml.sax.saxutils import escape
 
 spaceCharacters = u"".join(spaceCharacters)
 
@@ -49,11 +52,10 @@ else:
 
     del register_error
 
-def escape_text(text, encoding):
-    return text.replace("&", "&amp;").encode(encoding, unicode_encode_errors)
+def encode(text, encoding):
+    return text.encode(encoding, unicode_encode_errors)
 
 class HTMLSerializer(object):
-    cdata_elements = frozenset(("style", "script", "xmp", "iframe", "noembed", "noframes", "noscript"))
 
     quote_attr_values = False
     quote_char = '"'
@@ -109,16 +111,13 @@ class HTMLSerializer(object):
                     else:
                         yield token["data"]
                 elif encoding:
-                    yield escape_text(token["data"], encoding)
+                    yield encode(escape(token["data"]), encoding)
                 else:
-                    yield token["data"] \
-                        .replace("&", "&amp;") \
-                        .replace("<", "&lt;")  \
-                        .replace(">", "&gt;")
+                    yield escape(token["data"])
 
             elif type in ("StartTag", "EmptyTag"):
                 name = token["name"]
-                if name in self.cdata_elements:
+                if name in rcdataElements:
                     in_cdata = True
                 elif in_cdata:
                     self.serializeError(_("Unexpected child element of a CDATA element"))
@@ -142,10 +141,9 @@ class HTMLSerializer(object):
                         else:
                             quote_attr = reduce(lambda x,y: x or (y in v),
                                 spaceCharacters + "<>\"'", False)
+                        v = v.replace("&", "&amp;")
                         if encoding:
-                            v = escape_text(v, encoding)
-                        else:
-                            v = v.replace("&", "&amp;")
+                            v = encode(v, encoding)
                         if quote_attr:
                             quote_char = self.quote_char
                             if self.use_best_quote_char:
@@ -174,7 +172,7 @@ class HTMLSerializer(object):
 
             elif type == "EndTag":
                 name = token["name"]
-                if name in self.cdata_elements:
+                if name in rcdataElements:
                     in_cdata = False
                 elif in_cdata:
                     self.serializeError(_("Unexpected child element of a CDATA element"))
