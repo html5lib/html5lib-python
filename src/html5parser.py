@@ -704,8 +704,9 @@ class InBodyPhase(Phase):
             ("plaintext",self.startTagPlaintext),
             (headingElements, self.startTagHeading),
             ("a", self.startTagA),
-            (("b", "big", "em", "font", "i", "nobr", "s", "small", "strike",
-              "strong", "tt", "u"),self.startTagFormatting),
+            (("b", "big", "em", "font", "i", "s", "small", "strike", "strong",
+              "tt", "u"),self.startTagFormatting),
+            ("nobr", self.startTagNobr),
             ("button", self.startTagButton),
             (("marquee", "object"), self.startTagMarqueeObject),
             ("xmp", self.startTagXmp),
@@ -875,6 +876,12 @@ class InBodyPhase(Phase):
 
     def startTagFormatting(self, name, attributes):
         self.tree.reconstructActiveFormattingElements()
+        self.addFormattingElement(name, attributes)
+
+    def startTagNobr(self, name, attributes):
+        self.tree.reconstructActiveFormattingElements()
+        if self.tree.elementInScope("nobr"):
+            self.processEndTag("nobr")
         self.addFormattingElement(name, attributes)
 
     def startTagButton(self, name, attributes):
