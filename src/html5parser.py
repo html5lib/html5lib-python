@@ -595,7 +595,11 @@ class InHeadPhase(Phase):
 
     def startTagBaseLinkMeta(self, name, attributes):
         element = self.tree.createElement(name, attributes)
-        self.appendToHead(element)
+        if (self.tree.headPointer is not None and
+            self.parser.phase == self.parser.phases["inHead"]):
+            self.appendToHead(element)
+        else:
+            self.tree.openElements[-1].appendChild(element)
 
     def startTagOther(self, name, attributes):
         self.anythingElse()
@@ -692,9 +696,9 @@ class InBodyPhase(Phase):
 
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
-            (("script", "style"), self.startTagScriptStyle),
-            (("base", "link", "meta", "title"),
-              self.startTagFromHead),
+            (("base", "link", "meta", "script", "style"),
+              self.startTagProcessInHead),
+            ("title", self.startTagTitle),
             ("body", self.startTagBody),
             (("address", "blockquote", "center", "dir", "div", "dl",
               "fieldset", "listing", "menu", "ol", "p", "pre", "ul"),
@@ -779,10 +783,10 @@ class InBodyPhase(Phase):
         self.tree.reconstructActiveFormattingElements()
         self.tree.insertText(data)
 
-    def startTagScriptStyle(self, name, attributes):
+    def startTagProcessInHead(self, name, attributes):
         self.parser.phases["inHead"].processStartTag(name, attributes)
 
-    def startTagFromHead(self, name, attributes):
+    def startTagTitle(self, name, attributes):
         self.parser.parseError(_(u"Unexpected start tag (" + name +\
           ") that belongs in the head. Moved."))
         self.parser.phases["inHead"].processStartTag(name, attributes)
