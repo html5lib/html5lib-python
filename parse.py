@@ -80,7 +80,6 @@ def parse():
     else:
         document = parseMethod(f, encoding=encoding)
         printOutput(p, document, opts)
-        print encoding
 
 def printOutput(parser, document, opts):
     if opts.encoding:
