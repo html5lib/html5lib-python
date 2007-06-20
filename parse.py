@@ -103,6 +103,7 @@ def printOutput(parser, document, opts):
         tokens = treewalkers.getTreeWalker(opts.treebuilder)(document)
         for text in serializer.HTMLSerializer(**kwargs).serialize(tokens, encoding='utf-8'):
             sys.stdout.write(text)
+        if not text.endswith('\n'): sys.stdout.write('\n')
     if opts.error:
         errList=[]
         for pos, message in parser.errors:
