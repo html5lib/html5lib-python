@@ -126,7 +126,6 @@ class HTMLInputStream(object):
                 encoding = bomDict.get(string[:2]) # UTF-16
                 seek = 2
 
-
         self.seek(string, encoding and seek or 0)
 
         return encoding
@@ -137,33 +136,38 @@ class HTMLInputStream(object):
             self.rawStream.unget(buffer[n:])
             return 
 
-        try:
-            self.rawStream.seek(n)
-        except IOError:
-            class BufferedStream:
-                 def __init__(self, data, stream):
+        if hasattr(self.rawStream, 'seek'):
+            try:
+                self.rawStream.seek(n)
+                return
+            except IOError:
+                pass
+
+        class BufferedStream:
+             def __init__(self, data, stream):
+                 self.data = data
+                 self.stream = stream
+             def read(self, chars=-1):
+                 if chars == -1 or chars > len(self.data):
+                     result = self.data
+                     self.data = ''
+                     if chars == -1:
+                         return result + self.stream.read()
+                     else:
+                         return result + self.stream.read(chars-len(result))
+                 elif not self.data:
+                     return self.stream.read(chars)
+                 else:
+                     result = self.data[:chars]
+                     self.data = self.data[chars:]
+                     return result
+             def unget(self, data):
+                 if self.data:
+                     self.data += data
+                 else:
                      self.data = data
-                     self.stream = stream
-                 def read(self, chars=-1):
-                     if chars == -1 or chars > len(self.data):
-                         result = self.data
-                         self.data = ''
-                         if chars == -1:
-                             return result + self.stream.read()
-                         else:
-                             return result + self.stream.read(chars-len(result))
-                     elif not self.data:
-                         return self.stream.read(chars)
-                     else:
-                         result = self.data[:chars]
-                         self.data = self.data[chars:]
-                         return result
-                 def unget(self, data):
-                     if self.data:
-                         self.data += data
-                     else:
-                         self.data = data
-            self.rawStream = BufferedStream(buffer[n:], self.rawStream)
+
+        self.rawStream = BufferedStream(buffer[n:], self.rawStream)
 
     def detectEncodingMeta(self):
         """Report the encoding declared by the meta element

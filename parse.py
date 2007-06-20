@@ -21,14 +21,19 @@ from src import treebuilders, serializer, treewalkers
 def parse():
     optParser = getOptParser()
     opts,args = optParser.parse_args()
+    encoding = None
 
     try:
         f = args[-1]
         # Try opening from the internet
         if f.startswith('http://'):
             try:
-                import urllib
-                f = urllib.urlopen(f).read()
+                import urllib, cgi
+                f = urllib.urlopen(f)
+                contentType = f.headers.get('content-type')
+                if contentType:
+                    (mediaType, params) = cgi.parse_header(contentType)
+                    encoding = params.get('charset')
             except: pass
         elif f == '-':
             f = sys.stdin
@@ -57,7 +62,7 @@ def parse():
         import hotshot
         import hotshot.stats
         prof = hotshot.Profile('stats.prof')
-        prof.runcall(parseMethod, f)
+        prof.runcall(parseMethod, f, encoding=encoding)
         prof.close()
         # XXX - We should use a temp file here
         stats = hotshot.stats.load('stats.prof')
@@ -67,14 +72,15 @@ def parse():
     elif opts.time:
         import time
         t0 = time.time()
-        document = parseMethod(f)
+        document = parseMethod(f, encoding=encoding)
         t1 = time.time()
         printOutput(p, document, opts)
         t2 = time.time()
-        sys.stdout.write("\n\nRun took: %fs (plus %fs to print the output)"%(t1-t0, t2-t1))
+        print "\n\nRun took: %fs (plus %fs to print the output)"%(t1-t0, t2-t1)
     else:
-        document = parseMethod(f)
+        document = parseMethod(f, encoding=encoding)
         printOutput(p, document, opts)
+        print encoding
 
 def printOutput(parser, document, opts):
     if opts.encoding:
