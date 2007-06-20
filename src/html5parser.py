@@ -482,8 +482,7 @@ class BeforeHeadPhase(Phase):
         self.startTagHandler.default = self.startTagOther
 
         self.endTagHandler = utils.MethodDispatcher([
-            ("html", self.endTagHtml),
-            ("br", self.endTagEmptyElement)
+            (("html", "head", "body", "br"), self.endTagImplyHead)
         ])
         self.endTagHandler.default = self.endTagOther
 
@@ -504,11 +503,7 @@ class BeforeHeadPhase(Phase):
         self.startTagHead("head", {})
         self.parser.phase.processStartTag(name, attributes)
 
-    def endTagHtml(self, name):
-        self.startTagHead("head", {})
-        self.parser.phase.processEndTag(name)
-
-    def endTagEmptyElement(self, name):
+    def endTagImplyHead(self, name):
         self.startTagHead("head", {})
         self.parser.phase.processEndTag(name)
 
@@ -532,8 +527,7 @@ class InHeadPhase(Phase):
 
         self. endTagHandler = utils.MethodDispatcher([
             ("head", self.endTagHead),
-            ("html", self.endTagHtml),
-            ("br", self.endTagEmptyElement),
+            (("html", "body", "br"), self.endTagImplyAfterHead),
             (("title", "style", "script"), self.endTagTitleStyleScript)
         ])
         self.endTagHandler.default = self.endTagOther
@@ -612,7 +606,7 @@ class InHeadPhase(Phase):
             self.parser.parseError(_(u"Unexpected end tag (head). Ignored."))
         self.parser.phase = self.parser.phases["afterHead"]
 
-    def endTagHtml(self, name):
+    def endTagImplyAfterHead(self, name):
         self.anythingElse()
         self.parser.phase.processEndTag(name)
 
@@ -623,10 +617,6 @@ class InHeadPhase(Phase):
             self.parser.parseError(_(u"Unexpected end tag (" + name +\
               "). Ignored."))
 
-    def endTagEmptyElement(self, name):
-        self.anythingElse()
-        self.parser.phase.processEndTag(name)
-    
     def endTagOther(self, name):
         self.parser.parseError(_(u"Unexpected end tag (" + name +\
           "). Ignored."))
