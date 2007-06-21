@@ -238,6 +238,10 @@ class HTMLInputStream(object):
         
         return u"".join(charStack)
 
+    def unget(self, chars):
+        if chars:
+            self.queue = list(chars) + self.queue
+
 class EncodingBytes(str):
     """String-like object with an assosiated position and various extra methods
     If the position is ever greater than the string length then an exception is

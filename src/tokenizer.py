@@ -113,7 +113,7 @@ class HTMLTokenizer(object):
 
         # The character we just consumed need to be put back on the stack so it
         # doesn't get lost...
-        self.stream.queue.append(data)
+        self.stream.unget(data)
 
     def consumeNumberEntity(self, isHex):
         """This function returns either U+FFFD or the character based on the
@@ -170,7 +170,7 @@ class HTMLTokenizer(object):
         if c != u";":
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Numeric entity didn't end with ';'.")})
-            self.stream.queue.append(c)
+            self.stream.unget(c)
 
         return char
 
@@ -178,7 +178,7 @@ class HTMLTokenizer(object):
         char = None
         charStack = [self.stream.char()]
         if charStack[0] in spaceCharacters or charStack[0] in (EOF, "<", "&"):
-            self.stream.queue.extend(charStack)
+            self.stream.unget(charStack)
         elif charStack[0] == u"#":
             # We might have a number entity here.
             charStack.extend([self.stream.char(), self.stream.char()])
@@ -186,22 +186,22 @@ class HTMLTokenizer(object):
                 # If we reach the end of the file put everything up to EOF
                 # back in the queue
                 charStack = charStack[:charStack.index(EOF)]
-                self.stream.queue.extend(charStack)
+                self.stream.unget(charStack)
                 self.tokenQueue.append({"type": "ParseError", "data":
                   _("Numeric entity expected. Got end of file instead.")})
             else:
                 if charStack[1].lower() == u"x" \
                   and charStack[2] in hexDigits:
                     # Hexadecimal entity detected.
-                    self.stream.queue.append(charStack[2])
+                    self.stream.unget(charStack[2])
                     char = self.consumeNumberEntity(True)
                 elif charStack[1] in digits:
                     # Decimal entity detected.
-                    self.stream.queue.extend(charStack[1:])
+                    self.stream.unget(charStack[1:])
                     char = self.consumeNumberEntity(False)
                 else:
                     # No number entity detected.
-                    self.stream.queue.extend(charStack)
+                    self.stream.unget(charStack)
                     self.tokenQueue.append({"type": "ParseError", "data":
                       _("Numeric entity expected but none found.")})
         else:
@@ -239,11 +239,11 @@ class HTMLTokenizer(object):
                 if not charStack[-1] == ";":
                     self.tokenQueue.append({"type": "ParseError", "data":
                       _("Named entity didn't end with ';'.")})
-                    self.stream.queue.extend(charStack[entityLength:])
+                    self.stream.unget(charStack[entityLength:])
             else:
                 self.tokenQueue.append({"type": "ParseError", "data":
                   _("Named entity expected. Got none.")})
-                self.stream.queue.extend(charStack)
+                self.stream.unget(charStack)
         return char
 
     def processEntityInAttribute(self):
@@ -347,14 +347,14 @@ class HTMLTokenizer(object):
                 self.tokenQueue.append({"type": "ParseError", "data":
                   _("Expected tag name. Got '?' instead (HTML doesn't "
                   "support processing instructions).")})
-                self.stream.queue.append(data)
+                self.stream.unget(data)
                 self.state = self.states["bogusComment"]
             else:
                 # XXX
                 self.tokenQueue.append({"type": "ParseError", "data":
                   _("Expected tag name. Got something else instead")})
                 self.tokenQueue.append({"type": "Characters", "data": u"<"})
-                self.stream.queue.append(data)
+                self.stream.unget(data)
                 self.state = self.states["data"]
         else:
             # We know the content model flag is set to either RCDATA or CDATA
@@ -364,6 +364,8 @@ class HTMLTokenizer(object):
                 self.state = self.states["closeTagOpen"]
             else:
                 self.tokenQueue.append({"type": "Characters", "data": u"<"})
+                # XXX: why was this a self.stream.queue.insert(0, data) rather than append(data)?
+                #self.stream.unget(data)
                 self.stream.queue.insert(0, data)
                 self.state = self.states["data"]
         return True
@@ -387,7 +389,7 @@ class HTMLTokenizer(object):
 
                 # Since this is just for checking. We put the characters back on
                 # the stack.
-                self.stream.queue.extend(charStack)
+                self.stream.unget(charStack)
 
             if self.currentToken \
               and self.currentToken["name"].lower() == "".join(charStack[:-1]).lower() \
@@ -422,7 +424,7 @@ class HTMLTokenizer(object):
             # XXX data can be _'_...
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Expected closing tag. Unexpected character '" + data + "' found.")})
-            self.stream.queue.append(data)
+            self.stream.unget(data)
             self.state = self.states["bogusComment"]
         return True
 
@@ -538,7 +540,7 @@ class HTMLTokenizer(object):
             self.state = self.states["attributeValueDoubleQuoted"]
         elif data == u"&":
             self.state = self.states["attributeValueUnQuoted"]
-            self.stream.queue.append(data);
+            self.stream.unget(data);
         elif data == u"'":
             self.state = self.states["attributeValueSingleQuoted"]
         elif data == u">":
@@ -629,7 +631,7 @@ class HTMLTokenizer(object):
             else:
                 self.tokenQueue.append({"type": "ParseError", "data":
                   _("Expected '--' or 'DOCTYPE'. Not found.")})
-                self.stream.queue.extend(charStack)
+                self.stream.unget(charStack)
                 self.state = self.states["bogusComment"]
         return True
 
@@ -732,7 +734,7 @@ class HTMLTokenizer(object):
         else:
             self.tokenQueue.append({"type": "ParseError", "data":
               _("No space after literal string 'DOCTYPE'.")})
-            self.stream.queue.append(data)
+            self.stream.unget(data)
             self.state = self.states["beforeDoctypeName"]
         return True
 
@@ -783,7 +785,7 @@ class HTMLTokenizer(object):
             self.state = self.states["data"]
         elif data == EOF:
             self.currentToken["correct"] = False
-            self.stream.queue.append(data)
+            self.stream.unget(data)
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Unexpected end of file in DOCTYPE.")})
             self.tokenQueue.append(self.currentToken)
@@ -799,7 +801,7 @@ class HTMLTokenizer(object):
               "".join(charStack).translate(asciiUpper2Lower) == "system":
                 self.state = self.states["beforeDoctypeSystemIdentifier"]
             else:
-                self.stream.queue.extend(charStack)
+                self.stream.unget(charStack)
                 self.tokenQueue.append({"type": "ParseError", "data":
                   _("Expected space or '>'. Got '" + data + "'")})
                 self.state = self.states["bogusDoctype"]
@@ -969,7 +971,7 @@ class HTMLTokenizer(object):
             self.state = self.states["data"]
         elif data == EOF:
             # XXX EMIT
-            self.stream.queue.append(data)
+            self.stream.unget(data)
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Unexpected end of file in bogus doctype.")})
             self.tokenQueue.append(self.currentToken)
