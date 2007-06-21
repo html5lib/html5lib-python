@@ -1,4 +1,4 @@
-import sys
+import os
 import unittest
 from support import simplejson, html5lib_test_files
 
@@ -13,9 +13,6 @@ from treewalkers._base import TreeWalker
 #from html5lib import html5parser, serializer
 #from html5lib.treewalkers._base import TreeWalker
 #END RELEASE
-
-#Run the serialize error checks
-checkSerializeErrors = False
 
 class JsonWalker(TreeWalker):
     def __iter__(self):
@@ -39,47 +36,50 @@ class JsonWalker(TreeWalker):
                 raise ValueError("Unknown token type: " + type)
 
 class TestCase(unittest.TestCase):
-    def addTest(cls, name, expected, input, description, options):
-        func = lambda self: self.mockTest(expected, input, options)
-        func.__doc__ = "\t".join([description, str(input), str(options)])
+    def addTest(cls, name, description, input, expected, xhtml, options):
+        func = lambda self: self.mockTest(input, options, expected, xhtml)
+        func.__doc__ = "\t".join([name, description, str(input), str(options)])
         setattr(cls, name, func)
     addTest = classmethod(addTest)
 
-    def mockTest(self, expected, input, options):
+    def mockTest(self, input, options, expected, xhtml):
         result = self.serialize_html(input, options)
         if len(expected) == 1:
             self.assertEquals(expected[0], result)
         elif result not in expected:
             self.fail("Expected: %s, Received: %s" % (expected, result))
 
+        if not xhtml: return
+
+        result = self.serialize_xhtml(input, options)
+        if len(xhtml) == 1:
+            self.assertEquals(xhtml[0], result)
+        elif result not in xhtml:
+            self.fail("Expected: %s, Received: %s" % (xhtml, result))
+
     def serialize_html(self, input, options):
         options = dict([(str(k),v) for k,v in options.iteritems()])
         return u''.join(serializer.HTMLSerializer(**options).
                 serialize(JsonWalker(input),options.get("encoding",None)))
 
-def test_serializer():
-    for filename in html5lib_test_files('serializer', '*.test'):
-        tests = simplejson.load(file(filename))
-        for test in tests['tests']:
-            yield test
+    def serialize_xhtml(self, input, options):
+        options = dict([(str(k),v) for k,v in options.iteritems()])
+        return u''.join(serializer.XHTMLSerializer(**options).
+                serialize(JsonWalker(input),options.get("encoding",None)))
 
 def buildTestSuite():
-    tests = 0
-    for test in test_serializer():
-        tests += 1
-        testName = 'test%d' % tests
-        TestCase.addTest(testName, test["expected"], test["input"], \
-            test["description"], test.get("options", {}))
+    for filename in html5lib_test_files('serializer', '*.test'):
+        test_name = os.path.basename(filename).replace('.test','')
+        tests = simplejson.load(file(filename))
+        for index, test in enumerate(tests['tests']):
+            xhtml = test.get("xhtml", test["expected"])
+            if test_name == 'optionaltags': xhtml = None
+            TestCase.addTest('test_%s_%d' % (test_name, index+1),
+                test["description"], test["input"], test["expected"], xhtml,
+                test.get("options", {}))
     return unittest.TestLoader().loadTestsFromTestCase(TestCase)
 
 def main():
-    # the following is temporary while the unit tests for parse errors are
-    # still in flux
-    if '-p' in sys.argv: # suppress check for serialize errors
-        sys.argv.remove('-p')
-        global checkSerializeErrors
-        checkSerializeErrors = False
-       
     buildTestSuite()
     unittest.main()
 
