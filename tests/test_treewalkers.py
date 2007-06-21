@@ -3,6 +3,8 @@ import sys
 import StringIO
 import unittest
 
+from support import html5lib_test_files
+
 #RELEASE remove
 import html5parser
 #Run tests over all treewalkers/treebuilders pairs
@@ -19,7 +21,6 @@ from filters.lint import Filter as LintFilter, LintError
 #from html5lib.filters.lint import Filter as LintFilter, LintError
 #END RELEASE
 
-from support import html5lib_test_files
 from test_parser import parseTestcase
 
 def PullDOMAdapter(node):
@@ -138,7 +139,7 @@ try:
                 yield COMMENT, token["data"], (None, -1, -1)
 
             elif type == "Doctype":
-                yield DOCTYPE, token["name"], (None, -1, -1)
+                yield DOCTYPE, (token["name"], None, None), (None, -1, -1)
 
             else:
                 pass # FIXME: What to do?
