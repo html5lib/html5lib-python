@@ -364,9 +364,7 @@ class HTMLTokenizer(object):
                 self.state = self.states["closeTagOpen"]
             else:
                 self.tokenQueue.append({"type": "Characters", "data": u"<"})
-                # XXX: why was this a self.stream.queue.insert(0, data) rather than append(data)?
-                #self.stream.unget(data)
-                self.stream.queue.insert(0, data)
+                self.stream.unget(data)
                 self.state = self.states["data"]
         return True
 
