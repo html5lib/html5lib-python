@@ -13,7 +13,7 @@ class SanitizeTest(unittest.TestCase):
   def addTest(cls, name, expected, input):
     def test(self, expected=expected, input=input):
         expected = ''.join([token.toxml() for token in html5parser.HTMLParser().
-          parseFragment(expected.encode('utf-8')).childNodes])
+          parseFragment(expected).childNodes])
         self.assertEqual(expected, self.sanitize_html(input))
     setattr(cls, name, test)
   addTest = classmethod(addTest)

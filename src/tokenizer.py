@@ -146,25 +146,24 @@ class HTMLTokenizer(object):
         # If the integer is between 127 and 160 (so 128 and bigger and 159 and
         # smaller) we need to do the "windows trick".
         if 127 < charAsInt < 160:
-            #XXX - removed parse error from windows 1252 entity for now
-            #we may want to reenable this later
-            #self.tokenQueue.append({"type": "ParseError", "data":
-            #  _("Entity used with illegal number (windows-1252 reference).")})
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Entity used with illegal number (windows-1252 reference).")})
 
             charAsInt = entitiesWindows1252[charAsInt - 128]
 
-        # 0 is not a good number.
-        if charAsInt == 0:
-            charAsInt = 65533
-
-        try:
-            # XXX We should have a separate function that does "int" to
-            # "unicodestring" conversion since this doesn't always work
-            # according to hsivonen. Also, unichr has a limitation of 65535
-            char = unichr(charAsInt)
-        except:
-            self.tokenQueue.append({"type": "ParseError", "data":
-              _("Numeric entity couldn't be converted to character.")})
+        # 0 is not a good number, neither are illegal Unicode code points.
+        if charAsInt > 0 and charAsInt <= 1114111:
+            try:
+                # XXX We should have a separate function that does "int" to
+                # "unicodestring" conversion since this doesn't always work
+                # according to hsivonen. Also, unichr has a limitation of 65535
+                char = unichr(charAsInt)
+            except:
+                try:
+                    char = eval("u'\\U%08x'" % charAsInt)
+                except:
+                    self.tokenQueue.append({"type": "ParseError", "data":
+                      _("Numeric entity couldn't be converted to character.")})
 
         # Discard the ; if present. Otherwise, put it back on the queue and
         # invoke parseError on parser.
