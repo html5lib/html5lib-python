@@ -126,6 +126,8 @@ class HTMLInputStream(object):
                 encoding = bomDict.get(string[:2]) # UTF-16
                 seek = 2
 
+        # Set the read position past the BOM if one was found, otherwise
+        # set it to the start of the stream
         self.seek(string, encoding and seek or 0)
 
         return encoding
