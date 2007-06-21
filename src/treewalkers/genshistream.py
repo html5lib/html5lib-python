@@ -55,7 +55,7 @@ class TreeWalker(_base.TreeWalker):
                 yield token
 
         elif kind == DOCTYPE:
-            yield self.doctype(data)
+            yield self.doctype(data[0])
 
         elif kind in (XML_DECL, DOCTYPE, START_NS, END_NS, \
           START_CDATA, END_CDATA, PI):
