@@ -11,7 +11,9 @@ class TreeWalker(_base.TreeWalker):
         depth = 0
         ignore_until = None
         previous = None
-        for event in NamespaceFlattener()(self.tree):
+        for event in NamespaceFlattener(prefixes={
+            'http://www.w3.org/1999/xhtml': ''
+          })(self.tree):
             if previous is not None:
                 if previous[0] == START:
                     depth += 1
