@@ -10,8 +10,9 @@ import os
 from optparse import OptionParser
 
 #RELEASE remove
-from src import html5parser, liberalxmlparser
-from src import treebuilders, serializer, treewalkers
+sys.path.insert(0,os.path.abspath(os.path.join(__file__,'../src')))
+import html5parser, liberalxmlparser
+import treebuilders, serializer, treewalkers
 #END RELEASE
 #RELEASE add
 #from html5lib import html5parser, liberalxmlparser
