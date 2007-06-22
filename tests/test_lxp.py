@@ -196,11 +196,6 @@ class XhtmlTest(Xhtml5Test):
 <head><title>XLINK</title></head>
 <body>
 <br/>
-</body></html>""",
-"""<html xmlns="http://www.w3.org/1999/xhtml">
-<head><title>XLINK</title></head>
-<body>
-<br/><br/>
 </body></html>""")
 
   def test_strong(self):
