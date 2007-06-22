@@ -15,11 +15,12 @@ References:
 """
 
 import html5parser
-from constants import voidElements
+from constants import voidElements, contentModelFlags
 import gettext
 _ = gettext.gettext
 
 from xml.dom import XHTML_NAMESPACE
+from xml.sax.saxutils import unescape
 
 class XMLParser(html5parser.HTMLParser):
     """ liberal XML parser """
@@ -46,6 +47,11 @@ class XMLParser(html5parser.HTMLParser):
         elif token["type"] == "EndTag":
             if token["data"]:
                self.parseError(_("End tag contains unexpected attributes."))
+
+        elif token["type"] == "Characters":
+            # un-escape rcdataElements (e.g. style, script)
+            if self.tokenizer.contentModelFlag == contentModelFlags["CDATA"]:
+                token["data"] = unescape(token["data"])
 
         elif token["type"] == "Comment":
             # Rescue CDATA from the comments

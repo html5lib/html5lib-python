@@ -193,16 +193,29 @@ class XhtmlTest(Xhtml5Test):
 
   def test_br(self):
     self.assertXhtmlEquals("""<html xmlns="http://www.w3.org/1999/xhtml">
-<head><title>XLINK</title></head>
+<head><title>BR</title></head>
 <body>
 <br/>
 </body></html>""")
 
   def test_strong(self):
     self.assertXhtmlEquals("""<html xmlns="http://www.w3.org/1999/xhtml">
-<head><title>XLINK</title></head>
+<head><title>STRONG</title></head>
 <body>
 <strong></strong>
+</body></html>""")
+
+  def test_script(self):
+    self.assertXhtmlEquals("""<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>SCRIPT</title></head>
+<body>
+<script>1 &lt; 2 &amp; 3</script>
+</body></html>""")
+
+  def test_title(self):
+    self.assertXhtmlEquals("""<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>1 &lt; 2 &amp; 3</title></head>
+<body>
 </body></html>""")
 
 def buildTestSuite():
