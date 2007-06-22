@@ -5,7 +5,7 @@
 #   always exist.
 # * </br> creates a <br> element.
 #
-# We haven't updated DOCTYPE and entity handling yet.
+# We haven't updated DOCTYPE handling yet
 #
 # It should be trivial to add the following cases. However, we should probably
 # also look into comment handling and such then...
@@ -53,6 +53,9 @@ class HTMLParser(object):
         self.tree = tree()
         self.tokenizer_class = tokenizer
         self.errors = []
+
+        # "quirks" / "almost-standards" / "standards"
+        self.quirksMode = "standards"
 
         self.phases = {
             "initial": InitialPhase(self, self.tree),
