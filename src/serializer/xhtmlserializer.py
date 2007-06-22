@@ -6,3 +6,4 @@ class XHTMLSerializer(HTMLSerializer):
     use_trailing_solidus = True
     escape_lt_in_attrs = True
     omit_optional_tags = False
+    escape_rcdata = True

@@ -65,6 +65,7 @@ class HTMLSerializer(object):
     use_trailing_solidus = False
     space_before_trailing_solidus = True
     escape_lt_in_attrs = False
+    escape_rcdata = False
 
     omit_optional_tags = True
 
@@ -78,7 +79,8 @@ class HTMLSerializer(object):
         for attr in ("quote_attr_values", "quote_char", "use_best_quote_char",
           "minimize_boolean_attributes", "use_trailing_solidus",
           "space_before_trailing_solidus", "omit_optional_tags",
-          "strip_whitespace", "inject_meta_charset", "escape_lt_in_attrs"):
+          "strip_whitespace", "inject_meta_charset", "escape_lt_in_attrs",
+          "escape_rcdata"):
             setattr(self, attr, kwargs.get(attr, getattr(self, attr)))
         self.errors = []
         self.strict = False
@@ -118,7 +120,7 @@ class HTMLSerializer(object):
 
             elif type in ("StartTag", "EmptyTag"):
                 name = token["name"]
-                if name in rcdataElements:
+                if name in rcdataElements and not self.escape_rcdata:
                     in_cdata = True
                 elif in_cdata:
                     self.serializeError(_("Unexpected child element of a CDATA element"))
