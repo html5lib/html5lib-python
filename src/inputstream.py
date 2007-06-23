@@ -40,6 +40,8 @@ class HTMLInputStream(object):
         #Number of bytes to use when looking for a meta element with
         #encoding information
         self.numBytesMeta = 512
+        #Number of bytes to use when using detecting encoding using chardet
+        self.numBytesChardet = 100
         #Encoding to use if no other information can be found
         self.defaultEncoding = "windows-1252"
         
@@ -84,10 +86,18 @@ class HTMLInputStream(object):
         #Guess with chardet, if avaliable
         if encoding is None and chardet:
             try:
-                import chardet
-                buffer = self.rawStream.read()
-                encoding = chardet.detect(buffer)['encoding']
-                self.seek(buffer, 0)
+                from chardet.universaldetector import UniversalDetector
+                buffers = []
+                detector = UniversalDetector()
+                while not detector.done:
+                    buffer = self.rawStream.read(self.numBytesChardet)
+                    if not buffer:
+                        break
+                    buffers.append(buffer)
+                    detector.feed(buffer)
+                detector.close()
+                encoding = detector.result['encoding']
+                self.seek("".join(buffers), 0)
             except ImportError:
                 pass
         # If all else fails use the default encoding
