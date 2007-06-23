@@ -143,13 +143,13 @@ class HTMLTokenizer(object):
         # Convert the set of characters consumed to an int.
         charAsInt = int("".join(charStack), radix)
 
-        # If the integer is between 127 and 160 (so 128 and bigger and 159 and
-        # smaller) we need to do the "windows trick".
         if charAsInt == 13:
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Incorrect CR newline entity. Replaced with LF.")})
             charAsInt = 10
-        if 127 < charAsInt < 160:
+        elif 127 < charAsInt < 160:
+            # If the integer is between 127 and 160 (so 128 and bigger and 159
+            # and smaller) we need to do the "windows trick".
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Entity used with illegal number (windows-1252 reference).")})
 
@@ -240,11 +240,9 @@ class HTMLTokenizer(object):
                 if entityName[-1] != ";":
                     self.tokenQueue.append({"type": "ParseError", "data":
                       _("Named entity didn't end with ';'.")})
-                if entityName[-1] == ";":
-                    char = entities[entityName]
-                    self.stream.unget(charStack[entityLength:])
-                elif fromAttribute and charStack[entityLength] in asciiLetters\
-                  or charStack[entityLength] in digits:
+                if entityName[-1] != ";" and fromAttribute and \
+                  (charStack[entityLength] in asciiLetters
+                  or charStack[entityLength] in digits):
                     self.stream.unget(charStack)
                 else:
                     char = entities[entityName]
