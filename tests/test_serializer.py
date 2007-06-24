@@ -2,17 +2,8 @@ import os
 import unittest
 from support import simplejson, html5lib_test_files
 
-#RELEASE remove
-import html5parser
-import serializer
-from treewalkers._base import TreeWalker
-#END RELEASE
-
-#RELEASE add
-#import html5lib
-#from html5lib import html5parser, serializer
-#from html5lib.treewalkers._base import TreeWalker
-#END RELEASE
+from html5lib import html5parser, serializer
+from html5lib.treewalkers._base import TreeWalker
 
 class JsonWalker(TreeWalker):
     def __iter__(self):

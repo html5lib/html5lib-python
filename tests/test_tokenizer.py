@@ -2,16 +2,8 @@ import os
 import unittest
 from support import simplejson, html5lib_test_files
 
-#RELEASE remove
-from tokenizer import HTMLTokenizer
-import constants
-#END RELEASE
-
-#RELEASE add
-#import html5lib
-#from html5lib.tokenizer import HTMLTokenizer
-#from html5lib import constants
-#END RELEASE
+from html5lib.tokenizer import HTMLTokenizer
+from html5lib import constants
 
 class TokenizerTestParser(object):
     def __init__(self, contentModelFlag, lastStartTag=None):

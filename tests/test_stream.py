@@ -1,18 +1,7 @@
+import support
 import unittest, codecs
 
-#RELEASE remove
-if __name__ == '__main__':
-  import os, sys
-  os.chdir(os.path.split(os.path.abspath(__file__))[0])
-  sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
-
-from inputstream import HTMLInputStream
-#END RELEASE
-
-#RELEASE add
-#import html5lib
-#from html5lib.inputstream import HTMLInputStream
-#END RELEASE
+from html5lib.inputstream import HTMLInputStream
 
 class HTMLInputStreamTest(unittest.TestCase):
 

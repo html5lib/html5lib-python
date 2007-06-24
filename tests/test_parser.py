@@ -4,19 +4,7 @@ import StringIO
 import unittest
 from support import html5lib_test_files
 
-#RELEASE remove
-import html5parser
-#Run tests over all treebuilders
-#XXX - it would be nice to automate finding all treebuilders or to allow running just one
-
-import treebuilders
-#END RELEASE
-
-#RELEASE add
-#import html5lib
-#from html5lib import html5parser
-#from html5lib.treebuilders import simpletree, etreefull, dom
-#END RELEASE
+from html5lib import html5parser, treebuilders
 
 treeTypes = {"simpletree":treebuilders.getTreeBuilder("simpletree"),
              "DOM":treebuilders.getTreeBuilder("dom")}

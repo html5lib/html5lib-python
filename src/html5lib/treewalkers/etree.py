@@ -5,7 +5,7 @@ import new
 import copy
 
 import _base
-from constants import voidElements
+from html5lib.constants import voidElements
 
 moduleCache = {}
 

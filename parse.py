@@ -11,13 +11,9 @@ from optparse import OptionParser
 
 #RELEASE remove
 sys.path.insert(0,os.path.abspath(os.path.join(__file__,'../src')))
-import html5parser, liberalxmlparser
-import treebuilders, serializer, treewalkers
 #END RELEASE
-#RELEASE add
-#from html5lib import html5parser, liberalxmlparser
-#from html5lib import treebuilders, serializer, treewalkers
-#END RELEASE
+from html5lib import html5parser, liberalxmlparser
+from html5lib import treebuilders, serializer, treewalkers
 
 def parse():
     optParser = getOptParser()

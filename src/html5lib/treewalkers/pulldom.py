@@ -3,7 +3,7 @@ from xml.dom.pulldom import START_ELEMENT, END_ELEMENT, \
 
 import _base
 
-from constants import voidElements
+from html5lib.constants import voidElements
 
 class TreeWalker(_base.TreeWalker):
     def __iter__(self):

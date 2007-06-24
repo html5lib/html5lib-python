@@ -5,21 +5,8 @@ import unittest
 
 from support import html5lib_test_files
 
-#RELEASE remove
-import html5parser
-#Run tests over all treewalkers/treebuilders pairs
-#XXX - it would be nice to automate finding all treewalkers or to allow running just one
-
-import treewalkers
-import treebuilders
-from filters.lint import Filter as LintFilter, LintError
-#END RELEASE
-
-#RELEASE add
-#import html5lib
-#from html5lib import html5parser, serializer, treewalkers, treebuilders
-#from html5lib.filters.lint import Filter as LintFilter, LintError
-#END RELEASE
+from html5lib import html5parser, treewalkers, treebuilders
+from html5lib.filters.lint import Filter as LintFilter, LintError
 
 from test_parser import parseTestcase
 

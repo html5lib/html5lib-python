@@ -6,19 +6,8 @@ import glob
 os.chdir(os.path.split(os.path.abspath(__file__))[0])
 sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
 
-#RELEASE remove
-import html5parser
-#Run tests over all treebuilders
-#XXX - it would be nice to automate finding all treebuilders or to allow running just one
-
-import treebuilders
-#END RELEASE
-
-#RELEASE add
-#import html5lib
-#from html5lib import html5parser
-#from html5lib.treebuilders import simpletree, etreefull, dom
-#END RELEASE
+import html5lib
+from html5lib import html5parser, treebuilders
 
 try:
     import simplejson

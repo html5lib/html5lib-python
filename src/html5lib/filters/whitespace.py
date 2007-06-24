@@ -7,9 +7,7 @@ except NameError:
 import re
 
 import _base
-from constants import rcdataElements
-
-from constants import spaceCharacters
+from html5lib.constants import rcdataElements, spaceCharacters
 spaceCharacters = u"".join(spaceCharacters)
 
 class Filter(_base.Filter):

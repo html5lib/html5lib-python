@@ -8,9 +8,6 @@ implements a 'serialize' method taking a tree as sole argument and
 returning an iterator generating tokens.
 """
 
-import os.path
-__path__.append(os.path.dirname(__path__[0]))
-
 treeWalkerCache = {}
 
 def getTreeWalker(treeType, implementation=None, **kwargs):

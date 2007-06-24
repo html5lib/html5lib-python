@@ -1,7 +1,7 @@
 import gettext
 _ = gettext.gettext
 
-from constants import voidElements, spaceCharacters
+from html5lib.constants import voidElements, spaceCharacters
 spaceCharacters = u"".join(spaceCharacters)
 
 class TreeWalker(object):

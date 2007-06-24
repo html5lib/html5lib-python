@@ -5,7 +5,7 @@ _ = gettext.gettext
 
 import _base
 
-from constants import voidElements
+from html5lib.constants import voidElements
 
 class TreeWalker(_base.NonRecursiveTreeWalker):
     def getNodeDetails(self, node):

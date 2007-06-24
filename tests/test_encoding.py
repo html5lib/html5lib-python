@@ -2,16 +2,9 @@ import os
 import unittest
 from support import html5lib_test_files
 
-#RELEASE remove
-import inputstream
-#END RELEASE
+from html5lib import inputstream
 
-#RELEASE add
-#import html5lib
-#from html5lib import inputstream
-#END RELEASE
-
-import re, unittest, inputstream
+import re, unittest
 
 class Html5EncodingTestCase(unittest.TestCase): pass
 

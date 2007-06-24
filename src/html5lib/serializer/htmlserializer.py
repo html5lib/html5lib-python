@@ -7,12 +7,12 @@ except NameError:
 import gettext
 _ = gettext.gettext
 
-from filters.whitespace import Filter as WhitespaceFilter
-from filters.optionaltags import Filter as OptionalTagFilter
-from filters.inject_meta_charset import Filter as InjectMetaCharsetFilter
+from html5lib.filters.whitespace import Filter as WhitespaceFilter
+from html5lib.filters.optionaltags import Filter as OptionalTagFilter
+from html5lib.filters.inject_meta_charset import Filter as InjectMetaCharsetFilter
 
-from constants import voidElements, booleanAttributes, spaceCharacters
-from constants import rcdataElements
+from html5lib.constants import voidElements, booleanAttributes, spaceCharacters
+from html5lib.constants import rcdataElements
 
 from xml.sax.saxutils import escape
 
@@ -25,7 +25,7 @@ except ImportError:
 else:
     unicode_encode_errors = "htmlentityreplace"
 
-    from constants import entities
+    from html5lib.constants import entities
 
     encode_entity_map = {}
     for k, v in entities.items():

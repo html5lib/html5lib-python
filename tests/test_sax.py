@@ -1,3 +1,4 @@
+import support
 import StringIO
 import xml.sax
 import new
@@ -5,21 +6,8 @@ import unittest
 
 PREFERRED_XML_PARSERS = ["drv_libxml2"]
 
-#RELEASE remove
-if __name__ == '__main__':
-  import os, sys
-  os.chdir(os.path.split(os.path.abspath(__file__))[0])
-  sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
-
-from liberalxmlparser import *
-from treebuilders import dom
-#END RELEASE
-
-#RELEASE add
-#import html5lib
-#from html5lib.treebuilders import dom
-#from html5lib.liberalxmlparser import *
-#END RELEASE
+from html5lib.treebuilders import dom
+from html5lib.liberalxmlparser import *
 
 class SAXLogger: 
   def __init__(self):

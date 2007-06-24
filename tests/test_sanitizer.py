@@ -1,13 +1,7 @@
 import os,sys,unittest
 from support import simplejson, html5lib_test_files
 
-#RELEASE remove
-import html5parser, sanitizer, constants
-#END RELEASE
-
-#RELEASE add
-#from html5lib import html5parser, sanitizer, constants
-#END RELEASE
+from html5lib import html5parser, sanitizer, constants
 
 class SanitizeTest(unittest.TestCase):
   def addTest(cls, name, expected, input):

@@ -30,9 +30,6 @@ of a full treebuilder and is a useful reference for the semantics of
 the various methods.
 """
 
-import os.path
-__path__.append(os.path.dirname(__path__[0]))
-
 treeBuilderCache = {}
 
 def getTreeBuilder(treeType, implementation=None, **kwargs):
