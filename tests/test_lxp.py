@@ -56,10 +56,10 @@ class BasicXhtml5Test(Xhtml5Test):
 
   def test_title_body_named_charref(self):
     self.assertXhtmlEquals(
-      '<title>mdash</title>A &mdash B',
+      '<title>ntilde</title>A &ntilde B',
       '<html xmlns="http://www.w3.org/1999/xhtml">'
-        '<head><title>mdash</title></head>' + 
-        '<body>A '+ unichr(0x2014).encode('utf-8') + ' B</body>' +
+        '<head><title>ntilde</title></head>' + 
+        '<body>A '+ unichr(0xf1).encode('utf-8') + ' B</body>' +
       '</html>')
 
 class BasicXmlTest(Xhtml5Test):
