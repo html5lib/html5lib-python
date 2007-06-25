@@ -1,4 +1,5 @@
 from distutils.core import setup
+import os
 
 long_description="""HTML parser designed to follow the WHATWG HTML5 
 specification. The parser is designed to handle all flavours of HTML and 
@@ -29,6 +30,9 @@ setup(name='html5lib',
       classifiers=classifiers,
       maintainer='James Graham',
       maintainer_email='jg307@cam.ac.uk',
-      packages=['html5lib', 'html5lib.treebuilders'],
-      package_dir = {'html5lib': 'src'}
+      packages=['html5lib'] + ['html5lib.'+name
+          for name in os.listdir(os.path.join('src','html5lib'))
+          if os.path.isdir(os.path.join('src','html5lib',name)) and
+              not name.startswith('.')],
+      package_dir = {'html5lib': 'src/html5lib'}
       )
