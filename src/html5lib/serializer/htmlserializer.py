@@ -73,12 +73,17 @@ class HTMLSerializer(object):
 
     inject_meta_charset = True
 
+    options = ("quote_attr_values", "quote_char", "use_best_quote_char",
+          "minimize_boolean_attributes", "use_trailing_solidus",
+          "space_before_trailing_solidus", "omit_optional_tags",
+          "strip_whitespace", "inject_meta_charset", "escape_lt_in_attrs",
+          "escape_rcdata")
+
     def __init__(self, **kwargs):
         if kwargs.has_key('quote_char'):
             self.use_best_quote_char = False
-        for name,value in kwargs.items():
-            if name in dir(self.__class__) and not name.startswith('_'):
-                setattr(self, name, value)
+        for attr in self.options:
+            setattr(self, attr, kwargs.get(attr, getattr(self, attr)))
         self.errors = []
         self.strict = False
 
