@@ -1032,7 +1032,12 @@ class InBodyPhase(Phase):
                 node = self.tree.openElements.pop()
 
     def endTagForm(self, name):
-        self.endTagBlock(name)
+        if self.tree.elementInScope(name):
+            self.tree.generateImpliedEndTags()
+        if self.tree.openElements[-1].name != name:
+            self.parser.parseError((u"End tag (form) seen too early. Ignored."))
+        else:
+            self.tree.openElements.pop()
         self.tree.formPointer = None
 
     def endTagListItem(self, name):
