@@ -994,7 +994,7 @@ class InBodyPhase(Phase):
         if self.tree.elementInScope("p"):
             self.tree.generateImpliedEndTags("p")
         if self.tree.openElements[-1].name != "p":
-            self.parser.parseError("Unexpected end tag (p).")
+            self.parser.parseError(_("Unexpected end tag (p)."))
         while self.tree.elementInScope("p"):
             self.tree.openElements.pop()
 
@@ -1024,7 +1024,7 @@ class InBodyPhase(Phase):
         if inScope:
             self.tree.generateImpliedEndTags()
         if self.tree.openElements[-1].name != name:
-             self.parser.parseError((u"End tag (" + name + ") seen too "
+             self.parser.parseError(_(u"End tag (" + name + ") seen too "
                u"early. Expected other end tag."))
         if inScope:
             node = self.tree.openElements.pop()
@@ -1035,7 +1035,7 @@ class InBodyPhase(Phase):
         if self.tree.elementInScope(name):
             self.tree.generateImpliedEndTags()
         if self.tree.openElements[-1].name != name:
-            self.parser.parseError((u"End tag (form) seen too early. Ignored."))
+            self.parser.parseError(_(u"End tag (form) seen too early. Ignored."))
         else:
             self.tree.openElements.pop()
         self.tree.formPointer = None
@@ -1045,7 +1045,7 @@ class InBodyPhase(Phase):
         if self.tree.elementInScope(name):
             self.tree.generateImpliedEndTags(name)
             if self.tree.openElements[-1].name != name:
-                self.parser.parseError((u"End tag (" + name + ") seen too "
+                self.parser.parseError(_(u"End tag (" + name + ") seen too "
                   u"early. Expected other end tag."))
 
         if self.tree.elementInScope(name):
@@ -1059,7 +1059,7 @@ class InBodyPhase(Phase):
                 self.tree.generateImpliedEndTags()
                 break
         if self.tree.openElements[-1].name != name:
-            self.parser.parseError((u"Unexpected end tag (" + name + "). "
+            self.parser.parseError(_(u"Unexpected end tag (" + name + "). "
                   u"Expected other end tag."))
 
         for item in headingElements:
