@@ -91,11 +91,7 @@ def printOutput(parser, document, opts):
         sys.stdout.write(document.hilite("utf-8"))
     elif opts.html:
         kwargs = {}
-        for opt in ['inject_meta_charset', 'strip_whitespace', 'sanitize',
-                    'omit_optional_tags', 'quote_attr_values', 'quote_char',
-                    'use_best_quote_char', 'minimize_boolean_attributes',
-                    'use_trailing_solidus', 'escape_lt_in_attrs',
-                    'escape_rcdata']:
+        for opt in serializer.HTMLSerializer.options:
             kwargs[opt] = getattr(opts,opt)
         if not kwargs['quote_char']: del kwargs['quote_char']
         tokens = treewalkers.getTreeWalker(opts.treebuilder)(document)
@@ -175,6 +171,11 @@ def getOptParser():
     parser.add_option("", "--use-trailing-solidus", action="store_true",
                       default=False, dest="use_trailing_solidus",
                       help="use trailing solidus")
+
+    parser.add_option("", "--space-before-trailing-solidus",
+                      action="store_true", default=False,
+                      dest="space_before_trailing_solidus",
+                      help="add space before trailing solidus")
 
     parser.add_option("", "--escape-lt-in-attrs", action="store_true",
                       default=False, dest="escape_lt_in_attrs",

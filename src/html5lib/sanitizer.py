@@ -2,7 +2,7 @@ import re
 from xml.sax.saxutils import escape, unescape
 from tokenizer import HTMLTokenizer
 
-class HTMLSanitizer(HTMLTokenizer):
+class HTMLSanitizerMixin:
     """ sanitization of XHTML+MathML+SVG and of inline style attributes."""
 
     acceptable_elements = ['a', 'abbr', 'acronym', 'address', 'area', 'b',
@@ -130,38 +130,37 @@ class HTMLSanitizer(HTMLTokenizer):
     #    => &lt;script> do_nasty_stuff() &lt;/script>
     #   sanitize_html('<a href="javascript: sucker();">Click here for $100</a>')
     #    => <a>Click here for $100</a>
-    def __iter__(self):
-        for token in HTMLTokenizer.__iter__(self):
-            if token["type"] in ["StartTag", "EndTag", "EmptyTag"]:
-                if token["name"] in self.allowed_elements:
-                    if token.has_key("data"):
-                        attrs = dict([(name,val) for name,val in token["data"][::-1] if name in self.allowed_attributes])
-                        for attr in self.attr_val_is_uri:
-                            if not attrs.has_key(attr): continue
-                            val_unescaped = re.sub("[`\000-\040\177-\240\s]+", '', unescape(attrs[attr])).lower()
-                            if re.match("^[a-z0-9][-+.a-z0-9]*:",val_unescaped) and (val_unescaped.split(':')[0] not in self.allowed_protocols):
-                                del attrs[attr]
-                        if attrs.has_key('style'):
-                            attrs['style'] = self.sanitize_css(attrs['style'])
-                        token["data"] = [[name,val] for name,val in attrs.items()]
-                    yield token
-                else:
-                    if token["type"] == "EndTag":
-                        token["data"] = "</%s>" % token["name"]
-                    elif token["data"]:
-                        attrs = ''.join([' %s="%s"' % (k,escape(v)) for k,v in token["data"]])
-                        token["data"] = "<%s%s>" % (token["name"],attrs)
-                    else:
-                        token["data"] = "<%s>" % token["name"]
-                    if token["type"] == "EmptyTag":
-                        token["data"]=token["data"][:-1] + "/>"
-                    token["type"] = "Characters"
-                    del token["name"]
-                    yield token
-            elif token["type"] == "Comment":
-                pass
+    def sanitize_token(self, token):
+        if token["type"] in ["StartTag", "EndTag", "EmptyTag"]:
+            if token["name"] in self.allowed_elements:
+                if token.has_key("data"):
+                    attrs = dict([(name,val) for name,val in token["data"][::-1] if name in self.allowed_attributes])
+                    for attr in self.attr_val_is_uri:
+                        if not attrs.has_key(attr): continue
+                        val_unescaped = re.sub("[`\000-\040\177-\240\s]+", '', unescape(attrs[attr])).lower()
+                        if re.match("^[a-z0-9][-+.a-z0-9]*:",val_unescaped) and (val_unescaped.split(':')[0] not in self.allowed_protocols):
+                            del attrs[attr]
+                    if attrs.has_key('style'):
+                        attrs['style'] = self.sanitize_css(attrs['style'])
+                    token["data"] = [[name,val] for name,val in attrs.items()]
+                return token
             else:
-                yield token
+                if token["type"] == "EndTag":
+                    token["data"] = "</%s>" % token["name"]
+                elif token["data"]:
+                    attrs = ''.join([' %s="%s"' % (k,escape(v)) for k,v in token["data"]])
+                    token["data"] = "<%s%s>" % (token["name"],attrs)
+                else:
+                    token["data"] = "<%s>" % token["name"]
+                if token["type"] == "EmptyTag":
+                    token["data"]=token["data"][:-1] + "/>"
+                token["type"] = "Characters"
+                del token["name"]
+                return token
+        elif token["type"] == "Comment":
+            pass
+        else:
+            return token
 
     def sanitize_css(self, style):
         # disallow urls
@@ -187,3 +186,9 @@ class HTMLSanitizer(HTMLTokenizer):
               clean.append(prop + ': ' + value + ';')
 
         return ' '.join(clean)
+
+class HTMLSanitizer(HTMLTokenizer, HTMLSanitizerMixin):
+    def __iter__(self):
+        for token in HTMLTokenizer.__iter__(self):
+            token = self.sanitize_token(token)
+            if token: yield token
