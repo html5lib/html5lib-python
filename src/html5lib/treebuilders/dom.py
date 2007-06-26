@@ -74,10 +74,6 @@ class NodeBuilder(_base.Node):
 class TreeBuilder(_base.TreeBuilder):
     def documentClass(self):
         self.dom = minidom.getDOMImplementation().createDocument(None,None,None)
-        def hilite(self, encoding):
-            print 'foo'
-        method = new.instancemethod(hilite, self.dom, self.dom.__class__)
-        setattr(self.dom, 'hilite', method)
         return self
 
     def insertDoctype(self, name):
