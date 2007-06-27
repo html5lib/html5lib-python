@@ -40,7 +40,9 @@ class XMLParser(html5parser.HTMLParser):
 
             # For EmptyTags, process both a Start and an End tag
             if token["type"] == "EmptyTag":
+                save = self.tokenizer.contentModelFlag
                 self.phase.processStartTag(token["name"], token["data"])
+                self.tokenizer.contentModelFlag = save
                 token["data"] = {}
                 token["type"] = "EndTag"
 

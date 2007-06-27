@@ -200,6 +200,16 @@ class XhtmlTest(Xhtml5Test):
 <script>1 &lt; 2 &amp; 3</script>
 </body></html>""")
 
+  def test_script_src(self):
+    self.assertXhtmlEquals("""<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>SCRIPT</title><script src="http://example.com"/></head>
+<body>
+</body></html>""",
+"""<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>SCRIPT</title><script src="http://example.com"></script></head>
+<body>
+</body></html>""")
+
   def test_title(self):
     self.assertXhtmlEquals("""<html xmlns="http://www.w3.org/1999/xhtml">
 <head><title>1 &lt; 2 &amp; 3</title></head>
