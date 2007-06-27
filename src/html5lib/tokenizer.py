@@ -130,7 +130,6 @@ class HTMLTokenizer(object):
             allowed = hexDigits
             radix = 16
 
-        char = u"\uFFFD"
         charStack = []
 
         # Consume all the characters that are in range while making sure we
@@ -155,8 +154,8 @@ class HTMLTokenizer(object):
 
             charAsInt = entitiesWindows1252[charAsInt - 128]
 
-        # 0 is not a good number, neither are illegal Unicode code points.
-        if charAsInt > 0 and charAsInt <= 1114111:
+        # 0 is not a good number, neither are illegal Unicode code points (higher than 0x10FFFF) or surrogate characters (in the range 0xD800 to 0xDFFF).
+        if 0 < charAsInt and charAsInt <= 1114111 and not (55296 <= charAsInt and charAsInt <= 57343):
             try:
                 # XXX We should have a separate function that does "int" to
                 # "unicodestring" conversion since this doesn't always work
@@ -167,7 +166,11 @@ class HTMLTokenizer(object):
                     char = eval("u'\\U%08x'" % charAsInt)
                 except:
                     self.tokenQueue.append({"type": "ParseError", "data":
-                      _("Numeric entity couldn't be converted to character.")})
+                      _("Numeric entity couldn't be converted to character (codepoint: U+%08x).") % charAsInt})
+        else:
+            char = u"\uFFFD"
+            self.tokenQueue.append({"type": "ParseError", "data":
+              _("Numeric entity represents an illegal codepoint: U+%08x.") % charAsInt})
 
         # Discard the ; if present. Otherwise, put it back on the queue and
         # invoke parseError on parser.
