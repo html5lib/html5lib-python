@@ -69,6 +69,7 @@ class XHTMLParser(XMLParser):
 
     def __init__(self, *args, **kwargs):
         html5parser.HTMLParser.__init__(self, *args, **kwargs)
+        self.phases["initial"] = XmlInitialPhase(self, self.tree)
         self.phases["rootElement"] = XhmlRootPhase(self, self.tree)
 
     def normalizeToken(self, token):
@@ -101,7 +102,19 @@ class XhmlRootPhase(html5parser.RootElementPhase):
         self.tree.document.appendChild(element)
         self.parser.phase = self.parser.phases["beforeHead"]
 
+class XmlInitialPhase(html5parser.InitialPhase):
+    """ Consume XML Prologs """
+    def processComment(self, data):
+        if not data.startswith('?xml') or not data.endswith('?'):
+            html5parser.InitialPhase.processComment(self, data)
+
 class XmlRootPhase(html5parser.Phase):
+    """ Consume XML Prologs """
+    def processComment(self, data):
+        print repr(data)
+        if not data.startswith('?xml') or not data.endswith('?'):
+            html5parser.InitialPhase.processComment(self, data)
+
     """ Prime the Xml parser """
     def __getattr__(self, name):
         self.tree.openElements.append(self.tree.document)

@@ -216,6 +216,17 @@ class XhtmlTest(Xhtml5Test):
 <body>
 </body></html>""")
 
+  def test_prolog(self):
+    self.assertXhtmlEquals("""<?xml version="1.0" encoding="UTF-8" ?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>PROLOG</title></head>
+<body>
+</body></html>""",
+"""<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>PROLOG</title></head>
+<body>
+</body></html>""")
+
 def buildTestSuite():
   return unittest.defaultTestLoader.loadTestsFromName(__name__)
 
