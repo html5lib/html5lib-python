@@ -53,6 +53,7 @@ class HTMLInputStream(object):
         self.dataStream = codecs.getreader(self.charEncoding)(self.rawStream, 'replace')
 
         self.queue = []
+        self.errors = []
 
         self.line = self.col = 0
         self.lineLengths = []
@@ -214,7 +215,10 @@ class HTMLInputStream(object):
                 return EOF
 
             # Normalize newlines and null characters
-            if c == '\x00': c = u'\uFFFD'
+            if c == '\x00':
+                self.errors.append('null character found in input stream, '
+                  'replaced with U+FFFD')
+                c = u'\uFFFD'
             if c == '\r':
                 c = self.dataStream.read(1, 1)
                 if c != '\n':

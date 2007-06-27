@@ -93,6 +93,8 @@ class HTMLTokenizer(object):
         # Start processing. When EOF is reached self.state will return False
         # instead of True and the loop will terminate.
         while self.state():
+            while self.stream.errors:
+                yield {"type": "ParseError", "data": self.stream.errors.pop(0)}
             while self.tokenQueue:
                 yield self.tokenQueue.pop(0)
 
