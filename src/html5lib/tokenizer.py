@@ -292,12 +292,12 @@ class HTMLTokenizer(object):
                 self.lastFourChars.pop(0)
             self.lastFourChars.append(data)
         if data == "&" and self.contentModelFlag in\
-          (contentModelFlags["PCDATA"], contentModelFlags["RCDATA"]):
+          (contentModelFlags["PCDATA"], contentModelFlags["RCDATA"]) and not\
+          self.escapeFlag:
             self.state = self.states["entityData"]
         elif data == "-" and self.contentModelFlag in\
-          (contentModelFlags["CDATA"], contentModelFlags["RCDATA"]) and\
-          self.escapeFlag == False and\
-          "".join(self.lastFourChars) == "<!--":
+          (contentModelFlags["CDATA"], contentModelFlags["RCDATA"]) and not\
+          self.escapeFlag and "".join(self.lastFourChars) == "<!--":
             self.escapeFlag = True
             self.tokenQueue.append({"type": "Characters", "data":data})
         elif data == "<" and (self.contentModelFlag ==\
@@ -307,7 +307,7 @@ class HTMLTokenizer(object):
             self.state = self.states["tagOpen"]
         elif data == ">" and self.contentModelFlag in\
           (contentModelFlags["CDATA"], contentModelFlags["RCDATA"]) and\
-          self.escapeFlag == True and "".join(self.lastFourChars)[1:] == "-->":
+          self.escapeFlag and "".join(self.lastFourChars)[1:] == "-->":
             self.escapeFlag = False
             self.tokenQueue.append({"type": "Characters", "data":data})
         elif data == EOF:
