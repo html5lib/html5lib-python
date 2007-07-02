@@ -60,5 +60,6 @@ def getTreeBuilder(treeType, implementation=None, **kwargs):
             treeBuilderCache[treeType] = soup.TreeBuilder
         elif treeType == "etree":
             import etree
-            treeBuilderCache[treeType] = etree.getETreeModule(implementation, **kwargs).TreeBuilder
+            # XXX: NEVER cache here, caching is done in the etree submodule
+            return etree.getETreeModule(implementation, **kwargs).TreeBuilder
     return treeBuilderCache.get(treeType)
