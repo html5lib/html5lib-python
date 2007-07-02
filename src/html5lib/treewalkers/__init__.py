@@ -20,15 +20,16 @@ def getTreeWalker(treeType, implementation=None, **kwargs):
                               more pythonic idioms.
                 "dom" - The xml.dom.minidom DOM implementation
                 "pulldom" - The xml.dom.pulldom event stream
-                "etree" - A generic builder for tree implementations exposing an
+                "etree" - A generic walker for tree implementations exposing an
                           elementtree-like interface (known to work with
                           ElementTree, cElementTree and lxml.etree).
+                "lxml" - Optimized walker for lxml.etree
                 "beautifulsoup" - Beautiful soup (if installed)
                 "genshi" - a Genshi stream
 
     implementation - (Currently applies to the "etree" tree type only). A module
                       implementing the tree type e.g. xml.etree.ElementTree or
-                      lxml.etree."""
+                      cElementTree."""
 
     treeType = treeType.lower()
     if treeType not in treeWalkerCache:
@@ -41,7 +42,11 @@ def getTreeWalker(treeType, implementation=None, **kwargs):
         elif treeType == "beautifulsoup":
             import soup
             treeWalkerCache[treeType] = soup.TreeWalker
+        elif treeType == "lxml":
+            import lxmletree
+            treeWalkerCache[treeType] = lxmletree.TreeWalker
         elif treeType == "etree":
             import etree
-            treeWalkerCache[treeType] = etree.getETreeModule(implementation, **kwargs).TreeWalker
+            # XXX: NEVER cache here, caching is done in the etree submodule
+            return etree.getETreeModule(implementation, **kwargs).TreeWalker
     return treeWalkerCache.get(treeType)
