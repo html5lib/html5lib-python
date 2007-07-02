@@ -143,32 +143,6 @@ def testSerializer(element):
 
     return "\n".join(rv)
 
-class HTMLSerializer(object):
-    def serialize(self, node):
-        rv = self.serializeNode(node)
-        for child in node.childNodes:
-            rv += self.serialize(child)
-        if node.nodeType == Node.ELEMENT_NODE and node.nodeName not in voidElements:
-            rv += "</%s>\n"%node.nodeName
-        return rv
-    
-    def serializeNode(self, node):
-        if node.nodeType == Node.TEXT_NODE:
-            rv = node.nodeValue
-        elif node.nodeType == Node.ELEMENT_NODE:
-            rv = "<%s"%node.nodeName
-            if node.hasAttributes():
-                rv = rv+"".join([" %s='%s'"%(key, escape(value)) for key,value in
-                                 node.attributes.items()])
-            rv += ">"
-        elif node.nodeType == Node.COMMENT_NODE:
-            rv = "<!-- %s -->" % escape(node.nodeValue)        
-        elif node.nodeType == Node.DOCUMENT_TYPE_NODE:
-            rv = "<!DOCTYPE %s>" % node.name
-        else:
-            rv = ""
-        return rv
-
 def dom2sax(node, handler, nsmap={'xml':XML_NAMESPACE}):
   if node.nodeType == Node.ELEMENT_NODE:
     if not nsmap:

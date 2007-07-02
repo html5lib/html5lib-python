@@ -191,32 +191,6 @@ class CommentNode(Node):
     def hilite(self):
         return '<code class="markup comment">&lt;!--%s--></code>' % escape(self.data)
 
-class HTMLSerializer(object):
-    def serialize(self, node):
-        rv = self.serializeNode(node)
-        for child in node.childNodes:
-            rv += self.serialize(child)
-        if node.type == Element.type and node.name not in voidElements:
-            rv += "</%s>\n"%node.name
-        return rv
-    
-    def serializeNode(self, node):
-        if node.type == TextNode.type:
-            rv = node.value
-        elif node.type == Element.type:
-            rv = "<%s"%node.name
-            if node.attributes:
-                rv = rv+"".join([" %s='%s'"%(key, escape(value)) for key,value in
-                                 node.attributes.iteritems()])
-            rv += ">"
-        elif node.type == CommentNode.type:
-            rv = "<!-- %s -->" % escape(node.data)        
-        elif node.type == DocumentType.type:
-            rv = "<!DOCTYPE %s>" % node.name
-        else:
-            rv = ""
-        return rv
-
 class TreeBuilder(_base.TreeBuilder):
     documentClass = Document
     doctypeClass = DocumentType
