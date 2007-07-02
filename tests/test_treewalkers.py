@@ -3,12 +3,12 @@ import sys
 import StringIO
 import unittest
 
-from support import html5lib_test_files
+from support import html5lib_test_files, TestData
 
 from html5lib import html5parser, treewalkers, treebuilders
 from html5lib.filters.lint import Filter as LintFilter, LintError
 
-from test_parser import parseTestcase
+from test_parser import convertExpected
 
 def PullDOMAdapter(node):
     from xml.dom import Node
@@ -209,7 +209,7 @@ class TestCase(unittest.TestCase):
         try:
             output = convertTokens(LintFilter(treeClass["walker"](document)))
             output = attrlist.sub(sortattrs, output)
-            expected = attrlist.sub(sortattrs, expected)
+            expected = attrlist.sub(sortattrs, convertExpected(expected))
             self.assertEquals(expected, output, "\n".join([
                 "", "Input:", input,
                 "", "Expected:", expected,
@@ -228,16 +228,14 @@ def buildTestSuite():
             testName = os.path.basename(filename).replace(".dat","")
             if testName == "tests5": continue # TODO
 
-            f = open(filename)
-            tests = f.read().split("#data\n")
+            tests = TestData(filename, ("data", "errors", "document-fragment",
+                                        "document"))
 
             for index, test in enumerate(tests):
-                if test == "": continue
-                test = "#data\n" + test
-                innerHTML, input, expected, errors = parseTestcase(test)
-
-                def testFunc(self, innerHTML=innerHTML, input=input,
-                    expected=expected, errors=errors, treeCls=treeCls):
+                errors = test['errors'].split("\n")
+                def testFunc(self, innerHTML=test['document-fragment'],
+                    input=test['data'], expected=test['document'],
+                    errors=errors, treeCls=treeCls):
                     self.runTest(innerHTML, input, expected, errors, treeCls)
                 setattr(TestCase, "test_%s_%d_%s" % (testName,index+1,treeName),
                      testFunc)
