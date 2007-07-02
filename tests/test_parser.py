@@ -2,7 +2,7 @@ import os
 import sys
 import StringIO
 import unittest
-from support import html5lib_test_files
+from support import html5lib_test_files, TestData
 
 from html5lib import html5parser, treebuilders
 
@@ -46,51 +46,25 @@ except ImportError:
 #Run the parse error checks
 checkParseErrors = False # TODO
 
-def parseTestcase(testString):
-    testString = testString.split("\n")
-    try:
-        if testString[0] != "#data":
-            sys.stderr.write(testString)
-        assert testString[0] == "#data"
-    except:
-        raise
-    innerHTML = False
-    input = []
-    expected = []
-    errors = []
-    currentList = input
-    for line in testString:
-        if line and not (line.startswith("#errors") or
-          line.startswith("#document") or line.startswith("#data") or
-          line.startswith("#document-fragment")):
-            if currentList is expected:
-                if line.startswith("|"):
-                    currentList.append(line[2:])
-                else:
-                    currentList.append(line)
+def convert(stripChars):
+    def convertData(data):
+        """convert the output of str(document) to the format used in the testcases"""
+        data = data.split("\n")
+        rv = []
+        for line in data:
+            if line.startswith("|"):
+                rv.append(line[stripChars:])
             else:
-                currentList.append(line)
-        elif line == "#errors":
-            currentList = errors
-        elif line == "#document" or line.startswith("#document-fragment"):
-            if line.startswith("#document-fragment"):
-                innerHTML = line[19:]
-                if not innerHTML:
-                    sys.stderr.write(testString)
-                assert innerHTML
-            currentList = expected
-    return innerHTML, "\n".join(input), "\n".join(expected), errors
+                rv.append(line)
+        return "\n".join(rv)
+    return convertData
+#XXX - There should just be one function here but for some reason the testcase
+#format differs from the treedump format by a single space character
 
-def convertTreeDump(treedump):
-    """convert the output of str(document) to the format used in the testcases"""
-    treedump = treedump.split("\n")[1:]
-    rv = []
-    for line in treedump:
-        if line.startswith("|"):
-            rv.append(line[3:])
-        else:
-            rv.append(line)
-    return "\n".join(rv)
+def convertTreeDump(data):
+    return "\n".join(convert(3)(data).split("\n")[1:])
+
+convertExpected = convert(2)
 
 import re
 attrlist = re.compile(r"^(\s+)\w+=.*(\n\1\w+=.*)+",re.M)
@@ -108,11 +82,14 @@ class TestCase(unittest.TestCase):
             document = p.parseFragment(StringIO.StringIO(input), innerHTML)
         else:
             document = p.parse(StringIO.StringIO(input))
+        
         output = convertTreeDump(p.tree.testSerializer(document))
         output = attrlist.sub(sortattrs, output)
+        
+        expected = convertExpected(expected)
         expected = attrlist.sub(sortattrs, expected)
-        errorMsg = "\n".join(["\n\nExpected:", expected,
-                                 "\nRecieved:", output])
+        errorMsg = "\n".join(["\n\nInput:", input, "\nExpected:", expected,
+                              "\nRecieved:", output])
         self.assertEquals(expected, output, errorMsg)
         errStr = ["Line: %i Col: %i %s"%(line, col, message) for
                   ((line,col), message) in p.errors]
@@ -130,21 +107,19 @@ def buildTestSuite():
     for treeName, treeCls in treeTypes.iteritems():
         for filename in html5lib_test_files('tree-construction'):
             testName = os.path.basename(filename).replace(".dat","")
+            if testName == "tests5": continue # TODO
 
-            f = open(filename)
-            tests = f.read().split("#data\n")
+            tests = TestData(filename, ("data", "errors", "document-fragment",
+                                        "document"))
 
             for index, test in enumerate(tests):
-                if test == "": continue
-
-                test = "#data\n" + test
-                innerHTML, input, expected, errors = parseTestcase(test)
-
-                def testFunc(self, innerHTML=innerHTML, input=input,
-                    expected=expected, errors=errors, treeCls=treeCls): 
+                errors = test['errors'].split("\n")
+                def testFunc(self, innerHTML=test['document-fragment'], input=test['data'],
+                    expected=test['document'], errors=errors, treeCls=treeCls): 
                     return self.runParserTest(innerHTML, input, expected, errors, treeCls)
                 setattr(TestCase, "test_%s_%d_%s" % (testName,index+1,treeName),
                      testFunc)
+
     return unittest.TestLoader().loadTestsFromTestCase(TestCase)
 
 def main():
