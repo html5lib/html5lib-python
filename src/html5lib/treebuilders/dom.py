@@ -1,8 +1,5 @@
 import _base
 from xml.dom import minidom, Node, XML_NAMESPACE, XMLNS_NAMESPACE
-import new
-from xml.sax.saxutils import escape
-from html5lib.constants import voidElements
 
 import re
 illegal_xml_chars = re.compile("[\x01-\x08\x0B\x0C\x0E-\x1F]")

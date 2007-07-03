@@ -1,6 +1,5 @@
 import _base
 import new
-import copy
 
 moduleCache = {}
 

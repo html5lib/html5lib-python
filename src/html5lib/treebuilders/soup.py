@@ -1,7 +1,3 @@
-
-import sys
-import copy
-
 from BeautifulSoup import BeautifulSoup, Tag, NavigableString, Comment, Declaration
 
 import _base
