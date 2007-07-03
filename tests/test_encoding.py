@@ -1,6 +1,6 @@
 import os
 import unittest
-from support import html5lib_test_files
+from support import html5lib_test_files, TestData
 
 from html5lib import inputstream
 
@@ -12,9 +12,8 @@ def buildTestSuite():
     for filename in html5lib_test_files("encoding"):
         test_name = os.path.basename(filename).replace('.dat',''). \
             replace('-','')
-        for idx,(data,encoding) in enumerate(re.compile(
-                "^#data\s*\n(.*?)\n#encoding\s*\n(.*?)\n",
-                re.DOTALL|re.MULTILINE).findall(open(filename).read())):
+        tests = TestData(filename, ("data", "encoding"))
+        for idx, (data, encoding) in enumerate(tests):
             def encodingTest(self, data=data, encoding=encoding):
                 stream = inputstream.HTMLInputStream(data,chardet=False)
                 self.assertEquals(encoding.lower(), stream.charEncoding)
