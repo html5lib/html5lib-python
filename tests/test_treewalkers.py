@@ -3,12 +3,10 @@ import sys
 import StringIO
 import unittest
 
-from support import html5lib_test_files, TestData
+from support import html5lib_test_files, TestData, convertExpected
 
 from html5lib import html5parser, treewalkers, treebuilders
 from html5lib.filters.lint import Filter as LintFilter, LintError
-
-from test_parser import convertExpected
 
 def PullDOMAdapter(node):
     from xml.dom import Node
@@ -231,11 +229,10 @@ def buildTestSuite():
             tests = TestData(filename, ("data", "errors", "document-fragment",
                                         "document"))
 
-            for index, test in enumerate(tests):
-                errors = test['errors'].split("\n")
-                def testFunc(self, innerHTML=test['document-fragment'],
-                    input=test['data'], expected=test['document'],
-                    errors=errors, treeCls=treeCls):
+            for index, (input, errors, innerHTML, expected) in enumerate(tests):
+                errors = errors.split("\n")
+                def testFunc(self, innerHTML=innerHTML, input=input,
+                    expected=expected, errors=errors, treeCls=treeCls):
                     self.runTest(innerHTML, input, expected, errors, treeCls)
                 setattr(TestCase, "test_%s_%d_%s" % (testName,index+1,treeName),
                      testFunc)

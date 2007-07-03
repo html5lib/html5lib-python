@@ -2,7 +2,7 @@ import os
 import sys
 import StringIO
 import unittest
-from support import html5lib_test_files, TestData
+from support import html5lib_test_files, TestData, convert, convertExpected
 
 from html5lib import html5parser, treebuilders
 
@@ -46,25 +46,10 @@ except ImportError:
 #Run the parse error checks
 checkParseErrors = False # TODO
 
-def convert(stripChars):
-    def convertData(data):
-        """convert the output of str(document) to the format used in the testcases"""
-        data = data.split("\n")
-        rv = []
-        for line in data:
-            if line.startswith("|"):
-                rv.append(line[stripChars:])
-            else:
-                rv.append(line)
-        return "\n".join(rv)
-    return convertData
 #XXX - There should just be one function here but for some reason the testcase
 #format differs from the treedump format by a single space character
-
 def convertTreeDump(data):
     return "\n".join(convert(3)(data).split("\n")[1:])
-
-convertExpected = convert(2)
 
 import re
 attrlist = re.compile(r"^(\s+)\w+=.*(\n\1\w+=.*)+",re.M)
@@ -98,9 +83,6 @@ class TestCase(unittest.TestCase):
         if checkParseErrors:
             self.assertEquals(len(p.errors), len(errors), errorMsg2)
 
-def test_parser():
-                yield innerHTML, input, expected, errors, treeName, treeCls
-
 def buildTestSuite():
     sys.stdout.write('Testing tree builders '+ " ".join(treeTypes.keys()) + "\n")
 
@@ -112,10 +94,10 @@ def buildTestSuite():
             tests = TestData(filename, ("data", "errors", "document-fragment",
                                         "document"))
 
-            for index, test in enumerate(tests):
-                errors = test['errors'].split("\n")
-                def testFunc(self, innerHTML=test['document-fragment'], input=test['data'],
-                    expected=test['document'], errors=errors, treeCls=treeCls): 
+            for index, (input, errors, innerHTML, expected) in enumerate(tests):
+                errors = errors.split("\n")
+                def testFunc(self, innerHTML=innerHTML, input=input,
+                    expected=expected, errors=errors, treeCls=treeCls): 
                     return self.runParserTest(innerHTML, input, expected, errors, treeCls)
                 setattr(TestCase, "test_%s_%d_%s" % (testName,index+1,treeName),
                      testFunc)

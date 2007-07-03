@@ -87,7 +87,7 @@ class TestData(object):
     def isSectionHeading(self, line):
         """If the current heading is a test section heading return the heading,
         otherwise return False"""
-        line=line.strip()
+        line = line.strip()
         if line.startswith("#") and line[1:] in self.sections:
             return line[1:]
         else:
@@ -98,7 +98,22 @@ class TestData(object):
         for key,value in data.iteritems():
             if value.endswith("\n"):
                 data[key] = value[:-1]
+        result = []
         for heading in self.sections:
-            if heading not in data:
-                data[heading] = None
-        return data
+            result.append(data.get(heading))
+        return result
+
+def convert(stripChars):
+    def convertData(data):
+        """convert the output of str(document) to the format used in the testcases"""
+        data = data.split("\n")
+        rv = []
+        for line in data:
+            if line.startswith("|"):
+                rv.append(line[stripChars:])
+            else:
+                rv.append(line)
+        return "\n".join(rv)
+    return convertData
+
+convertExpected = convert(2)
