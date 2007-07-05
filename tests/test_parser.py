@@ -80,8 +80,7 @@ class TestCase(unittest.TestCase):
                   ((line,col), message) in p.errors]
         errorMsg2 = "\n".join(["\n\nInput errors (" + str(len(errors)) + "):\n" + "\n".join(errors),
                                "Actual errors (" + str(len(p.errors)) + "):\n" + "\n".join(errStr)])
-        if checkParseErrors:
-            self.assertEquals(len(p.errors), len(errors), errorMsg2)
+        self.assertEquals(len(p.errors), len(errors), errorMsg2)
 
 def buildTestSuite():
     sys.stdout.write('Testing tree builders '+ " ".join(treeTypes.keys()) + "\n")

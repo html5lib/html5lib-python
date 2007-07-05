@@ -11,12 +11,6 @@ def buildTestSuite():
     return suite
 
 def main():
-    # the following is temporary while the unit tests for parse errors are
-    # still in flux
-    if '-p' in sys.argv: # enable check for parse errors
-        import test_parser
-        test_parser.checkParseErrors = True
-
     results = unittest.TextTestRunner().run(buildTestSuite())
     if not results.wasSuccessful(): sys.exit(1)
 
