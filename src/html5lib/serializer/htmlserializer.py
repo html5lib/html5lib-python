@@ -32,7 +32,7 @@ else:
     def htmlentityreplace_errors(exc):
         if isinstance(exc, (UnicodeEncodeError, UnicodeTranslateError)):
             res = []
-            for c in ex.object[exc.start:exc.end]:
+            for c in exc.object[exc.start:exc.end]:
                 c = encode_entity_map.get(c)
                 if c:
                     res.append("&")
