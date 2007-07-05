@@ -872,7 +872,11 @@ class InBodyPhase(Phase):
     def startTagNobr(self, name, attributes):
         self.tree.reconstructActiveFormattingElements()
         if self.tree.elementInScope("nobr"):
+            self.parser.parseError(_(u"Unexpected start tag (nobr) implies "
+              "end tag (nobr)."))
             self.processEndTag("nobr")
+            # XXX Need tests that trigger the following
+            self.tree.reconstructActiveFormattingElements()
         self.addFormattingElement(name, attributes)
 
     def startTagButton(self, name, attributes):
