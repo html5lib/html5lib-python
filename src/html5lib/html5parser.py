@@ -56,6 +56,7 @@ class HTMLParser(object):
             "rootElement": RootElementPhase(self, self.tree),
             "beforeHead": BeforeHeadPhase(self, self.tree),
             "inHead": InHeadPhase(self, self.tree),
+            # XXX "inHeadNoscript": InHeadNoScriptPhase(self, self.tree),
             "afterHead": AfterHeadPhase(self, self.tree),
             "inBody": InBodyPhase(self, self.tree),
             "inTable": InTablePhase(self, self.tree),
@@ -516,6 +517,7 @@ class InHeadPhase(Phase):
             ("html", self.startTagHtml),
             ("title", self.startTagTitle),
             ("style", self.startTagStyle),
+            ("noscript", self.startTagNoScript),
             ("script", self.startTagScript),
             (("base", "link", "meta"), self.startTagBaseLinkMeta),
             ("head", self.startTagHead)
@@ -525,7 +527,8 @@ class InHeadPhase(Phase):
         self. endTagHandler = utils.MethodDispatcher([
             ("head", self.endTagHead),
             (("html", "body", "br", "p"), self.endTagImplyAfterHead),
-            (("title", "style", "script"), self.endTagTitleStyleScript)
+            (("title", "style", "script", "noscript"),
+              self.endTagTitleStyleScriptNoScript)
         ])
         self.endTagHandler.default = self.endTagOther
 
@@ -547,7 +550,8 @@ class InHeadPhase(Phase):
         self.parser.phase.processEOF()
 
     def processCharacters(self, data):
-        if self.tree.openElements[-1].name in ("title", "style", "script"):
+        if self.tree.openElements[-1].name in\
+          ("title", "style", "script", "noscript"):
             self.tree.insertText(data)
         else:
             self.anythingElse()
@@ -572,6 +576,17 @@ class InHeadPhase(Phase):
         self.tree.openElements.append(element)
         self.parser.tokenizer.contentModelFlag = contentModelFlags["CDATA"]
 
+    def startTagNoScript(self, name, attributes):
+        # XXX Need to decide whether to implement the scripting disabled case.
+        element = self.tree.createElement(name, attributes)
+        if self.tree.headPointer is not None and\
+          self.parser.phase == self.parser.phases["inHead"]:
+            self.appendToHead(element)
+        else:
+            self.tree.openElements[-1].appendChild(element)
+        self.tree.openElements.append(element)
+        self.parser.tokenizer.contentModelFlag = contentModelFlags["CDATA"]
+    
     def startTagScript(self, name, attributes):
         #XXX Inner HTML case may be wrong
         element = self.tree.createElement(name, attributes)
@@ -607,7 +622,7 @@ class InHeadPhase(Phase):
         self.anythingElse()
         self.parser.phase.processEndTag(name)
 
-    def endTagTitleStyleScript(self, name):
+    def endTagTitleStyleScriptNoScript(self, name):
         if self.tree.openElements[-1].name == name:
             self.tree.openElements.pop()
         else:
@@ -623,6 +638,11 @@ class InHeadPhase(Phase):
             self.endTagHead("head")
         else:
             self.parser.phase = self.parser.phases["afterHead"]
+
+# XXX If we implement a parser for which scripting is disabled we need to
+# implement this phase.
+#
+# class InHeadNoScriptPhase(Phase):
 
 class AfterHeadPhase(Phase):
     def __init__(self, parser, tree):
