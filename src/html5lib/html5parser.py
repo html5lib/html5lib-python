@@ -1042,9 +1042,10 @@ class InBodyPhase(Phase):
         # AT Could merge this with the Block case
         if self.tree.elementInScope(name):
             self.tree.generateImpliedEndTags(name)
-            if self.tree.openElements[-1].name != name:
-                self.parser.parseError(_(u"End tag (" + name + ") seen too "
-                  u"early. Expected other end tag."))
+        
+        if self.tree.openElements[-1].name != name:
+            self.parser.parseError(_(u"End tag (" + name + ") seen too "
+              u"early. Expected other end tag."))
 
         if self.tree.elementInScope(name):
             node = self.tree.openElements.pop()
