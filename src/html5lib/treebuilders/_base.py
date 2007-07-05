@@ -302,6 +302,7 @@ class TreeBuilder(object):
 
     def generateImpliedEndTags(self, exclude=None):
         name = self.openElements[-1].name
+        # XXX td, th and tr are not actually needed
         if (name in frozenset(("dd", "dt", "li", "p", "td", "th", "tr"))
             and name != exclude):
             self.openElements.pop()
