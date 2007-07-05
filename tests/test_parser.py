@@ -78,8 +78,8 @@ class TestCase(unittest.TestCase):
         self.assertEquals(expected, output, errorMsg)
         errStr = ["Line: %i Col: %i %s"%(line, col, message) for
                   ((line,col), message) in p.errors]
-        errorMsg2 = "\n".join(["\n\nInput errors:\n" + "\n".join(errors),
-                               "Actual errors:\n" + "\n".join(errStr)])
+        errorMsg2 = "\n".join(["\n\nInput errors (" + str(len(errors)) + "):\n" + "\n".join(errors),
+                               "Actual errors (" + str(len(p.errors)) + "):\n" + "\n".join(errStr)])
         if checkParseErrors:
             self.assertEquals(len(p.errors), len(errors), errorMsg2)
 
@@ -95,7 +95,8 @@ def buildTestSuite():
                                         "document"))
 
             for index, (input, errors, innerHTML, expected) in enumerate(tests):
-                errors = errors.split("\n")
+                if errors:
+                    errors = errors.split("\n")
                 def testFunc(self, innerHTML=innerHTML, input=input,
                     expected=expected, errors=errors, treeCls=treeCls): 
                     return self.runParserTest(innerHTML, input, expected, errors, treeCls)
