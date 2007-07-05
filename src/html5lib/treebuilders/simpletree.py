@@ -30,7 +30,7 @@ class Node(_base.Node):
             tree += child.printTree(indent + 2)
         return tree
 
-    def appendChild(self, node, index=None):
+    def appendChild(self, node):
         if (isinstance(node, TextNode) and self.childNodes and
           isinstance(self.childNodes[-1], TextNode)):
             self.childNodes[-1].value += node.value
