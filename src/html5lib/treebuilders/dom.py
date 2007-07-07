@@ -119,7 +119,10 @@ def testSerializer(element):
     rv = []
     def serializeElement(element, indent=0):
         if element.nodeType == Node.DOCUMENT_TYPE_NODE:
-            rv.append("|%s<!DOCTYPE %s>"%(' '*indent, element.name))
+            if element.name:
+                rv.append("|%s<!DOCTYPE %s>"%(' '*indent, element.name))
+            else:
+                rv.append("|%s<!DOCTYPE>"%(' '*indent))
         elif element.nodeType == Node.DOCUMENT_NODE:
             rv.append("#document")
         elif element.nodeType == Node.DOCUMENT_FRAGMENT_NODE:

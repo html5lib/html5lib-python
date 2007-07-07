@@ -109,7 +109,10 @@ class DocumentType(Node):
         Node.__init__(self, name)
 
     def __unicode__(self):
-        return "<!DOCTYPE %s>" % self.name
+        if self.name:
+            return "<!DOCTYPE %s>" % self.name
+        else:
+            return "<!DOCTYPE>"
 
     toxml = __unicode__
     

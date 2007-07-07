@@ -151,7 +151,10 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             if not(hasattr(element, "tag")):
                 element = element.getroot()
             if element.tag == "<!DOCTYPE>":
-                rv.append("|%s<!DOCTYPE %s>"%(' '*indent, element.text))
+                if element.text:
+                    rv.append("|%s<!DOCTYPE %s>"%(' '*indent, element.text))
+                else:
+                    rv.append("|%s<!DOCTYPE>"%(' '*indent))
             elif element.tag == "<DOCUMENT_ROOT>":
                 rv.append("#document")
                 if element.text:
