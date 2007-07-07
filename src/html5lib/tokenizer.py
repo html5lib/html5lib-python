@@ -627,7 +627,7 @@ class HTMLTokenizer(object):
     def markupDeclarationOpenState(self):
         charStack = [self.stream.char(), self.stream.char()]
         if charStack == [u"-", u"-"]:
-            self.currentToken = {"type": "Comment", "data": ""}
+            self.currentToken = {"type": "Comment", "data": u""}
             self.state = self.states["commentStart"]
         else:
             for x in xrange(5):
@@ -635,7 +635,7 @@ class HTMLTokenizer(object):
             # Put in explicit EOF check
             if (not EOF in charStack and
                 "".join(charStack).upper() == u"DOCTYPE"):
-                self.currentToken = {"type":"Doctype", "name":"",
+                self.currentToken = {"type":"Doctype", "name":u"",
                   "publicId":None, "systemId":None, "correct":True}
                 self.state = self.states["doctype"]
             else:
@@ -822,10 +822,10 @@ class HTMLTokenizer(object):
         if data in spaceCharacters:
             pass
         elif data == "\"":
-            self.currentToken["publicId"] = ""
+            self.currentToken["publicId"] = u""
             self.state = self.states["doctypePublicIdentifierDoubleQuoted"]
         elif data == "'":
-            self.currentToken["publicId"] = ""
+            self.currentToken["publicId"] = u""
             self.state = self.states["doctypePublicIdentifierSingleQuoted"]
         elif data == ">":
             self.tokenQueue.append({"type": "ParseError", "data":
@@ -878,10 +878,10 @@ class HTMLTokenizer(object):
         if data in spaceCharacters:
             pass
         elif data == "\"":
-            self.currentToken["systemId"] = ""
+            self.currentToken["systemId"] = u""
             self.state = self.states["doctypeSystemIdentifierDoubleQuoted"]
         elif data == "'":
-            self.currentToken["systemId"] = ""
+            self.currentToken["systemId"] = u""
             self.state = self.states["doctypeSystemIdentifierSingleQuoted"]
         elif data == ">":
             self.tokenQueue.append(self.currentToken)
@@ -903,10 +903,10 @@ class HTMLTokenizer(object):
         if data in spaceCharacters:
             pass
         elif data == "\"":
-            self.currentToken["systemId"] = ""
+            self.currentToken["systemId"] = u""
             self.state = self.states["doctypeSystemIdentifierDoubleQuoted"]
         elif data == "'":
-            self.currentToken["systemId"] = ""
+            self.currentToken["systemId"] = u""
             self.state = self.states["doctypeSystemIdentifierSingleQuoted"]
         elif data == ">":
             self.tokenQueue.append({"type": "ParseError", "data":
