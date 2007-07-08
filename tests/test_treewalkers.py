@@ -184,7 +184,7 @@ def convertTokens(tokens):
             if token["name"]:
                 output.append("%s<!DOCTYPE %s>" % (" "*indent, token["name"]))
             else:
-                output.append("%s<!DOCTYPE>" % " "*indent)
+                output.append("%s<!DOCTYPE>" % (" "*indent,))
         elif type in ("Characters", "SpaceCharacters"):
             output.append("%s\"%s\"" % (" "*indent, token["data"]))
         else:
@@ -217,7 +217,7 @@ class TestCase(unittest.TestCase):
                 "", "Recieved:", output
             ]))
         except LintError, le:
-            self.fail(le.message)
+            self.fail(input + "\n" + le.message)
         except NotImplementedError:
             pass # Amnesty for those that confess...
 

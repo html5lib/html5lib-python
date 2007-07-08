@@ -77,8 +77,6 @@ class Filter(_base.Filter):
                     raise LintError(_("Doctype not in PCDATA content model flag: %s") % name)
                 if not isinstance(name, unicode):
                     raise LintError(_(u"Tag name is not a string: %r") % name)
-                if not name:
-                    raise LintError(_(u"Empty tag name"))
                 # XXX: what to do with token["data"] ?
 
             elif type in ("ParseError", "SerializeError"):
