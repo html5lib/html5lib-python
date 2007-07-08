@@ -191,7 +191,7 @@ class HTMLTokenizer(object):
         elif charStack[0] == u"#":
             # We might have a number entity here.
             charStack.extend([self.stream.char(), self.stream.char()])
-            if EOF in charStack:
+            if EOF in charStack[:2]:
                 # If we reach the end of the file put everything up to EOF
                 # back in the queue
                 charStack = charStack[:charStack.index(EOF)]
