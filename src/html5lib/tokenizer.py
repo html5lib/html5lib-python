@@ -481,6 +481,7 @@ class HTMLTokenizer(object):
     def attributeNameState(self):
         data = self.stream.char()
         leavingThisState = True
+        emitToken = False
         if data == u"=":
             self.state = self.states["beforeAttributeValue"]
         elif data in asciiLetters:
@@ -491,7 +492,7 @@ class HTMLTokenizer(object):
             # XXX If we emit here the attributes are converted to a dict
             # without being checked and when the code below runs we error
             # because data is a dict not a list
-            pass
+            emitToken = True
         elif data in spaceCharacters:
             self.state = self.states["afterAttributeName"]
         elif data == u"/":
@@ -500,8 +501,8 @@ class HTMLTokenizer(object):
         elif data == EOF:
             self.tokenQueue.append({"type": "ParseError", "data":
               _("Unexpected end of file in attribute name.")})
-            self.emitCurrentToken()
-            leavingThisState = False
+            self.state = self.states["data"]
+            emitToken = True
         else:
             self.currentToken["data"][-1][0] += data
             leavingThisState = False
@@ -515,7 +516,7 @@ class HTMLTokenizer(object):
                     self.tokenQueue.append({"type": "ParseError", "data":
                       _("Dropped duplicate attribute on tag.")})
             # XXX Fix for above XXX
-            if data == u">":
+            if emitToken:
                 self.emitCurrentToken()
         return True
 
