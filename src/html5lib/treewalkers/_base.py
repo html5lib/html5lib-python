@@ -52,7 +52,8 @@ class TreeWalker(object):
         return {"type": "Comment", "data": unicode(data)}
 
     def doctype(self, name, publicId=None, systemId=None, correct=True):
-        return {"type": "Doctype", "name": name and unicode(name) or None,
+        return {"type": "Doctype",
+                "name": name is not None and unicode(name) or u"",
                 "publicId": publicId, "systemId": systemId,
                 "correct": correct}
 
