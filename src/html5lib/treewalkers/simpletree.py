@@ -26,7 +26,7 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             return (_base.DOCUMENT,)
 
         elif node.type == 3: # DocumentType
-            return _base.DOCTYPE, node.name
+            return _base.DOCTYPE, node.name, node.publicId, node.systemId
 
         elif node.type == 4: # TextNode
             return _base.TEXT, node.value
