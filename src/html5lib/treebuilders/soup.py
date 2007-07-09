@@ -103,7 +103,7 @@ class TreeBuilder(_base.TreeBuilder):
         self.soup = BeautifulSoup("")
         return Element(self.soup, self.soup)
     
-    def insertDoctype(self, name):
+    def insertDoctype(self, name, publicId, systemId):
         self.soup.insert(0, Declaration(name))
     
     def elementClass(self, name):

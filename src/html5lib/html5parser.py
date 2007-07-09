@@ -322,7 +322,7 @@ class InitialPhase(Phase):
           systemId != None:
             self.parser.parseError(_("Erroneous DOCTYPE."))
         # XXX need to update DOCTYPE tokens
-        self.tree.insertDoctype(name)
+        self.tree.insertDoctype(name, publicId, systemId)
         
         if publicId == None:
           publicId = ""

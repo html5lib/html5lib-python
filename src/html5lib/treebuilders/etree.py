@@ -135,6 +135,24 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
         def __init__(self, name):
             Element.__init__(self, "<!DOCTYPE>") 
             self._element.text = name
+
+        def _getPublicId(self):
+            return self._element.get(u"publicId", None)
+
+        def _setPublicId(self, value):
+            if value is not None:
+                self._element.set(u"publicId", value)
+
+        publicId = property(_getPublicId, _setPublicId)
+    
+        def _getSystemId(self):
+            return self._element.get(u"systemId", None)
+
+        def _setSystemId(self, value):
+            if value is not None:
+                self._element.set(u"systemId", value)
+
+        systemId = property(_getSystemId, _setSystemId)
     
     class Document(Element):
         def __init__(self):

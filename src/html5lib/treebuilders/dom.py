@@ -73,9 +73,9 @@ class TreeBuilder(_base.TreeBuilder):
         self.dom = minidom.getDOMImplementation().createDocument(None,None,None)
         return self
 
-    def insertDoctype(self, name):
+    def insertDoctype(self, name, publicId, systemId):
         domimpl = minidom.getDOMImplementation()
-        doctype = domimpl.createDocumentType(name,None,None)
+        doctype = domimpl.createDocumentType(name, publicId, systemId)
         self.document.appendChild(NodeBuilder(doctype))
         doctype.ownerDocument = self.dom
 

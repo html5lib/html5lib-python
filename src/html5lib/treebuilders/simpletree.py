@@ -107,6 +107,8 @@ class DocumentType(Node):
     type = 3
     def __init__(self, name):
         Node.__init__(self, name)
+        self.publicId = u""
+        self.systemId = u""
 
     def __unicode__(self):
         if self.name:
