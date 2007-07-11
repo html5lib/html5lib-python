@@ -89,10 +89,13 @@ def buildTestSuite():
         for filename in html5lib_test_files('tree-construction'):
             testName = os.path.basename(filename).replace(".dat","")
 
-            tests = TestData(filename, ("data", "errors", "document-fragment",
-                                        "document"))
+            tests = TestData(filename, "data")
 
-            for index, (input, errors, innerHTML, expected) in enumerate(tests):
+            for index, test in enumerate(tests):
+                input, errors, innerHTML, expected = [test[key] for key in
+                                                      'data', 'errors',
+                                                      'document-fragment',
+                                                      'document']
                 if errors:
                     errors = errors.split("\n")
                 def testFunc(self, innerHTML=innerHTML, input=input,

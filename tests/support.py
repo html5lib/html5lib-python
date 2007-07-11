@@ -61,22 +61,30 @@ except ImportError:
 def html5lib_test_files(subdirectory, files='*.dat'):
     return glob.glob(os.path.join(os.path.pardir,os.path.pardir,'testdata',subdirectory,files))
 
+class DefaultDict(dict):
+    def __init__(self, default, *args, **kwargs):
+        self.default = default
+        dict.__init__(self, *args, **kwargs)
+    
+    def __getitem__(self, key):
+        return dict.get(self, key, self.default)
+
 class TestData(object):
-    def __init__(self, filename, sections):
+    def __init__(self, filename, newTestHeading="data"):
         self.f = open(filename)
-        self.sections = sections
+        self.newTestHeading = newTestHeading
     
     def __iter__(self):
-        data = {}
+        data = DefaultDict(None)
         key=None
         for line in self.f:
             heading = self.isSectionHeading(line)
             if heading:
-                if data and heading == self.sections[0]:
+                if data and heading == self.newTestHeading:
                     #Remove trailing newline
                     data[key] = data[key][:-1]
                     yield self.normaliseOutput(data)
-                    data = {}
+                    data = DefaultDict(None)
                 key = heading
                 data[key]=""
             elif key is not None:
@@ -87,9 +95,8 @@ class TestData(object):
     def isSectionHeading(self, line):
         """If the current heading is a test section heading return the heading,
         otherwise return False"""
-        line = line.strip()
-        if line.startswith("#") and line[1:] in self.sections:
-            return line[1:]
+        if line.startswith("#"):
+            return line[1:].strip()
         else:
             return False
     
@@ -98,10 +105,7 @@ class TestData(object):
         for key,value in data.iteritems():
             if value.endswith("\n"):
                 data[key] = value[:-1]
-        result = []
-        for heading in self.sections:
-            result.append(data.get(heading))
-        return result
+        return data
 
 def convert(stripChars):
     def convertData(data):

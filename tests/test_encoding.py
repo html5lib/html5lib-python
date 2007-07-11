@@ -12,9 +12,9 @@ def buildTestSuite():
     for filename in html5lib_test_files("encoding"):
         test_name = os.path.basename(filename).replace('.dat',''). \
             replace('-','')
-        tests = TestData(filename, ("data", "encoding"))
-        for idx, (data, encoding) in enumerate(tests):
-            def encodingTest(self, data=data, encoding=encoding):
+        tests = TestData(filename, "data")
+        for idx, test in enumerate(tests):
+            def encodingTest(self, data=test['data'], encoding=test['encoding']):
                 stream = inputstream.HTMLInputStream(data,chardet=False)
                 self.assertEquals(encoding.lower(), stream.charEncoding)
             setattr(Html5EncodingTestCase, 'test_%s_%d' % (test_name, idx+1),

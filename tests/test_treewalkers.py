@@ -229,10 +229,13 @@ def buildTestSuite():
             testName = os.path.basename(filename).replace(".dat","")
             if testName == "tests5": continue # TODO
 
-            tests = TestData(filename, ("data", "errors", "document-fragment",
-                                        "document"))
+            tests = TestData(filename, "data")
 
-            for index, (input, errors, innerHTML, expected) in enumerate(tests):
+            for index, test in enumerate(tests):
+                (input, errors,
+                 innerHTML, expected) = [test[key] for key in ("data", "errors",
+                                                               "document-fragment",
+                                                               "document")]
                 errors = errors.split("\n")
                 def testFunc(self, innerHTML=innerHTML, input=input,
                     expected=expected, errors=errors, treeCls=treeCls):
