@@ -220,8 +220,10 @@ class HTMLInputStream(object):
                   'replaced with U+FFFD')
                 c = u'\uFFFD'
             if c == '\r':
-                c = self.dataStream.read(1, 1)
-                if c != '\n':
+                #XXX This isn't right in the case with multiple CR in a row
+                #also recursing here isn't ideal + not sure what happens to input position
+                c = self.char()
+                if c and c != '\n':
                     self.queue.insert(0, unicode(c))
                 c = '\n'
 
