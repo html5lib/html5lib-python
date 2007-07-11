@@ -37,6 +37,8 @@ class TokenizerTestParser(object):
         self.outputTokens.append([u"StartTag", token["name"], token["data"]])
 
     def processEndTag(self, token):
+        if token["data"]:
+            self.processParseError(None)
         self.outputTokens.append([u"EndTag", token["name"]])
 
     def processComment(self, token):
@@ -53,7 +55,7 @@ class TokenizerTestParser(object):
         pass
 
     def processParseError(self, token):
-        self.outputTokens.append([u"ParseError", token["data"]])
+        self.outputTokens.append(u"ParseError")
 
 def concatenateCharacterTokens(tokens):
     outputTokens = []
@@ -71,10 +73,9 @@ def concatenateCharacterTokens(tokens):
 def normalizeTokens(tokens):
     """ convert array of attributes to a dictionary """
     # TODO: convert tests to reflect arrays
-    for i, token in enumerate(tokens):
-        if token[0] == u'ParseError':
-            tokens[i] = token[0]
-            #token[2] = dict(token[2][::-1])
+    for token in tokens:
+        if token[0] == 'StartTag':
+            token[2] = dict(token[2][::-1])
     return tokens
 
 def tokensMatch(expectedTokens, recievedTokens):
@@ -101,14 +102,14 @@ class TestCase(unittest.TestCase):
             test['lastStartTag'] = None
         parser = TokenizerTestParser(test['contentModelFlag'], 
                                      test['lastStartTag'])
-        tokens = parser.parse(test['input'])
+            
+        tokens = normalizeTokens(parser.parse(test['input']))
         tokens = concatenateCharacterTokens(tokens)
         errorMsg = "\n".join(["\n\nContent Model Flag:",
                               test['contentModelFlag'] ,
                               "\nInput:", str(test['input']),
                               "\nExpected:", str(output),
                               "\nRecieved:", str(tokens)])
-        tokens = normalizeTokens(tokens)
         self.assertEquals(tokensMatch(tokens, output), True, errorMsg)
 
 def buildTestSuite():
