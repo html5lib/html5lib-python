@@ -77,6 +77,11 @@ def buildTestSuite():
 
     return unittest.TestLoader().loadTestsFromTestCase(SanitizeTest)
 
+def sanitize_html(stream):
+  return ''.join([token.toxml() for token in
+      html5parser.HTMLParser(tokenizer=sanitizer.HTMLSanitizer).
+          parseFragment(stream).childNodes])
+
 def main():
     buildTestSuite()
     unittest.main()

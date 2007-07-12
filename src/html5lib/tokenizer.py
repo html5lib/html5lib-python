@@ -32,9 +32,14 @@ class HTMLTokenizer(object):
 
     # XXX need to fix documentation
 
-    def __init__(self, stream, encoding=None, parseMeta=True):
+    def __init__(self, stream, encoding=None, parseMeta=True,
+                 lowercaseElementName=True, lowercaseAttrName=True,):
         self.stream = HTMLInputStream(stream, encoding, parseMeta)
-
+        
+        #Perform case conversions?
+        self.lowercaseElementName = lowercaseElementName
+        self.lowercaseAttrName = lowercaseAttrName
+        
         self.states = {
             "data":self.dataState,
             "entityData":self.entityDataState,
@@ -272,9 +277,15 @@ class HTMLTokenizer(object):
         the state to "data" because that's what's needed after a token has been
         emitted.
         """
-
+        token = self.currentToken
         # Add token to the queue to be yielded
-        self.tokenQueue.append(self.currentToken)
+        if (token["type"] in ("StartTag", "EndTag", "EmptyTag")):
+            if self.lowercaseElementName:
+                token["name"] = token["name"].translate(asciiUpper2Lower)
+            if token["type"] == "EndTag" and token["data"]:
+               self.tokenQueue.append({"type":"ParseError",
+                                       "data":_("End tag contains unexpected attributes.")})
+        self.tokenQueue.append(token)
         self.state = self.states["data"]
 
 
@@ -511,10 +522,14 @@ class HTMLTokenizer(object):
             # Attributes are not dropped at this stage. That happens when the
             # start tag token is emitted so values can still be safely appended
             # to attributes, but we do want to report the parse error in time.
+            if self.lowercaseAttrName:
+                self.currentToken["data"][-1][0] = (
+                    self.currentToken["data"][-1][0].translate(asciiUpper2Lower))
             for name, value in self.currentToken["data"][:-1]:
                 if self.currentToken["data"][-1][0] == name:
                     self.tokenQueue.append({"type": "ParseError", "data":
                       _("Dropped duplicate attribute on tag.")})
+                    break
             # XXX Fix for above XXX
             if emitToken:
                 self.emitCurrentToken()

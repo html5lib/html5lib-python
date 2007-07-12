@@ -27,28 +27,21 @@ class XMLParser(html5parser.HTMLParser):
 
     def __init__(self, *args, **kwargs):
         html5parser.HTMLParser.__init__(self, *args, **kwargs)
+        
         self.phases["initial"] = XmlRootPhase(self, self.tree)
 
     def normalizeToken(self, token):
-        if token["type"] == "StartTag" or token["type"] == "EmptyTag":
-            # We need to remove the duplicate attributes and convert attributes
-            # to a dict so that [["x", "y"], ["x", "z"]] becomes {"x": "y"}
 
-            # AT When Python 2.4 is widespread we should use
-            # dict(reversed(token.data))
+        if token["type"] in ("StartTag", "EmptyTag"):
             token["data"] = dict(token["data"][::-1])
 
-            # For EmptyTags, process both a Start and an End tag
-            if token["type"] == "EmptyTag":
-                save = self.tokenizer.contentModelFlag
-                self.phase.processStartTag(token["name"], token["data"])
-                self.tokenizer.contentModelFlag = save
-                token["data"] = {}
-                token["type"] = "EndTag"
-
-        elif token["type"] == "EndTag":
-            if token["data"]:
-               self.parseError(_("End tag contains unexpected attributes."))
+        # For EmptyTags, process both a Start and an End tag
+        if token["type"] == "EmptyTag":
+            save = self.tokenizer.contentModelFlag
+            self.phase.processStartTag(token["name"], token["data"])
+            self.tokenizer.contentModelFlag = save
+            token["data"] = {}
+            token["type"] = "EndTag"
 
         elif token["type"] == "Characters":
             # un-escape rcdataElements (e.g. style, script)
@@ -63,6 +56,13 @@ class XMLParser(html5parser.HTMLParser):
                 token["data"] = token["data"][7:-2]
 
         return token
+
+    def _parse(self, stream, innerHTML=False, container="div", encoding=None,
+               **kwargs):
+
+        html5parser.HTMLParser._parse(self, stream, innerHTML, container,
+                                      encoding, lowercaseElementName=False,
+                                      lowercaseAttrName=False)
 
 class XHTMLParser(XMLParser):
     """ liberal XMTHML parser """

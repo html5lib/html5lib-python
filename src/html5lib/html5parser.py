@@ -32,7 +32,8 @@ class HTMLParser(object):
     """HTML parser. Generates a tree structure from a stream of (possibly
         malformed) HTML"""
 
-    def __init__(self, strict = False, tree=simpletree.TreeBuilder, tokenizer=tokenizer.HTMLTokenizer):
+    def __init__(self, strict = False, tree=simpletree.TreeBuilder,
+                 tokenizer=tokenizer.HTMLTokenizer):
         """
         strict - raise an exception when a parse error is encountered
 
@@ -73,14 +74,14 @@ class HTMLParser(object):
         }
 
     def _parse(self, stream, innerHTML=False, container="div",
-               encoding=None):
+               encoding=None, **kwargs):
         
         self.tree.reset()
         self.firstStartTag = False
         self.errors = []
 
-        self.tokenizer = self.tokenizer_class(stream, encoding,
-                                              parseMeta=not innerHTML)
+        self.tokenizer = self.tokenizer_class(stream, encoding=encoding,
+                                              parseMeta=not innerHTML, **kwargs)
 
         if innerHTML:
             self.innerHTML = container.lower()
@@ -176,25 +177,10 @@ class HTMLParser(object):
             token["type"] = "StartTag"
 
         if token["type"] == "StartTag":
-            token["name"] = token["name"].translate(asciiUpper2Lower)
-
-            # We need to remove the duplicate attributes and convert attributes
-            # to a dict so that [["x", "y"], ["x", "z"]] becomes {"x": "y"}
-
-            # AT When Python 2.4 is widespread we should use
-            # dict(reversed(token.data))
-            if token["data"]:
-                token["data"] = dict([(attr.translate(asciiUpper2Lower), value)
-                    for attr,value in token["data"][::-1]])
-            else:
-                token["data"] = {}
-
-        elif token["type"] == "EndTag":
-            if token["data"]:
-               self.parseError(_("End tag contains unexpected attributes."))
-            token["name"] = token["name"].lower()
+            token["data"] = dict(token["data"][::-1])
 
         return token
+
 
     def resetInsertionMode(self):
         # The name of this method is mostly historical. (It's also used in the

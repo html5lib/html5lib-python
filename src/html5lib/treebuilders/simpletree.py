@@ -112,9 +112,9 @@ class DocumentType(Node):
 
     def __unicode__(self):
         if self.name:
-            return "<!DOCTYPE %s>" % self.name
+            return u"<!DOCTYPE %s>" % self.name
         else:
-            return "<!DOCTYPE>"
+            return u"<!DOCTYPE>"
 
     toxml = __unicode__
     
@@ -128,7 +128,7 @@ class TextNode(Node):
         self.value = value
 
     def __unicode__(self):
-        return "\"%s\"" % self.value
+        return u"\"%s\"" % self.value
 
     def toxml(self):
         return escape(self.value)
@@ -142,20 +142,20 @@ class Element(Node):
         self.attributes = {}
         
     def __unicode__(self):
-        return "<%s>" % self.name
+        return u"<%s>" % self.name
 
     def toxml(self):
         result = '<' + self.name
         if self.attributes:
             for name,value in self.attributes.iteritems():
-                result += ' %s="%s"' % (name, escape(value,{'"':'&quot;'}))
+                result += u' %s="%s"' % (name, escape(value,{'"':'&quot;'}))
         if self.childNodes:
             result += '>'
             for child in self.childNodes:
                 result += child.toxml()
-            result += '</%s>' % self.name
+            result += u'</%s>' % self.name
         else:
-            result += '/>'
+            result += u'/>'
         return result
     
     def hilite(self):

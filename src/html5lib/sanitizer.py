@@ -2,7 +2,7 @@ import re
 from xml.sax.saxutils import escape, unescape
 from tokenizer import HTMLTokenizer
 
-class HTMLSanitizerMixin:
+class HTMLSanitizerMixin(object):
     """ sanitization of XHTML+MathML+SVG and of inline style attributes."""
 
     acceptable_elements = ['a', 'abbr', 'acronym', 'address', 'area', 'b',
@@ -188,7 +188,15 @@ class HTMLSanitizerMixin:
         return ' '.join(clean)
 
 class HTMLSanitizer(HTMLTokenizer, HTMLSanitizerMixin):
+    def __init__(self, stream, encoding=None, parseMeta=True,
+                 lowercaseElementName=False, lowercaseAttrName=False):
+        #Change case matching defaults as we only output lowercase html anyway
+        #This solution doesn't seem ideal...
+        HTMLTokenizer.__init__(self, stream, encoding, parseMeta,
+                               lowercaseElementName, lowercaseAttrName)
+
     def __iter__(self):
         for token in HTMLTokenizer.__iter__(self):
             token = self.sanitize_token(token)
-            if token: yield token
+            if token:
+                yield token
