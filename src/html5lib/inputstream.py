@@ -207,24 +207,25 @@ class HTMLInputStream(object):
             EOF when EOF is reached.
         """
         if self.queue:
-            return self.queue.pop(0)
+            char = self.queue.pop(0)
+            if char == "\n":
+                self.lineLengths.append(self.col)
+                self.line += 1
+                self.col = 0
+            return char
         else:
-            c = self.dataStream.read(1, 1)
-            if not c:
-                self.col += 1
-                return EOF
-
-            # Normalize newlines and null characters
-            if c == '\x00':
-                self.errors.append('null character found in input stream, '
-                  'replaced with U+FFFD')
-                c = u'\uFFFD'
+            c = self.readChar()
+            if c is EOF:
+                return c
+            
             if c == '\r':
                 #XXX This isn't right in the case with multiple CR in a row
                 #also recursing here isn't ideal + not sure what happens to input position
-                c = self.char()
-                if c and c != '\n':
+                c = self.readChar()
+                if c is not EOF and c not in ('\n', '\r'):
                     self.queue.insert(0, unicode(c))
+                elif c == '\r':
+                    self.queue.insert(0, u'\n')
                 c = '\n'
 
             # update position in stream
@@ -235,6 +236,21 @@ class HTMLInputStream(object):
             else:
                 self.col += 1
             return unicode(c)
+
+    def readChar(self):
+        """Read the next character from the datastream and normalize for null
+        but not for CR"""
+        c = self.dataStream.read(1, 1)
+        if not c:
+            self.col += 1
+            return EOF
+
+        # Normalize newlines and null characters
+        if c == '\x00':
+            self.errors.append('null character found in input stream, '
+                'replaced with U+FFFD')
+            c = u'\uFFFD'
+        return c
 
     def charsUntil(self, characters, opposite = False):
         """ Returns a string of characters from the stream up to but not
