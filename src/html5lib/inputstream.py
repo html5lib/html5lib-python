@@ -2,6 +2,9 @@ import codecs
 import re
 import types
 
+from gettext import gettext
+_ = gettext
+
 from constants import EOF, spaceCharacters, asciiLetters, asciiUppercase
 from constants import encodings
 from utils import MethodDispatcher
@@ -247,8 +250,8 @@ class HTMLInputStream(object):
 
         # Normalize newlines and null characters
         if c == '\x00':
-            self.errors.append('null character found in input stream, '
-                'replaced with U+FFFD')
+            self.errors.append(_('null character found in input stream, '
+                'replaced with U+FFFD'))
             c = u'\uFFFD'
         return c
 

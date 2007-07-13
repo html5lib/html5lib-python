@@ -16,8 +16,6 @@ References:
 
 import html5parser
 from constants import voidElements, contentModelFlags
-import gettext
-_ = gettext.gettext
 
 from xml.dom import XHTML_NAMESPACE
 from xml.sax.saxutils import unescape
