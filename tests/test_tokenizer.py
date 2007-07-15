@@ -69,27 +69,32 @@ def concatenateCharacterTokens(tokens):
     return outputTokens
 
 def normalizeTokens(tokens):
-    """ convert array of attributes to a dictionary """
     # TODO: convert tests to reflect arrays
     for i, token in enumerate(tokens):
         if token[0] == u'ParseError':
             tokens[i] = token[0]
-            #token[2] = dict(token[2][::-1])
     return tokens
 
-def tokensMatch(expectedTokens, recievedTokens):
+def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder):
     """Test whether the test has passed or failed
 
-    For brevity in the tests, the test has passed if the sequence of expected
-    tokens appears anywhere in the sequence of returned tokens.
+    If the ignoreErrorOrder flag is set to true we don't test the relative
+    positions of parse errors and non parse errors
     """
-    return expectedTokens == recievedTokens
-    for i, token in enumerate(recievedTokens):
-        if expectedTokens[0] == token:
-            if (len(expectedTokens) <= len(recievedTokens[i:]) and
-                recievedTokens[i:i+len(expectedTokens)]):
-                return True
-    return False
+    if not ignoreErrorOrder:    
+        return expectedTokens == receivedTokens
+    else:
+        #Sort the tokens into two groups; non-parse errors and parse errors
+        tokens = {"expected":[[],[]], "received":[[],[]]}
+        for tokenType, tokenList in zip(tokens.keys(),
+                                         (expectedTokens, receivedTokens)):
+            for token in tokenList:
+                if token != "ParseError":
+                    tokens[tokenType][0].append(token)
+                else:
+                    tokens[tokenType][1].append(token)
+        
+        return tokens["expected"] == tokens["received"]
 
 
 class TestCase(unittest.TestCase):
@@ -107,9 +112,11 @@ class TestCase(unittest.TestCase):
                               test['contentModelFlag'] ,
                               "\nInput:", str(test['input']),
                               "\nExpected:", str(output),
-                              "\nRecieved:", str(tokens)])
+                              "\nreceived:", str(tokens)])
         tokens = normalizeTokens(tokens)
-        self.assertEquals(tokensMatch(tokens, output), True, errorMsg)
+        ignoreErrorOrder = test.get('ignoreErrorOrder', False)
+        self.assertEquals(tokensMatch(tokens, output, ignoreErrorOrder), True,
+                          errorMsg)
 
 def buildTestSuite():
     for filename in html5lib_test_files('tokenizer', '*.test'):
