@@ -770,6 +770,11 @@ class InBodyPhase(Phase):
         self.tree.reconstructActiveFormattingElements()
         self.tree.insertText(data)
 
+    #Uncomment the following to match the current spec rather than the behaviour above
+    #def processSpaceCharacters(self, data):
+    #    self.tree.reconstructActiveFormattingElements()
+    #    self.tree.insertText(data)
+
     def startTagProcessInHead(self, name, attributes):
         self.parser.phases["inHead"].processStartTag(name, attributes)
 
@@ -939,7 +944,7 @@ class InBodyPhase(Phase):
         self.processStartTag("label", {})
         # XXX Localization ...
         self.processCharacters(
-            "This is a searchable index. Insert your search keywords here:")
+            "This is a searchable index. Insert your search keywords here: ")
         attributes["name"] = "isindex"
         attrs = [[key,value] for key,value in attributes.iteritems()]
         self.processStartTag("input", dict(attrs))
