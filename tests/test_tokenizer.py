@@ -73,7 +73,7 @@ def normalizeTokens(tokens):
     for i, token in enumerate(tokens):
         if token[0] == u'ParseError':
             tokens[i] = token[0]
-    return tokens
+    return simplejson.loads(simplejson.dumps(tokens))
 
 def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder):
     """Test whether the test has passed or failed
