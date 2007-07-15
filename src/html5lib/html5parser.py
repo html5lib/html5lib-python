@@ -400,7 +400,7 @@ class InitialPhase(Phase):
         self.parser.phase = self.parser.phases["rootElement"]
 
     def processSpaceCharacters(self, data):
-        self.tree.insertText(data, self.tree.document)
+        pass
 
     def processCharacters(self, data):
         self.parser.parseError(_(u"Unexpected non-space characters. "
