@@ -2,8 +2,6 @@
 # * Phases and insertion modes are one concept in parser.py.
 # * EOF handling is slightly different to make sure <html>, <head> and <body>
 #   always exist.
-# * Active formatting elements not reconstructed on whitespace tokens
-
 
 
 try:
@@ -756,11 +754,12 @@ class InBodyPhase(Phase):
         # Sometimes (start of <pre> and <textarea> blocks) we want to drop
         # leading newlines
         self.processSpaceCharacters = self.processSpaceCharactersNonPre
-        if (data.startswith("\n") and (self.tree.openElements[-1].name == "pre"
-          or self.tree.openElements[-1].name == "textarea")
-          and not self.tree.openElements[-1].hasContent()):
+        if (data.startswith("\n") and
+            self.tree.openElements[-1].name in ("pre", "textarea") and
+            not self.tree.openElements[-1].hasContent()):
             data = data[1:]
         if data:
+            self.tree.reconstructActiveFormattingElements()
             self.tree.insertText(data)
 
     def processCharacters(self, data):
@@ -770,10 +769,10 @@ class InBodyPhase(Phase):
         self.tree.reconstructActiveFormattingElements()
         self.tree.insertText(data)
 
-    #Uncomment the following to match the current spec rather than the behaviour above
-    #def processSpaceCharacters(self, data):
-    #    self.tree.reconstructActiveFormattingElements()
-    #    self.tree.insertText(data)
+    #This matches the current spec but may not match the real world
+    def processSpaceCharacters(self, data):
+        self.tree.reconstructActiveFormattingElements()
+        self.tree.insertText(data)
 
     def startTagProcessInHead(self, name, attributes):
         self.parser.phases["inHead"].processStartTag(name, attributes)
