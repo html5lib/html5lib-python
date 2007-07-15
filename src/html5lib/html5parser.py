@@ -1,9 +1,9 @@
-# Differences from the current specification (23 December 2006) are as follows:
+# Differences from the current specification are as follows:
 # * Phases and insertion modes are one concept in parser.py.
 # * EOF handling is slightly different to make sure <html>, <head> and <body>
 #   always exist.
-#
-# We haven't updated DOCTYPE handling yet
+# * Active formatting elements not reconstructed on whitespace tokens
+
 
 
 try:
@@ -436,7 +436,7 @@ class RootElementPhase(Phase):
         self.tree.insertComment(data, self.tree.document)
 
     def processSpaceCharacters(self, data):
-        self.tree.insertText(data, self.tree.document)
+        pass
 
     def processCharacters(self, data):
         self.insertHtmlElement()
