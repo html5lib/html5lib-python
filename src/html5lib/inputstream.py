@@ -36,7 +36,10 @@ class HTMLInputStream(object):
         # List of where new lines occur
         self.newLines = [0]
 
-        # Raw Stream
+        self.charEncoding = encoding
+
+        # Raw Stream - for unicode objects this will encode to utf-8 and set
+        #              self.charEncoding as appropriate
         self.rawStream = self.openStream(source)
 
         # Encoding Information
@@ -49,9 +52,8 @@ class HTMLInputStream(object):
         self.defaultEncoding = "windows-1252"
         
         #Detect encoding iff no explicit "transport level" encoding is supplied
-        if encoding is None or not isValidEncoding(encoding):
-            encoding = self.detectEncoding(parseMeta, chardet)
-        self.charEncoding = encoding
+        if self.charEncoding is None or not isValidEncoding(self.charEncoding):
+            self.charEncoding = self.detectEncoding(parseMeta, chardet)
 
         self.dataStream = codecs.getreader(self.charEncoding)(self.rawStream, 'replace')
 
@@ -74,6 +76,7 @@ class HTMLInputStream(object):
             # Otherwise treat source as a string and convert to a file object
             if isinstance(source, unicode):
                 source = source.encode('utf-8')
+                self.charEncoding = "utf-8"
             import cStringIO
             stream = cStringIO.StringIO(str(source))
         return stream
