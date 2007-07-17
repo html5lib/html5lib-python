@@ -226,8 +226,8 @@ class HTMLInputStream(object):
             self.col += 1
         return char
 
-    def readChunk(self, chunkSize=1024):
-        data = self.dataStream.read(1024)
+    def readChunk(self, chunkSize=10240):
+        data = self.dataStream.read(chunkSize)
         if not data:
             return
         #Replace null characters
@@ -250,18 +250,40 @@ class HTMLInputStream(object):
         including any character in characters or EOF. characters can be
         any container that supports the in method being called on it.
         """
-        charStack = [self.char()]
 
-        while charStack[-1] and (charStack[-1] in characters) == opposite:
-            charStack.append(self.char())
+        #This method is currently 40-50% of our total runtime and badly needs
+        #optimizing
+        #Possible improvements:
+        # - use regexp to find characters that match the required character set
+        # - compute line positions in a single pass at the end
+        # - improve EOF handling for fewer if statements
 
-        # Put the character stopped on back to the front of the queue
-        # from where it came.
-        c = charStack.pop()
-        if c != EOF:
-            self.unget(c)
+        if not self.queue:
+            self.readChunk()
+        #Break if we have reached EOF
+        if not self.queue or self.queue[0] == None:
+            return u""
         
-        return u"".join(charStack)
+        i = 0
+        while (self.queue[i] in characters) == opposite:
+            #Working out positions like this really sucks
+            if self.queue[i] == '\n':
+                self.lineLengths.append(self.col)
+                self.line += 1
+                self.col = 0
+            else:
+                self.col += 1
+            i += 1
+            if i == len(self.queue):
+                self.readChunk()
+            #If the queue doesn't grow we have reached EOF
+            if i == len(self.queue) or self.queue[i] is EOF:
+                break
+
+        rv = u"".join(self.queue[:i])
+        self.queue = self.queue[i:]
+        
+        return rv
 
     def unget(self, chars):
         if chars:
