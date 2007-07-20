@@ -25,8 +25,9 @@ class Filter(_base.Filter):
             elif type == "EndTag" and preserve:
                 preserve -= 1
 
-            elif not preserve and type == "SpaceCharacters":
-                continue
+            elif not preserve and type == "SpaceCharacters" and token["data"]:
+                # Test on token["data"] above to not introduce spaces where there were not
+                token["data"] = u" "
 
             elif not preserve and type == "Characters":
                 token["data"] = collapse_spaces(token["data"])
