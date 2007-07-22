@@ -1,6 +1,6 @@
 html5lib is a pure-python library for parsing HTML. It is designed to
-conform to the Web Applications 1.0 specification, which has
-formalized the error handling algorithms of popular web browsers.
+conform to the HTML 5 specification, which has formalized the error handling
+algorithms of popular web browsers.
 
  = Installation =
 
@@ -36,3 +36,4 @@ http://code.google.com/p/html5lib/issues/list
 Contributions to code or documenation are actively encouraged. Submit
 patches to the issue tracker or discuss changes on irc in the #whatwg
 channel on freenode.net
+

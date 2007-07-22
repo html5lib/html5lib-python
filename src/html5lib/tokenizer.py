@@ -297,11 +297,15 @@ class HTMLTokenizer(object):
 
     def dataState(self):
         data = self.stream.char()
+
+        # Keep a charbuffer to handle the escapeFlag
         if self.contentModelFlag in\
           (contentModelFlags["CDATA"], contentModelFlags["RCDATA"]):
             if len(self.lastFourChars) == 4:
                 self.lastFourChars.pop(0)
             self.lastFourChars.append(data)
+
+        # The rest of the logic
         if data == "&" and self.contentModelFlag in\
           (contentModelFlags["PCDATA"], contentModelFlags["RCDATA"]) and not\
           self.escapeFlag:
@@ -328,8 +332,6 @@ class HTMLTokenizer(object):
             # Directly after emitting a token you switch back to the "data
             # state". At that point spaceCharacters are important so they are
             # emitted separately.
-            # XXX need to check if we don't need a special "spaces" flag on
-            # characters.
             self.tokenQueue.append({"type": "SpaceCharacters", "data":
               data + self.stream.charsUntil(spaceCharacters, True)})
         else:
