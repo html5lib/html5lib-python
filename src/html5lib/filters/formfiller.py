@@ -29,13 +29,13 @@ class SimpleFilter(_base.Filter):
                     input_checked_index = -1
                     for i,(n,v) in enumerate(token["data"]):
                         n = n.lower()
-                        if n == "name":
+                        if n == u"name":
                             field_name = v.strip(spaceCharacters)
-                        elif n == "type":
+                        elif n == u"type":
                             field_type = v.strip(spaceCharacters)
-                        elif n == "checked":
+                        elif n == u"checked":
                             input_checked_index = i
-                        elif n == "value":
+                        elif n == u"value":
                             input_value_index = i
 
                     value_list = self.fieldStorage.getlist(field_name)
@@ -45,16 +45,16 @@ class SimpleFilter(_base.Filter):
                     else:
                         value = ""
 
-                    if type in ("checkbox", "radio"):
+                    if field_type in (u"checkbox", u"radio"):
                         if value_list:
-                            if token["data"][input_value_index] == value:
+                            if token["data"][input_value_index][1] == value:
                                 if input_checked_index < 0:
                                     token["data"].append((u"checked", u""))
                                 field_indices[field_name] = field_index + 1
                             elif input_checked_index >= 0:
                                 del token["data"][input_checked_index]
 
-                    elif type not in ("button", "submit", "reset"):
+                    elif field_type not in (u"button", u"submit", u"reset"):
                         if input_value_index >= 0:
                             token["data"][input_value_index] = (u"value", value)
                         else:

@@ -26,7 +26,7 @@ class TestCase(unittest.TestCase):
                 "data": [(u"type", u"text"), (u"name", u"foo"), (u"value", u"quux")]}],
             FieldStorage({"foo": "bar"}),
             [{"type": u"EmptyTag", "name": u"input",
-                "data": [(u"type", u"text"), (u"name", u"foo"), (u"value", "bar")]}])
+                "data": [(u"type", u"text"), (u"name", u"foo"), (u"value", u"bar")]}])
 
     def testSingleTextInputWithoutValue(self):
         self.runTest(
@@ -34,7 +34,58 @@ class TestCase(unittest.TestCase):
                 "data": [(u"type", u"text"), (u"name", u"foo")]}],
             FieldStorage({"foo": "bar"}),
             [{"type": u"EmptyTag", "name": u"input",
-                "data": [(u"type", u"text"), (u"name", u"foo"), (u"value", "bar")]}])
+                "data": [(u"type", u"text"), (u"name", u"foo"), (u"value", u"bar")]}])
+
+    def testSingleCheckbox(self):
+        self.runTest(
+            [{"type": u"EmptyTag", "name": u"input",
+                "data": [(u"type", u"checkbox"), (u"name", u"foo"), (u"value", u"bar")]}],
+            FieldStorage({"foo": "bar"}),
+            [{"type": u"EmptyTag", "name": u"input",
+                "data": [(u"type", u"checkbox"), (u"name", u"foo"), (u"value", u"bar"), (u"checked", u"")]}])
+
+    def testSingleCheckboxShouldBeUnchecked(self):
+        self.runTest(
+            [{"type": u"EmptyTag", "name": u"input",
+                "data": [(u"type", u"checkbox"), (u"name", u"foo"), (u"value", u"quux")]}],
+            FieldStorage({"foo": "bar"}),
+            [{"type": u"EmptyTag", "name": u"input",
+                "data": [(u"type", u"checkbox"), (u"name", u"foo"), (u"value", u"quux")]}])
+
+    def testSingleCheckboxCheckedByDefault(self):
+        self.runTest(
+            [{"type": u"EmptyTag", "name": u"input",
+                "data": [(u"type", u"checkbox"), (u"name", u"foo"), (u"value", u"bar"), (u"checked", u"")]}],
+            FieldStorage({"foo": "bar"}),
+            [{"type": u"EmptyTag", "name": u"input",
+                "data": [(u"type", u"checkbox"), (u"name", u"foo"), (u"value", u"bar"), (u"checked", u"")]}])
+
+    def testSingleCheckboxCheckedByDefaultShouldBeUnchecked(self):
+        self.runTest(
+            [{"type": u"EmptyTag", "name": u"input",
+                "data": [(u"type", u"checkbox"), (u"name", u"foo"), (u"value", u"quux"), (u"checked", u"")]}],
+            FieldStorage({"foo": "bar"}),
+            [{"type": u"EmptyTag", "name": u"input",
+                "data": [(u"type", u"checkbox"), (u"name", u"foo"), (u"value", u"quux")]}])
+
+    def testSingleTextareaWithValue(self):
+        self.runTest(
+            [{"type": u"StartTag", "name": u"textarea", "data": [(u"name", u"foo")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"textarea", "data": []}],
+            FieldStorage({"foo": "bar"}),
+            [{"type": u"StartTag", "name": u"textarea", "data": [(u"name", u"foo")]},
+             {"type": u"Characters", "data": u"bar"},
+             {"type": u"EndTag", "name": u"textarea", "data": []}])
+
+    def testSingleTextareaWithoutValue(self):
+        self.runTest(
+            [{"type": u"StartTag", "name": u"textarea", "data": [(u"name", u"foo")]},
+             {"type": u"EndTag", "name": u"textarea", "data": []}],
+            FieldStorage({"foo": "bar"}),
+            [{"type": u"StartTag", "name": u"textarea", "data": [(u"name", u"foo")]},
+             {"type": u"Characters", "data": u"bar"},
+             {"type": u"EndTag", "name": u"textarea", "data": []}])
 
 def main():
     unittest.main()
