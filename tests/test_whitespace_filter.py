@@ -15,6 +15,22 @@ class TestCase(unittest.TestCase):
     def runTestUnmodifiedOutput(self, input):
         self.runTest(input, input)
 
+    def testPhrasingElements(self):
+        self.runTestUnmodifiedOutput(
+            [{"type": u"Characters", "data": u"This is a " },
+             {"type": u"StartTag", "name": u"span", "data": [] },
+             {"type": u"Characters", "data": u"phrase" },
+             {"type": u"EndTag", "name": u"span", "data": []},
+             {"type": u"SpaceCharacters", "data": u" " },
+             {"type": u"Characters", "data": u"with" },
+             {"type": u"SpaceCharacters", "data": u" " },
+             {"type": u"StartTag", "name": u"em", "data": [] },
+             {"type": u"Characters", "data": u"emphasised text" },
+             {"type": u"EndTag", "name": u"em", "data": []},
+             {"type": u"Characters", "data": u" and an " },
+             {"type": u"StartTag", "name": u"img", "data": [[u"alt", u"image"]] },
+             {"type": u"Characters", "data": u"." }])
+
     def testLeadingWhitespace(self):
         self.runTest(
             [{"type": u"StartTag", "name": u"p", "data": []},

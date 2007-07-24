@@ -10,10 +10,12 @@ import _base
 from html5lib.constants import rcdataElements, spaceCharacters
 spaceCharacters = u"".join(spaceCharacters)
 
+SPACES_REGEX = re.compile(u"[%s]+" % spaceCharacters)
+
 class Filter(_base.Filter):
-    
+
     spacePreserveElements = frozenset(["pre", "textarea"] + list(rcdataElements))
-    
+
     def __iter__(self):
         preserve = 0
         for token in _base.Filter.__iter__(self):
@@ -35,5 +37,5 @@ class Filter(_base.Filter):
             yield token
 
 def collapse_spaces(text):
-    return re.compile(u"[%s]+" % spaceCharacters).sub(' ', text)
+    return SPACES_REGEX.sub(' ', text)
 
