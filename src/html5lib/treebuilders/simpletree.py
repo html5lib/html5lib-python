@@ -63,8 +63,9 @@ class Node(_base.Node):
 
     def cloneNode(self):
         newNode = type(self)(self.name)
-        for attr, value in self.attributes.iteritems():
-            newNode.attributes[attr] = value
+        if hasattr(self, 'attributes'):
+            for attr, value in self.attributes.iteritems():
+                newNode.attributes[attr] = value
         newNode.value = self.value
         return newNode
 
