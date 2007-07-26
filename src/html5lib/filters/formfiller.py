@@ -73,8 +73,9 @@ class SimpleFilter(_base.Filter):
                     attributes = dict(reversed(token["data"]))
                     field_name = attributes.get("name")
                     is_select_multiple = "multiple" in attributes
+                    is_selected_option_found = False
 
-                elif state == "in_select" and field_name and name == "option":
+                elif field_type == "select" and field_name and name == "option":
                     option_selected_index = -1
                     option_value = None
                     for i,(n,v) in enumerate(token["data"]):
@@ -84,7 +85,7 @@ class SimpleFilter(_base.Filter):
                         elif n == "value":
                             option_value = v.strip(spaceCharacters)
                     if option_value is None:
-                        raise NotImplementedError("<option>s must have a value= attribute")
+                        raise NotImplementedError("<option>s without a value= attribute")
                     else:
                         value_list = self.fieldStorage.getlist(field_name)
                         if value_list:
@@ -93,27 +94,32 @@ class SimpleFilter(_base.Filter):
                                 value = value_list[field_index]
                             else:
                                 value = ""
-                            if option_value == value:
+                            if (is_select_multiple or not is_selected_option_found) and option_value == value:
                                 if option_selected_index < 0:
                                     token["data"].append((u"selected", u""))
                                 field_indices[field_name] = field_index + 1
+                                is_selected_option_found = True
                             elif option_selected_index >= 0:
                                 del token["data"][option_selected_index]
 
             elif field_type is not None and field_name and type == "EndTag":
                 name = token["name"].lower()
-                if name == "textarea":
-                    value_list = self.fieldStorage.getlist(field_name)
-                    if value_list:
-                        field_index = field_indices.setdefault(field_name, 0)
-                        if field_index < len(value_list):
-                            value = value_list[field_index]
-                        else:
-                            value = ""
-                        yield {"type": "Characters", "data": value}
+                if name == field_type:
+                    if name == "textarea":
+                        value_list = self.fieldStorage.getlist(field_name)
+                        if value_list:
+                            field_index = field_indices.setdefault(field_name, 0)
+                            if field_index < len(value_list):
+                                value = value_list[field_index]
+                            else:
+                                value = ""
+                            yield {"type": "Characters", "data": value}
+                            field_indices[field_name] = field_index + 1
 
-                field_indices[field_name] = field_index + 1
-                field_name = None
+                    field_name = None
+
+                elif name == "option" and field_type == "select":
+                    pass # TODO: part of "option without value= attribute" processing
 
             elif field_type == "textarea":
                 continue # ignore token

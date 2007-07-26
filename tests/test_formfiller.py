@@ -87,6 +87,198 @@ class TestCase(unittest.TestCase):
              {"type": u"Characters", "data": u"bar"},
              {"type": u"EndTag", "name": u"textarea", "data": []}])
 
+    def testSingleSelectWithValue(self):
+        self.runTest(
+            [{"type": u"StartTag", "name": u"select", "data": [(u"name", u"foo")]},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"bar")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"EndTag", "name": u"select", "data": []}],
+            FieldStorage({"foo": "bar"}),
+            [{"type": u"StartTag", "name": u"select", "data": [(u"name", u"foo")]},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"bar"), (u"selected", u"")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"EndTag", "name": u"select", "data": []}])
+
+    def testSingleSelectWithValueShouldBeUnselected(self):
+        self.runTest(
+            [{"type": u"StartTag", "name": u"select", "data": [(u"name", u"foo")]},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"bar")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"EndTag", "name": u"select", "data": []}],
+            FieldStorage({"foo": "quux"}),
+            [{"type": u"StartTag", "name": u"select", "data": [(u"name", u"foo")]},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"bar")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"EndTag", "name": u"select", "data": []}])
+
+    def testSingleSelectWithoutValue(self):
+        self.runTest(
+            [{"type": u"StartTag", "name": u"select", "data": [(u"name", u"foo")]},
+             {"type": u"StartTag", "name": u"option", "data": []},
+             {"type": u"Characters", "data": u"bar"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"EndTag", "name": u"select", "data": []}],
+            FieldStorage({"foo": "bar"}),
+            [{"type": u"StartTag", "name": u"select", "data": [(u"name", u"foo")]},
+             {"type": u"StartTag", "name": u"option", "data": [(u"selected", u"")]},
+             {"type": u"Characters", "data": u"bar"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"EndTag", "name": u"select", "data": []}])
+
+    def testSingleSelectWithoutValueShouldBeUnselected(self):
+        self.runTest(
+            [{"type": u"StartTag", "name": u"select", "data": [(u"name", u"foo")]},
+             {"type": u"StartTag", "name": u"option", "data": []},
+             {"type": u"Characters", "data": u"bar"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"EndTag", "name": u"select", "data": []}],
+            FieldStorage({"foo": "quux"}),
+            [{"type": u"StartTag", "name": u"select", "data": [(u"name", u"foo")]},
+             {"type": u"StartTag", "name": u"option", "data": []},
+             {"type": u"Characters", "data": u"bar"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"EndTag", "name": u"select", "data": []}])
+
+    def testSingleSelectTwoOptionsWithValue(self):
+        self.runTest(
+            [{"type": u"StartTag", "name": u"select", "data": [(u"name", u"foo")]},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"bar")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"quux")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"EndTag", "name": u"select", "data": []}],
+            FieldStorage({"foo": "bar"}),
+            [{"type": u"StartTag", "name": u"select", "data": [(u"name", u"foo")]},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"bar"), (u"selected", u"")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"quux")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"EndTag", "name": u"select", "data": []}])
+
+    def testSingleSelectTwoOptionsWithValueShouldBeUnselected(self):
+        self.runTest(
+            [{"type": u"StartTag", "name": u"select", "data": [(u"name", u"foo")]},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"bar")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"baz")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"EndTag", "name": u"select", "data": []}],
+            FieldStorage({"foo": "quux"}),
+            [{"type": u"StartTag", "name": u"select", "data": [(u"name", u"foo")]},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"bar")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"baz")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"EndTag", "name": u"select", "data": []}])
+
+    def testSingleSelectTwoOptionsWithoutValue(self):
+        self.runTest(
+            [{"type": u"StartTag", "name": u"select", "data": [(u"name", u"foo")]},
+             {"type": u"StartTag", "name": u"option", "data": []},
+             {"type": u"Characters", "data": u"bar"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"StartTag", "name": u"option", "data": []},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"EndTag", "name": u"select", "data": []}],
+            FieldStorage({"foo": "bar"}),
+            [{"type": u"StartTag", "name": u"select", "data": [(u"name", u"foo")]},
+             {"type": u"StartTag", "name": u"option", "data": [(u"selected", u"")]},
+             {"type": u"Characters", "data": u"bar"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"StartTag", "name": u"option", "data": []},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"EndTag", "name": u"select", "data": []}])
+
+    def testSingleSelectTwoOptionsWithoutValueShouldBeUnselected(self):
+        self.runTest(
+            [{"type": u"StartTag", "name": u"select", "data": [(u"name", u"foo")]},
+             {"type": u"StartTag", "name": u"option", "data": []},
+             {"type": u"Characters", "data": u"bar"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"StartTag", "name": u"option", "data": []},
+             {"type": u"Characters", "data": u"baz"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"EndTag", "name": u"select", "data": []}],
+            FieldStorage({"foo": "quux"}),
+            [{"type": u"StartTag", "name": u"select", "data": [(u"name", u"foo")]},
+             {"type": u"StartTag", "name": u"option", "data": []},
+             {"type": u"Characters", "data": u"bar"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"StartTag", "name": u"option", "data": []},
+             {"type": u"Characters", "data": u"baz"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"EndTag", "name": u"select", "data": []}])
+
+    def testSingleSelectMultiple(self):
+        self.runTest(
+            [{"type": u"StartTag", "name": u"select", "data": [(u"name", u"foo"), (u"multiple", u"")]},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"bar")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"quux")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"EndTag", "name": u"select", "data": []}],
+            FieldStorage({"foo": ["bar", "quux"]}),
+            [{"type": u"StartTag", "name": u"select", "data": [(u"name", u"foo"), (u"multiple", u"")]},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"bar"), (u"selected", u"")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"quux"), (u"selected", u"")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"EndTag", "name": u"select", "data": []}])
+
+    def testTwoSelect(self):
+        self.runTest(
+            [{"type": u"StartTag", "name": u"select", "data": [(u"name", u"foo")]},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"bar")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"quux")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"EndTag", "name": u"select", "data": []},
+             {"type": u"StartTag", "name": u"select", "data": [(u"name", u"foo")]},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"bar")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"quux")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"EndTag", "name": u"select", "data": []}],
+            FieldStorage({"foo": ["bar", "quux"]}),
+            [{"type": u"StartTag", "name": u"select", "data": [(u"name", u"foo")]},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"bar"), (u"selected", u"")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"quux")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"EndTag", "name": u"select", "data": []},
+             {"type": u"StartTag", "name": u"select", "data": [(u"name", u"foo")]},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"bar")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"StartTag", "name": u"option", "data": [(u"value", u"quux"), (u"selected", u"")]},
+             {"type": u"Characters", "data": u"quux"},
+             {"type": u"EndTag", "name": u"option", "data": []},
+             {"type": u"EndTag", "name": u"select", "data": []}])
+
 def main():
     unittest.main()
 
