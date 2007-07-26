@@ -112,7 +112,11 @@ class TestCase(unittest.TestCase):
              {"type": u"Characters", "data": u"foo" + spaceCharacters + "bar"},
              {"type": u"EndTag", "name": u"pre", "data": []}])
 
+def buildTestSuite():
+    return unittest.defaultTestLoader.loadTestsFromName(__name__)
+
 def main():
+    buildTestSuite()
     unittest.main()
 
 if __name__ == "__main__":
