@@ -255,7 +255,7 @@ class HTMLInputStream(object):
         #optimizing
         #Possible improvements:
         # - use regexp to find characters that match the required character set
-        # - compute line positions in a single pass at the end
+        #   (with regexp cache since we do the same operations many many times)
         # - improve EOF handling for fewer if statements
 
         if not self.queue:
@@ -266,13 +266,6 @@ class HTMLInputStream(object):
         
         i = 0
         while (self.queue[i] in characters) == opposite:
-            #Working out positions like this really sucks
-            if self.queue[i] == '\n':
-                self.lineLengths.append(self.col)
-                self.line += 1
-                self.col = 0
-            else:
-                self.col += 1
             i += 1
             if i == len(self.queue):
                 self.readChunk()
@@ -281,6 +274,32 @@ class HTMLInputStream(object):
                 break
 
         rv = u"".join(self.queue[:i])
+        
+        #Calculate where we now are in the stream
+        #One possible optimisation would be to store all read characters and
+        #Calculate this on an as-needed basis (perhaps flushing the read data
+        #every time we read a new chunk) rather than once per call here and
+        #in .char()
+        lines = rv.split("\n")
+        
+        if lines:
+            #Add number of lines passed onto positon
+            oldCol = self.col
+            self.line += len(lines)-1
+            if len(lines) > 1:
+                self.col = len(lines[-1])
+            else:
+                self.col += len(lines[0])
+
+            if self.lineLengths and oldCol > 0:
+                self.lineLengths[-1] += len(lines[0])
+                lines = lines[1:-1]
+            else:
+                lines = lines[:-1]
+        
+            for line in lines:
+                self.lineLengths.append(len(line))
+
         self.queue = self.queue[i:]
         
         return rv
