@@ -133,10 +133,7 @@ def testSerializer(element):
     rv = []
     def serializeElement(element, indent=0):
         if isinstance(element, Declaration):
-            if element.string:
-                rv.append("|%s<!DOCTYPE %s>"%(' '*indent, element.string))
-            else:
-                rv.append("|%s<!DOCTYPE>"%(' '*indent))
+            rv.append("|%s<!DOCTYPE %s>"%(' '*indent, element.string))
         elif isinstance(element, BeautifulSoup):
             if element.name == "[document_fragment]":
                 rv.append("#document-fragment")                

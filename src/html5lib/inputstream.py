@@ -255,7 +255,7 @@ class HTMLInputStream(object):
         #optimizing
         #Possible improvements:
         # - use regexp to find characters that match the required character set
-        #   (with regexp cache since we do the same operations many many times)
+        #   (with regexp cache since we do the same searches many many times)
         # - improve EOF handling for fewer if statements
 
         if not self.queue:
