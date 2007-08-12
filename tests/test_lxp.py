@@ -227,6 +227,19 @@ class XhtmlTest(Xhtml5Test):
 <body>
 </body></html>""")
 
+  def test_tagsoup(self):
+    self.assertXhtmlEquals(
+"""<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>TAGSOUP</title></head>
+<body>
+<u><blockquote><p></u>
+</body></html>""",
+"""<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>TAGSOUP</title></head>
+<body>
+<u/><blockquote><u/><p><u/>
+</p></blockquote></body></html>""")
+
 def buildTestSuite():
   return unittest.defaultTestLoader.loadTestsFromName(__name__)
 

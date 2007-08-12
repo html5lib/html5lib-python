@@ -41,7 +41,8 @@ class NodeBuilder(_base.Node):
         node.parent = self
 
     def removeChild(self, node):
-        self.element.removeChild(node.element)
+        if node.element.parentNode == self.element:
+            self.element.removeChild(node.element)
         node.parent = None
 
     def reparentChildren(self, newParent):
