@@ -272,35 +272,46 @@ class HTMLInputStream(object):
             #If the queue doesn't grow we have reached EOF
             if i == len(self.queue) or self.queue[i] is EOF:
                 break
+            #XXX- wallpaper over bug in calculation below
+            #Otherwise change the stream position
+            if self.queue[i] == '\n':
+                self.lineLengths.append(self.col)
+                self.line += 1
+                self.col = 0
+            else:
+                self.col += 1
 
         rv = u"".join(self.queue[:i])
+        self.queue = self.queue[i:]
         
         #Calculate where we now are in the stream
         #One possible optimisation would be to store all read characters and
         #Calculate this on an as-needed basis (perhaps flushing the read data
         #every time we read a new chunk) rather than once per call here and
         #in .char()
-        lines = rv.split("\n")
         
-        if lines:
-            #Add number of lines passed onto positon
-            oldCol = self.col
-            self.line += len(lines)-1
-            if len(lines) > 1:
-                self.col = len(lines[-1])
-            else:
-                self.col += len(lines[0])
-
-            if self.lineLengths and oldCol > 0:
-                self.lineLengths[-1] += len(lines[0])
-                lines = lines[1:-1]
-            else:
-                lines = lines[:-1]
+        #XXX Temporarily disable this because there is a bug
         
-            for line in lines:
-                self.lineLengths.append(len(line))
-
-        self.queue = self.queue[i:]
+        #lines = rv.split("\n")
+        #
+        #if lines:
+        #    #Add number of lines passed onto positon
+        #    oldCol = self.col
+        #    self.line += len(lines)-1
+        #    if len(lines) > 1:
+        #        self.col = len(lines[-1])
+        #    else:
+        #        self.col += len(lines[0])
+        #
+        #    if self.lineLengths and oldCol > 0:
+        #        self.lineLengths[-1] += len(lines[0])
+        #        lines = lines[1:-1]
+        #    else:
+        #        lines = lines[:-1]
+        #
+        #    for line in lines:
+        #        self.lineLengths.append(len(line))
+        #
         
         return rv
 
