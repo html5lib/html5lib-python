@@ -12,6 +12,11 @@ class MoreParserTests(unittest.TestCase):
     doc = parser.parse('<!DOCTYPE HTML>')
     self.assert_(doc.cloneNode(True))
 
+  def test_line_counter(self):
+    # http://groups.google.com/group/html5lib-discuss/browse_frm/thread/f4f00e4a2f26d5c0
+    parser = html5parser.HTMLParser(tree=dom.TreeBuilder)
+    parser.parse("<pre>\nx\n&gt;\n</pre>")
+
 def buildTestSuite():
   return unittest.defaultTestLoader.loadTestsFromName(__name__)
 
