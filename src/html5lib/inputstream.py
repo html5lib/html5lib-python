@@ -2,9 +2,6 @@ import codecs
 import re
 import types
 
-from gettext import gettext
-_ = gettext
-
 from constants import EOF, spaceCharacters, asciiLetters, asciiUppercase
 from constants import encodings
 from utils import MethodDispatcher
@@ -232,8 +229,7 @@ class HTMLInputStream(object):
             return
         #Replace null characters
         for i in xrange(data.count(u"\u0000")):
-            self.errors.append(_('null character found in input stream, '
-                                 'replaced with U+FFFD'))
+            self.errors.append("null-character")
         data = data.replace(u"\u0000", u"\ufffd")
         #Check for CR LF broken across chunks
         if (self._lastChunkEndsWithCR and data[0] == "\n"):

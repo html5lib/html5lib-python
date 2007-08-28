@@ -14,6 +14,7 @@ sys.path.insert(0,os.path.abspath(os.path.join(__file__,'../src')))
 #END RELEASE
 from html5lib import html5parser, liberalxmlparser
 from html5lib import treebuilders, serializer, treewalkers
+from html5lib import constants
 
 def parse():
     optParser = getOptParser()
@@ -100,8 +101,8 @@ def printOutput(parser, document, opts):
         if not text.endswith('\n'): sys.stdout.write('\n')
     if opts.error:
         errList=[]
-        for pos, message in parser.errors:
-            errList.append("Line %i Col %i"%pos + " " + message)
+        for pos, errorcode, datavars in parser.errors:
+            errList.append("Line %i Col %i"%pos + " " + constants.E.get(errorcode, 'Unknown error "%s"' % errorcode) % datavars)
         sys.stdout.write("\nParse errors:\n" + "\n".join(errList)+"\n")
 
 def getOptParser():

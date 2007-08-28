@@ -4,7 +4,7 @@ import StringIO
 import unittest
 from support import html5lib_test_files, TestData, convert, convertExpected
 
-from html5lib import html5parser, treebuilders
+from html5lib import html5parser, treebuilders, constants
 
 treeTypes = {"simpletree":treebuilders.getTreeBuilder("simpletree"),
              "DOM":treebuilders.getTreeBuilder("dom")}
@@ -76,8 +76,8 @@ class TestCase(unittest.TestCase):
         errorMsg = "\n".join(["\n\nInput:", input, "\nExpected:", expected,
                               "\nRecieved:", output])
         self.assertEquals(expected, output, errorMsg)
-        errStr = ["Line: %i Col: %i %s"%(line, col, message) for
-                  ((line,col), message) in p.errors]
+        errStr = ["Line: %i Col: %i %s"%(line, col, constants.E[errorcode] % datavars) for
+                  ((line,col), errorcode, datavars) in p.errors]
         errorMsg2 = "\n".join(["\n\nInput errors (" + str(len(errors)) + "):\n" + "\n".join(errors),
                                "Actual errors (" + str(len(p.errors)) + "):\n" + "\n".join(errStr)])
         self.assertEquals(len(p.errors), len(errors), errorMsg2)
