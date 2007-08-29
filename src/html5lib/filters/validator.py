@@ -134,19 +134,19 @@ allowedAttributeMap = {
     'th': frozenset(('colspan', 'rowspan', 'scope')),
     # all possible <input> attributes are listed here but <input> is really handled separately
     'input': frozenset(('accept', 'accesskey', 'action', 'alt', 'autocomplete', 'autofocus', 'checked', 'disabled', 'enctype', 'form', 'inputmode', 'list', 'maxlength', 'method', 'min', 'max', 'name', 'pattern', 'step', 'readonly', 'replace', 'required', 'size', 'src', 'tabindex', 'target', 'template', 'value')),
-#    'form': frozenset(('action', 'method', 'enctype', 'accept', 'name', 'onsubmit',
-#             'onreset', 'accept-charset', 'data', 'replace')),
-#    'button': frozenset(('name', 'value', 'type', 'disabled', 'form', 'autofocus')),
-#    'select': frozenset(('name', 'size', 'multiple', 'disabled', 'data', 'accesskey',
-#               'form', 'autofocus')),
-#    'optgroup': frozenset(('disabled', 'label', 'form', 'autofocus')),
-#    'option': frozenset(('selected', 'disabled', 'label', 'value', 'form', 'autofocus')),
-#    'textarea': frozenset(('name', 'rows', 'cols', 'disabled', 'readonly', 'required',
-#                 'form', 'autofocus', 'wrap', 'accept')),
-#    'label': frozenset(('for', 'accesskey', 'form')),
-#    'fieldset': frozenset(('disabled', 'form')),
-#    'output': frozenset(('form', 'name', 'for', 'onforminput', 'onformchange')),
-#    'datalist': frozenset(('data')),
+    'form': frozenset(('action', 'method', 'enctype', 'accept', 'name', 'onsubmit',
+             'onreset', 'accept-charset', 'data', 'replace')),
+    'button': frozenset(('name', 'value', 'type', 'disabled', 'form', 'autofocus')),
+    'select': frozenset(('name', 'size', 'multiple', 'disabled', 'data', 'accesskey',
+               'form', 'autofocus')),
+    'optgroup': frozenset(('disabled', 'label', 'form', 'autofocus')),
+    'option': frozenset(('selected', 'disabled', 'label', 'value', 'form', 'autofocus')),
+    'textarea': frozenset(('name', 'rows', 'cols', 'disabled', 'readonly', 'required',
+                 'form', 'autofocus', 'wrap', 'accept')),
+    'label': frozenset(('for', 'accesskey', 'form')),
+    'fieldset': frozenset(('disabled', 'form')),
+    'output': frozenset(('form', 'name', 'for', 'onforminput', 'onformchange')),
+    'datalist': frozenset(('data')),
 #    # XXX repetition model for repeating form controls
     'script': frozenset(('src', 'defer', 'async', 'type')),
     'noscript': frozenset(()),
@@ -163,6 +163,22 @@ allowedAttributeMap = {
     'legend': frozenset(()),
     'div': frozenset(()),
     'font': frozenset(('style',))
+}
+
+tmpMap = {
+    'form': frozenset(('action', 'method', 'enctype', 'accept', 'name', 'onsubmit',
+             'onreset', 'accept-charset', 'data', 'replace')),
+    'button': frozenset(('name', 'value', 'type', 'disabled', 'form', 'autofocus')),
+    'select': frozenset(('name', 'size', 'multiple', 'disabled', 'data', 'accesskey',
+               'form', 'autofocus')),
+    'optgroup': frozenset(('disabled', 'label', 'form', 'autofocus')),
+    'option': frozenset(('selected', 'disabled', 'label', 'value', 'form', 'autofocus')),
+    'textarea': frozenset(('name', 'rows', 'cols', 'disabled', 'readonly', 'required',
+                 'form', 'autofocus', 'wrap', 'accept')),
+    'label': frozenset(('for', 'accesskey', 'form')),
+    'fieldset': frozenset(('disabled', 'form')),
+    'output': frozenset(('form', 'name', 'for', 'onforminput', 'onformchange')),
+    'datalist': frozenset(('data')),
 }
 
 requiredAttributeMap = {
