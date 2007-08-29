@@ -20,21 +20,31 @@ _ = gettext.gettext
 
 E.update({
     "unrecognized-attribute":
-        _(u"Unrecognized attribute '%(attrName)s' in <%(tagName)s>"),
+        _(u"Unrecognized attribute '%(attributeName)s' in <%(tagName)s>"),
 })
+
+globalAttributes = ['id', 'title', 'lang', 'dir', 'class', 'irrelevant']
+allowedAttributeMap = {
+    'html': globalAttributes + ['xmlns']
+}
 
 class HTMLConformanceChecker(_base.Filter):
     def __init__(self, stream, encoding, parseMeta, **kwargs):
-        _base.Filter.__init__(self, tokenizer.HTMLTokenizer(stream, encoding, parseMeta, **kwargs))
+        _base.Filter.__init__(self, tokenizer.HTMLTokenizer(
+            stream, encoding, parseMeta, **kwargs))
 
     def __iter__(self):
         for token in _base.Filter.__iter__(self):
             type = token["type"]
             if type == "StartTag":
                 name = token["name"].lower()
-                if name == 'html':
+                if name in allowedAttributeMap.keys():
+                    allowedAttributes = allowedAttributeMap[name]
                     for attrName, attrValue in token["data"]:
-                        if attrName.lower() != 'xmlns':
-                            yield {"type": "ParseError", "data": "unrecognized-attribute", "datavars": {"tagName": name, "attributeName": attrName}}
+                        if attrName.lower() not in allowedAttributes:
+                            yield {"type": "ParseError",
+                                   "data": "unrecognized-attribute",
+                                   "datavars": {"tagName": name,
+                                                "attributeName": attrName}}
 
             yield token
