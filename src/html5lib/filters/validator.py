@@ -26,15 +26,17 @@ _ = gettext.gettext
 
 E.update({
     "unknown-start-tag":
-        _(u"Unknown start tag <%(tagName)s'"),
+        _(u"Unknown start tag <%(tagName)s>."),
     "unknown-attribute":
-        _(u"Unknown '%(attributeName)s' attribute on <%(tagName)s>"),
+        _(u"Unknown '%(attributeName)s' attribute on <%(tagName)s>."),
     "missing-required-attribute":
-        _(u"Missing required '%(attributeName)s' attribute on <%(tagName)s>"),
+        _(u"Missing required '%(attributeName)s' attribute on <%(tagName)s>."),
     "unknown-input-type":
-        _(u"Unknown value for input type: '%(inputType)s'"),
+        _(u"Illegal value for <input type> attribute: '%(inputType)s'."),
     "attribute-not-allowed-on-this-input-type":
-        _(u"'%(attributeName)s' attribute is not allowed on <input type='%(inputType)s'>"),
+        _(u"'%(attributeName)s' attribute is not allowed on <input type=%(inputType)s>."),
+    "deprecated-attribute":
+        _(u"'%(attributeName)s' attribute is deprecated on <%(tagName)s>."),
 })
 
 globalAttributes = frozenset(('class', 'contenteditable', 'contextmenu', 'dir',
@@ -130,10 +132,10 @@ allowedAttributeMap = {
     'tr': frozenset(()),
     'td': frozenset(('colspan', 'rowspan')),
     'th': frozenset(('colspan', 'rowspan', 'scope')),
-#    'form': frozenset(('action', 'method', 'enctype', 'accept', 'name', 'onsubmit',
-#             'onreset', 'accept-charset', 'data', 'replace')),
     # all possible <input> attributes are listed here but <input> is really handled separately
     'input': frozenset(('accept', 'accesskey', 'action', 'alt', 'autocomplete', 'autofocus', 'checked', 'disabled', 'enctype', 'form', 'inputmode', 'list', 'maxlength', 'method', 'min', 'max', 'name', 'pattern', 'step', 'readonly', 'replace', 'required', 'size', 'src', 'tabindex', 'target', 'template', 'value')),
+#    'form': frozenset(('action', 'method', 'enctype', 'accept', 'name', 'onsubmit',
+#             'onreset', 'accept-charset', 'data', 'replace')),
 #    'button': frozenset(('name', 'value', 'type', 'disabled', 'form', 'autofocus')),
 #    'select': frozenset(('name', 'size', 'multiple', 'disabled', 'data', 'accesskey',
 #               'form', 'autofocus')),
@@ -160,7 +162,7 @@ allowedAttributeMap = {
     'nest': frozenset(()),
     'legend': frozenset(()),
     'div': frozenset(()),
-    'font': frozenset(('style',)),
+    'font': frozenset(('style',))
 }
 
 requiredAttributeMap = {
@@ -171,7 +173,7 @@ requiredAttributeMap = {
     'object': frozenset(()), # XXX one of 'data' or 'type' is required
     'param': frozenset(('name', 'value')),
     'source': frozenset(('src',)),
-    'map': frozenset(('id',)),
+    'map': frozenset(('id',))
 }
 
 inputTypeAllowedAttributeMap = {
@@ -198,7 +200,12 @@ inputTypeAllowedAttributeMap = {
     'number': frozenset(('accesskey', 'autocomplete', 'autofocus', 'disabled', 'form', 'list', 'min', 'max', 'name', 'step', 'readonly', 'required', 'tabindex', 'value')),
     'range': frozenset(('accesskey', 'autocomplete', 'autofocus', 'disabled', 'form', 'list', 'min', 'max', 'name', 'step', 'readonly', 'required', 'tabindex', 'value')),
     'email': frozenset(('accesskey', 'autocomplete', 'autofocus', 'disabled', 'form', 'inputmode', 'list', 'maxlength', 'name', 'pattern', 'readonly', 'required', 'tabindex', 'value')),
-    'url': frozenset(('accesskey', 'autocomplete', 'autofocus', 'disabled', 'form', 'inputmode', 'list', 'maxlength', 'name', 'pattern', 'readonly', 'required', 'tabindex', 'value')),
+    'url': frozenset(('accesskey', 'autocomplete', 'autofocus', 'disabled', 'form', 'inputmode', 'list', 'maxlength', 'name', 'pattern', 'readonly', 'required', 'tabindex', 'value'))
+}
+
+inputTypeDeprecatedAttributeMap = {
+    'text': frozenset(('size',)),
+    'password': frozenset(('size',))
 }
 
 class HTMLConformanceChecker(_base.Filter):
@@ -246,6 +253,11 @@ class HTMLConformanceChecker(_base.Filter):
             elif attrName not in allowedAttributes:
                 yield {"type": "ParseError",
                        "data": "attribute-not-allowed-on-this-input-type",
+                       "datavars": {"attributeName": attrName,
+                                    "inputType": inputType}}
+            if attrName in inputTypeDeprecatedAttributeMap.get(inputType, []):
+                yield {"type": "ParseError",
+                       "data": "deprecated-attribute",
                        "datavars": {"attributeName": attrName,
                                     "inputType": inputType}}
 
