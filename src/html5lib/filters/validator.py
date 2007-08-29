@@ -165,22 +165,6 @@ allowedAttributeMap = {
     'font': frozenset(('style',))
 }
 
-tmpMap = {
-    'form': frozenset(('action', 'method', 'enctype', 'accept', 'name', 'onsubmit',
-             'onreset', 'accept-charset', 'data', 'replace')),
-    'button': frozenset(('name', 'value', 'type', 'disabled', 'form', 'autofocus')),
-    'select': frozenset(('name', 'size', 'multiple', 'disabled', 'data', 'accesskey',
-               'form', 'autofocus')),
-    'optgroup': frozenset(('disabled', 'label', 'form', 'autofocus')),
-    'option': frozenset(('selected', 'disabled', 'label', 'value', 'form', 'autofocus')),
-    'textarea': frozenset(('name', 'rows', 'cols', 'disabled', 'readonly', 'required',
-                 'form', 'autofocus', 'wrap', 'accept')),
-    'label': frozenset(('for', 'accesskey', 'form')),
-    'fieldset': frozenset(('disabled', 'form')),
-    'output': frozenset(('form', 'name', 'for', 'onforminput', 'onformchange')),
-    'datalist': frozenset(('data')),
-}
-
 requiredAttributeMap = {
     'link': frozenset(('href', 'rel')),
     'bdo': frozenset(('dir',)),
