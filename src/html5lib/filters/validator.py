@@ -35,9 +35,6 @@ globalAttributes = ['class', 'contenteditable', 'contextmenu', 'dir',
     'onmousewheel', 'onresize', 'onscroll', 'onselect', 'onsubmit', 'onunload']
 # XXX lang in HTML only, xml:lang in XHTML only
 
-modAttributes = ['cite', 'datetime']
-mediaAttributes = ['src', 'autoplay', 'start', 'loopstart', 'loopend', 'end',
-                   'loopcount', 'controls'],
 allowedAttributeMap = {
     'html': ['xmlns'],
     'base': ['href', 'target'],
@@ -52,14 +49,16 @@ allowedAttributeMap = {
     'time': ['datetime'],
     'meter': ['value', 'min', 'low', 'high', 'max', 'optimum'],
     'progress': ['value', 'max'],
-    'ins': modAttributes,
-    'del': modAttributes,
+    'ins': ['cite', 'datetime'],
+    'del': ['cite', 'datetime'],
     'img': ['alt', 'src', 'usemap', 'ismap', 'height', 'width'], # XXX ismap depends on parent
     'iframe': ['src'],
     'object': ['data', 'type', 'usemap', 'height', 'width'],
     'param': ['name', 'value'],
-    'video': mediaAttributes,
-    'audio': mediaAttributes,
+    'video': ['src', 'autoplay', 'start', 'loopstart', 'loopend', 'end',
+              'loopcount', 'controls'],
+    'audio': ['src', 'autoplay', 'start', 'loopstart', 'loopend', 'end',
+              'loopcount', 'controls'],
     'source': ['src', 'type', 'media'],
     'canvas': ['height', 'width'],
     'area': ['alt', 'coords', 'shape', 'href', 'target', 'ping', 'rel',
