@@ -19,7 +19,7 @@ except NameError:
     from sets import Set as set
     from sets import ImmutableSet as frozenset
 import _base
-from html5lib.constants import E
+from html5lib.constants import E, spaceCharacters
 from html5lib import tokenizer
 import gettext
 _ = gettext.gettext
@@ -37,6 +37,10 @@ E.update({
         _(u"'%(attributeName)s' attribute is not allowed on <input type=%(inputType)s>."),
     "deprecated-attribute":
         _(u"'%(attributeName)s' attribute is deprecated on <%(tagName)s>."),
+    "invalid-class-attribute":
+        _(u"Invalid class attribute value on <%(tagName)s>."),
+    "duplicate-value-in-token-list":
+        _(u"Duplicate value '%(attributeValue)s' in token list in '%(attributeName)s' attribute on <%(tagName)s>."),
 })
 
 globalAttributes = frozenset(('class', 'contenteditable', 'contextmenu', 'dir',
@@ -225,18 +229,35 @@ class HTMLConformanceChecker(_base.Filter):
                     for t in method(token) or []: yield t
             yield token
 
+    def checkAttributeValues(self, token):
+        tagName = token.get("name", "")
+        fakeToken = {"tagName": tagName.capitalize()}
+        for attrName, attrValue in token.get("data", []):
+            attrName = attrName.lower()
+            fakeToken["attributeName"] = attrName.capitalize()
+            method = getattr(self, "validateAttributeValue%(tagName)s%(attributeName)s" % fakeToken, None)
+            if method:
+                for t in method(token, tagName, attrName, attrValue) or []: yield t
+            else:
+                method = getattr(self, "validateAttributeValue%(attributeName)s" % fakeToken, None)
+                if method:
+                    for t in method(token, tagName, attrName, attrValue) or []: yield t
+
     def validateStartTag(self, token):
         for t in self.checkUnknownStartTag(token) or []: yield t
         for t in self.checkStartTagRequiredAttributes(token) or []: yield t
         for t in self.checkStartTagUnknownAttributes(token) or []: yield t
+        for t in self.checkAttributeValues(token) or []: yield t
 
     def validateStartTagEmbed(self, token):
         for t in self.checkStartTagRequiredAttributes(token) or []: yield t
+        for t in self.checkAttributeValues(token) or []: yield t
         # spec says "any attributes w/o namespace"
         # so don't call checkStartTagUnknownAttributes
 
     def validateStartTagInput(self, token):
-        attrDict = dict([(name.lower(), value) for name, value in token["data"]])
+        for t in self.checkAttributeValues(token) or []: yield t
+        attrDict = dict([(name.lower(), value) for name, value in token.get("data", [])])
         inputType = attrDict.get("type", "text")
         if inputType not in inputTypeAllowedAttributeMap.keys():
             yield {"type": "ParseError",
@@ -262,7 +283,7 @@ class HTMLConformanceChecker(_base.Filter):
 
     def checkUnknownStartTag(self, token):
         # check for recognized tag name
-        name = token["name"].lower()
+        name = token.get("name", "").lower()
         if name not in allowedAttributeMap.keys():
             yield {"type": "ParseError",
                    "data": "unknown-start-tag",
@@ -270,10 +291,10 @@ class HTMLConformanceChecker(_base.Filter):
 
     def checkStartTagRequiredAttributes(self, token):
         # check for presence of required attributes
-        name = token["name"].lower()
+        name = token.get("name", "").lower()
         if name in requiredAttributeMap.keys():
             attrsPresent = [attrName for attrName, attrValue
-                            in token["data"]]
+                            in token.get("data", [])]
             for attrName in requiredAttributeMap[name]:
                 if attrName not in attrsPresent:
                     yield {"type": "ParseError",
@@ -283,12 +304,39 @@ class HTMLConformanceChecker(_base.Filter):
 
     def checkStartTagUnknownAttributes(self, token):
         # check for recognized attribute names
-        name = token["name"].lower()
+        name = token.get("name").lower()
         allowedAttributes = globalAttributes | allowedAttributeMap.get(name, frozenset(()))
-        for attrName, attrValue in token["data"]:
+        for attrName, attrValue in token.get("data", []):
             if attrName.lower() not in allowedAttributes:
                 yield {"type": "ParseError",
                        "data": "unknown-attribute",
                        "datavars": {"tagName": name,
                                     "attributeName": attrName}}
 
+    def validateAttributeValueClass(self, token, tagName, attrName, attrValue):
+        for t in self.checkTokenList(tagName, attrName, attrValue) or []:
+            yield t
+            yield {"type": "ParseError",
+                   "data": "invalid-class-attribute",
+                   "datavars": {"tagName": tagName}}
+        
+    def checkTokenList(self, tagName, attrName, attrValue):
+        # The "token" in the method name refers to tokens in an attribute value
+        # i.e. http://www.whatwg.org/specs/web-apps/current-work/#set-of
+        # but the "token" parameter refers to the token generated from
+        # HTMLTokenizer.  Sorry for the confusion.
+        valueList = []
+        currentValue = ''
+        for c in attrValue + ' ':
+            if c in spaceCharacters:
+                if currentValue:
+                    if currentValue in valueList:
+                        yield {"type": "ParseError",
+                               "data": "duplicate-value-in-token-list",
+                               "datavars": {"tagName": tagName,
+                                            "attributeName": attrName,
+                                            "attributeValue": currentValue}}
+                    valueList.append(currentValue)
+                    currentValue = ''
+            else:
+                currentValue += c
