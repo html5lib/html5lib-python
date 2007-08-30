@@ -41,6 +41,12 @@ E.update({
         _(u"Duplicate value '%(attributeValue)s' in token list in '%(attributeName)s' attribute on <%(tagName)s>."),
     "invalid-attribute-value":
         _(u"Invalid value for '%(attributeName)s' attribute on <%(tagName)s>."),
+    "space-in-id":
+        _(u"Illegal space character in ID attribute on <%(tagName)s>."),
+    "duplicate-id":
+        _(u"Duplicate ID on <%(tagName)s>."),
+    "attribute-value-can-not-be-blank":
+        _(u"Value can not be blank: '%(attributeName)s' attribute on <%(tagName)s>."),
 })
 
 globalAttributes = frozenset(('class', 'contenteditable', 'contextmenu', 'dir',
@@ -215,6 +221,9 @@ class HTMLConformanceChecker(_base.Filter):
     def __init__(self, stream, encoding, parseMeta, **kwargs):
         _base.Filter.__init__(self, tokenizer.HTMLTokenizer(
             stream, encoding, parseMeta, **kwargs))
+        self.thingsThatDefineAnID = []
+        self.thingsThatPointToAnID = []
+        self.IDsWeHaveKnownAndLoved = []
 
     def __iter__(self):
         for token in _base.Filter.__iter__(self):
@@ -328,6 +337,36 @@ class HTMLConformanceChecker(_base.Filter):
                    "data": "invalid-attribute-value",
                    "datavars": {"tagName": tagName,
                                 "attributeName": attrName}}
+        
+    def validateAttributeValueId(self, token, tagName, attrName, attrValue):
+        # This method has side effects.  It adds 'token' to the list of
+        # things that define an ID (self.thingsThatDefineAnID) so that we can
+        # later check 1) whether an ID is duplicated, and 2) whether all the
+        # things that point to something else by ID (like <label for> or
+        # <span contextmenu>) point to an ID that actually exists somewhere.
+        if not attrValue:
+            yield {"type": "ParseError",
+                   "data": "attribute-value-can-not-be-blank",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName}}
+            return
+
+        if attrValue in self.IDsWeHaveKnownAndLoved:
+            yield {"type": "ParseError",
+                   "data": "duplicate-id",
+                   "datavars": {"tagName": tagName}}
+        self.IDsWeHaveKnownAndLoved.append(attrValue)
+        self.thingsThatDefineAnID.append(token)
+        for c in attrValue:
+            if c in spaceCharacters:
+                yield {"type": "ParseError",
+                       "data": "space-in-id",
+                       "datavars": {"tagName": tagName}}
+                yield {"type": "ParseError",
+                       "data": "invalid-attribute-value",
+                       "datavars": {"tagName": tagName,
+                                    "attributeName": attrName}}
+                break
         
     def checkTokenList(self, tagName, attrName, attrValue):
         # The "token" in the method name refers to tokens in an attribute value
