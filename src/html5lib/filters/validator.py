@@ -336,97 +336,6 @@ class HTMLConformanceChecker(_base.Filter):
                                     "attributeName": attrName}}
 
     ##########################################################################
-    # Attribute validation
-    ##########################################################################
-
-    def checkAttributeValues(self, token):
-        tagName = token.get("name", "")
-        fakeToken = {"tagName": tagName.capitalize()}
-        for attrName, attrValue in token.get("data", []):
-            attrName = attrName.lower()
-            fakeToken["attributeName"] = attrName.capitalize()
-            method = getattr(self, "validateAttributeValue%(tagName)s%(attributeName)s" % fakeToken, None)
-            if method:
-                for t in method(token, tagName, attrName, attrValue) or []: yield t
-            else:
-                method = getattr(self, "validateAttributeValue%(attributeName)s" % fakeToken, None)
-                if method:
-                    for t in method(token, tagName, attrName, attrValue) or []: yield t
-
-    def validateAttributeValueClass(self, token, tagName, attrName, attrValue):
-        for t in self.checkTokenList(tagName, attrName, attrValue) or []:
-            yield t
-            yield {"type": "ParseError",
-                   "data": "invalid-attribute-value",
-                   "datavars": {"tagName": tagName,
-                                "attributeName": attrName}}
-
-    def validateAttributeValueContenteditable(self, token, tagName, attrName, attrValue):
-        for t in self.checkEnumeratedValue(token, tagName, attrName, attrValue, frozenset(('true', 'false', ''))) or []: yield t
-
-    def validateAttributeValueDir(self, token, tagName, attrName, attrValue):
-        for t in self.checkEnumeratedValue(token, tagName, attrName, attrValue, frozenset(('ltr', 'rtl'))) or []: yield t
-
-    def validateAttributeValueDraggable(self, token, tagName, attrName, attrValue):
-        for t in self.checkEnumeratedValue(token, tagName, attrName, attrValue, frozenset(('true', 'false'))) or []: yield t
-
-    def validateAttributeValueIrrelevant(self, token, tagName, attrName, attrValue):
-        for t in self.checkBooleanValue(token, tagName, attrName, attrValue) or []: yield t
-
-    def validateAttributeValueLang(self, token, tagName, attrName, attrValue):
-        if not attrValue: return # blank is OK
-        if not iso639codes.isValidLangCode(attrValue):
-            yield {"type": "ParseError",
-                   "data": "invalid-lang-code",
-                   "datavars": {"tagName": tagName,
-                                "attributeName": attrName,
-                                "attributeValue": attrValue}}
-
-    def validateAttributeValueContextmenu(self, token, tagName, attrName, attrValue):
-        for t in self.checkIDValue(token, tagName, attrName, attrValue) or []: yield t
-        self.thingsThatPointToAnID.append(token)
-
-    def validateAttributeValueId(self, token, tagName, attrName, attrValue):
-        # This method has side effects.  It adds 'token' to the list of
-        # things that define an ID (self.thingsThatDefineAnID) so that we can
-        # later check 1) whether an ID is duplicated, and 2) whether all the
-        # things that point to something else by ID (like <label for> or
-        # <span contextmenu>) point to an ID that actually exists somewhere.
-        for t in self.checkIDValue(token, tagName, attrName, attrValue) or []: yield t
-        if not attrValue: return
-        if attrValue in self.IDsWeHaveKnownAndLoved:
-            yield {"type": "ParseError",
-                   "data": "duplicate-id",
-                   "datavars": {"tagName": tagName}}
-        self.IDsWeHaveKnownAndLoved.append(attrValue)
-        self.thingsThatDefineAnID.append(token)
-
-    def validateAttributeValueTabindex(self, token, tagName, attrName, attrValue):
-        for t in self.checkIntegerValue(token, tagName, attrName, attrValue) or []: yield t
-
-    def validateAttributeValueRef(self, token, tagName, attrName, attrValue):
-        # XXX
-        pass
-
-    def validateAttributeValueTemplate(self, token, tagName, attrName, attrValue):
-        # XXX
-        pass
-
-    def validateAttributeValueHtmlXmlns(self, token, tagName, attrName, attrValue):
-        if attrValue != "http://www.w3.org/1999/xhtml":
-            yield {"type": "ParseError",
-                   "data": "invalid-root-namespace",
-                   "datavars": {"tagName": tagName,
-                                "attributeName": attrName}}
-
-    def validateAttributeValueBaseHref(self, token, tagName, attrName, attrValue):
-        # XXX
-        pass
-
-    def validateAttributeValueBaseTarget(self, token, tagName, attrName, attrValue):
-        for t in self.checkBrowsingContext(token, tagName, attrName, attrValue) or []: yield t
-
-    ##########################################################################
     # Attribute validation helpers
     ##########################################################################
 
@@ -551,6 +460,95 @@ class HTMLConformanceChecker(_base.Filter):
                "data": "invalid-browsing-context",
                "datavars": {"tagName": tagName,
                             "attributeName": attrName}}
+
+    ##########################################################################
+    # Attribute validation
+    ##########################################################################
+
+    def checkAttributeValues(self, token):
+        tagName = token.get("name", "")
+        fakeToken = {"tagName": tagName.capitalize()}
+        for attrName, attrValue in token.get("data", []):
+            attrName = attrName.lower()
+            fakeToken["attributeName"] = attrName.capitalize()
+            method = getattr(self, "validateAttributeValue%(tagName)s%(attributeName)s" % fakeToken, None)
+            if method:
+                for t in method(token, tagName, attrName, attrValue) or []: yield t
+            else:
+                method = getattr(self, "validateAttributeValue%(attributeName)s" % fakeToken, None)
+                if method:
+                    for t in method(token, tagName, attrName, attrValue) or []: yield t
+
+    def validateAttributeValueClass(self, token, tagName, attrName, attrValue):
+        for t in self.checkTokenList(tagName, attrName, attrValue) or []:
+            yield t
+            yield {"type": "ParseError",
+                   "data": "invalid-attribute-value",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName}}
+
+    def validateAttributeValueContenteditable(self, token, tagName, attrName, attrValue):
+        for t in self.checkEnumeratedValue(token, tagName, attrName, attrValue, frozenset(('true', 'false', ''))) or []: yield t
+
+    def validateAttributeValueDir(self, token, tagName, attrName, attrValue):
+        for t in self.checkEnumeratedValue(token, tagName, attrName, attrValue, frozenset(('ltr', 'rtl'))) or []: yield t
+
+    def validateAttributeValueDraggable(self, token, tagName, attrName, attrValue):
+        for t in self.checkEnumeratedValue(token, tagName, attrName, attrValue, frozenset(('true', 'false'))) or []: yield t
+
+    def validateAttributeValueIrrelevant(self, token, tagName, attrName, attrValue):
+        for t in self.checkBooleanValue(token, tagName, attrName, attrValue) or []: yield t
+
+    def validateAttributeValueLang(self, token, tagName, attrName, attrValue):
+        if not attrValue: return # blank is OK
+        if not iso639codes.isValidLangCode(attrValue):
+            yield {"type": "ParseError",
+                   "data": "invalid-lang-code",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName,
+                                "attributeValue": attrValue}}
+
+    def validateAttributeValueContextmenu(self, token, tagName, attrName, attrValue):
+        for t in self.checkIDValue(token, tagName, attrName, attrValue) or []: yield t
+        self.thingsThatPointToAnID.append(token)
+
+    def validateAttributeValueId(self, token, tagName, attrName, attrValue):
+        # This method has side effects.  It adds 'token' to the list of
+        # things that define an ID (self.thingsThatDefineAnID) so that we can
+        # later check 1) whether an ID is duplicated, and 2) whether all the
+        # things that point to something else by ID (like <label for> or
+        # <span contextmenu>) point to an ID that actually exists somewhere.
+        for t in self.checkIDValue(token, tagName, attrName, attrValue) or []: yield t
+        if not attrValue: return
+        if attrValue in self.IDsWeHaveKnownAndLoved:
+            yield {"type": "ParseError",
+                   "data": "duplicate-id",
+                   "datavars": {"tagName": tagName}}
+        self.IDsWeHaveKnownAndLoved.append(attrValue)
+        self.thingsThatDefineAnID.append(token)
+
+    validateAttributeValueTabindex = checkIntegerValue
+
+    def validateAttributeValueRef(self, token, tagName, attrName, attrValue):
+        # XXX
+        pass
+
+    def validateAttributeValueTemplate(self, token, tagName, attrName, attrValue):
+        # XXX
+        pass
+
+    def validateAttributeValueHtmlXmlns(self, token, tagName, attrName, attrValue):
+        if attrValue != "http://www.w3.org/1999/xhtml":
+            yield {"type": "ParseError",
+                   "data": "invalid-root-namespace",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName}}
+
+    def validateAttributeValueBaseHref(self, token, tagName, attrName, attrValue):
+        # XXX
+        pass
+
+    validateAttributeValueBaseTarget = checkBrowsingContext
 
     ##########################################################################
     # Whole document validation (IDs, etc.)
