@@ -982,7 +982,9 @@ class InBodyPhase(Phase):
         """New HTML5 elements, "event-source", "section", "nav",
         "article", "aside", "header", "footer", "datagrid", "command"
         """
-        sys.stderr.write("Warning: Undefined behaviour for start tag %s"%name)
+        #2007-08-30 - MAP - commenting out this write to sys.stderr because
+        #  it's really annoying me when I run the validator tests
+        #sys.stderr.write("Warning: Undefined behaviour for start tag %s"%name)
         self.startTagOther(name, attributes)
         #raise NotImplementedError
 
