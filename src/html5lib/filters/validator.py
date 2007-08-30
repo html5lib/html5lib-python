@@ -37,10 +37,10 @@ E.update({
         _(u"'%(attributeName)s' attribute is not allowed on <input type=%(inputType)s>."),
     "deprecated-attribute":
         _(u"'%(attributeName)s' attribute is deprecated on <%(tagName)s>."),
-    "invalid-class-attribute":
-        _(u"Invalid class attribute value on <%(tagName)s>."),
     "duplicate-value-in-token-list":
         _(u"Duplicate value '%(attributeValue)s' in token list in '%(attributeName)s' attribute on <%(tagName)s>."),
+    "invalid-attribute-value":
+        _(u"Invalid value for '%(attributeName)s' attribute on <%(tagName)s>."),
 })
 
 globalAttributes = frozenset(('class', 'contenteditable', 'contextmenu', 'dir',
@@ -317,8 +317,17 @@ class HTMLConformanceChecker(_base.Filter):
         for t in self.checkTokenList(tagName, attrName, attrValue) or []:
             yield t
             yield {"type": "ParseError",
-                   "data": "invalid-class-attribute",
-                   "datavars": {"tagName": tagName}}
+                   "data": "invalid-attribute-value",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName}}
+
+    def validateAttributeValueContenteditable(self, token, tagName, attrName, attrValue):
+        attrValue = attrValue.lower()
+        if attrValue not in frozenset(('true', 'false', '')):
+            yield {"type": "ParseError",
+                   "data": "invalid-attribute-value",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName}}
         
     def checkTokenList(self, tagName, attrName, attrValue):
         # The "token" in the method name refers to tokens in an attribute value
