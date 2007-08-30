@@ -51,6 +51,8 @@ E.update({
         _(u"This value refers to a non-existent ID: '%(attributeName)s' attribute on <%(tagName)s>."),
     "invalid-enumerated-value":
         _(u"Value must be one of %(enumeratedValues)s: '%(attributeName)s' attribute on <%tagName)s>."),
+    "invalid-boolean-value":
+        _(u"Value must be one of %(enumeratedValues)s: '%(attributeName)s' attribute on <%tagName)s>."),
     "contextmenu-must-point-to-menu":
         _(u"The contextmenu attribute must point to an ID defined on a <menu> element."),
 })
@@ -368,6 +370,9 @@ class HTMLConformanceChecker(_base.Filter):
     def validateAttributeValueDraggable(self, token, tagName, attrName, attrValue):
         for t in self.checkEnumeratedValue(token, tagName, attrName, attrValue, frozenset(('true', 'false'))) or []: yield t
 
+    def validateAttributeValueIrrelevant(self, token, tagName, attrName, attrValue):
+        for t in self.checkBooleanValue(token, tagName, attrName, attrValue) or []: yield t
+
     def checkEnumeratedValue(self, token, tagName, attrName, attrValue, enumeratedValues):
         if not attrValue and ('' not in enumeratedValues):
             yield {"type": "ParseError",
@@ -387,6 +392,19 @@ class HTMLConformanceChecker(_base.Filter):
                    "datavars": {"tagName": tagName,
                                 "attributeName": attrName}}
         
+    def checkBooleanValue(self, token, tagName, attrName, attrValue):
+        enumeratedValues = frozenset((attrName, ''))
+        if attrValue not in enumeratedValues:
+            yield {"type": "ParseError",
+                   "data": "invalid-boolean-value",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName,
+                                "enumeratedValues": tuple(enumeratedValues)}}
+            yield {"type": "ParseError",
+                   "data": "invalid-attribute-value",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName}}
+
     def validateAttributeValueContextmenu(self, token, tagName, attrName, attrValue):
         for t in self.checkIDValue(token, tagName, attrName, attrValue) or []: yield t
         self.thingsThatPointToAnID.append(token)
