@@ -49,6 +49,8 @@ E.update({
         _(u"This value can not be blank: '%(attributeName)s' attribute on <%(tagName)s>."),
     "id-does-not-exist":
         _(u"This value refers to a non-existent ID: '%(attributeName)s' attribute on <%(tagName)s>."),
+    "invalid-enumerated-value":
+        _(u"Value must be one of %(enumeratedValues)s: '%(attributeName)s' attribute on <%tagName)s>."),
     "contextmenu-must-point-to-menu":
         _(u"The contextmenu attribute must point to an ID defined on a <menu> element."),
 })
@@ -358,8 +360,25 @@ class HTMLConformanceChecker(_base.Filter):
                                 "attributeName": attrName}}
 
     def validateAttributeValueContenteditable(self, token, tagName, attrName, attrValue):
+        for t in self.checkEnumeratedValue(token, tagName, attrName, attrValue, frozenset(('true', 'false', ''))) or []: yield t
+
+    def validateAttributeValueDir(self, token, tagName, attrName, attrValue):
+        for t in self.checkEnumeratedValue(token, tagName, attrName, attrValue, frozenset(('ltr', 'rtl'))) or []: yield t
+
+    def checkEnumeratedValue(self, token, tagName, attrName, attrValue, enumeratedValues):
+        if not attrValue and ('' not in enumeratedValues):
+            yield {"type": "ParseError",
+                   "data": "attribute-value-can-not-be-blank",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName}}
+            return
         attrValue = attrValue.lower()
-        if attrValue not in frozenset(('true', 'false', '')):
+        if attrValue not in enumeratedValues:
+            yield {"type": "ParseError",
+                   "data": "invalid-enumerated-value",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName,
+                                "enumeratedValues": tuple(enumeratedValues)}}
             yield {"type": "ParseError",
                    "data": "invalid-attribute-value",
                    "datavars": {"tagName": tagName,
