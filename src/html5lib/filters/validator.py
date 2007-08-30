@@ -62,6 +62,8 @@ E.update({
         _(u"Value must be an integer: '%(attributeName)s' attribute on <%tagName)s>."),
     "invalid-root-namespace":
         _(u"Root namespace must be 'http://www.w3.org/1999/xhtml', or omitted."),
+    "invalid-browsing-context":
+        _(u"Value must be one of ('_self', '_parent', '_top'), or a name that does not start with '_': '%(attributeName)s' attribute on <%(tagName)s>."),
 })
 
 globalAttributes = frozenset(('class', 'contenteditable', 'contextmenu', 'dir',
@@ -402,12 +404,27 @@ class HTMLConformanceChecker(_base.Filter):
     def validateAttributeValueTabindex(self, token, tagName, attrName, attrValue):
         for t in self.checkIntegerValue(token, tagName, attrName, attrValue) or []: yield t
 
+    def validateAttributeValueRef(self, token, tagName, attrName, attrValue):
+        # XXX
+        pass
+
+    def validateAttributeValueTemplate(self, token, tagName, attrName, attrValue):
+        # XXX
+        pass
+
     def validateAttributeValueHtmlXmlns(self, token, tagName, attrName, attrValue):
         if attrValue != "http://www.w3.org/1999/xhtml":
             yield {"type": "ParseError",
                    "data": "invalid-root-namespace",
                    "datavars": {"tagName": tagName,
                                 "attributeName": attrName}}
+
+    def validateAttributeValueBaseHref(self, token, tagName, attrName, attrValue):
+        # XXX
+        pass
+
+    def validateAttributeValueBaseTarget(self, token, tagName, attrName, attrValue):
+        for t in self.checkBrowsingContext(token, tagName, attrName, attrValue) or []: yield t
 
     ##########################################################################
     # Attribute validation helpers
@@ -524,6 +541,16 @@ class HTMLConformanceChecker(_base.Filter):
                    "data": "attribute-value-can-not-be-blank",
                    "datavars": {"tagName": tagName,
                                 "attributeName": attrName}}
+
+    def checkBrowsingContext(self, token, tagName, attrName, attrValue):
+        if not attrValue: return
+        if attrValue[0] != '_': return
+        attrValue = attrValue.lower()
+        if attrValue in frozenset(('_self', '_parent', '_top', '_blank')): return
+        yield {"type": "ParseError",
+               "data": "invalid-browsing-context",
+               "datavars": {"tagName": tagName,
+                            "attributeName": attrName}}
 
     ##########################################################################
     # Whole document validation (IDs, etc.)
