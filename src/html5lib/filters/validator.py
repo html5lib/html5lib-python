@@ -60,6 +60,8 @@ E.update({
         _(u"Invalid language code: '%(attributeName)s' attibute on <%(tagName)s>."),
     "invalid-integer-value":
         _(u"Value must be an integer: '%(attributeName)s' attribute on <%tagName)s>."),
+    "invalid-root-namespace":
+        _(u"Root namespace must be 'http://www.w3.org/1999/xhtml', or omitted."),
 })
 
 globalAttributes = frozenset(('class', 'contenteditable', 'contextmenu', 'dir',
@@ -71,6 +73,7 @@ globalAttributes = frozenset(('class', 'contenteditable', 'contextmenu', 'dir',
     'onmousedown', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup',
     'onmousewheel', 'onresize', 'onscroll', 'onselect', 'onsubmit', 'onunload'))
 # XXX lang in HTML only, xml:lang in XHTML only
+# XXX validate ref, template
 
 allowedAttributeMap = {
     'html': frozenset(('xmlns',)),
@@ -398,6 +401,13 @@ class HTMLConformanceChecker(_base.Filter):
 
     def validateAttributeValueTabindex(self, token, tagName, attrName, attrValue):
         for t in self.checkIntegerValue(token, tagName, attrName, attrValue) or []: yield t
+
+    def validateAttributeValueHtmlXmlns(self, token, tagName, attrName, attrValue):
+        if attrValue != "http://www.w3.org/1999/xhtml":
+            yield {"type": "ParseError",
+                   "data": "invalid-root-namespace",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName}}
 
     ##########################################################################
     # Attribute validation helpers
