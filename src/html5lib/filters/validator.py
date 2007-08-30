@@ -20,7 +20,7 @@ except NameError:
     from sets import ImmutableSet as frozenset
 import _base
 import iso639codes
-from html5lib.constants import E, spaceCharacters
+from html5lib.constants import E, spaceCharacters, digits
 from html5lib import tokenizer
 import gettext
 _ = gettext.gettext
@@ -58,6 +58,8 @@ E.update({
         _(u"The contextmenu attribute must point to an ID defined on a <menu> element."),
     "invalid-lang-code":
         _(u"Invalid language code: '%(attributeName)s' attibute on <%(tagName)s>."),
+    "invalid-integer-value":
+        _(u"Value must be an integer: '%(attributeName)s' attribute on <%tagName)s>."),
 })
 
 globalAttributes = frozenset(('class', 'contenteditable', 'contextmenu', 'dir',
@@ -250,41 +252,9 @@ class HTMLConformanceChecker(_base.Filter):
             yield token
         for t in self.eof() or []: yield t
 
-    def checkAttributeValues(self, token):
-        tagName = token.get("name", "")
-        fakeToken = {"tagName": tagName.capitalize()}
-        for attrName, attrValue in token.get("data", []):
-            attrName = attrName.lower()
-            fakeToken["attributeName"] = attrName.capitalize()
-            method = getattr(self, "validateAttributeValue%(tagName)s%(attributeName)s" % fakeToken, None)
-            if method:
-                for t in method(token, tagName, attrName, attrValue) or []: yield t
-            else:
-                method = getattr(self, "validateAttributeValue%(attributeName)s" % fakeToken, None)
-                if method:
-                    for t in method(token, tagName, attrName, attrValue) or []: yield t
-
-    def eof(self):
-        for token in self.thingsThatPointToAnID:
-            tagName = token.get("name", "").lower()
-            attrsDict = token["data"] # by now html5parser has "normalized" the attrs list into a dict.
-                                      # hooray for obscure side effects!
-            attrValue = attrsDict.get("contextmenu", "")
-            if attrValue and (attrValue not in self.IDsWeHaveKnownAndLoved):
-                yield {"type": "ParseError",
-                       "data": "id-does-not-exist",
-                       "datavars": {"tagName": tagName,
-                                    "attributeName": "contextmenu",
-                                    "attributeValue": attrValue}}
-            else:
-                for refToken in self.thingsThatDefineAnID:
-                    id = refToken.get("data", {}).get("id", "")
-                    if not id: continue
-                    if id == attrValue:
-                        if refToken.get("name", "").lower() != "menu":
-                            yield {"type": "ParseError",
-                                   "data": "contextmenu-must-point-to-menu"}
-                        break
+    ##########################################################################
+    # Start tag validation
+    ##########################################################################
 
     def validateStartTag(self, token):
         for t in self.checkUnknownStartTag(token) or []: yield t
@@ -324,6 +294,10 @@ class HTMLConformanceChecker(_base.Filter):
                        "datavars": {"attributeName": attrName,
                                     "inputType": inputType}}
 
+    ##########################################################################
+    # Start tag validation helpers
+    ##########################################################################
+
     def checkUnknownStartTag(self, token):
         # check for recognized tag name
         name = token.get("name", "").lower()
@@ -356,6 +330,24 @@ class HTMLConformanceChecker(_base.Filter):
                        "datavars": {"tagName": name,
                                     "attributeName": attrName}}
 
+    ##########################################################################
+    # Attribute validation
+    ##########################################################################
+
+    def checkAttributeValues(self, token):
+        tagName = token.get("name", "")
+        fakeToken = {"tagName": tagName.capitalize()}
+        for attrName, attrValue in token.get("data", []):
+            attrName = attrName.lower()
+            fakeToken["attributeName"] = attrName.capitalize()
+            method = getattr(self, "validateAttributeValue%(tagName)s%(attributeName)s" % fakeToken, None)
+            if method:
+                for t in method(token, tagName, attrName, attrValue) or []: yield t
+            else:
+                method = getattr(self, "validateAttributeValue%(attributeName)s" % fakeToken, None)
+                if method:
+                    for t in method(token, tagName, attrName, attrValue) or []: yield t
+
     def validateAttributeValueClass(self, token, tagName, attrName, attrValue):
         for t in self.checkTokenList(tagName, attrName, attrValue) or []:
             yield t
@@ -385,38 +377,6 @@ class HTMLConformanceChecker(_base.Filter):
                                 "attributeName": attrName,
                                 "attributeValue": attrValue}}
 
-    def checkEnumeratedValue(self, token, tagName, attrName, attrValue, enumeratedValues):
-        if not attrValue and ('' not in enumeratedValues):
-            yield {"type": "ParseError",
-                   "data": "attribute-value-can-not-be-blank",
-                   "datavars": {"tagName": tagName,
-                                "attributeName": attrName}}
-            return
-        attrValue = attrValue.lower()
-        if attrValue not in enumeratedValues:
-            yield {"type": "ParseError",
-                   "data": "invalid-enumerated-value",
-                   "datavars": {"tagName": tagName,
-                                "attributeName": attrName,
-                                "enumeratedValues": tuple(enumeratedValues)}}
-            yield {"type": "ParseError",
-                   "data": "invalid-attribute-value",
-                   "datavars": {"tagName": tagName,
-                                "attributeName": attrName}}
-        
-    def checkBooleanValue(self, token, tagName, attrName, attrValue):
-        enumeratedValues = frozenset((attrName, ''))
-        if attrValue not in enumeratedValues:
-            yield {"type": "ParseError",
-                   "data": "invalid-boolean-value",
-                   "datavars": {"tagName": tagName,
-                                "attributeName": attrName,
-                                "enumeratedValues": tuple(enumeratedValues)}}
-            yield {"type": "ParseError",
-                   "data": "invalid-attribute-value",
-                   "datavars": {"tagName": tagName,
-                                "attributeName": attrName}}
-
     def validateAttributeValueContextmenu(self, token, tagName, attrName, attrValue):
         for t in self.checkIDValue(token, tagName, attrName, attrValue) or []: yield t
         self.thingsThatPointToAnID.append(token)
@@ -435,6 +395,13 @@ class HTMLConformanceChecker(_base.Filter):
                    "datavars": {"tagName": tagName}}
         self.IDsWeHaveKnownAndLoved.append(attrValue)
         self.thingsThatDefineAnID.append(token)
+
+    def validateAttributeValueTabindex(self, token, tagName, attrName, attrValue):
+        for t in self.checkIntegerValue(token, tagName, attrName, attrValue) or []: yield t
+
+    ##########################################################################
+    # Attribute validation helpers
+    ##########################################################################
 
     def checkIDValue(self, token, tagName, attrName, attrValue):
         if not attrValue:
@@ -474,3 +441,102 @@ class HTMLConformanceChecker(_base.Filter):
                     currentValue = ''
             else:
                 currentValue += c
+
+    def checkEnumeratedValue(self, token, tagName, attrName, attrValue, enumeratedValues):
+        if not attrValue and ('' not in enumeratedValues):
+            yield {"type": "ParseError",
+                   "data": "attribute-value-can-not-be-blank",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName}}
+            return
+        attrValue = attrValue.lower()
+        if attrValue not in enumeratedValues:
+            yield {"type": "ParseError",
+                   "data": "invalid-enumerated-value",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName,
+                                "enumeratedValues": tuple(enumeratedValues)}}
+            yield {"type": "ParseError",
+                   "data": "invalid-attribute-value",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName}}
+        
+    def checkBooleanValue(self, token, tagName, attrName, attrValue):
+        enumeratedValues = frozenset((attrName, ''))
+        if attrValue not in enumeratedValues:
+            yield {"type": "ParseError",
+                   "data": "invalid-boolean-value",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName,
+                                "enumeratedValues": tuple(enumeratedValues)}}
+            yield {"type": "ParseError",
+                   "data": "invalid-attribute-value",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName}}
+
+    def checkIntegerValue(self, token, tagName, attrName, attrValue):
+        sign = 1
+        numberString = ''
+        state = 'begin' # ('begin', 'initial-number', 'number', 'trailing-junk')
+        error = {"type": "ParseError",
+                 "data": "invalid-integer-value",
+                 "datavars": {"tagName": tagName,
+                              "attributeName": attrName,
+                              "attributeValue": attrValue}}
+        for c in attrValue:
+            if state == 'begin':
+                if c in spaceCharacters:
+                    pass
+                elif c == '-':
+                    sign = -1
+                    state = 'initial-number'
+                elif c in digits:
+                    numberString += c
+                    state = 'in-number'
+                else:
+                    yield error
+                    return
+            elif state == 'initial-number':
+                if c not in digits:
+                    yield error
+                    return
+                numberString += c
+                state = 'in-number'
+            elif state == 'in-number':
+                if c in digits:
+                    numberString += c
+                else:
+                    state = 'trailing-junk'
+            elif state == 'trailing-junk':
+                pass
+        if not numberString:
+            yield {"type": "ParseError",
+                   "data": "attribute-value-can-not-be-blank",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName}}
+
+    ##########################################################################
+    # Whole document validation (IDs, etc.)
+    ##########################################################################
+
+    def eof(self):
+        for token in self.thingsThatPointToAnID:
+            tagName = token.get("name", "").lower()
+            attrsDict = token["data"] # by now html5parser has "normalized" the attrs list into a dict.
+                                      # hooray for obscure side effects!
+            attrValue = attrsDict.get("contextmenu", "")
+            if attrValue and (attrValue not in self.IDsWeHaveKnownAndLoved):
+                yield {"type": "ParseError",
+                       "data": "id-does-not-exist",
+                       "datavars": {"tagName": tagName,
+                                    "attributeName": "contextmenu",
+                                    "attributeValue": attrValue}}
+            else:
+                for refToken in self.thingsThatDefineAnID:
+                    id = refToken.get("data", {}).get("id", "")
+                    if not id: continue
+                    if id == attrValue:
+                        if refToken.get("name", "").lower() != "menu":
+                            yield {"type": "ParseError",
+                                   "data": "contextmenu-must-point-to-menu"}
+                        break
