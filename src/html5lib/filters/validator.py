@@ -365,6 +365,9 @@ class HTMLConformanceChecker(_base.Filter):
     def validateAttributeValueDir(self, token, tagName, attrName, attrValue):
         for t in self.checkEnumeratedValue(token, tagName, attrName, attrValue, frozenset(('ltr', 'rtl'))) or []: yield t
 
+    def validateAttributeValueDraggable(self, token, tagName, attrName, attrValue):
+        for t in self.checkEnumeratedValue(token, tagName, attrName, attrValue, frozenset(('true', 'false'))) or []: yield t
+
     def checkEnumeratedValue(self, token, tagName, attrName, attrValue, enumeratedValues):
         if not attrValue and ('' not in enumeratedValues):
             yield {"type": "ParseError",
