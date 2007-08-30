@@ -30,23 +30,27 @@ E.update({
     "unknown-attribute":
         _(u"Unknown '%(attributeName)s' attribute on <%(tagName)s>."),
     "missing-required-attribute":
-        _(u"Missing required '%(attributeName)s' attribute on <%(tagName)s>."),
+        _(u"The '%(attributeName)s' attribute is required on <%(tagName)s>."),
     "unknown-input-type":
-        _(u"Illegal value for <input type> attribute: '%(inputType)s'."),
+        _(u"Illegal value for attribute on <input type='%(inputType)s'>."),
     "attribute-not-allowed-on-this-input-type":
-        _(u"'%(attributeName)s' attribute is not allowed on <input type=%(inputType)s>."),
+        _(u"The '%(attributeName)s' attribute is not allowed on <input type=%(inputType)s>."),
     "deprecated-attribute":
-        _(u"'%(attributeName)s' attribute is deprecated on <%(tagName)s>."),
+        _(u"This attribute is deprecated: '%(attributeName)s' attribute on <%(tagName)s>."),
     "duplicate-value-in-token-list":
-        _(u"Duplicate value '%(attributeValue)s' in token list in '%(attributeName)s' attribute on <%(tagName)s>."),
+        _(u"Duplicate value in token list: '%(attributeValue)s' in '%(attributeName)s' attribute on <%(tagName)s>."),
     "invalid-attribute-value":
-        _(u"Invalid value for '%(attributeName)s' attribute on <%(tagName)s>."),
+        _(u"Invalid attribute value: '%(attributeName)s' attribute on <%(tagName)s>."),
     "space-in-id":
-        _(u"Illegal space character in ID attribute on <%(tagName)s>."),
+        _(u"Whitespace is not allowed here: '%(attributeName)s' attribute on <%(tagName)s>."),
     "duplicate-id":
-        _(u"Duplicate ID on <%(tagName)s>."),
+        _(u"This ID was already defined earlier: 'id' attribute on <%(tagName)s>."),
     "attribute-value-can-not-be-blank":
-        _(u"Value can not be blank: '%(attributeName)s' attribute on <%(tagName)s>."),
+        _(u"This value can not be blank: '%(attributeName)s' attribute on <%(tagName)s>."),
+    "id-does-not-exist":
+        _(u"This value refers to a non-existent ID: '%(attributeName)s' attribute on <%(tagName)s>."),
+    "contextmenu-must-point-to-menu":
+        _(u"The contextmenu attribute must point to an ID defined on a <menu> element."),
 })
 
 globalAttributes = frozenset(('class', 'contenteditable', 'contextmenu', 'dir',
@@ -237,6 +241,7 @@ class HTMLConformanceChecker(_base.Filter):
                 if method:
                     for t in method(token) or []: yield t
             yield token
+        for t in self.eof() or []: yield t
 
     def checkAttributeValues(self, token):
         tagName = token.get("name", "")
@@ -251,6 +256,28 @@ class HTMLConformanceChecker(_base.Filter):
                 method = getattr(self, "validateAttributeValue%(attributeName)s" % fakeToken, None)
                 if method:
                     for t in method(token, tagName, attrName, attrValue) or []: yield t
+
+    def eof(self):
+        for token in self.thingsThatPointToAnID:
+            tagName = token.get("name", "").lower()
+            attrsDict = token["data"] # by now html5parser has "normalized" the attrs list into a dict.
+                                      # hooray for obscure side effects!
+            attrValue = attrsDict.get("contextmenu", "")
+            if attrValue and (attrValue not in self.IDsWeHaveKnownAndLoved):
+                yield {"type": "ParseError",
+                       "data": "id-does-not-exist",
+                       "datavars": {"tagName": tagName,
+                                    "attributeName": "contextmenu",
+                                    "attributeValue": attrValue}}
+            else:
+                for refToken in self.thingsThatDefineAnID:
+                    id = refToken.get("data", {}).get("id", "")
+                    if not id: continue
+                    if id == attrValue:
+                        if refToken.get("name", "").lower() != "menu":
+                            yield {"type": "ParseError",
+                                   "data": "contextmenu-must-point-to-menu"}
+                        break
 
     def validateStartTag(self, token):
         for t in self.checkUnknownStartTag(token) or []: yield t
@@ -338,30 +365,37 @@ class HTMLConformanceChecker(_base.Filter):
                    "datavars": {"tagName": tagName,
                                 "attributeName": attrName}}
         
+    def validateAttributeValueContextmenu(self, token, tagName, attrName, attrValue):
+        for t in self.checkIDValue(token, tagName, attrName, attrValue) or []: yield t
+        self.thingsThatPointToAnID.append(token)
+
     def validateAttributeValueId(self, token, tagName, attrName, attrValue):
         # This method has side effects.  It adds 'token' to the list of
         # things that define an ID (self.thingsThatDefineAnID) so that we can
         # later check 1) whether an ID is duplicated, and 2) whether all the
         # things that point to something else by ID (like <label for> or
         # <span contextmenu>) point to an ID that actually exists somewhere.
-        if not attrValue:
-            yield {"type": "ParseError",
-                   "data": "attribute-value-can-not-be-blank",
-                   "datavars": {"tagName": tagName,
-                                "attributeName": attrName}}
-            return
-
+        for t in self.checkIDValue(token, tagName, attrName, attrValue) or []: yield t
+        if not attrValue: return
         if attrValue in self.IDsWeHaveKnownAndLoved:
             yield {"type": "ParseError",
                    "data": "duplicate-id",
                    "datavars": {"tagName": tagName}}
         self.IDsWeHaveKnownAndLoved.append(attrValue)
         self.thingsThatDefineAnID.append(token)
+
+    def checkIDValue(self, token, tagName, attrName, attrValue):
+        if not attrValue:
+            yield {"type": "ParseError",
+                   "data": "attribute-value-can-not-be-blank",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName}}
         for c in attrValue:
             if c in spaceCharacters:
                 yield {"type": "ParseError",
                        "data": "space-in-id",
-                       "datavars": {"tagName": tagName}}
+                       "datavars": {"tagName": tagName,
+                                    "attributeName": attrName}}
                 yield {"type": "ParseError",
                        "data": "invalid-attribute-value",
                        "datavars": {"tagName": tagName,
