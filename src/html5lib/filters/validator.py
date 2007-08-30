@@ -19,6 +19,7 @@ except NameError:
     from sets import Set as set
     from sets import ImmutableSet as frozenset
 import _base
+import iso639codes
 from html5lib.constants import E, spaceCharacters
 from html5lib import tokenizer
 import gettext
@@ -55,6 +56,8 @@ E.update({
         _(u"Value must be one of %(enumeratedValues)s: '%(attributeName)s' attribute on <%tagName)s>."),
     "contextmenu-must-point-to-menu":
         _(u"The contextmenu attribute must point to an ID defined on a <menu> element."),
+    "invalid-lang-code":
+        _(u"Invalid language code: '%(attributeName)s' attibute on <%(tagName)s>."),
 })
 
 globalAttributes = frozenset(('class', 'contenteditable', 'contextmenu', 'dir',
@@ -372,6 +375,15 @@ class HTMLConformanceChecker(_base.Filter):
 
     def validateAttributeValueIrrelevant(self, token, tagName, attrName, attrValue):
         for t in self.checkBooleanValue(token, tagName, attrName, attrValue) or []: yield t
+
+    def validateAttributeValueLang(self, token, tagName, attrName, attrValue):
+        if not attrValue: return # blank is OK
+        if not iso639codes.isValidLangCode(attrValue):
+            yield {"type": "ParseError",
+                   "data": "invalid-lang-code",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName,
+                                "attributeValue": attrValue}}
 
     def checkEnumeratedValue(self, token, tagName, attrName, attrValue, enumeratedValues):
         if not attrValue and ('' not in enumeratedValues):
