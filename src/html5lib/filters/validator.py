@@ -20,6 +20,7 @@ except NameError:
     from sets import ImmutableSet as frozenset
 import _base
 import iso639codes
+import rfc3987
 from html5lib.constants import E, spaceCharacters, digits
 from html5lib import tokenizer
 import gettext
@@ -339,7 +340,31 @@ class HTMLConformanceChecker(_base.Filter):
     # Attribute validation helpers
     ##########################################################################
 
-    def checkIDValue(self, token, tagName, attrName, attrValue):
+    def checkURI(self, token, tagName, attrName, attrValue):
+        isValid, errorCode = rfc3987.isValidURI(attrValue)
+        if not isValid:
+            yield {"type": "ParseError",
+                   "data": errorCode,
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName}}
+            yield {"type": "ParseError",
+                   "data": "invalid-attribute-value",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName}}
+
+    def checkIRI(self, token, tagName, attrName, attrValue):
+        isValid, errorCode = rfc3987.isValidIRI(attrValue)
+        if not isValid:
+            yield {"type": "ParseError",
+                   "data": errorCode,
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName}}
+            yield {"type": "ParseError",
+                   "data": "invalid-attribute-value",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName}}
+
+    def checkID(self, token, tagName, attrName, attrValue):
         if not attrValue:
             yield {"type": "ParseError",
                    "data": "attribute-value-can-not-be-blank",
@@ -509,7 +534,7 @@ class HTMLConformanceChecker(_base.Filter):
                                 "attributeValue": attrValue}}
 
     def validateAttributeValueContextmenu(self, token, tagName, attrName, attrValue):
-        for t in self.checkIDValue(token, tagName, attrName, attrValue) or []: yield t
+        for t in self.checkID(token, tagName, attrName, attrValue) or []: yield t
         self.thingsThatPointToAnID.append(token)
 
     def validateAttributeValueId(self, token, tagName, attrName, attrValue):
@@ -518,7 +543,7 @@ class HTMLConformanceChecker(_base.Filter):
         # later check 1) whether an ID is duplicated, and 2) whether all the
         # things that point to something else by ID (like <label for> or
         # <span contextmenu>) point to an ID that actually exists somewhere.
-        for t in self.checkIDValue(token, tagName, attrName, attrValue) or []: yield t
+        for t in self.checkID(token, tagName, attrName, attrValue) or []: yield t
         if not attrValue: return
         if attrValue in self.IDsWeHaveKnownAndLoved:
             yield {"type": "ParseError",
@@ -548,7 +573,9 @@ class HTMLConformanceChecker(_base.Filter):
         # XXX
         pass
 
+    validateAttributeValueBaseHref = checkIRI
     validateAttributeValueBaseTarget = checkBrowsingContext
+    validateAttributeValueLinkHref = checkIRI
 
     ##########################################################################
     # Whole document validation (IDs, etc.)
