@@ -21,6 +21,7 @@ except NameError:
 import _base
 import iso639codes
 import rfc3987
+import rfc2046
 from html5lib.constants import E, spaceCharacters, digits
 from html5lib import tokenizer
 import gettext
@@ -65,6 +66,24 @@ E.update({
         _(u"Root namespace must be 'http://www.w3.org/1999/xhtml', or omitted."),
     "invalid-browsing-context":
         _(u"Value must be one of ('_self', '_parent', '_top'), or a name that does not start with '_': '%(attributeName)s' attribute on <%(tagName)s>."),
+    "invalid-tag-uri":
+        _(u"Invalid URI: '%(attributeName)s' attribute on <%(tagName)s>."),
+    "invalid-urn":
+        _(u"Invalid URN: '%(attributeName)s' attribute on <%(tagName)s>."),
+    "invalid-uri-char":
+        _(u"Illegal character in URI: '%(attributeName)s' attribute on <%(tagName)s>."),
+    "uri-not-iri":
+        _(u"Expected a URI but found an IRI: '%(attributeName)s' attribute on <%(tagName)s>."),
+    "invalid-uri":
+        _(u"Invalid URI: '%(attributeName)s' attribute on <%(tagName)s>."),
+    "invalid-http-or-ftp-uri":
+        _(u"Invalid URI: '%(attributeName)s' attribute on <%(tagName)s>."),
+    "invalid-scheme":
+        _(u"Unregistered URI scheme: '%(attributeName)s' attribute on <%(tagName)s>."),
+    "invalid-rel":
+        _(u"Invalid link relation: '%(attributeName)s' attribute on <%(tagName)s>."),
+    "invalid-mime-type":
+        _(u"Invalid MIME type: '%(attributeName)s' attribute on <%(tagName)s>."),
 })
 
 globalAttributes = frozenset(('class', 'contenteditable', 'contextmenu', 'dir',
@@ -236,6 +255,9 @@ inputTypeDeprecatedAttributeMap = {
     'password': frozenset(('size',))
 }
 
+linkRelValues = frozenset(('alternate', 'archive', 'archives', 'author', 'contact', 'feed', 'first', 'begin', 'start', 'help', 'icon', 'index', 'top', 'contents', 'toc', 'last', 'end', 'license', 'copyright', 'next', 'pingback', 'prefetch', 'prev', 'previous', 'search', 'stylesheet', 'sidebar', 'tag', 'up'))
+aRelValues = frozenset(('alternate', 'archive', 'archives', 'author', 'contact', 'feed', 'first', 'begin', 'start', 'help', 'index', 'top', 'contents', 'toc', 'last', 'end', 'license', 'copyright', 'next', 'prev', 'previous', 'search', 'sidebar', 'tag', 'up', 'bookmark', 'external', 'nofollow'))
+
 class HTMLConformanceChecker(_base.Filter):
     def __init__(self, stream, encoding, parseMeta, **kwargs):
         _base.Filter.__init__(self, tokenizer.HTMLTokenizer(
@@ -340,17 +362,17 @@ class HTMLConformanceChecker(_base.Filter):
     # Attribute validation helpers
     ##########################################################################
 
-    def checkURI(self, token, tagName, attrName, attrValue):
-        isValid, errorCode = rfc3987.isValidURI(attrValue)
-        if not isValid:
-            yield {"type": "ParseError",
-                   "data": errorCode,
-                   "datavars": {"tagName": tagName,
-                                "attributeName": attrName}}
-            yield {"type": "ParseError",
-                   "data": "invalid-attribute-value",
-                   "datavars": {"tagName": tagName,
-                                "attributeName": attrName}}
+#    def checkURI(self, token, tagName, attrName, attrValue):
+#        isValid, errorCode = rfc3987.isValidURI(attrValue)
+#        if not isValid:
+#            yield {"type": "ParseError",
+#                   "data": errorCode,
+#                   "datavars": {"tagName": tagName,
+#                                "attributeName": attrName}}
+#            yield {"type": "ParseError",
+#                   "data": "invalid-attribute-value",
+#                   "datavars": {"tagName": tagName,
+#                                "attributeName": attrName}}
 
     def checkIRI(self, token, tagName, attrName, attrValue):
         isValid, errorCode = rfc3987.isValidIRI(attrValue)
@@ -382,26 +404,36 @@ class HTMLConformanceChecker(_base.Filter):
                                     "attributeName": attrName}}
                 break
         
+    def parseTokenList(self, value):
+        valueList = []
+        currentValue = ''
+        for c in value + ' ':
+            if c in spaceCharacters:
+                if currentValue:
+                    valueList.append(currentValue)
+                    currentValue = ''
+            else:
+                currentValue += c
+        if currentValue:
+            valueList.append(currentValue)
+        return valueList
+        
     def checkTokenList(self, tagName, attrName, attrValue):
         # The "token" in the method name refers to tokens in an attribute value
         # i.e. http://www.whatwg.org/specs/web-apps/current-work/#set-of
         # but the "token" parameter refers to the token generated from
         # HTMLTokenizer.  Sorry for the confusion.
-        valueList = []
-        currentValue = ''
-        for c in attrValue + ' ':
-            if c in spaceCharacters:
-                if currentValue:
-                    if currentValue in valueList:
-                        yield {"type": "ParseError",
-                               "data": "duplicate-value-in-token-list",
-                               "datavars": {"tagName": tagName,
-                                            "attributeName": attrName,
-                                            "attributeValue": currentValue}}
-                    valueList.append(currentValue)
-                    currentValue = ''
-            else:
-                currentValue += c
+        valueList = self.parseTokenList(attrValue)
+        valueDict = {}
+        for currentValue in valueList:
+            if valueDict.has_key(currentValue):
+                yield {"type": "ParseError",
+                       "data": "duplicate-value-in-token-list",
+                       "datavars": {"tagName": tagName,
+                                    "attributeName": attrName,
+                                    "attributeValue": currentValue}}
+                break
+            valueDict[currentValue] = 1
 
     def checkEnumeratedValue(self, token, tagName, attrName, attrValue, enumeratedValues):
         if not attrValue and ('' not in enumeratedValues):
@@ -422,7 +454,7 @@ class HTMLConformanceChecker(_base.Filter):
                    "datavars": {"tagName": tagName,
                                 "attributeName": attrName}}
         
-    def checkBooleanValue(self, token, tagName, attrName, attrValue):
+    def checkBoolean(self, token, tagName, attrName, attrValue):
         enumeratedValues = frozenset((attrName, ''))
         if attrValue not in enumeratedValues:
             yield {"type": "ParseError",
@@ -435,7 +467,7 @@ class HTMLConformanceChecker(_base.Filter):
                    "datavars": {"tagName": tagName,
                                 "attributeName": attrName}}
 
-    def checkIntegerValue(self, token, tagName, attrName, attrValue):
+    def checkInteger(self, token, tagName, attrName, attrValue):
         sign = 1
         numberString = ''
         state = 'begin' # ('begin', 'initial-number', 'number', 'trailing-junk')
@@ -476,6 +508,10 @@ class HTMLConformanceChecker(_base.Filter):
                    "datavars": {"tagName": tagName,
                                 "attributeName": attrName}}
 
+    def checkFloatingPointNumber(self, token, tagName, attrName, attrValue):
+        # XXX
+        pass
+
     def checkBrowsingContext(self, token, tagName, attrName, attrValue):
         if not attrValue: return
         if attrValue[0] != '_': return
@@ -485,6 +521,56 @@ class HTMLConformanceChecker(_base.Filter):
                "data": "invalid-browsing-context",
                "datavars": {"tagName": tagName,
                             "attributeName": attrName}}
+
+    def checkLangCode(self, token, tagName, attrName, attrValue):
+        if not attrValue: return # blank is OK
+        if not iso639codes.isValidLangCode(attrValue):
+            yield {"type": "ParseError",
+                   "data": "invalid-lang-code",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName,
+                                "attributeValue": attrValue}}
+
+    def checkMIMEType(self, token, tagName, attrName, attrValue):
+        # XXX needs tests
+        if not attrValue:
+            yield {"type": "ParseError",
+                   "data": "attribute-value-can-not-be-blank",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName}}
+
+        if not rfc2046.isValidMIMEType(attrValue):
+            yield {"type": "ParseError",
+                   "data": "invalid-mime-type",
+                   "datavars": {"tagName": tagName,
+                                "attributeName": attrName,
+                                "attributeValue": attrValue}}
+
+    def checkMediaQuery(self, token, tagName, attrName, attrValue):
+        # XXX
+        pass
+
+    def checkLinkRelation(self, token, tagName, attrName, attrValue):
+        for t in self.checkTokenList(tagName, attrName, attrValue) or []: yield t
+        valueList = self.parseTokenList(attrValue)
+        allowedValues = (tagName == 'link') and linkRelValues or aRelValues
+        for currentValue in valueList:
+            if currentValue not in allowedValues:
+                yield {"type": "ParseError",
+                       "data": "invalid-rel",
+                       "datavars": {"tagName": tagName,
+                                    "attributeName": attrName}}
+
+    def checkDateTime(self, token, tagName, attrName, attrValue):
+        # XXX
+        state = 'begin' # ('begin', '...
+#        for c in attrValue:
+#            if state == 'begin':
+#                if c in spaceCharacters:
+#                    continue
+#                elif c in digits:
+#                    state = ...
+                    
 
     ##########################################################################
     # Attribute validation
@@ -521,17 +607,8 @@ class HTMLConformanceChecker(_base.Filter):
     def validateAttributeValueDraggable(self, token, tagName, attrName, attrValue):
         for t in self.checkEnumeratedValue(token, tagName, attrName, attrValue, frozenset(('true', 'false'))) or []: yield t
 
-    def validateAttributeValueIrrelevant(self, token, tagName, attrName, attrValue):
-        for t in self.checkBooleanValue(token, tagName, attrName, attrValue) or []: yield t
-
-    def validateAttributeValueLang(self, token, tagName, attrName, attrValue):
-        if not attrValue: return # blank is OK
-        if not iso639codes.isValidLangCode(attrValue):
-            yield {"type": "ParseError",
-                   "data": "invalid-lang-code",
-                   "datavars": {"tagName": tagName,
-                                "attributeName": attrName,
-                                "attributeValue": attrValue}}
+    validateAttributeValueIrrelevant = checkBoolean
+    validateAttributeValueLang = checkLangCode
 
     def validateAttributeValueContextmenu(self, token, tagName, attrName, attrValue):
         for t in self.checkID(token, tagName, attrName, attrValue) or []: yield t
@@ -552,7 +629,7 @@ class HTMLConformanceChecker(_base.Filter):
         self.IDsWeHaveKnownAndLoved.append(attrValue)
         self.thingsThatDefineAnID.append(token)
 
-    validateAttributeValueTabindex = checkIntegerValue
+    validateAttributeValueTabindex = checkInteger
 
     def validateAttributeValueRef(self, token, tagName, attrName, attrValue):
         # XXX
@@ -569,13 +646,47 @@ class HTMLConformanceChecker(_base.Filter):
                    "datavars": {"tagName": tagName,
                                 "attributeName": attrName}}
 
-    def validateAttributeValueBaseHref(self, token, tagName, attrName, attrValue):
-        # XXX
-        pass
-
     validateAttributeValueBaseHref = checkIRI
     validateAttributeValueBaseTarget = checkBrowsingContext
     validateAttributeValueLinkHref = checkIRI
+    validateAttributeValueLinkRel = checkLinkRelation
+    validateAttributeValueLinkMedia = checkMediaQuery
+    validateAttributeValueLinkHreflang = checkLangCode
+    validateAttributeValueLinkType = checkMIMEType
+    # XXX <meta> attributes
+    validateAttributeValueStyleMedia = checkMediaQuery
+    validateAttributeValueStyleType = checkMIMEType
+    validateAttributeValueStyleScoped = checkBoolean
+    validateAttributeValueBlockquoteCite = checkIRI
+    validateAttributeValueOlStart = checkInteger
+    validateAttributeValueLiValue = checkInteger
+    # XXX need tests from here on
+    validateAttributeValueAHref = checkIRI
+    validateAttributeValueATarget = checkBrowsingContext
+
+    def validateAttributeValueAPing(self, token, tagName, attrName, attrValue):
+        valueList = self.parseTokenList(attrValue)
+        for currentValue in valueList:
+            for t in self.checkIRI(token, tagName, attrName, attrValue) or []: yield t
+
+    validateAttributeValueARel = checkLinkRelation
+    validateAttributeValueAMedia = checkMediaQuery
+    validateAttributeValueAHreflang = checkLangCode
+    validateAttributeValueAType = checkMIMEType
+    validateAttributeValueQCite = checkIRI
+    validateAttributeValueTimeDatetime = checkDateTime
+    validateAttributeValueMeterValue = checkFloatingPointNumber
+    validateAttributeValueMeterMin = checkFloatingPointNumber
+    validateAttributeValueMeterLow = checkFloatingPointNumber
+    validateAttributeValueMeterHigh = checkFloatingPointNumber
+    validateAttributeValueMeterMax = checkFloatingPointNumber
+    validateAttributeValueMeterOptimum = checkFloatingPointNumber
+    validateAttributeValueProgressValue = checkFloatingPointNumber
+    validateAttributeValueProgressMax = checkFloatingPointNumber
+    validateAttributeValueInsCite = checkIRI
+    validateAttributeValueInsDatetime = checkDateTime
+    validateAttributeValueDelCite = checkIRI
+    validateAttributeValueDelDatetime = checkDateTime
 
     ##########################################################################
     # Whole document validation (IDs, etc.)

@@ -31,6 +31,7 @@ iana_schemes = [ # http://www.iana.org/assignments/uri-schemes.html
   "urn", "go", "h323", "ipp", "tftp", "mupdate", "pres", "im", "mtqp",
   "iris.beep", "dict", "snmp", "crid", "tag", "dns", "info"
 ]
+allowed_schemes = iana_schemes + ['javascript']
 
 rfc2396_re = re.compile("([a-zA-Z][0-9a-zA-Z+\\-\\.]*:)?/{0,2}" +
                         "[0-9a-zA-Z;/?:@&=+$\\.\\-_!~*'()%,#]*$")
@@ -62,8 +63,8 @@ def isValidURI(value, uriPattern=rfc2396_re):
     elif scheme in ['http','ftp']:
         if not re.match('^\w+://[^/].*',value):
             return False, "invalid-http-or-ftp-uri"
-    elif value.find(':')>=0 and scheme.isalpha() and scheme not in iana_schemes:
-        return False, "unregistered-scheme"
+    elif value.find(':')>=0 and scheme.isalpha() and scheme not in allowed_schemes:
+        return False, "invalid-scheme"
     return True, ""
 
 def isValidIRI(value):
