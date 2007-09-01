@@ -208,7 +208,7 @@ class TestCase(unittest.TestCase):
             document = p.parse(StringIO.StringIO(input))
         document = treeClass.get("adapter", lambda x: x)(document)
         try:
-            output = convertTokens(LintFilter(treeClass["walker"](document)))
+            output = convertTokens(treeClass["walker"](document))
             output = attrlist.sub(sortattrs, output)
             expected = attrlist.sub(sortattrs, convertExpected(expected))
             self.assertEquals(expected, output, "\n".join([
@@ -216,11 +216,27 @@ class TestCase(unittest.TestCase):
                 "", "Expected:", expected,
                 "", "Recieved:", output
             ]))
-        except LintError, le:
-            self.fail(input + "\n" + le.message)
         except NotImplementedError:
             pass # Amnesty for those that confess...
 
+class TokenTestCase(unittest.TestCase):
+    def test_all_tokens(self):
+        expected = [
+            {'data': [], 'type': 'StartTag', 'name': u'html'},
+            {'data': [], 'type': 'StartTag', 'name': u'head'},
+            {'data': [], 'type': 'EndTag', 'name': u'head'},
+            {'data': [], 'type': 'StartTag', 'name': u'body'},
+            {'data': [], 'type': 'EndTag', 'name': u'body'},
+            {'data': [], 'type': 'EndTag', 'name': u'html'}]
+        for treeName, treeCls in treeTypes.iteritems():
+            p = html5parser.HTMLParser(tree = treeCls["builder"])
+            document = p.parse("<html></html>")
+            document = treeCls.get("adapter", lambda x: x)(document)
+            output = treeCls["walker"](document)
+            for expectedToken, outputToken in zip(expected, output):
+                self.assertEquals(expectedToken, outputToken)
+
+            
 def buildTestSuite():
     sys.stdout.write('Testing tree walkers '+ " ".join(treeTypes.keys()) + "\n")
 

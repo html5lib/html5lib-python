@@ -1,4 +1,4 @@
-from genshi.core import START, END, XML_DECL, DOCTYPE, TEXT, \
+from genshi.core import START, END, XML_NAMESPACE, DOCTYPE, TEXT, \
     START_NS, END_NS, START_CDATA, END_CDATA, PI, COMMENT
 from genshi.output import NamespaceFlattener
 
@@ -59,7 +59,7 @@ class TreeWalker(_base.TreeWalker):
         elif kind == DOCTYPE:
             yield self.doctype(*data)
 
-        elif kind in (XML_DECL, DOCTYPE, START_NS, END_NS, \
+        elif kind in (XML_NAMESPACE, DOCTYPE, START_NS, END_NS, \
           START_CDATA, END_CDATA, PI):
             pass
 

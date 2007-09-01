@@ -78,19 +78,20 @@ def getETreeBuilder(ElementTreeImplementation):
                 return (node, 0, parents)
 
         def getNextSibling(self, node):
-            assert isinstance(node, tuple), "Node is not a tuple: " + str(node)
-
-            elt, key, parents = node
-            if key == "text":
-                key = -1
-            elif key == "tail":
-                elt, key = parents.pop()
+            if isinstance(node, tuple):
+                elt, key, parents = node
+                if key == "text":
+                    key = -1
+                elif key == "tail":
+                    elt, key = parents.pop()
+                else:
+                    # Look for "tail" of the "revisited" node
+                    child = elt[key]
+                    if child.tail:
+                        parents.append((elt, key))
+                        return (child, "tail", parents)
             else:
-                # Look for "tail" of the "revisited" node
-                child = elt[key]
-                if child.tail:
-                    parents.append((elt, key))
-                    return (child, "tail", parents)
+                return None
 
             # case where key were "text" or "tail" or elt[key] had a tail
             key += 1
@@ -106,7 +107,6 @@ def getETreeBuilder(ElementTreeImplementation):
                 elt, key = parents.pop()
                 return elt, key, parents
             else:
-                # HACK: We could return ``elt`` but None will stop the algorithm the same way
-                return None
+                return elt
 
     return locals()
