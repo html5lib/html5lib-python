@@ -101,12 +101,14 @@ def getETreeBuilder(ElementTreeImplementation):
                 return None
 
         def getParentNode(self, node):
-            assert isinstance(node, tuple)
-            elt, key, parents = node
-            if parents:
-                elt, key = parents.pop()
-                return elt, key, parents
+            if isinstance(node, tuple):
+                elt, key, parents = node
+                if parents:
+                    elt, key = parents.pop()
+                    return elt, key, parents
+                else:
+                    return elt
             else:
-                return elt
+                return None
 
     return locals()
