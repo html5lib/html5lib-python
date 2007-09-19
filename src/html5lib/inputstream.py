@@ -5,7 +5,13 @@ import types
 from constants import EOF, spaceCharacters, asciiLetters, asciiUppercase
 from constants import encodings
 from utils import MethodDispatcher
+from collections import deque
 
+try:
+    from collections import deque
+except ImportError:
+    from utils import deque
+    
 class HTMLInputStream(object):
     """Provides a unicode stream of characters to the HTMLTokenizer.
 
@@ -55,7 +61,7 @@ class HTMLInputStream(object):
         self.dataStream = codecs.getreader(self.charEncoding)(self.rawStream,
                                                               'replace')
 
-        self.queue = []
+        self.queue = deque([])
         self.errors = []
 
         self.line = self.col = 0
@@ -212,7 +218,7 @@ class HTMLInputStream(object):
         if not self.queue:
             return EOF
         
-        char = self.queue.pop(0)
+        char = self.queue.popleft()
         
         # update position in stream
         if char == '\n':
@@ -277,8 +283,7 @@ class HTMLInputStream(object):
             else:
                 self.col += 1
 
-        rv = u"".join(self.queue[:i])
-        self.queue = self.queue[i:]
+        rv = u"".join([ self.queue.popleft() for c in range(i) ])
         
         #Calculate where we now are in the stream
         #One possible optimisation would be to store all read characters and
@@ -313,7 +318,9 @@ class HTMLInputStream(object):
 
     def unget(self, chars):
         if chars:
-            self.queue = list(chars) + self.queue
+            l = list(chars)
+            l.reverse()
+            self.queue.extendleft(l)
             #Alter the current line, col position
             for c in chars[::-1]:
                 if c == '\n':
