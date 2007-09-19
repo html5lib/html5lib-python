@@ -5,7 +5,6 @@ import types
 from constants import EOF, spaceCharacters, asciiLetters, asciiUppercase
 from constants import encodings
 from utils import MethodDispatcher
-from collections import deque
 
 try:
     from collections import deque
@@ -186,7 +185,7 @@ class HTMLInputStream(object):
                  else:
                      result = self.data[:chars]
                      self.data = self.data[chars:]
-                     return result
+                     return resutl
              def unget(self, data):
                  if self.data:
                      self.data += data
