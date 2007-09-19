@@ -226,11 +226,17 @@ class TokenTestCase(unittest.TestCase):
             {'data': [], 'type': 'StartTag', 'name': u'head'},
             {'data': [], 'type': 'EndTag', 'name': u'head'},
             {'data': [], 'type': 'StartTag', 'name': u'body'},
+            {'data': u'a', 'type': 'Characters'},
+            {'data': [], 'type': 'StartTag', 'name': u'div'},
+            {'data': u'b', 'type': 'Characters'},
+            {'data': [], 'type': 'EndTag', 'name': u'div'},
+            {'data': u'c', 'type': 'Characters'},
             {'data': [], 'type': 'EndTag', 'name': u'body'},
-            {'data': [], 'type': 'EndTag', 'name': u'html'}]
+            {'data': [], 'type': 'EndTag', 'name': u'html'}
+            ]
         for treeName, treeCls in treeTypes.iteritems():
             p = html5parser.HTMLParser(tree = treeCls["builder"])
-            document = p.parse("<html></html>")
+            document = p.parse("<html><head></head><body>a<div>b</div>c</body></html>")
             document = treeCls.get("adapter", lambda x: x)(document)
             output = treeCls["walker"](document)
             for expectedToken, outputToken in zip(expected, output):

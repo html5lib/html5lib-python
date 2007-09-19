@@ -28,23 +28,22 @@ def getETreeBuilder(ElementTreeImplementation):
         to avoid using recursion, returns "nodes" as tuples with the following
         content:
 
-        1. An Element node serving as *context* (it cannot be called the parent
-           node due to the particular ``tail`` text nodes.
-
-        2. Either the string literals ``"text"`` or ``"tail"`` or a child index
-
-        3. A list used as a stack of all ancestor *context nodes*. It is a
-           pair tuple whose first item is an Element and second item is a child
-           index.
+        1. The current element
+        
+        2. The index of the element relative to its parent
+        
+        3. A stack of ancestor elements
+        
+        4. A flag "text", "tail" or None to indicate if the current node is a
+           text node; either the text or tail of the current element (1)
         """
-
-        def getNodeDetails(self, node):
+def getNodeDetails(self, node):
             if isinstance(node, tuple): # It might be the root Element
-                elt, key, parents = node
-                if key in ("text", "tail"):
-                    return _base.TEXT, getattr(elt, key)
+                elt, key, parents, flag = node
+                if flag in ("text", "tail"):
+                    return _base.TEXT, getattr(elt, flag)
                 else:
-                    node = elt[int(key)]
+                    node = elt
 
             if not(hasattr(node, "tag")):
                 node = node.getroot()
@@ -61,54 +60,60 @@ def getETreeBuilder(ElementTreeImplementation):
             else:
                 #This is assumed to be an ordinary element
                 return _base.ELEMENT, node.tag, node.attrib.items(), len(node) or node.text
-
+    
         def getFirstChild(self, node):
-            if isinstance(node, tuple): # It might be the root Element
-                elt, key, parents = node
-                assert key not in ("text", "tail"), "Text nodes have no children"
-                parents.append((elt, int(key)))
-                node = elt[int(key)]
+            if isinstance(node, tuple):
+                element, key, parents, flag = node
             else:
-                parents = []
-            
-            assert len(node) or node.text, "Node has no children"
-            if node.text:
-                return (node, "text", parents)
+                element, key, parents, flag = node, None, [], None
+                
+            if flag in ("text", "tail"):
+                return None
             else:
-                return (node, 0, parents)
-
+                if element.text:
+                    return element, key, parents, "text"
+                elif len(element):
+                    parents.append(element)
+                    return element[0], 0, parents, None
+                else:
+                    return None
+        
         def getNextSibling(self, node):
             if isinstance(node, tuple):
-                elt, key, parents = node
-                if key == "text":
-                    key = -1
-                elif key == "tail":
-                    elt, key = parents.pop()
+                element, key, parents, flag = node
+            else:
+                return None
+                
+            if flag == "text":
+                if len(element):
+                    parents.append(element)
+                    return element[0], 0, parents, None
                 else:
-                    # Look for "tail" of the "revisited" node
-                    child = elt[key]
-                    if child.tail:
-                        parents.append((elt, key))
-                        return (child, "tail", parents)
+                    return None
             else:
-                return None
-
-            # case where key were "text" or "tail" or elt[key] had a tail
-            key += 1
-            if len(elt) > key:
-                return (elt, key, parents)
-            else:
-                return None
-
+                if element.tail and flag != "tail":
+                    return element, key, parents, "tail"
+                elif key < len(parents[-1]) - 1:
+                    return parents[-1][key+1], key+1, parents, None
+                else:
+                    return None
+        
         def getParentNode(self, node):
             if isinstance(node, tuple):
-                elt, key, parents = node
-                if parents:
-                    elt, key = parents.pop()
-                    return elt, key, parents
-                else:
-                    return elt
+                element, key, parents, flag = node
             else:
                 return None
+            
+            if flag == "text":
+                if not parents:
+                    return element
+                else:
+                    return element, key, parents, None
+            else:
+                parent = parents.pop()
+                if not parents:
+                    return parent
+                else:
+                    return parent, list(parents[-1]).index(parent), parents, None
 
     return locals()
