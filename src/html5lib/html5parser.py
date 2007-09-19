@@ -36,6 +36,10 @@ class HTMLParser(object):
         tree - a treebuilder class controlling the type of tree that will be
         returned. Built in treebuilders can be accessed through
         html5lib.treebuilders.getTreeBuilder(treeType)
+        
+        tokenizer - a class that provides a stream of tokens to the treebuilder.
+        This may be replaced for e.g. a sanitizer which converts some tags to
+        text
         """
 
         # Raise an exception on the first error encountered
@@ -521,7 +525,7 @@ class InHeadPhase(Phase):
 
     # the real thing
     def processEOF(self):
-        if self.tree.openElements[-1].name in ("title", "style", "script"):
+        if self.tree.openElements[-1].name in ("title", "style", "script", "noscript"):
             self.parser.parseError("expected-named-closing-tag-but-got-eof",
               {"name": self.tree.openElements[-1].name})
             self.tree.openElements.pop()
@@ -565,6 +569,7 @@ class InHeadPhase(Phase):
             self.tree.openElements[-1].appendChild(element)
         self.tree.openElements.append(element)
         self.parser.tokenizer.contentModelFlag = contentModelFlags["CDATA"]
+        
     
     def startTagScript(self, name, attributes):
         #XXX Inner HTML case may be wrong
