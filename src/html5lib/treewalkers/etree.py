@@ -37,7 +37,7 @@ def getETreeBuilder(ElementTreeImplementation):
         4. A flag "text", "tail" or None to indicate if the current node is a
            text node; either the text or tail of the current element (1)
         """
-def getNodeDetails(self, node):
+        def getNodeDetails(self, node):
             if isinstance(node, tuple): # It might be the root Element
                 elt, key, parents, flag = node
                 if flag in ("text", "tail"):
