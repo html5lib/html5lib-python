@@ -185,7 +185,7 @@ class HTMLInputStream(object):
                  else:
                      result = self.data[:chars]
                      self.data = self.data[chars:]
-                     return resutl
+                     return result
              def unget(self, data):
                  if self.data:
                      self.data += data
