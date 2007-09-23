@@ -61,9 +61,9 @@ class HTMLInputStream(object):
                                                               'replace')
 
         self.queue = deque([])
+        self.readChars = []
         self.errors = []
 
-        self.line = self.col = 0
         self.lineLengths = []
         
         #Flag to indicate we may have a CR LF broken across a data chunk
@@ -202,10 +202,33 @@ class HTMLInputStream(object):
         self.seek(buffer, 0)
         return parser.getEncoding()
 
+    def updatePosition(self):
+        #Remove EOF from readChars, if present
+        if not self.readChars:
+            return
+        if self.readChars and self.readChars[-1] == EOF:
+            #There may be more than one EOF in readChars so we cannot assume
+            #readChars.index(EOF) == -1
+            self.readChars = self.readChars[:self.readChars.index(EOF)]
+        readChars = "".join(self.readChars)
+        lines = readChars.split("\n")
+        if self.lineLengths:
+            self.lineLengths[-1] += len(lines[0])
+        else:
+            self.lineLengths.append(len(lines[0]))
+        for line in lines[1:]:
+            self.lineLengths.append(len(line))
+        self.readChars = []
+        #print self.lineLengths
+
     def position(self):
         """Returns (line, col) of the current position in the stream."""
-        line, col = self.line, self.col
-        return (line + 1, col)
+        self.updatePosition()
+        if self.lineLengths:
+            line, col = len(self.lineLengths), self.lineLengths[-1]
+        else:
+            line, col = 1,0
+        return (line, col)
 
     def char(self):
         """ Read one character from the stream or queue if available. Return
@@ -219,13 +242,7 @@ class HTMLInputStream(object):
         
         char = self.queue.popleft()
         
-        # update position in stream
-        if char == '\n':
-            self.lineLengths.append(self.col)
-            self.line += 1
-            self.col = 0
-        else:
-            self.col += 1
+        self.readChars.append(char)
         return char
 
     def readChunk(self, chunkSize=10240):
@@ -245,6 +262,8 @@ class HTMLInputStream(object):
         
         data = unicode(data)
         self.queue.extend([char for char in data])
+
+        self.updatePosition()
 
     def charsUntil(self, characters, opposite = False):
         """ Returns a string of characters from the stream up to but not
@@ -273,49 +292,16 @@ class HTMLInputStream(object):
             #If the queue doesn't grow we have reached EOF
             if i == len(self.queue) or self.queue[i] is EOF:
                 break
-            #XXX- wallpaper over bug in calculation below
-            #Otherwise change the stream position
-            if self.queue[i] == '\n':
-                self.lineLengths.append(self.col)
-                self.line += 1
-                self.col = 0
-            else:
-                self.col += 1
 
-        rv = u"".join([ self.queue.popleft() for c in range(i) ])
+        rv = [self.queue.popleft() for c in range(i)]
         
-        #Calculate where we now are in the stream
-        #One possible optimisation would be to store all read characters and
-        #Calculate this on an as-needed basis (perhaps flushing the read data
-        #every time we read a new chunk) rather than once per call here and
-        #in .char()
+        self.readChars.extend(rv)
         
-        #XXX Temporarily disable this because there is a bug
-        
-        #lines = rv.split("\n")
-        #
-        #if lines:
-        #    #Add number of lines passed onto positon
-        #    oldCol = self.col
-        #    self.line += len(lines)-1
-        #    if len(lines) > 1:
-        #        self.col = len(lines[-1])
-        #    else:
-        #        self.col += len(lines[0])
-        #
-        #    if self.lineLengths and oldCol > 0:
-        #        self.lineLengths[-1] += len(lines[0])
-        #        lines = lines[1:-1]
-        #    else:
-        #        lines = lines[:-1]
-        #
-        #    for line in lines:
-        #        self.lineLengths.append(len(line))
-        #
-        
+        rv = u"".join(rv)
         return rv
 
     def unget(self, chars):
+        self.updatePosition()
         if chars:
             l = list(chars)
             l.reverse()
@@ -323,10 +309,10 @@ class HTMLInputStream(object):
             #Alter the current line, col position
             for c in chars[::-1]:
                 if c == '\n':
-                    self.line -= 1
-                    self.col = self.lineLengths[self.line]
+                    assert self.lineLengths[-1] == 0
+                    self.lineLengths.pop()
                 else:
-                    self.col -= 1
+                    self.lineLengths[-1] -= 1
 
 class EncodingBytes(str):
     """String-like object with an assosiated position and various extra methods

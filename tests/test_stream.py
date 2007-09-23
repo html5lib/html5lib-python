@@ -41,12 +41,22 @@ class HTMLInputStreamTest(unittest.TestCase):
         self.assertEquals(stream.position(), (1, 0))
         self.assertEquals(stream.charsUntil('c'),u"a\nbb\n")
         self.assertEquals(stream.position(), (3,0))
-        self.assertEquals(stream.lineLengths, [1,2])
         self.assertEquals(stream.charsUntil('x'),u"ccc\ndddd")
         self.assertEquals(stream.position(), (4,4))
-        self.assertEquals(stream.lineLengths, [1,2,3])
         self.assertEquals(stream.charsUntil('e'),u"x")
         self.assertEquals(stream.position(), (4,5))
+
+    def test_position(self):
+        stream = HTMLInputStream(codecs.BOM_UTF8 + "a\nbb\nccc\nddd")
+        self.assertEquals(stream.position(), (1, 0))
+        self.assertEquals(stream.charsUntil('c'),u"a\nbb\n")
+        self.assertEquals(stream.position(), (3, 0))
+        stream.unget("a\nbb\n")
+        self.assertEquals(stream.position(), (1, 0))
+        self.assertEquals(stream.charsUntil('c'),u"a\nbb\n")
+        self.assertEquals(stream.position(), (3, 0))
+	self.assertEquals(stream.charsUntil('e'),u"ccc\nddd")
+        self.assertEquals(stream.position(), (4, 3))
 
 def buildTestSuite():
     return unittest.defaultTestLoader.loadTestsFromName(__name__)
