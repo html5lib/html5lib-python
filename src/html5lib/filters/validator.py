@@ -193,7 +193,7 @@ allowedAttributeMap = {
     'label': frozenset(('for', 'accesskey', 'form')),
     'fieldset': frozenset(('disabled', 'form')),
     'output': frozenset(('form', 'name', 'for', 'onforminput', 'onformchange')),
-    'datalist': frozenset(('data')),
+    'datalist': frozenset(('data',)),
 #    # XXX repetition model for repeating form controls
     'script': frozenset(('src', 'defer', 'async', 'type')),
     'noscript': frozenset(()),
