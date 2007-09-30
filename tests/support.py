@@ -9,6 +9,14 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
 import html5lib
 from html5lib import html5parser, treebuilders
 
+#Define the location of the tests as this changes in release versions
+#RELEASE remove
+test_dir = os.path.join(os.path.pardir,os.path.pardir,'testdata')
+#END RELEASE
+#RELEASE add
+#test_dir = './testdata'
+#END RELEASE
+
 try:
     import simplejson
 except:
@@ -59,7 +67,7 @@ except ImportError:
     pass
 
 def html5lib_test_files(subdirectory, files='*.dat'):
-    return glob.glob(os.path.join(os.path.pardir,os.path.pardir,'testdata',subdirectory,files))
+    return glob.glob(os.path.join(test_dir,subdirectory,files))
 
 class DefaultDict(dict):
     def __init__(self, default, *args, **kwargs):

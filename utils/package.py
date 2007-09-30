@@ -14,7 +14,7 @@ exclude = [".svn", "*.pyc", "*~", "__basedir__/utils",
 
 class Package(object):
 
-    def __init__(self, inDir, outDir, version=0, status=4, installDir="~"):
+    def __init__(self, inDir, outDir, version="0", status=4, installDir="~"):
         #List of files to remove on exit
         self.version = str(version)
         self.status = str(status)
@@ -28,12 +28,13 @@ class Package(object):
 
     def runall(self):
         self.getFileList()
+        self.copyTestData()
         self.copy()
         self.makeSetupFile()
         self.preprocess()
-        if self.test():
-            self.makeZipFile()
-            self.cleanup()
+        #if self.test():
+        self.makeZipFile()
+        #self.cleanup()
         
 
     def getExcludeList(self):
@@ -41,7 +42,32 @@ class Package(object):
         for item in exclude:
             rv.append(item.replace("__basedir__", self.inDir))
         return rv
-        
+
+    def copyTestData(self):
+        outDir = "tests/testdata"
+        try:
+            os.mkdir(outDir)
+        except OSError:
+            #the directory already exists    
+            pass
+        inBaseDir = os.path.abspath(os.path.join(self.inDir, "../testdata"))
+        dirWalker = os.walk(inBaseDir)
+        for (curDir, dirs, files) in dirWalker:
+            outDir = os.path.join(self.inDir, "tests", "testdata", curDir[len(inBaseDir)+1:])
+            for dir in dirs[:]:
+                if self.excludeItem(curDir, dir):
+                    dirs.remove(dir)
+                else:
+                    try:
+                        os.mkdir(os.path.join(outDir, dir))
+                    except OSError:
+                        #the directory already exists    
+                        pass
+            for fn in files[:]:
+                if not self.excludeItem(curDir, fn):
+                    newFn = os.path.join(outDir, fn)
+                    shutil.copy(os.path.join(curDir, fn), newFn)
+                    self.cleanupFiles.append(newFn)
     def getFileList(self):
         """Get a list of files to copy"""
         fileList = []
@@ -95,7 +121,6 @@ class Package(object):
             self.outFiles.append(outPath)
             if os.path.isdir(inPath):
                 try:
-                    
                     os.mkdir(outPath)
                 except OSError:
                     #File may already exist
@@ -192,3 +217,12 @@ class Preprocessor(object):
         self.outPath = os.path.abspath(os.path.join(self.inDir,
                                         line[line.find("move")+4:].strip(),
                                         self.outPath[len(self.inDir)+1:]))
+        dirName = os.path.dirname(self.outPath)
+        if not os.path.exists(dirName):
+            dirsToCreate = []
+            while not os.path.exists(dirName):
+                dirsToCreate.append(dirName)
+                dirName = os.path.dirname(dirName)
+            
+            for item in dirsToCreate[::-1]:
+                os.mkdir(item)

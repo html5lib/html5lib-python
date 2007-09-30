@@ -1,6 +1,6 @@
 import os
 import unittest
-from support import html5lib_test_files, TestData
+from support import html5lib_test_files, TestData, test_dir
 
 from html5lib import inputstream
 
@@ -23,7 +23,7 @@ def buildTestSuite():
     try:
         import chardet
         def test_chardet(self):
-            data = open("../../testdata/encoding/chardet/test_big5.txt").read()
+            data = open(os.path.join(test_dir, "/chardet/test_big5.txt")).read()
             encoding = inputstream.HTMLInputStream(data).charEncoding
             assert encoding.lower() == "big5"
         setattr(Html5EncodingTestCase, 'test_chardet', test_chardet)
