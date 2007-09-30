@@ -2,7 +2,11 @@
 # * Phases and insertion modes are one concept in parser.py.
 # * EOF handling is slightly different to make sure <html>, <head> and <body>
 #   always exist.
-
+# * We're not detecting all DOCTYPE modes yet
+#
+# XXXAvK: I think there are some other quirks, but it might make sense to
+# wait with fixing them until browsers start more seriously implementing the
+# HTML5 parsing algorithm.
 
 try:
     frozenset

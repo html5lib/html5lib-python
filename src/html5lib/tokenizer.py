@@ -126,9 +126,6 @@ class HTMLTokenizer(object):
         If not present self.tokenQueue.append({"type": "ParseError"}) is invoked.
         """
 
-        # XXX More need to be done here. For instance, #13 should prolly be
-        # converted to #10 so we don't get \r (#13 is \r right?) in the DOM and
-        # such. Thoughts on this appreciated.
         allowed = digits
         radix = 10
         if isHex:

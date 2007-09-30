@@ -10,7 +10,7 @@ try:
     from collections import deque
 except ImportError:
     from utils import deque
-    
+
 class HTMLInputStream(object):
     """Provides a unicode stream of characters to the HTMLTokenizer.
 
