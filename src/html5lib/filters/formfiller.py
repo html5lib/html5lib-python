@@ -70,7 +70,7 @@ class SimpleFilter(_base.Filter):
 
                 elif name == "select":
                     field_type = "select"
-                    attributes = dict(reversed(token["data"]))
+                    attributes = dict(token["data"][::-1])
                     field_name = attributes.get("name")
                     is_select_multiple = "multiple" in attributes
                     is_selected_option_found = False

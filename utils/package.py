@@ -7,10 +7,11 @@ import shutil
 import subprocess
 import zipfile
 
-exclude = [".svn", "*.pyc", "*~", "__basedir__/utils",
+exclude = [".svn", "*.pyc", "*~", "*.orig", "*.patch", "__basedir__/utils",
            "__basedir__/setup_base.py", "*.prof", "#*", "__basedir__/build",
            '__basedir__/tests/performance', '*.out',
-           '__basedir__/tests/sites', '__basedir__/tests/*.html']
+           '__basedir__/tests/testdata/*.html',
+           '__basedir__/tests/testdata/sites', '__basedir__/print-stats.py']
 
 class Package(object):
 

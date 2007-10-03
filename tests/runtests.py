@@ -7,7 +7,7 @@ import unittest
 os.chdir(os.path.split(os.path.abspath(__file__))[0])
 sys.path.insert(0, os.path.abspath(os.curdir))
 sys.path.insert(0, os.path.abspath(os.pardir))
-
+sys.path.insert(0, os.path.join(os.path.abspath(os.pardir), "src"))
 
 def buildTestSuite():
     suite = unittest.TestSuite()
@@ -18,7 +18,9 @@ def buildTestSuite():
 
 def main():
     results = unittest.TextTestRunner().run(buildTestSuite())
-    if not results.wasSuccessful(): sys.exit(1)
+    return results
 
 if __name__ == "__main__":
-    main()
+    results = main()
+    if not results.wasSuccessful():
+        sys.exit(1)
