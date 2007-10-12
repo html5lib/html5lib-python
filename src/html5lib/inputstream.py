@@ -308,7 +308,9 @@ class HTMLInputStream(object):
             self.queue.extendleft(l)
             #Alter the current line, col position
             for c in chars[::-1]:
-                if c == '\n':
+                if c is None:
+                    continue
+                elif c == '\n':
                     assert self.lineLengths[-1] == 0
                     self.lineLengths.pop()
                 else:
