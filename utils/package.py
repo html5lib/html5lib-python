@@ -28,8 +28,8 @@ class Package(object):
         self.outFiles = []
 
     def runall(self):
-        self.getFileList()
         self.copyTestData()
+        self.getFileList()
         self.copy()
         self.makeSetupFile()
         self.preprocess()

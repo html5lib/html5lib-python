@@ -809,7 +809,7 @@ class InBodyPhase(Phase):
 
     def startTagForm(self, name, attributes):
         if self.tree.formPointer:
-            self.parser.parseError("Unexpected start tag (form). Ignored.")
+            self.parser.parseError(u"unexpected-start-tag", {"name": "form"})
         else:
             if self.tree.elementInScope("p"):
                 self.endTagP("p")
@@ -1017,7 +1017,8 @@ class InBodyPhase(Phase):
         # XXX Need to take open <p> tags into account here. We shouldn't imply
         # </p> but we should not throw a parse error either. Specification is
         # likely to be updated.
-        if self.tree.openElements[1].name != "body":
+        if (len(self.tree.openElements) == 1 or
+            self.tree.openElements[1].name != "body"):
             # innerHTML case
             self.parser.parseError()
             return
@@ -1410,7 +1411,7 @@ class InCaptionPhase(Phase):
             if self.tree.openElements[-1].name != "caption":
                 self.parser.parseError("expected-one-end-tag-but-got-another",
                   {"gotName": "caption",
-                   "expectedNmae": self.tree.openElements[-1].name})
+                   "expectedName": self.tree.openElements[-1].name})
             while self.tree.openElements[-1].name != "caption":
                 self.tree.openElements.pop()
             self.tree.openElements.pop()

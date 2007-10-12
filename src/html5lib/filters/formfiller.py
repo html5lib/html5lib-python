@@ -66,7 +66,7 @@ class SimpleFilter(_base.Filter):
 
                 elif name == "textarea":
                     field_type = "textarea"
-                    field_name = dict(reversed(token["data"]))["name"]
+                    field_name = dict((token["data"])[::-1])["name"]
 
                 elif name == "select":
                     field_type = "select"

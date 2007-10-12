@@ -1,5 +1,7 @@
 import os
 import sys
+import traceback
+
 import StringIO
 import unittest
 from support import html5lib_test_files, TestData, convert, convertExpected
@@ -63,10 +65,16 @@ class TestCase(unittest.TestCase):
         #XXX - move this out into the setup function
         #concatenate all consecutive character tokens into a single token
         p = html5parser.HTMLParser(tree = treeClass)
-        if innerHTML:
-            document = p.parseFragment(StringIO.StringIO(input), innerHTML)
-        else:
-            document = p.parse(StringIO.StringIO(input))
+        
+        try:
+            if innerHTML:
+                document = p.parseFragment(StringIO.StringIO(input), innerHTML)
+            else:
+                document = p.parse(StringIO.StringIO(input))
+        except:
+            errorMsg = "\n".join(["\n\nInput:", input, "\nExpected:", expected,
+                                  "\nTraceback:", traceback.format_exc()])
+            self.assertTrue(False, errorMsg)
         
         output = convertTreeDump(p.tree.testSerializer(document))
         output = attrlist.sub(sortattrs, output)
