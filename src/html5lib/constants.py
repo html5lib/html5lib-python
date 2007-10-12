@@ -232,6 +232,8 @@ E = {
     "expected-eof-but-got-end-tag":
        _(u"Unexpected end tag (%(name)s)"
          u". Expected end of file."),
+    "XXX-undefined-error":
+        (u"Undefined error (this sucks and should be fixed)"),
 }
 
 contentModelFlags = {
