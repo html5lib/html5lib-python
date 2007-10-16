@@ -58,7 +58,7 @@ class HTMLInputStream(object):
             self.charEncoding = self.detectEncoding(parseMeta, chardet)
 
         self.dataStream = codecs.getreader(self.charEncoding[0])(self.rawStream,
-                                                              '  replace')
+                                                                 'replace')
 
         self.queue = deque([])
         self.readChars = []
