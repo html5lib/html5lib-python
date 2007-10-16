@@ -30,9 +30,9 @@ class HTMLTokenizer(object):
 
     # XXX need to fix documentation
 
-    def __init__(self, stream, encoding=None, parseMeta=True,
+    def __init__(self, stream, encoding=None, parseMeta=True, useChardet=True,
                  lowercaseElementName=True, lowercaseAttrName=True,):
-        self.stream = HTMLInputStream(stream, encoding, parseMeta)
+        self.stream = HTMLInputStream(stream, encoding, parseMeta, useChardet)
         
         #Perform case conversions?
         self.lowercaseElementName = lowercaseElementName

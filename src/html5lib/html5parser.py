@@ -78,14 +78,15 @@ class HTMLParser(object):
         }
 
     def _parse(self, stream, innerHTML=False, container="div",
-               encoding=None, **kwargs):
+               encoding=None, parseMeta=True, useChardet=True, **kwargs):
         
         self.tree.reset()
         self.firstStartTag = False
         self.errors = []
 
         self.tokenizer = self.tokenizer_class(stream, encoding=encoding,
-                                              parseMeta=not innerHTML, **kwargs)
+                                              parseMeta=parseMeta,
+                                              useChardet=useChardet, **kwargs)
 
         if innerHTML:
             self.innerHTML = container.lower()
@@ -131,7 +132,7 @@ class HTMLParser(object):
         # When the loop finishes it's EOF
         self.phase.processEOF()
 
-    def parse(self, stream, encoding=None):
+    def parse(self, stream, encoding=None, parseMeta=True, useChardet=True):
         """Parse a HTML document into a well-formed tree
 
         stream - a filelike object or string containing the HTML to be parsed
@@ -144,7 +145,8 @@ class HTMLParser(object):
         self._parse(stream, innerHTML=False, encoding=encoding)
         return self.tree.getDocument()
     
-    def parseFragment(self, stream, container="div", encoding=None):
+    def parseFragment(self, stream, container="div", encoding=None,
+                      parseMeta=False, useChardet=True):
         """Parse a HTML fragment into a well-formed tree fragment
         
         container - name of the element we're setting the innerHTML property

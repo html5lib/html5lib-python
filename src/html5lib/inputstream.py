@@ -38,7 +38,7 @@ class HTMLInputStream(object):
         # List of where new lines occur
         self.newLines = [0]
 
-        self.charEncoding = encoding
+        self.charEncoding = (encoding, "certian")
 
         # Raw Stream - for unicode objects this will encode to utf-8 and set
         #              self.charEncoding as appropriate
@@ -54,11 +54,11 @@ class HTMLInputStream(object):
         self.defaultEncoding = "windows-1252"
         
         #Detect encoding iff no explicit "transport level" encoding is supplied
-        if self.charEncoding is None or not isValidEncoding(self.charEncoding):
+        if self.charEncoding[0] is None or not isValidEncoding(self.charEncoding[0]):
             self.charEncoding = self.detectEncoding(parseMeta, chardet)
 
-        self.dataStream = codecs.getreader(self.charEncoding)(self.rawStream,
-                                                              'replace')
+        self.dataStream = codecs.getreader(self.charEncoding[0])(self.rawStream,
+                                                              '  replace')
 
         self.queue = deque([])
         self.readChars = []
@@ -92,12 +92,15 @@ class HTMLInputStream(object):
         #First look for a BOM
         #This will also read past the BOM if present
         encoding = self.detectBOM()
+        confidence = "certain"
         #If there is no BOM need to look for meta elements with encoding 
         #information
         if encoding is None and parseMeta:
             encoding = self.detectEncodingMeta()
+            confidence = "tentative"
         #Guess with chardet, if avaliable
         if encoding is None and chardet:
+            confidence = "tentative"
             try:
                 from chardet.universaldetector import UniversalDetector
                 buffers = []
@@ -115,6 +118,7 @@ class HTMLInputStream(object):
                 pass
         # If all else fails use the default encoding
         if encoding is None:
+            confidence="tentative"
             encoding = self.defaultEncoding
         
         #Substitute for equivalent encodings:
@@ -123,7 +127,7 @@ class HTMLInputStream(object):
         if encoding.lower() in encodingSub:
             encoding = encodingSub[encoding.lower()]
 
-        return encoding
+        return encoding, confidence
 
     def detectBOM(self):
         """Attempts to detect at BOM at the start of the stream. If
@@ -200,7 +204,8 @@ class HTMLInputStream(object):
         buffer = self.rawStream.read(self.numBytesMeta)
         parser = EncodingParser(buffer)
         self.seek(buffer, 0)
-        return parser.getEncoding()
+        encoding = parser.getEncoding()
+        return encoding
 
     def updatePosition(self):
         #Remove EOF from readChars, if present
@@ -414,7 +419,12 @@ class EncodingParser(object):
             if not keepParsing:
                 break
         if self.encoding is not None:
-            self.encoding = self.encoding.strip()
+            self.encoding = self.encoding.strip()        
+            #Spec violation that complies with hsivonen + mjs
+            if self.encoding.upper() in ("UTF-16", "UTF-16BE", "UTF-16LE",
+                                         "UTF-32", "UTF-32BE", "UTF-32LE"):
+                self.encoding = "utf-8"
+        
         return self.encoding
 
     def handleComment(self):
@@ -531,7 +541,7 @@ class EncodingParser(object):
                 #11.5
                 else:
                     attrValue.extend(self.data.currentByte)
-        elif self.data.currentByte in (">", '<'):
+        elif self.data.currentByte in (">", "<"):
                 return "".join(attrName), ""
         elif self.data.currentByte in asciiUppercase:
             attrValue.extend(self.data.currentByte.lower())
@@ -540,7 +550,7 @@ class EncodingParser(object):
         while True:
             self.data.position +=1
             if self.data.currentByte in (
-                list(spaceCharacters) + [">", '<']):
+                list(spaceCharacters) + [">", "<"]):
                 return "".join(attrName), "".join(attrValue)
             elif self.data.currentByte in asciiUppercase:
                 attrValue.extend(self.data.currentByte.lower())

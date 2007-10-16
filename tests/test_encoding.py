@@ -16,7 +16,7 @@ def buildTestSuite():
         for idx, test in enumerate(tests):
             def encodingTest(self, data=test['data'], encoding=test['encoding']):
                 stream = inputstream.HTMLInputStream(data,chardet=False)
-                self.assertEquals(encoding.lower(), stream.charEncoding)
+                self.assertEquals(encoding.lower(), stream.charEncoding[0])
             setattr(Html5EncodingTestCase, 'test_%s_%d' % (test_name, idx+1),
                 encodingTest)
 
@@ -25,7 +25,7 @@ def buildTestSuite():
         def test_chardet(self):
             data = open(os.path.join(test_dir, "encoding" , "chardet", "test_big5.txt")).read()
             encoding = inputstream.HTMLInputStream(data).charEncoding
-            assert encoding.lower() == "big5"
+            assert encoding[0].lower() == "big5"
         setattr(Html5EncodingTestCase, 'test_chardet', test_chardet)
     except ImportError:
         print "chardet not found, skipping chardet tests"
