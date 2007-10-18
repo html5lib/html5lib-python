@@ -6,6 +6,11 @@ from constants import EOF, spaceCharacters, asciiLetters, asciiUppercase
 from constants import encodings
 from utils import MethodDispatcher
 
+#Non-unicode versions of constants for use in the pre-parser
+spaceCharactersBytes = [str(item) for item in spaceCharacters]
+asciiLettersBytes = [str(item) for item in asciiLetters]
+asciiUppercaseBytes = [str(item) for item in asciiUppercase]
+
 try:
     from collections import deque
 except ImportError:
@@ -357,7 +362,7 @@ class EncodingBytes(str):
     
     currentByte = property(getCurrentByte)
 
-    def skip(self, chars=spaceCharacters):
+    def skip(self, chars=spaceCharactersBytes):
         """Skip past a list of characters"""
         while self.currentByte in chars:
             self.position += 1
@@ -432,7 +437,7 @@ class EncodingParser(object):
         return self.data.jumpTo("-->")
 
     def handleMeta(self):
-        if self.data.currentByte not in spaceCharacters:
+        if self.data.currentByte not in spaceCharactersBytes:
             #if we have <meta not followed by a space so just keep going
             return True
         #We have a valid meta element we want to search for attributes
@@ -462,7 +467,7 @@ class EncodingParser(object):
         return self.handlePossibleTag(True)
 
     def handlePossibleTag(self, endTag):
-        if self.data.currentByte not in asciiLetters:
+        if self.data.currentByte not in asciiLettersBytes:
             #If the next byte is not an ascii letter either ignore this
             #fragment (possible start tag case) or treat it according to 
             #handleOther
@@ -471,7 +476,7 @@ class EncodingParser(object):
                 self.handleOther()
             return True
         
-        self.data.findNext(list(spaceCharacters) + ["<", ">"])
+        self.data.findNext(list(spaceCharactersBytes) + ["<", ">"])
         if self.data.currentByte == "<":
             #return to the first step in the overall "two step" algorithm
             #reprocessing the < byte
@@ -489,7 +494,7 @@ class EncodingParser(object):
     def getAttribute(self):
         """Return a name,value pair for the next attribute in the stream, 
         if one is found, or None"""
-        self.data.skip(list(spaceCharacters)+["/"])
+        self.data.skip(list(spaceCharactersBytes)+["/"])
         if self.data.currentByte == "<":
             self.data.position -= 1
             return None
@@ -502,12 +507,12 @@ class EncodingParser(object):
         while True:
             if self.data.currentByte == "=" and attrName:   
                 break
-            elif self.data.currentByte in spaceCharacters:
+            elif self.data.currentByte in spaceCharactersBytes:
                 spaceFound=True
                 break
             elif self.data.currentByte in ("/", "<", ">"):
                 return "".join(attrName), ""
-            elif self.data.currentByte in asciiUppercase:
+            elif self.data.currentByte in asciiUppercaseBytes:
                 attrName.extend(self.data.currentByte.lower())
             else:
                 attrName.extend(self.data.currentByte)
@@ -536,23 +541,23 @@ class EncodingParser(object):
                     self.data.position += 1
                     return "".join(attrName), "".join(attrValue)
                 #11.4
-                elif self.data.currentByte in asciiUppercase:
+                elif self.data.currentByte in asciiUppercaseBytes:
                     attrValue.extend(self.data.currentByte.lower())
                 #11.5
                 else:
                     attrValue.extend(self.data.currentByte)
         elif self.data.currentByte in (">", "<"):
                 return "".join(attrName), ""
-        elif self.data.currentByte in asciiUppercase:
+        elif self.data.currentByte in asciiUppercaseBytes:
             attrValue.extend(self.data.currentByte.lower())
         else:
             attrValue.extend(self.data.currentByte)
         while True:
             self.data.position +=1
             if self.data.currentByte in (
-                list(spaceCharacters) + [">", "<"]):
+                list(spaceCharactersBytes) + [">", "<"]):
                 return "".join(attrName), "".join(attrValue)
-            elif self.data.currentByte in asciiUppercase:
+            elif self.data.currentByte in asciiUppercaseBytes:
                 attrValue.extend(self.data.currentByte.lower())
             else:
                 attrValue.extend(self.data.currentByte)
@@ -588,7 +593,7 @@ class ContentAttrParser(object):
                 #Unquoted value
                 oldPosition = self.data.position
                 try:
-                    self.data.findNext(spaceCharacters)
+                    self.data.findNext(spaceCharactersBytes)
                     return self.data[oldPosition:self.data.position]
                 except StopIteration:
                     #Return the whole remaining value
