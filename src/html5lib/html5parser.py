@@ -427,9 +427,7 @@ class InitialPhase(Phase):
 class RootElementPhase(Phase):
     # helper methods
     def insertHtmlElement(self):
-        element = self.tree.createElement("html", {})
-        self.tree.openElements.append(element)
-        self.tree.document.appendChild(element)
+        self.tree.insertRoot("html")
         self.parser.phase = self.parser.phases["beforeHead"]
 
     # other

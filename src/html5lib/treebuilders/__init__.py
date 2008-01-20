@@ -58,6 +58,9 @@ def getTreeBuilder(treeType, implementation=None, **kwargs):
         elif treeType == "beautifulsoup":
             import soup
             treeBuilderCache[treeType] = soup.TreeBuilder
+        elif treeType == "lxml":
+            import etree_lxml
+            treeBuilderCache[treeType] = etree_lxml.TreeBuilder
         elif treeType == "etree":
             import etree
             # XXX: NEVER cache here, caching is done in the etree submodule

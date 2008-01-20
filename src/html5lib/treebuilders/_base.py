@@ -207,6 +207,11 @@ class TreeBuilder(object):
                 return item
         return False
 
+    def insertRoot(self, name):
+        element = self.createElement("html", {})
+        self.openElements.append(element)
+        self.document.appendChild(element)
+
     def insertDoctype(self, name, publicId, systemId):
         doctype = self.doctypeClass(name)
         doctype.publicId = publicId

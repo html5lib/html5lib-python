@@ -1041,3 +1041,6 @@ encodings = frozenset((
     "tis-620",
     "hz-gb-2312",
     ))
+
+class DataLossWarning(UserWarning):
+    pass
