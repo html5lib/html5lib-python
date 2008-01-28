@@ -1,11 +1,13 @@
 import os
 import sys
 import traceback
-
 import StringIO
 import unittest
-from support import html5lib_test_files, TestData, convert, convertExpected
+import warnings
 
+warnings.simplefilter("error")
+
+from support import html5lib_test_files, TestData, convert, convertExpected
 from html5lib import html5parser, treebuilders, constants
 
 treeTypes = {"simpletree":treebuilders.getTreeBuilder("simpletree"),
@@ -34,8 +36,11 @@ except ImportError:
         pass
     
 try:
-    import lxml.etree as lxml
-    treeTypes['lxml'] = treebuilders.getTreeBuilder("etree", lxml, fullTree=True)
+    try:
+        import lxml.html as lxml
+    except ImportError:
+        import lxml.etree as lxml
+    treeTypes['lxml'] = treebuilders.getTreeBuilder("lxml", lxml, fullTree=True)
 except ImportError:
     pass
 
@@ -70,7 +75,11 @@ class TestCase(unittest.TestCase):
             if innerHTML:
                 document = p.parseFragment(StringIO.StringIO(input), innerHTML)
             else:
-                document = p.parse(StringIO.StringIO(input))
+                try:
+                    document = p.parse(StringIO.StringIO(input))
+                except constants.DataLossWarning:
+                    sys.stderr.write("Test input causes known dataloss, skipping")
+                    return 
         except:
             errorMsg = "\n".join(["\n\nInput:", input, "\nExpected:", expected,
                                   "\nTraceback:", traceback.format_exc()])

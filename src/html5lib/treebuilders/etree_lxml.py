@@ -170,13 +170,17 @@ class TreeBuilder(_base.TreeBuilder):
         if self.doctype:
             docStr += "<!DOCTYPE %s"%self.doctype.name
             if self.doctype.publicId is not None:
-                docStr += "PUBLIC %s"%self.doctype.publicId
+                docStr += ' PUBLIC "%s"'%self.doctype.publicId
             if self.doctype.systemId:
-                docStr += "SYSTEM %s"%self.doctype.systemId
+                docStr += '  "%s"'%self.doctype.systemId
             docStr += ">"
         docStr += "<html></html>"
         
-        root = etree.fromstring(docStr)
+        try:
+            root = etree.fromstring(docStr)
+        except etree.XMLSyntaxError:
+            print docStr
+            raise
         
         #Create the root document and add the ElementTree to it
         self.document = self.documentClass()
