@@ -94,7 +94,8 @@ def getDomBuilder(DomImplementation):
             domimpl = Dom.getDOMImplementation()
             doctype = domimpl.createDocumentType(name, publicId, systemId)
             self.document.appendChild(NodeBuilder(doctype))
-            doctype.ownerDocument = self.dom
+            if Dom == minidom:
+                doctype.ownerDocument = self.dom
     
         def elementClass(self, name):
             return NodeBuilder(self.dom.createElement(name))
