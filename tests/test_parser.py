@@ -50,6 +50,14 @@ try:
 except ImportError:
     pass
 
+#Try whatever dom implementations are avaliable from a list that are
+#"supposed" to work
+try:
+    import pxdom
+    treeTypes["pxdom"] = treebuilders.getTreeBuilder("dom", pxdom)
+except ImportError:
+    pass
+
 #Run the parse error checks
 checkParseErrors = False # TODO
 
