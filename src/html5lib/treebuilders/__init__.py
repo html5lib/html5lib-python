@@ -40,21 +40,32 @@ def getTreeBuilder(treeType, implementation=None, **kwargs):
                
                "simpletree" - a built-in DOM-ish tree type with support for some
                               more pythonic idioms.
-                "dom" - The xml.dom.minidom DOM implementation
+                "dom" - A generic builder for DOM implementations, defaulting to
+                        a xml.dom.minidom based implementation for the sake of
+                        backwards compatibility (as releases up until 0.10 had a
+                        builder called "dom" that was a minidom implemenation).
                 "etree" - A generic builder for tree implementations exposing an
                           elementtree-like interface (known to work with
                           ElementTree, cElementTree and lxml.etree).
                 "beautifulsoup" - Beautiful soup (if installed)
                
-    implementation - (Currently applies to the "etree" tree type only). A module
-                      implementing the tree type e.g. xml.etree.ElementTree or
-                      lxml.etree."""
+    implementation - (Currently applies to the "etree" and "dom" tree types). A
+                      module implementing the tree type e.g.
+                      xml.etree.ElementTree or lxml.etree."""
     
     treeType = treeType.lower()
     if treeType not in treeBuilderCache:
-        if treeType in ("dom", "simpletree"):
-            mod = __import__(treeType, globals())
-            treeBuilderCache[treeType] = mod.TreeBuilder
+        if treeType == "dom":
+            import dom
+            # XXX: Keep backwards compatibility by using minidom if no implementation is given
+            if implementation == None:
+                from xml.dom import minidom
+                implementation = minidom
+            # XXX: NEVER cache here, caching is done in the dom submodule
+            return dom.getDomModule(implementation, **kwargs).TreeBuilder
+        elif treeType == "simpletree":
+            import simpletree
+            treeBuilderCache[treeType] = simpletree.TreeBuilder
         elif treeType == "beautifulsoup":
             import soup
             treeBuilderCache[treeType] = soup.TreeBuilder
