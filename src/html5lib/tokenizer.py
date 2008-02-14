@@ -865,6 +865,12 @@ class HTMLTokenizer(object):
         data = self.stream.char()
         if data == "\"":
             self.state = self.states["afterDoctypePublicIdentifier"]
+        elif data == ">":
+            self.tokenQueue.append({"type": "ParseError", "data":
+              "unexpected-end-of-doctype"})
+            self.currentToken["correct"] = False
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.states["data"]
         elif data == EOF:
             self.tokenQueue.append({"type": "ParseError", "data":
               "eof-in-doctype"})
@@ -879,6 +885,12 @@ class HTMLTokenizer(object):
         data = self.stream.char()
         if data == "'":
             self.state = self.states["afterDoctypePublicIdentifier"]
+        elif data == ">":
+            self.tokenQueue.append({"type": "ParseError", "data":
+              "unexpected-end-of-doctype"})
+            self.currentToken["correct"] = False
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.states["data"]
         elif data == EOF:
             self.tokenQueue.append({"type": "ParseError", "data":
               "eof-in-doctype"})
@@ -946,6 +958,12 @@ class HTMLTokenizer(object):
         data = self.stream.char()
         if data == "\"":
             self.state = self.states["afterDoctypeSystemIdentifier"]
+        elif data == ">":
+            self.tokenQueue.append({"type": "ParseError", "data":
+              "unexpected-end-of-doctype"})
+            self.currentToken["correct"] = False
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.states["data"]
         elif data == EOF:
             self.tokenQueue.append({"type": "ParseError", "data":
               "eof-in-doctype"})
@@ -960,6 +978,12 @@ class HTMLTokenizer(object):
         data = self.stream.char()
         if data == "'":
             self.state = self.states["afterDoctypeSystemIdentifier"]
+        elif data == ">":
+            self.tokenQueue.append({"type": "ParseError", "data":
+              "unexpected-end-of-doctype"})
+            self.currentToken["correct"] = False
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.states["data"]
         elif data == EOF:
             self.tokenQueue.append({"type": "ParseError", "data":
               "eof-in-doctype"})
