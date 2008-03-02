@@ -51,6 +51,7 @@ class HTMLTokenizer(object):
             "attributeValueDoubleQuoted":self.attributeValueDoubleQuotedState,
             "attributeValueSingleQuoted":self.attributeValueSingleQuotedState,
             "attributeValueUnQuoted":self.attributeValueUnQuotedState,
+            "afterAttributeValue":self.afterAttributeValueState,
             "bogusComment":self.bogusCommentState,
             "markupDeclarationOpen":self.markupDeclarationOpenState,
             "commentStart":self.commentStartState,
@@ -185,10 +186,11 @@ class HTMLTokenizer(object):
 
         return char
 
-    def consumeEntity(self, fromAttribute=False):
+    def consumeEntity(self, allowedChar=None, fromAttribute=False):
         char = None
         charStack = [self.stream.char()]
-        if charStack[0] in spaceCharacters or charStack[0] in (EOF, "<", "&"):
+        if charStack[0] in spaceCharacters or charStack[0] in (EOF, "<", "&")\
+         or (allowedChar is not None and allowedChar == charStack[0]):
             self.stream.unget(charStack)
         elif charStack[0] == u"#":
             # We might have a number entity here.
@@ -260,10 +262,10 @@ class HTMLTokenizer(object):
                 self.stream.unget(charStack)
         return char
 
-    def processEntityInAttribute(self):
+    def processEntityInAttribute(self, allowedChar):
         """This method replaces the need for "entityInAttributeValueState".
         """
-        entity = self.consumeEntity(True)
+        entity = self.consumeEntity(allowedChar=allowedChar, fromAttribute=True)
         if entity:
             self.currentToken["data"][-1][1] += entity
         else:
@@ -479,6 +481,11 @@ class HTMLTokenizer(object):
             self.emitCurrentToken()
         elif data == u"/":
             self.processSolidusInTag()
+        elif data == u"'" or data == u'"' or data == u"=":
+            self.tokenQueue.append({"type": "ParseError", "data":
+              "invalid-character-in-attribute-name"})
+            self.currentToken["data"].append([data, ""])
+            self.state = self.states["attributeName"]
         elif data == EOF:
             self.tokenQueue.append({"type": "ParseError", "data":
               "expected-attribute-name-but-got-eof"})
@@ -508,6 +515,11 @@ class HTMLTokenizer(object):
         elif data == u"/":
             self.processSolidusInTag()
             self.state = self.states["beforeAttributeName"]
+        elif data == u"'" or data == u'"':
+            self.tokenQueue.append({"type": "ParseError", "data":
+              "invalid-character-in-attribute-name"})
+            self.currentToken["data"][-1][0] += data
+            leavingThisState = False
         elif data == EOF:
             self.tokenQueue.append({"type": "ParseError", "data":
               "eof-in-attribute-name"})
@@ -570,6 +582,11 @@ class HTMLTokenizer(object):
             self.state = self.states["attributeValueSingleQuoted"]
         elif data == u">":
             self.emitCurrentToken()
+        elif data == u"=":
+            self.tokenQueue.append({"type": "ParseError", "data":
+              "equals-in-unquoted-attribute-value"})
+            self.currentToken["data"][-1][1] += data
+            self.state = self.states["attributeValueUnQuoted"]
         elif data == EOF:
             self.tokenQueue.append({"type": "ParseError", "data":
               "expected-attribute-value-but-got-eof"})
@@ -582,9 +599,9 @@ class HTMLTokenizer(object):
     def attributeValueDoubleQuotedState(self):
         data = self.stream.char()
         if data == "\"":
-            self.state = self.states["beforeAttributeName"]
+            self.state = self.states["afterAttributeValue"]
         elif data == u"&":
-            self.processEntityInAttribute()
+            self.processEntityInAttribute(u'"')
         elif data == EOF:
             self.tokenQueue.append({"type": "ParseError", "data":
               "eof-in-attribute-value-double-quote"})
@@ -597,9 +614,9 @@ class HTMLTokenizer(object):
     def attributeValueSingleQuotedState(self):
         data = self.stream.char()
         if data == "'":
-            self.state = self.states["beforeAttributeName"]
+            self.state = self.states["afterAttributeValue"]
         elif data == u"&":
-            self.processEntityInAttribute()
+            self.processEntityInAttribute(u"'")
         elif data == EOF:
             self.tokenQueue.append({"type": "ParseError", "data":
               "eof-in-attribute-value-single-quote"})
@@ -614,16 +631,37 @@ class HTMLTokenizer(object):
         if data in spaceCharacters:
             self.state = self.states["beforeAttributeName"]
         elif data == u"&":
-            self.processEntityInAttribute()
+            self.processEntityInAttribute(None)
         elif data == u">":
             self.emitCurrentToken()
+        elif data == u'"' or data == u"'" or data == u"=":
+            self.tokenQueue.append({"type": "ParseError", "data":
+              "unexpected-character-in-unquoted-attribute-value"})
+            self.currentToken["data"][-1][1] += data
         elif data == EOF:
             self.tokenQueue.append({"type": "ParseError", "data":
               "eof-in-attribute-value-no-quotes"})
             self.emitCurrentToken()
         else:
             self.currentToken["data"][-1][1] += data + self.stream.charsUntil( \
-              frozenset(("&", ">","<")) | spaceCharacters)
+              frozenset(("&", ">", "<", "=", "'", '"')) | spaceCharacters)
+        return True
+
+    def afterAttributeValueState(self):
+        data = self.stream.char()
+        if data in spaceCharacters:
+            self.state = self.states["beforeAttributeName"]
+        elif data == u">":
+            self.emitCurrentToken()
+            self.state = self.states["data"]
+        elif data == u"/":
+            self.processSolidusInTag()
+            self.state = self.states["beforeAttributeName"]
+        else:
+            self.tokenQueue.append({"type": "ParseError", "data":
+              "unexpected-character-after-attribute-value"})
+            self.stream.unget(data)
+            self.state = self.states["beforeAttributeName"]
         return True
 
     def bogusCommentState(self):
