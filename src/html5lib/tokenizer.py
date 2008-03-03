@@ -868,6 +868,7 @@ class HTMLTokenizer(object):
                 self.tokenQueue.append({"type": "ParseError", "data":
                   "expected-space-or-right-bracket-in-doctype", "datavars":
                   {"data": data}})
+                self.currentToken["correct"] = False
                 self.state = self.states["bogusDoctype"]
         return True
     
@@ -896,6 +897,7 @@ class HTMLTokenizer(object):
         else:
             self.tokenQueue.append({"type": "ParseError", "data":
               "unexpected-char-in-doctype"})
+            self.currentToken["correct"] = False
             self.state = self.states["bogusDoctype"]
         return True
 
@@ -961,6 +963,7 @@ class HTMLTokenizer(object):
         else:
             self.tokenQueue.append({"type": "ParseError", "data":
               "unexpected-char-in-doctype"})
+            self.currentToken["correct"] = False
             self.state = self.states["bogusDoctype"]
         return True
     
@@ -989,6 +992,7 @@ class HTMLTokenizer(object):
         else:
             self.tokenQueue.append({"type": "ParseError", "data":
               "unexpected-char-in-doctype"})
+            self.currentToken["correct"] = False
             self.state = self.states["bogusDoctype"]
         return True
 
@@ -1053,7 +1057,6 @@ class HTMLTokenizer(object):
 
     def bogusDoctypeState(self):
         data = self.stream.char()
-        self.currentToken["correct"] = False
         if data == u">":
             self.tokenQueue.append(self.currentToken)
             self.state = self.states["data"]
