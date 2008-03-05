@@ -170,6 +170,8 @@ E = {
     "unexpected-char-implies-table-voodoo":
        _(u"Unexpected non-space characters in "
          u"table context caused voodoo mode."),
+    "unpexted-hidden-input-in-table":
+       _(u"Unexpected input with type hidden in table context."),
     "unexpected-start-tag-implies-table-voodoo":
        _(u"Unexpected start tag (%(name)s) in "
          u"table context caused voodoo mode."),
@@ -190,7 +192,9 @@ E = {
        _(u"Unexpected end tag (%(name)s) in the table row phase. Ignored."),
     "unexpected-select-in-select":
        _(u"Unexpected select start tag in the select phase "
-         u"implies select start tag."),
+         u"treated as select end tag."),
+    "unexpected-input-in-select":
+       _(u"Unexpected input start tag in the select phase."),
     "unexpected-start-tag-in-select":
        _(u"Unexpected start tag token (%(name)s in the select phase. "
          u"Ignored."),
@@ -244,6 +248,7 @@ contentModelFlags = {
 }
 
 scopingElements = frozenset((
+    "applet",
     "button",
     "caption",
     "html",

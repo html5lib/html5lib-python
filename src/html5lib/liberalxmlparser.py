@@ -93,7 +93,7 @@ class XHTMLParser(XMLParser):
 
         return token
 
-class XhmlRootPhase(html5parser.RootElementPhase):
+class XhmlRootPhase(html5parser.BeforeHtmlPhase):
     def insertHtmlElement(self):
         element = self.tree.createElement("html", {'xmlns': 'http://www.w3.org/1999/xhtml'})
         self.tree.openElements.append(element)

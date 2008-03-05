@@ -272,32 +272,31 @@ class TreeBuilder(object):
         if parent is None:
             parent = self.openElements[-1]
 
-        if (not(self.insertFromTable) or (self.insertFromTable and
-                                          self.openElements[-1].name not in
-                                          tableInsertModeElements)):
+        if (not(self.insertFromTable) or (self.insertFromTable and\
+          self.openElements[-1].name not in tableInsertModeElements)):
             parent.insertText(data)
         else:
-            #We should be in the InTable mode. This means we want to do
-            #special magic element rearranging
+            # We should be in the InTable mode. This means we want to do
+            # special magic element rearranging
             parent, insertBefore = self.getTableMisnestedNodePosition()
             parent.insertText(data, insertBefore)
             
     def getTableMisnestedNodePosition(self):
         """Get the foster parent element, and sibling to insert before
         (or None) when inserting a misnested table node"""
-        #The foster parent element is the one which comes before the most
-        #recently opened table element
-        #XXX - this is really inelegant
+        # The foster parent element is the one which comes before the most
+        # recently opened table element
+        # XXX - this is really inelegant
         lastTable=None
         fosterParent = None
         insertBefore = None
         for elm in self.openElements[::-1]:
-            if elm.name == u"table":
+            if elm.name == "table":
                 lastTable = elm
                 break
         if lastTable:
-            #XXX - we should really check that this parent is actually a
-            #node here
+            # XXX - we should really check that this parent is actually a
+            # node here
             if lastTable.parent:
                 fosterParent = lastTable.parent
                 insertBefore = lastTable
