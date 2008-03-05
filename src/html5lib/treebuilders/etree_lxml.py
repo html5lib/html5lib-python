@@ -169,10 +169,9 @@ class TreeBuilder(_base.TreeBuilder):
         docStr = ""
         if self.doctype:
             docStr += "<!DOCTYPE %s"%self.doctype.name
-            if self.doctype.publicId is not None:
-                docStr += ' PUBLIC "%s"'%self.doctype.publicId
-            if self.doctype.systemId:
-                docStr += '  "%s"'%self.doctype.systemId
+            if self.doctype.publicId is not None or self.doctype.systemId is not None:
+                docStr += ' PUBLIC "%s" "%s"'%(self.doctype.publicId or "",
+                                               self.doctype.systemId or "")
             docStr += ">"
         docStr += "<html></html>"
         
