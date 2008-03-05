@@ -71,7 +71,7 @@ class HTMLParser(object):
             "inRow": InRowPhase(self, self.tree),
             "inCell": InCellPhase(self, self.tree),
             "inSelect": InSelectPhase(self, self.tree),
-            # XXX inSelectInTable
+            "inSelectInTable": InSelectInTablePhase(self, self.tree),
             "afterBody": AfterBodyPhase(self, self.tree),
             "inFrameset": InFramesetPhase(self, self.tree),
             "afterFrameset": AfterFramesetPhase(self, self.tree),
@@ -977,7 +977,14 @@ class InBodyPhase(Phase):
     def startTagSelect(self, name, attributes):
         self.tree.reconstructActiveFormattingElements()
         self.tree.insertElement(name, attributes)
-        self.parser.phase = self.parser.phases["inSelect"]
+        if self.parser.phase in (self.parser.phases["inTable"],
+          self.parser.phases["inCaption"],
+          self.parser.phases["inColumnGroup"],
+          self.parser.phases["inTableBody"], self.parser.phases["inRow"],
+          self.parser.phases["inCell"]):
+            self.parser.phase = self.parser.phases["inSelectInTable"]
+        else:
+            self.parser.phase = self.parser.phases["inSelect"]
 
     def startTagMisplaced(self, name, attributes):
         """ Elements that should be children of other elements that have a
@@ -1874,6 +1881,41 @@ class InSelectPhase(Phase):
     def endTagOther(self, name):
         self.parser.parseError("unexpected-end-tag-in-select",
           {"name": name})
+
+
+class InSelectInTablePhase(Phase):
+    def __init__(self, parser, tree):
+        Phase.__init__(self, parser, tree)
+
+        self.startTagHandler = utils.MethodDispatcher([
+            (("caption", "table", "tbody", "tfoot", "thead", "tr", "td", "th"), self.startTagTable)
+        ])
+        self.startTagHandler.default = self.startTagOther
+
+        self.endTagHandler = utils.MethodDispatcher([
+            (("caption", "table", "tbody", "tfoot", "thead", "tr", "td", "th"), self.endTagTable)
+        ])
+        self.endTagHandler.default = self.endTagOther
+
+    def processCharacters(self, data):
+        self.parser.phases["inSelect"].processCharacters(data)
+    
+    def startTagTable(self, name, attributes):
+        self.parser.parseError("unexpected-table-element-start-tag-in-select-in-table", {"name": name})
+        self.endTagOther("select")
+        self.parser.phase.processStartTag(name, attributes)
+
+    def startTagOther(self, name, attributes):
+        self.parser.phases["inSelect"].processStartTag(name, attributes)
+
+    def endTagTable(self, name):
+        self.parser.parseError("unexpected-table-element-end-tag-in-select-in-table", {"name": name})
+        if self.tree.elementInScope(name):
+            self.endTagOther("select")
+            self.parser.phase.processEndTag(name)
+
+    def endTagOther(self, name):
+        self.parser.phases["inSelect"].processEndTag(name)
 
 
 class AfterBodyPhase(Phase):

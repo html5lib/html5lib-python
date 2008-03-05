@@ -200,6 +200,10 @@ E = {
          u"Ignored."),
     "unexpected-end-tag-in-select":
        _(u"Unexpected end tag (%(name)s) in the select phase. Ignored."),
+    "unexpected-table-element-start-tag-in-select-in-table":
+       _(u"Unexpected table element start tag (%(name)s) in the select in table phase."),
+    "unexpected-table-element-end-tag-in-select-in-table":
+       _(u"Unexpected table element end tag (%(name)s) in the select in table phase."),
     "unexpected-char-after-body":
        _(u"Unexpected non-space characters in the after body phase."),
     "unexpected-start-tag-after-body":
