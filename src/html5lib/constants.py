@@ -170,7 +170,7 @@ E = {
     "unexpected-char-implies-table-voodoo":
        _(u"Unexpected non-space characters in "
          u"table context caused voodoo mode."),
-    "unpexted-hidden-input-in-table":
+    "unexpected-hidden-input-in-table":
        _(u"Unexpected input with type hidden in table context."),
     "unexpected-start-tag-implies-table-voodoo":
        _(u"Unexpected start tag (%(name)s) in "

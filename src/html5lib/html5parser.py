@@ -1360,7 +1360,7 @@ class InTablePhase(Phase):
 
     def startTagInput(self, name, attributes):
         if "type" in attributes and attributes["type"].translate(asciiUpper2Lower) == "hidden" and "tainted" not in self.getCurrentTable()._flags:
-            self.parser.parseError("unpexted-hidden-input-in-table")
+            self.parser.parseError("unexpected-hidden-input-in-table")
             self.tree.insertElement(name, attributes)
             # XXX associate with form
             self.tree.openElements.pop()
