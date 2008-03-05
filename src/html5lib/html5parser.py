@@ -555,8 +555,7 @@ class InHeadPhase(Phase):
         self.parser.parseError("two-heads-are-not-better-than-one")
 
     def startTagTitle(self, name, attributes):
-        if self.tree.headPointer is not None and\
-          self.parser.phase == self.parser.phases["inHead"]:
+        if self.tree.headPointer is not None and self.parser.phase == self.parser.phases["inHead"]:
             element = self.tree.createElement(name, attributes)
             self.appendToHead(element)
             self.tree.openElements.append(element)
@@ -565,8 +564,7 @@ class InHeadPhase(Phase):
         self.parser.tokenizer.contentModelFlag = contentModelFlags["RCDATA"]
 
     def startTagStyle(self, name, attributes):
-        if self.tree.headPointer is not None and\
-          self.parser.phase == self.parser.phases["inHead"]:
+        if self.tree.headPointer is not None and self.parser.phase == self.parser.phases["inHead"]:
             element = self.tree.createElement(name, attributes)
             self.appendToHead(element)
             self.tree.openElements.append(element)
@@ -576,8 +574,7 @@ class InHeadPhase(Phase):
 
     def startTagNoScript(self, name, attributes):
         # XXX Need to decide whether to implement the scripting disabled case.
-        if self.tree.headPointer is not None and\
-          self.parser.phase == self.parser.phases["inHead"]:
+        if self.tree.headPointer is not None and self.parser.phase == self.parser.phases["inHead"]:
             element = self.tree.createElement(name, attributes)
             self.appendToHead(element)
             self.tree.openElements.append(element)
@@ -587,23 +584,23 @@ class InHeadPhase(Phase):
 
     def startTagScript(self, name, attributes):
         #XXX Inner HTML case may be wrong
-        element = self.tree.createElement(name, attributes)
-        element._flags.append("parser-inserted")
-        if (self.tree.headPointer is not None and
-            self.parser.phase == self.parser.phases["inHead"]):
+        element = None
+        if (self.tree.headPointer is not None and self.parser.phase == self.parser.phases["inHead"]):
+            element = self.tree.createElement(name, attributes)
             self.appendToHead(element)
+            self.tree.openElements.append(element)
         else:
-            self.tree.openElements[-1].appendChild(element)
-        self.tree.openElements.append(element)
+            element = self.tree.insertElement(name, attributes)
+        element._flags.append("parser-inserted")
         self.parser.tokenizer.contentModelFlag = contentModelFlags["CDATA"]
 
     def startTagBaseLinkMeta(self, name, attributes):
-        element = self.tree.createElement(name, attributes)
-        if (self.tree.headPointer is not None and
-            self.parser.phase == self.parser.phases["inHead"]):
+        if (self.tree.headPointer is not None and self.parser.phase == self.parser.phases["inHead"]):
+            element = self.tree.createElement(name, attributes)
             self.appendToHead(element)
         else:
-            self.tree.openElements[-1].appendChild(element)
+            self.tree.insertElement(name, attributes)
+            self.tree.openElements.pop()
 
     def startTagOther(self, name, attributes):
         self.anythingElse()
