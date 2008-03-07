@@ -36,7 +36,7 @@ class Document(object):
         self._childNodes = []
 
     def appendChild(self, element):
-        warnings.warn("lxml does not support comments as siblings of the root node", DataLossWarning)
+        self._elementTree.getroot().addnext(element._element)
 
     def _getChildNodes(self):
         return self._childNodes
@@ -50,11 +50,19 @@ def testSerializer(element):
         if not hasattr(element, "tag"):
             rv.append("#document")
             if element.docinfo.internalDTD:
-                dtd_str = element.docinfo.doctype
-                if not dtd_str:
+                if not (element.docinfo.public_id or element.docinfo.system_url):
                     dtd_str = "<!DOCTYPE %s>"%element.docinfo.root_name
+                else:
+                    dtd_str = """<!DOCTYPE %s PUBLIC "%s" "%s">"""%(
+                        element.docinfo.root_name, element.docinfo.public_id,
+                        element.docinfo.system_url)
                 rv.append("|%s%s"%(' '*(indent+2), dtd_str))
-            serializeElement(element.getroot(), indent+2)
+            next_element = element.getroot()
+            while next_element.getprevious() is not None:
+                next_element = next_element.getprevious()
+            while next_element is not None:
+                serializeElement(next_element, indent+2)
+                next_element = next_element.getnext()
         elif type(element.tag) == type(etree.Comment):
             rv.append("|%s<!-- %s -->"%(' '*indent, element.text))
         else:
@@ -136,6 +144,7 @@ class TreeBuilder(_base.TreeBuilder):
     def reset(self):
         _base.TreeBuilder.reset(self)
         self.insertComment = self.insertCommentInitial
+        self.initial_comments = []
         self.doctype = None
 
     def testSerializer(self, element):
@@ -159,7 +168,7 @@ class TreeBuilder(_base.TreeBuilder):
         self.doctype = doctype
     
     def insertCommentInitial(self, data, parent=None):
-        warnings.warn("lxml does not support comments as siblings of the root node", DataLossWarning)
+        self.initial_comments.append(data)
     
     def insertRoot(self, name):
         """Create the document root"""
@@ -180,6 +189,10 @@ class TreeBuilder(_base.TreeBuilder):
         except etree.XMLSyntaxError:
             print docStr
             raise
+        
+        #Append the initial comments:
+        for comment_data in self.initial_comments:
+            root.addprevious(etree.Comment(comment_data))
         
         #Create the root document and add the ElementTree to it
         self.document = self.documentClass()
