@@ -53,8 +53,8 @@ class HTMLParser(object):
         self.tokenizer_class = tokenizer
         self.errors = []
 
-        # "quirks" / "almost-standards" / "standards"
-        self.quirksMode = "standards"
+        # "quirks" / "limited-quirks" / "no-quirks"
+        self.compatMode = "no-quirks"
 
         self.phases = {
             "initial": InitialPhase(self, self.tree),
@@ -304,6 +304,7 @@ class InitialPhase(Phase):
     # this.
     def processEOF(self):
         self.parser.parseError("expected-doctype-but-got-eof")
+        self.compatMode = "quirks"
         self.parser.phase = self.parser.phases["beforeHtml"]
         self.parser.phase.processEOF()
 
@@ -323,11 +324,8 @@ class InitialPhase(Phase):
         if publicId != "":
           publicId = publicId.translate(asciiUpper2Lower)
 
-        if nameLower != "html":
-            # XXX quirks mode
-            pass
-        else:
-            if publicId in\
+        if not correct or nameLower != "html"\
+            or publicId in\
               ("+//silmaril//dtd html pro v0r11 19970101//en",
                "-//advasoft ltd//dtd html 3.0 aswedit + extensions//en",
                "-//as//dtd html 3.0 aswedit + extensions//en",
@@ -397,13 +395,19 @@ class InitialPhase(Phase):
                "-//webtechs//dtd mozilla html//en",
                "-/w3c/dtd html 4.0 transitional/en",
                "html")\
-              or (publicId in\
+            or (publicId in\
               ("-//w3c//dtd html 4.01 frameset//EN",
                "-//w3c//dtd html 4.01 transitional//EN") and systemId == None)\
-              or (systemId != None and\
+            or (systemId != None and\
                 systemId == "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd"):
-                #XXX quirks mode
-                pass
+                self.compatMode = "quirks"
+        elif publicId in\
+              ("-//w3c//dtd xhtml 1.0 frameset//EN",
+               "-//w3c//dtd xhtml 1.0 transitional//EN")\
+            or (publicId in\
+              ("-//w3c//dtd html 4.01 frameset//EN",
+               "-//w3c//dtd html 4.01 transitional//EN") and systemId == None):
+               self.compatMode = "limited-quirks"
 
         self.parser.phase = self.parser.phases["beforeHtml"]
 
@@ -412,18 +416,21 @@ class InitialPhase(Phase):
 
     def processCharacters(self, data):
         self.parser.parseError("expected-doctype-but-got-chars")
+        self.compatMode = "quirks"
         self.parser.phase = self.parser.phases["beforeHtml"]
         self.parser.phase.processCharacters(data)
 
     def processStartTag(self, name, attributes):
         self.parser.parseError("expected-doctype-but-got-start-tag",
           {"name": name})
+        self.compatMode = "quirks"
         self.parser.phase = self.parser.phases["beforeHtml"]
         self.parser.phase.processStartTag(name, attributes)
 
     def processEndTag(self, name):
         self.parser.parseError("expected-doctype-but-got-end-tag",
           {"name": name})
+        self.compatMode = "quirks"
         self.parser.phase = self.parser.phases["beforeHtml"]
         self.parser.phase.processEndTag(name)
 
