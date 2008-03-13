@@ -54,7 +54,7 @@ class HTMLParser(object):
         self.errors = []
 
         # "quirks" / "limited-quirks" / "no-quirks"
-        self.compatMode = "no-quirks"
+        self.compatMode = "no quirks"
 
         self.phases = {
             "initial": InitialPhase(self, self.tree),
@@ -87,6 +87,7 @@ class HTMLParser(object):
         self.tree.reset()
         self.firstStartTag = False
         self.errors = []
+        self.compatMode = "no quirks"
 
         self.tokenizer = self.tokenizer_class(stream, encoding=encoding,
                                               parseMeta=parseMeta,
@@ -324,7 +325,7 @@ class InitialPhase(Phase):
         if publicId != "":
           publicId = publicId.translate(asciiUpper2Lower)
 
-        if not correct or nameLower != "html"\
+        if (not correct) or nameLower != "html"\
             or publicId in\
               ("+//silmaril//dtd html pro v0r11 19970101//en",
                "-//advasoft ltd//dtd html 3.0 aswedit + extensions//en",
@@ -399,7 +400,7 @@ class InitialPhase(Phase):
               ("-//w3c//dtd html 4.01 frameset//EN",
                "-//w3c//dtd html 4.01 transitional//EN") and systemId == None)\
             or (systemId != None and\
-                systemId == "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd"):
+              systemId == "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd"):
                 self.compatMode = "quirks"
         elif publicId in\
               ("-//w3c//dtd xhtml 1.0 frameset//EN",
@@ -407,7 +408,7 @@ class InitialPhase(Phase):
             or (publicId in\
               ("-//w3c//dtd html 4.01 frameset//EN",
                "-//w3c//dtd html 4.01 transitional//EN") and systemId == None):
-               self.compatMode = "limited-quirks"
+               self.compatMode = "limited quirks"
 
         self.parser.phase = self.parser.phases["beforeHtml"]
 
