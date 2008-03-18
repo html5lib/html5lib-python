@@ -112,7 +112,15 @@ class DocumentType(Node):
         self.systemId = u""
 
     def __unicode__(self):
-        return u"<!DOCTYPE %s>" % self.name
+        if self.publicId or self.systemId:
+            publicId = self.publicId or ""
+            systemId = self.systemId or ""
+            return """<!DOCTYPE %s PUBLIC "%s" "%s">"""%(
+                self.name, publicId, systemId)
+                            
+        else:
+            return u"<!DOCTYPE %s>" % self.name
+    
 
     toxml = __unicode__
     

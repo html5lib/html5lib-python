@@ -169,7 +169,13 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             if not(hasattr(element, "tag")):
                 element = element.getroot()
             if element.tag == "<!DOCTYPE>":
-                rv.append("|%s<!DOCTYPE %s>"%(' '*indent, element.text))
+                if element.get("publicId") or element.get("systemId"):
+                    publicId = element.get("publicId") or ""
+                    systemId = element.get("systemId") or ""
+                    rv.append( """<!DOCTYPE %s PUBLIC "%s" "%s">"""%(
+                            element.text, publicId, systemId))
+                else:     
+                    rv.append("<!DOCTYPE %s>"%(element.text,))
             elif element.tag == "<DOCUMENT_ROOT>":
                 rv.append("#document")
                 if element.text:
@@ -206,7 +212,13 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                 element = element.getroot()
             
             if element.tag == "<!DOCTYPE>":
-                rv.append("<!DOCTYPE %s>"%(element.text,))
+                if element.get("publicId") or element.get("systemId"):
+                    publicId = element.get("publicId") or ""
+                    systemId = element.get("systemId") or ""
+                    rv.append( """<!DOCTYPE %s PUBLIC "%s" "%s">"""%(
+                            element.text, publicId, systemId))
+                else:     
+                    rv.append("<!DOCTYPE %s>"%(element.text,))
             elif element.tag == "<DOCUMENT_ROOT>":
                 if element.text:
                     rv.append(element.text)

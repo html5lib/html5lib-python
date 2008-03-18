@@ -138,7 +138,13 @@ def getDomBuilder(DomImplementation):
         def serializeElement(element, indent=0):
             if element.nodeType == Node.DOCUMENT_TYPE_NODE:
                 if element.name:
-                    rv.append("|%s<!DOCTYPE %s>"%(' '*indent, element.name))
+                    if element.publicId or element.systemId:
+                        publicId = element.publicId or ""
+                        systemId = element.systemId or ""
+                        rv.append( """|%s<!DOCTYPE %s PUBLIC "%s" "%s">"""%(
+                                ' '*indent, element.name, publicId, systemId))
+                    else:
+                        rv.append("|%s<!DOCTYPE %s>"%(' '*indent, element.name))
                 else:
                     rv.append("|%s<!DOCTYPE >"%(' '*indent,))
             elif element.nodeType == Node.DOCUMENT_NODE:

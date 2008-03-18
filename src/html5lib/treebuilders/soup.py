@@ -104,7 +104,12 @@ class TreeBuilder(_base.TreeBuilder):
         return Element(self.soup, self.soup)
     
     def insertDoctype(self, name, publicId, systemId):
-        self.soup.insert(0, Declaration(name))
+        if publicId or systemId:
+            publicId = publicId or ""
+            systemId = systemId or ""
+            self.soup.insert(0, Declaration("%s PUBLIC \"%s\" \"%s\""%(name, publicId, systemId)))
+        else:
+            self.soup.insert(0, Declaration(name))
     
     def elementClass(self, name):
         return Element(Tag(self.soup, name), self.soup)
@@ -134,6 +139,7 @@ def testSerializer(element):
     def serializeElement(element, indent=0):
         if isinstance(element, Declaration):
             rv.append("|%s<!DOCTYPE %s>"%(' '*indent, element.string))
+            
         elif isinstance(element, BeautifulSoup):
             if element.name == "[document_fragment]":
                 rv.append("#document-fragment")                
