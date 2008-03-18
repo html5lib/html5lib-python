@@ -122,15 +122,17 @@ def buildTestSuite():
     for filename in html5lib_test_files('tokenizer', '*.test'):
         tests = simplejson.load(file(filename))
         testName = os.path.basename(filename).replace(".test","")
-        for index,test in enumerate(tests['tests']):
-            if 'contentModelFlags' not in test:
-                test["contentModelFlags"] = ["PCDATA"]
-            for contentModelFlag in test["contentModelFlags"]:
-                test["contentModelFlag"] = contentModelFlag
-                def testFunc(self, test=test):
-                    self.runTokenizerTest(test)
-                testFunc.__doc__ = "\t".join([testName, test['description']])
-                setattr(TestCase, 'test_%s_%d' % (testName, index), testFunc)
+        if 'test' in tests:
+            for index,test in enumerate(tests['tests']):
+                if 'contentModelFlags' not in test:
+                    test["contentModelFlags"] = ["PCDATA"]
+                for contentModelFlag in test["contentModelFlags"]:
+                    test["contentModelFlag"] = contentModelFlag
+                    def testFunc(self, test=test):
+                        self.runTokenizerTest(test)
+                    testFunc.__doc__ = "\t".join([testName, 
+                                                  test['description']])
+                    setattr(TestCase, 'test_%s_%d' % (testName, index), testFunc)
     return unittest.TestLoader().loadTestsFromTestCase(TestCase)
 
 def main():
