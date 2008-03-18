@@ -4,7 +4,7 @@ import warnings
 from html5lib.constants import DataLossWarning
 import etree as etree_builders
 try:
-    import lxml.html as etree
+    import lxml.etree as etree
 except ImportError:
     import lxml.etree as etree
 
@@ -48,21 +48,33 @@ def testSerializer(element):
     finalText = None
     def serializeElement(element, indent=0):
         if not hasattr(element, "tag"):
-            rv.append("#document")
-            if element.docinfo.internalDTD:
-                if not (element.docinfo.public_id or element.docinfo.system_url):
-                    dtd_str = "<!DOCTYPE %s>"%element.docinfo.root_name
-                else:
-                    dtd_str = """<!DOCTYPE %s PUBLIC "%s" "%s">"""%(
-                        element.docinfo.root_name, element.docinfo.public_id,
-                        element.docinfo.system_url)
-                rv.append("|%s%s"%(' '*(indent+2), dtd_str))
-            next_element = element.getroot()
-            while next_element.getprevious() is not None:
-                next_element = next_element.getprevious()
-            while next_element is not None:
-                serializeElement(next_element, indent+2)
-                next_element = next_element.getnext()
+            if  hasattr(element, "getroot"):
+                #Full tree case
+                rv.append("#document")
+                if element.docinfo.internalDTD:
+                    if not (element.docinfo.public_id or 
+                            element.docinfo.system_url):
+                        dtd_str = "<!DOCTYPE %s>"%element.docinfo.root_name
+                    else:
+                        dtd_str = """<!DOCTYPE %s PUBLIC "%s" "%s">"""%(
+                            element.docinfo.root_name, 
+                            element.docinfo.public_id,
+                            element.docinfo.system_url)
+                    rv.append("|%s%s"%(' '*(indent+2), dtd_str))
+                next_element = element.getroot()
+                while next_element.getprevious() is not None:
+                    next_element = next_element.getprevious()
+                while next_element is not None:
+                    serializeElement(next_element, indent+2)
+                    next_element = next_element.getnext()
+            elif isinstance(element, basestring):
+                #Text in a fragment
+                rv.append("|%s\"%s\""%(' '*indent, element))
+            else:
+                #Fragment case
+                rv.append("#document-fragment")
+                for next_element in element:
+                    serializeElement(next_element, indent+2)
         elif type(element.tag) == type(etree.Comment):
             rv.append("|%s<!-- %s -->"%(' '*indent, element.text))
         else:
@@ -132,13 +144,13 @@ class TreeBuilder(_base.TreeBuilder):
     doctypeClass = DocumentType
     elementClass = None
     commentClass = None
-    fragmentClass = None
+    fragmentClass = Document
     
     def __init__(self, fullTree = False):
         builder = etree_builders.getETreeModule(etree, fullTree=fullTree)
         self.elementClass = builder.Element
         self.commentClass = builder.Comment
-        self.fragmentClass = builder.DocumentFragment
+        #self.fragmentClass = builder.DocumentFragment
         _base.TreeBuilder.__init__(self)
     
     def reset(self):
@@ -157,7 +169,14 @@ class TreeBuilder(_base.TreeBuilder):
             return self.document._elementTree.getroot()
     
     def getFragment(self):
-        return _base.TreeBuilder.getFragment(self)._element
+        fragment = []
+        element = self.openElements[0]._element
+        if element.text:
+            fragment.append(element.text)
+        fragment.extend(element.getchildren())
+        if element.tail:
+            fragment.append(element.tail)
+        return fragment
     
     def insertDoctype(self, name, publicId, systemId):
         if not name:
@@ -172,9 +191,10 @@ class TreeBuilder(_base.TreeBuilder):
     
     def insertRoot(self, name):
         """Create the document root"""
-        #Because of the way libxml2 works, it doesn't seem to be possible to alter information
-        #like the doctype after the tree has been parsed. Therefore we need to use the built-in
-        #parser to create our iniial tree, after which we can add elements like normal
+        #Because of the way libxml2 works, it doesn't seem to be possible to
+        #alter informatioN like the doctype after the tree has been parsed. 
+        #Therefore we need to use the built-in parser to create our iniial 
+        #tree, after which we can add elements like normal
         docStr = ""
         if self.doctype:
             docStr += "<!DOCTYPE %s"%self.doctype.name
