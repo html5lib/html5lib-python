@@ -1577,6 +1577,9 @@ class InTableBodyPhase(Phase):
             self.tree.openElements.pop()
 
     # the rest
+    def processSpaceCharacters(self,data):
+        self.parser.phases["inTable"].processSpaceCharacters(data)   
+
     def processCharacters(self,data):
         self.parser.phases["inTable"].processCharacters(data)
 
@@ -1665,6 +1668,9 @@ class InRowPhase(Phase):
         return not self.tree.elementInScope("tr", tableVariant=True)
 
     # the rest
+    def processSpaceCharacters(self, data):
+        self.parser.phases["inTable"].processSpaceCharacters(data)        
+
     def processCharacters(self, data):
         self.parser.phases["inTable"].processCharacters(data)
 
