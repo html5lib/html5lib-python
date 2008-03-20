@@ -21,14 +21,16 @@ class Xhtml5Test(unittest.TestCase):
 
   def assertXmlEquals(self, input, expected=None, parser=XMLParser):
     document = parser(tree=dom.TreeBuilder).parse(input).documentElement
+    #print document.toxml('utf-8')
     if not expected:
        expected = xmlelem.sub(sortattrs, input)
        expected = re.sub('&#(\d+);', ncr, expected)
        output = xmlelem.sub(sortattrs, document.toxml('utf-8'))
        self.assertEquals(expected, output)
     else:
-       self.assertEquals(expected, document.toxml('utf-8'))
-
+      self.assertEquals(expected, document.toxml('utf-8'))
+      pass
+      
   def assertXhtmlEquals(self, input, expected=None, parser=XHTMLParser):
     self.assertXmlEquals(input, expected, parser)
 
@@ -93,8 +95,7 @@ class OpmlTest(Xhtml5Test):
 class XhtmlTest(Xhtml5Test):
 
   def test_mathml(self):
-    self.assertXhtmlEquals("""<html xmlns="http://www.w3.org/1999/xhtml">
-<head><title>MathML</title></head>
+    self.assertXhtmlEquals("""<html xmlns="http://www.w3.org/1999/xhtml"><head><title>MathML</title></head>
 <body>
   <math xmlns="http://www.w3.org/1998/Math/MathML">
     <mrow>
@@ -140,8 +141,7 @@ class XhtmlTest(Xhtml5Test):
 </body></html>""")
 
   def test_svg(self):
-    self.assertXhtmlEquals("""<html xmlns="http://www.w3.org/1999/xhtml">
-<head><title>SVG</title></head>
+    self.assertXhtmlEquals("""<html xmlns="http://www.w3.org/1999/xhtml"><head><title>SVG</title></head>
 <body>
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
     <path d="M38,38c0-12,24-15,23-2c0,9-16,13-16,23v7h11v-4c0-9,17-12,17-27
@@ -154,8 +154,7 @@ class XhtmlTest(Xhtml5Test):
 </body></html>""")
 
   def test_xlink(self):
-    self.assertXhtmlEquals("""<html xmlns="http://www.w3.org/1999/xhtml">
-<head><title>XLINK</title></head>
+    self.assertXhtmlEquals("""<html xmlns="http://www.w3.org/1999/xhtml"><head><title>XLINK</title></head>
 <body>
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
     <defs xmlns:l="http://www.w3.org/1999/xlink">
@@ -180,22 +179,19 @@ class XhtmlTest(Xhtml5Test):
 </body></html>""")
 
   def test_br(self):
-    self.assertXhtmlEquals("""<html xmlns="http://www.w3.org/1999/xhtml">
-<head><title>BR</title></head>
+    self.assertXhtmlEquals("""<html xmlns="http://www.w3.org/1999/xhtml"><head><title>BR</title></head>
 <body>
 <br/>
 </body></html>""")
 
   def test_strong(self):
-    self.assertXhtmlEquals("""<html xmlns="http://www.w3.org/1999/xhtml">
-<head><title>STRONG</title></head>
+    self.assertXhtmlEquals("""<html xmlns="http://www.w3.org/1999/xhtml"><head><title>STRONG</title></head>
 <body>
 <strong></strong>
 </body></html>""")
 
   def test_script(self):
-    self.assertXhtmlEquals("""<html xmlns="http://www.w3.org/1999/xhtml">
-<head><title>SCRIPT</title></head>
+    self.assertXhtmlEquals("""<html xmlns="http://www.w3.org/1999/xhtml"><head><title>SCRIPT</title></head>
 <body>
 <script>1 &lt; 2 &amp; 3</script>
 </body></html>""")
@@ -205,14 +201,12 @@ class XhtmlTest(Xhtml5Test):
 <head><title>SCRIPT</title><script src="http://example.com"/></head>
 <body>
 </body></html>""",
-"""<html xmlns="http://www.w3.org/1999/xhtml">
-<head><title>SCRIPT</title><script src="http://example.com"></script></head>
+"""<html xmlns="http://www.w3.org/1999/xhtml"><head><title>SCRIPT</title><script src="http://example.com"></script></head>
 <body>
 </body></html>""")
 
   def test_title(self):
-    self.assertXhtmlEquals("""<html xmlns="http://www.w3.org/1999/xhtml">
-<head><title>1 &lt; 2 &amp; 3</title></head>
+    self.assertXhtmlEquals("""<html xmlns="http://www.w3.org/1999/xhtml"><head><title>1 &lt; 2 &amp; 3</title></head>
 <body>
 </body></html>""")
 
@@ -222,8 +216,7 @@ class XhtmlTest(Xhtml5Test):
 <head><title>PROLOG</title></head>
 <body>
 </body></html>""",
-"""<html xmlns="http://www.w3.org/1999/xhtml">
-<head><title>PROLOG</title></head>
+"""<html xmlns="http://www.w3.org/1999/xhtml"><head><title>PROLOG</title></head>
 <body>
 </body></html>""")
 
@@ -234,8 +227,7 @@ class XhtmlTest(Xhtml5Test):
 <body>
 <u><blockquote><p></u>
 </body></html>""",
-"""<html xmlns="http://www.w3.org/1999/xhtml">
-<head><title>TAGSOUP</title></head>
+"""<html xmlns="http://www.w3.org/1999/xhtml"><head><title>TAGSOUP</title></head>
 <body>
 <u/><blockquote><u/><p><u/>
 </p></blockquote></body></html>""")
