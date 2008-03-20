@@ -333,9 +333,14 @@ class HTMLTokenizer(object):
             # emitted separately.
             self.tokenQueue.append({"type": "SpaceCharacters", "data":
               data + self.stream.charsUntil(spaceCharacters, True)})
+            # No need to update lastFourChars here, since the first space will
+            # have already broken any <!-- or --> sequences
         else:
+            chars = self.stream.charsUntil(("&", "<", ">", "-"))
             self.tokenQueue.append({"type": "Characters", "data": 
-              data + self.stream.charsUntil(("&", "<", ">", "-"))})
+              data + chars})
+            self.lastFourChars += chars[-4:]
+            self.lastFourChars = self.lastFourChars[-4:]
         return True
 
     def entityDataState(self):
