@@ -122,7 +122,7 @@ def buildTestSuite():
     for filename in html5lib_test_files('tokenizer', '*.test'):
         tests = simplejson.load(file(filename))
         testName = os.path.basename(filename).replace(".test","")
-        if 'test' in tests:
+        if 'tests' in tests:
             for index,test in enumerate(tests['tests']):
                 if 'contentModelFlags' not in test:
                     test["contentModelFlags"] = ["PCDATA"]
