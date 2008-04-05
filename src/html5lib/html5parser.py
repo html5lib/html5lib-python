@@ -314,16 +314,20 @@ class InitialPhase(Phase):
 
     def processDoctype(self, name, publicId, systemId, correct):
         nameLower = name.translate(asciiUpper2Lower)
-        if nameLower != "html" or publicId != None or\
-          systemId != None:
+        if (nameLower != "html" or publicId != None or
+            systemId != None):
             self.parser.parseError("unknown-doctype")
-        # XXX need to update DOCTYPE tokens
-        self.tree.insertDoctype(name, publicId, systemId)
         
-        if publicId == None:
-          publicId = ""
+        if publicId is None:
+            publicId = ""
+        if systemId is None:
+            systemId = ""
+            
+        self.tree.insertDoctype(name, publicId, systemId)
+
         if publicId != "":
-          publicId = publicId.translate(asciiUpper2Lower)
+            publicId = publicId.translate(asciiUpper2Lower)
+
 
         if (not correct) or nameLower != "html"\
             or publicId in\
@@ -1064,14 +1068,18 @@ class InBodyPhase(Phase):
                 node = self.tree.openElements.pop()
 
     def endTagForm(self, name):
-        if self.tree.elementInScope(name):
-            self.tree.generateImpliedEndTags()
-        if self.tree.openElements[-1].name != name:
-            self.parser.parseError("end-tag-too-early-ignored",
-              {"name": "form"})
-        else:
-            self.tree.openElements.pop()
         self.tree.formPointer = None
+        if not self.tree.elementInScope(name):
+            self.parser.parseError("unexpected-end-tag",
+                                   {"name":"form"})
+        else:
+            self.tree.generateImpliedEndTags()
+            if self.tree.openElements[-1].name != name:
+                self.parser.parseError("end-tag-too-early-ignored",
+                                       {"name": "form"})
+            node = self.tree.openElements.pop()
+            while node.name != name:
+                node = self.tree.openElements.pop()
 
     def endTagListItem(self, name):
         # AT Could merge this with the Block case
