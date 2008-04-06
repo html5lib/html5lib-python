@@ -82,6 +82,13 @@ class HTMLSanitizerMixin(object):
 
     attr_val_is_uri = ['href', 'src', 'cite', 'action', 'longdesc',
          'xlink:href', 'xml:base']
+
+    svg_attr_val_allows_ref = ['clip-path', 'color-profile', 'cursor', 'fill',
+      'filter', 'marker', 'marker-start', 'marker-mid', 'marker-end', 'mask', 'stroke']
+
+    svg_allow_local_href = ['altGlyph', 'animate', 'animateColor', 'animateMotion',
+      'animateTransform', 'cursor', 'feImage', 'filter', 'linearGradient', 'pattern',
+      'radialGradient', 'textpath', 'tref', 'set', 'use']
   
     acceptable_css_properties = ['azimuth', 'background-color',
         'border-bottom-color', 'border-collapse', 'border-color',
@@ -136,10 +143,18 @@ class HTMLSanitizerMixin(object):
                 if token.has_key("data"):
                     attrs = dict([(name,val) for name,val in token["data"][::-1] if name in self.allowed_attributes])
                     for attr in self.attr_val_is_uri:
-                        if not attrs.has_key(attr): continue
+                        if not attrs.has_key(attr):
+                            continue
                         val_unescaped = re.sub("[`\000-\040\177-\240\s]+", '', unescape(attrs[attr])).lower()
                         if re.match("^[a-z0-9][-+.a-z0-9]*:",val_unescaped) and (val_unescaped.split(':')[0] not in self.allowed_protocols):
                             del attrs[attr]
+                    for attr in self.svg_attr_val_allows_ref:
+                        if attr in attrs:
+                            attrs[attr] = re.sub(r'url\s*\(\s*[^#\s][^)]+?\)', ' ',
+                                                 unescape(attrs[attr]))
+                    if (token["name"] in self.svg_allow_local_href and
+                        'xlink:href' in attrs and re.find('^\s*[^#\s].*', attrs['xlink:href'])):
+                        del attrs['xlink:href']
                     if attrs.has_key('style'):
                         attrs['style'] = self.sanitize_css(attrs['style'])
                     token["data"] = [[name,val] for name,val in attrs.items()]
