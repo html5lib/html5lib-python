@@ -23,7 +23,7 @@ class HTMLSanitizerMixin(object):
       
     svg_elements = ['a', 'animate', 'animateColor', 'animateMotion',
         'animateTransform', 'circle', 'defs', 'desc', 'ellipse', 'font-face',
-        'font-face-name', 'font-face-src', 'g', 'glyph', 'hkern', 'image',
+        'font-face-name', 'font-face-src', 'g', 'glyph', 'hkern', 
         'linearGradient', 'line', 'marker', 'metadata', 'missing-glyph',
         'mpath', 'path', 'polygon', 'polyline', 'radialGradient', 'rect',
         'set', 'stop', 'svg', 'switch', 'text', 'title', 'tspan', 'use']
