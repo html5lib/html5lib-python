@@ -11,6 +11,8 @@ spaceCharactersBytes = [str(item) for item in spaceCharacters]
 asciiLettersBytes = [str(item) for item in asciiLetters]
 asciiUppercaseBytes = [str(item) for item in asciiUppercase]
 
+invalid_unicode_re = re.compile(u"[\u0001-\u0008]|[\u000E-\u001F]|[\u007F-\u009F]|[\uD800-\uDFFF]|[\uFDD0-\uFDDF]|\uFFFE|\uFFFF|\U0001FFFE|\U0001FFFF|\U0002FFFE|\U0002FFFF|\U0003FFFE|\U0003FFFF|\U0004FFFE|\U0004FFFF|\U0005FFFE|\U0005FFFF|\U0006FFFE|\U0006FFFF|\U0007FFFE|\U0007FFFF|\U0008FFFE|\U0008FFFF|\U0009FFFE|\U0009FFFF|\U000AFFFE|\U000AFFFF|\U000BFFFE\U000BFFFF|\U000CFFFE|\U000CFFFF|\U000DFFFE|\U000DFFFF|\U000EFFFE|\U000EFFFF|\U000FFFFE|\U000FFFFF|\U0010FFFE|\U0010FFFF")
+
 try:
     from collections import deque
 except ImportError:
@@ -28,7 +30,7 @@ class HTMLInputStream(object):
         """Initialises the HTMLInputStream.
 
         HTMLInputStream(source, [encoding]) -> Normalized stream from source
-        for use by the HTML5Lib.
+        for use by html5lib.
 
         source can be either a file-object, local filename or a string.
 
@@ -59,7 +61,8 @@ class HTMLInputStream(object):
         self.defaultEncoding = "windows-1252"
         
         #Detect encoding iff no explicit "transport level" encoding is supplied
-        if self.charEncoding[0] is None or not isValidEncoding(self.charEncoding[0]):
+        if (self.charEncoding[0] is None or
+            not isValidEncoding(self.charEncoding[0])):
             self.charEncoding = self.detectEncoding(parseMeta, chardet)
 
         self.dataStream = codecs.getreader(self.charEncoding[0])(self.rawStream,
@@ -87,7 +90,7 @@ class HTMLInputStream(object):
             # Otherwise treat source as a string and convert to a file object
             if isinstance(source, unicode):
                 source = source.encode('utf-8')
-                self.charEncoding = "utf-8"
+                self.charEncoding = ("utf-8", "certian")
             import cStringIO
             stream = cStringIO.StringIO(str(source))
         return stream
@@ -262,6 +265,9 @@ class HTMLInputStream(object):
         #Replace null characters
         for i in xrange(data.count(u"\u0000")):
             self.errors.append("null-character")
+        for i in xrange(len(invalid_unicode_re.findall(data))):
+            self.errors.append("invalid-codepoint")
+
         data = data.replace(u"\u0000", u"\ufffd")
         #Check for CR LF broken across chunks
         if (self._lastChunkEndsWithCR and data[0] == "\n"):
@@ -271,7 +277,7 @@ class HTMLInputStream(object):
         data = data.replace("\r", "\n")
         
         data = unicode(data)
-        self.queue.extend([char for char in data])
+        self.queue.extend(list(data))
 
         self.updatePosition()
 

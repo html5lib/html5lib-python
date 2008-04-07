@@ -13,6 +13,8 @@ EOF = None
 E = {
     "null-character": 
        _(u"Null character in input stream, replaced with U+FFFD."),
+    "invalid-character": 
+       _(u"Invalid codepoint in stream."),
     "incorrectly-placed-solidus":
        _(u"Solidus (/) incorrectly placed in tag."),
     "incorrect-cr-newline-entity":

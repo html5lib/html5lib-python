@@ -4,7 +4,11 @@ except NameError:
     # Import from the sets module for python 2.3
     from sets import Set as set
     from sets import ImmutableSet as frozenset
-
+try:
+    from collections import deque
+except ImportError:
+    from utils import deque
+    
 from constants import contentModelFlags, spaceCharacters
 from constants import entitiesWindows1252, entities
 from constants import asciiLowercase, asciiLetters, asciiUpper2Lower
@@ -83,9 +87,6 @@ class HTMLTokenizer(object):
         # The current token being created
         self.currentToken = None
 
-        # Tokens to be processed.
-        self.tokenQueue = []
-
     def __iter__(self):
         """ This is where the magic happens.
 
@@ -93,14 +94,14 @@ class HTMLTokenizer(object):
         to return we yield the token which pauses processing until the next token
         is requested.
         """
-        self.tokenQueue = []
+        self.tokenQueue = deque([])
         # Start processing. When EOF is reached self.state will return False
         # instead of True and the loop will terminate.
         while self.state():
             while self.stream.errors:
                 yield {"type": "ParseError", "data": self.stream.errors.pop(0)}
             while self.tokenQueue:
-                yield self.tokenQueue.pop(0)
+                yield self.tokenQueue.popleft()
 
     # Below are various helper functions the tokenizer states use worked out.
     def processSolidusInTag(self):
