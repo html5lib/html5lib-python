@@ -1,3 +1,4 @@
+import re
 import gettext
 _ = gettext.gettext
 
@@ -6,13 +7,28 @@ from BeautifulSoup import BeautifulSoup, Declaration, Comment, Tag
 import _base
 
 class TreeWalker(_base.NonRecursiveTreeWalker):
+    doctype_regexp = re.compile(
+        r'(?P<name>[^\s]*)(\s*PUBLIC\s*"(?P<publicId>.*)"\s*"(?P<systemId1>.*)"|\s*SYSTEM\s*"(?P<systemId2>.*)")?')
     def getNodeDetails(self, node):
         if isinstance(node, BeautifulSoup): # Document or DocumentFragment
             return (_base.DOCUMENT,)
 
         elif isinstance(node, Declaration): # DocumentType
             #Slice needed to remove markup added during unicode conversion
-            return _base.DOCTYPE, unicode(node.string)[2:-1]
+            m = self.doctype_regexp.match(unicode(node.string)[2:-1])
+            #This regexp approach seems wrong and fragile
+            #but beautiful soup stores the doctype as a single thing and we want the seperate bits
+            #It should work as long as the tree is created by html5lib itself but may be wrong if it's
+            #been modified at all
+            #We could just feed to it a html5lib tokenizer, I guess...
+            assert m is not None, "DOCTYPE did not match expected format"
+            name = m.group('name')
+            publicId = m.group('publicId')
+            if publicId is not None:
+                systemId = m.group('systemId1')
+            else:
+                systemId = m.group('systemId2')
+            return _base.DOCTYPE, name, publicId or "", systemId or ""
 
         elif isinstance(node, Comment):
             return _base.COMMENT, unicode(node.string)[4:-3]

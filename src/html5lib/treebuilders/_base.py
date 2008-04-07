@@ -213,9 +213,7 @@ class TreeBuilder(object):
         self.document.appendChild(element)
 
     def insertDoctype(self, name, publicId, systemId):
-        doctype = self.doctypeClass(name)
-        doctype.publicId = publicId
-        doctype.systemId = systemId
+        doctype = self.doctypeClass(name, publicId, systemId)
         self.document.appendChild(doctype)
 
     def insertComment(self, data, parent=None):

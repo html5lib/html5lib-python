@@ -141,7 +141,7 @@ def getDomBuilder(DomImplementation):
                     if element.publicId or element.systemId:
                         publicId = element.publicId or ""
                         systemId = element.systemId or ""
-                        rv.append( """|%s<!DOCTYPE %s PUBLIC "%s" "%s">"""%(
+                        rv.append( """|%s<!DOCTYPE %s "%s" "%s">"""%(
                                 ' '*indent, element.name, publicId, systemId))
                     else:
                         rv.append("|%s<!DOCTYPE %s>"%(' '*indent, element.name))

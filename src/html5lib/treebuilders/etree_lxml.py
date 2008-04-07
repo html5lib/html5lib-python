@@ -23,10 +23,10 @@ When any of these things occur, we emit a DataLossWarning
 """
 
 class DocumentType(object):
-    def __init__(self, name, publicId = None, systemId = None):
+    def __init__(self, name, publicId, systemId):
         self.name = name
         if name != name.lower():
-            warnings.warn("lxml does not preserve doctype case", DataLossWarning)
+            warnings.warn("lxml does not preserve doctype case", DataLossWarning)           
         self.publicId = publicId
         self.systemId = systemId
 
@@ -56,7 +56,7 @@ def testSerializer(element):
                             element.docinfo.system_url):
                         dtd_str = "<!DOCTYPE %s>"%element.docinfo.root_name
                     else:
-                        dtd_str = """<!DOCTYPE %s PUBLIC "%s" "%s">"""%(
+                        dtd_str = """<!DOCTYPE %s "%s" "%s">"""%(
                             element.docinfo.root_name, 
                             element.docinfo.public_id,
                             element.docinfo.system_url)
@@ -181,9 +181,7 @@ class TreeBuilder(_base.TreeBuilder):
     def insertDoctype(self, name, publicId, systemId):
         if not name:
             warnings.warn("lxml cannot represent null doctype", DataLossWarning)
-        doctype = self.doctypeClass(name)
-        doctype.publicId = publicId
-        doctype.systemId = systemId
+        doctype = self.doctypeClass(name, publicId, systemId)
         self.doctype = doctype
     
     def insertCommentInitial(self, data, parent=None):
@@ -196,7 +194,7 @@ class TreeBuilder(_base.TreeBuilder):
         #Therefore we need to use the built-in parser to create our iniial 
         #tree, after which we can add elements like normal
         docStr = ""
-        if self.doctype:
+        if self.doctype and self.doctype.name:
             docStr += "<!DOCTYPE %s"%self.doctype.name
             if self.doctype.publicId is not None or self.doctype.systemId is not None:
                 docStr += ' PUBLIC "%s" "%s"'%(self.doctype.publicId or "",

@@ -104,10 +104,11 @@ class TreeBuilder(_base.TreeBuilder):
         return Element(self.soup, self.soup)
     
     def insertDoctype(self, name, publicId, systemId):
-        if publicId or systemId:
-            publicId = publicId or ""
-            systemId = systemId or ""
+        if publicId:
             self.soup.insert(0, Declaration("%s PUBLIC \"%s\" \"%s\""%(name, publicId, systemId)))
+        elif systemId:
+            self.soup.insert(0, Declaration("%s SYSTEM \"%s\""%
+                                            (name, systemId)))
         else:
             self.soup.insert(0, Declaration(name))
     
@@ -135,10 +136,25 @@ class TreeBuilder(_base.TreeBuilder):
         return _base.TreeBuilder.getFragment(self).element
     
 def testSerializer(element):
+    import re
     rv = []
     def serializeElement(element, indent=0):
         if isinstance(element, Declaration):
-            rv.append("|%s<!DOCTYPE %s>"%(' '*indent, element.string))
+            doctype_regexp = r'(?P<name>[^\s]*)( PUBLIC "(?P<publicId>.*)" "(?P<systemId1>.*)"| SYSTEM "(?P<systemId2>.*)")?'
+            m = re.compile(doctype_regexp).match(element.string)
+            assert m is not None, "DOCTYPE did not match expected format"
+            name = m.group('name')
+            publicId = m.group('publicId')
+            if publicId is not None:
+                systemId = m.group('systemId1')
+            else:
+                systemId = m.group('systemId2')
+
+            if publicId is not None or systemId is not None:
+                rv.append("""|%s<!DOCTYPE %s "%s" "%s">"""%
+                          (' '*indent, name, publicId or "", systemId or ""))
+            else:
+                rv.append("|%s<!DOCTYPE %s>"%(' '*indent, name))
             
         elif isinstance(element, BeautifulSoup):
             if element.name == "[document_fragment]":

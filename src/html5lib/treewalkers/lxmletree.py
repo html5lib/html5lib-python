@@ -33,6 +33,9 @@ class Root(object):
     def getnext(self):
         return None
 
+    def __len__(self):
+        return 1
+
 class Doctype(object):
     def __init__(self, root_node, name, public_id, system_id):
         self.root_node = root_node
@@ -91,6 +94,9 @@ class FragmentWrapper(object):
     def __str__(self):
         return str(self.obj)
 
+    def __len__(self):
+        return len(self.obj)
+
         
 class TreeWalker(_base.NonRecursiveTreeWalker):
     def __init__(self, tree):
@@ -119,12 +125,12 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
 
         else:
             #This is assumed to be an ordinary element
-            return _base.ELEMENT, node.tag, node.attrib.items(), bool(node) or node.text
+            return _base.ELEMENT, node.tag, node.attrib.items(), len(node) > 0 or node.text
 
     def getFirstChild(self, node):
         assert not isinstance(node, tuple), _("Text nodes have no children")
 
-        assert bool(node) or node.text, "Node has no children"
+        assert len(node) or node.text, "Node has no children"
         if node.text:
             return (node, "text")
         else:
@@ -137,7 +143,7 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             if key == "text":
                 # XXX: we cannot use a "bool(node) and node[0] or None" construct here
                 # because node[0] might evaluate to False if it has no child element
-                if bool(node):
+                if len(node):
                     return node[0]
                 else:
                     return None

@@ -132,12 +132,14 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
         data = property(_getData, _setData)
     
     class DocumentType(Element):
-        def __init__(self, name):
+        def __init__(self, name, publicId, systemId):
             Element.__init__(self, "<!DOCTYPE>") 
             self._element.text = name
+            self.publicId = publicId
+            self.systemId = systemId
 
         def _getPublicId(self):
-            return self._element.get(u"publicId", None)
+            return self._element.get(u"publicId", "")
 
         def _setPublicId(self, value):
             if value is not None:
@@ -146,7 +148,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
         publicId = property(_getPublicId, _setPublicId)
     
         def _getSystemId(self):
-            return self._element.get(u"systemId", None)
+            return self._element.get(u"systemId", "")
 
         def _setSystemId(self, value):
             if value is not None:
@@ -172,7 +174,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                 if element.get("publicId") or element.get("systemId"):
                     publicId = element.get("publicId") or ""
                     systemId = element.get("systemId") or ""
-                    rv.append( """<!DOCTYPE %s PUBLIC "%s" "%s">"""%(
+                    rv.append( """<!DOCTYPE %s "%s" "%s">"""%(
                             element.text, publicId, systemId))
                 else:     
                     rv.append("<!DOCTYPE %s>"%(element.text,))

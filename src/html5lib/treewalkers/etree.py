@@ -52,7 +52,8 @@ def getETreeBuilder(ElementTreeImplementation):
                 return (_base.DOCUMENT,)
 
             elif node.tag == "<!DOCTYPE>":
-                return _base.DOCTYPE, node.text
+                return (_base.DOCTYPE, node.text, 
+                        node.get("publicId"), node.get("systemId"))
 
             elif type(node.tag) == type(ElementTree.Comment):
                 return _base.COMMENT, node.text

@@ -106,17 +106,15 @@ class DocumentFragment(Document):
 
 class DocumentType(Node):
     type = 3
-    def __init__(self, name):
+    def __init__(self, name, publicId, systemId):
         Node.__init__(self, name)
-        self.publicId = u""
-        self.systemId = u""
+        self.publicId = publicId
+        self.systemId = systemId
 
     def __unicode__(self):
         if self.publicId or self.systemId:
-            publicId = self.publicId or ""
-            systemId = self.systemId or ""
-            return """<!DOCTYPE %s PUBLIC "%s" "%s">"""%(
-                self.name, publicId, systemId)
+            return """<!DOCTYPE %s "%s" "%s">"""%(
+                self.name, self.publicId, self.systemId)
                             
         else:
             return u"<!DOCTYPE %s>" % self.name
