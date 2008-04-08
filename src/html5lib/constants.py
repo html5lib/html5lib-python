@@ -234,6 +234,8 @@ E = {
     "unexpected-end-tag-after-frameset":
        _(u"Unexpected end tag (%(name)s)"
          u" in the after frameset phase. Ignored."),
+    "unexpected-end-tag-after-body-innerhtml":
+       _(u"Unexpected end tag after body(innerHtml)"),
     "expected-eof-but-got-char":
        _(u"Unexpected non-space characters. Expected end of file."),
     "expected-eof-but-got-start-tag":
@@ -242,6 +244,12 @@ E = {
     "expected-eof-but-got-end-tag":
        _(u"Unexpected end tag (%(name)s)"
          u". Expected end of file."),
+    "eof-in-table":
+       _(u"Unexpected end of file. Expected table content."),
+    "eof-in-select":
+       _(u"Unexpected end of file. Expected select content."),
+    "eof-in-frameset":
+       _(u"Unexpected end of file. Expected frameset content."),
     "XXX-undefined-error":
         (u"Undefined error (this sucks and should be fixed)"),
 }

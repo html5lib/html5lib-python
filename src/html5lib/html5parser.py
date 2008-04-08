@@ -257,6 +257,7 @@ class Phase(object):
         self.tree = tree
 
     def processEOF(self):
+        raise NotImplementedError
         self.tree.generateImpliedEndTags()
         if len(self.tree.openElements) > 2:
             self.parser.parseError("expected-closing-tag-but-got-eof")
@@ -547,11 +548,11 @@ class InHeadPhase(Phase):
             self.tree.openElements[-1].appendChild(element)
 
     # the real thing
-    def processEOF(self):
+    def processEOF (self):
         if self.tree.openElements[-1].name in ("title", "style", "script", "noscript"):
             self.parser.parseError("expected-named-closing-tag-but-got-eof",
               {"name": self.tree.openElements[-1].name})
-            self.tree.openElements.pop()
+            self.tree.openElements.pop() 
         self.anythingElse()
         self.parser.phase.processEOF()
 
@@ -776,6 +777,15 @@ class InBodyPhase(Phase):
             self.tree.openElements[-1])
 
     # the real deal
+    def processEOF(self):
+        allowed_elements = set(("dd", "dt", "li", "p", "tbody", "td", "tfoot",
+                                "th", "thead", "tr", "body", "html"))
+        for node in self.tree.openElements[::-1]:
+            if node.name not in allowed_elements:
+                self.parser.parseError("expected-closing-tag-but-got-eof")
+                break
+        #Stop parsing
+    
     def processSpaceCharactersDropNewline(self, data):
         # Sometimes (start of <pre>, <listing>, and <textarea> blocks) we
         # want to drop leading newlines
@@ -1311,8 +1321,8 @@ class InTablePhase(Phase):
     def clearStackToTableContext(self):
         # "clear the stack back to a table context"
         while self.tree.openElements[-1].name not in ("table", "html"):
-            self.parser.parseError("unexpected-implied-end-tag-in-table",
-              {"name":  self.tree.openElements[-1].name})
+            #self.parser.parseError("unexpected-implied-end-tag-in-table",
+            #  {"name":  self.tree.openElements[-1].name})
             self.tree.openElements.pop()
         # When the current node is <html> it's an innerHTML case
 
@@ -1323,6 +1333,13 @@ class InTablePhase(Phase):
         return self.tree.openElements[i]
 
     # processing methods
+    def processEOF(self):
+        if self.tree.openElements[-1].name != "html":
+            self.parser.parseError("eof-in-table")
+        else:
+            assert self.parser.innerHTML
+        #Stop parsing
+
     def processSpaceCharacters(self, data):
         if "tainted" not in self.getCurrentTable()._flags:
             self.tree.insertText(data)
@@ -1454,6 +1471,9 @@ class InCaptionPhase(Phase):
     def ignoreEndTagCaption(self):
         return not self.tree.elementInScope("caption", True)
 
+    def processEOF(self):
+        self.parser.phases["inBody"].processEOF()
+
     def processCharacters(self, data):
         self.parser.phases["inBody"].processCharacters(data)
 
@@ -1521,6 +1541,16 @@ class InColumnGroupPhase(Phase):
     def ignoreEndTagColgroup(self):
         return self.tree.openElements[-1].name == "html"
 
+    def processEOF(self):
+        if self.tree.openElements[-1].name == "html":
+            assert self.parser.innerHTML
+            return
+        else:
+            ignoreEndTag = self.ignoreEndTagColgroup()
+            self.endTagColgroup("colgroup")
+            if not ignoreEndTag:
+                self.parser.phase.processEOF()
+
     def processCharacters(self, data):
         ignoreEndTag = self.ignoreEndTagColgroup()
         self.endTagColgroup("colgroup")
@@ -1564,7 +1594,8 @@ class InTableBodyPhase(Phase):
             ("html", self.startTagHtml),
             ("tr", self.startTagTr),
             (("td", "th"), self.startTagTableCell),
-            (("caption", "col", "colgroup", "tbody", "tfoot", "thead"), self.startTagTableOther)
+            (("caption", "col", "colgroup", "tbody", "tfoot", "thead"),
+             self.startTagTableOther)
         ])
         self.startTagHandler.default = self.startTagOther
 
@@ -1580,13 +1611,18 @@ class InTableBodyPhase(Phase):
     def clearStackToTableBodyContext(self):
         while self.tree.openElements[-1].name not in ("tbody", "tfoot",
           "thead", "html"):
-            self.parser.parseError("unexpected-implied-end-tag-in-table",
-              {"name": self.tree.openElements[-1].name})
+            #self.parser.parseError("unexpected-implied-end-tag-in-table",
+            #  {"name": self.tree.openElements[-1].name})
             self.tree.openElements.pop()
+        if self.tree.openElements[-1].name == "html":
+            assert self.parser.innerHTML
 
     # the rest
+    def processEOF(self):
+        self.parser.phases["inTable"].processEOF()
+    
     def processSpaceCharacters(self,data):
-        self.parser.phases["inTable"].processSpaceCharacters(data)   
+        self.parser.phases["inTable"].processSpaceCharacters(data)
 
     def processCharacters(self,data):
         self.parser.phases["inTable"].processCharacters(data)
@@ -1676,6 +1712,9 @@ class InRowPhase(Phase):
         return not self.tree.elementInScope("tr", tableVariant=True)
 
     # the rest
+    def processEOF(self):
+        self.parser.phases["inTable"].processEOF()
+    
     def processSpaceCharacters(self, data):
         self.parser.phases["inTable"].processSpaceCharacters(data)        
 
@@ -1757,6 +1796,9 @@ class InCellPhase(Phase):
             self.endTagTableCell("th")
 
     # the rest
+    def processEOF(self):
+        self.parser.phases["inBody"].processEOF()
+        
     def processCharacters(self, data):
         self.parser.phases["inBody"].processCharacters(data)
 
@@ -1834,6 +1876,12 @@ class InSelectPhase(Phase):
         self.endTagHandler.default = self.endTagOther
 
     # http://www.whatwg.org/specs/web-apps/current-work/#in-select
+    def processEOF(self):
+        if self.tree.openElements[-1].name != "html":
+            self.parser.parseError("eof-in-select")
+        else:
+            assert self.parser.innerHtml
+
     def processCharacters(self, data):
         self.tree.insertText(data)
 
@@ -1919,6 +1967,9 @@ class InSelectInTablePhase(Phase):
         ])
         self.endTagHandler.default = self.endTagOther
 
+    def processEOF(self):
+        self.parser.phases["inSelect"].processEOF()
+
     def processCharacters(self, data):
         self.parser.phases["inSelect"].processCharacters(data)
     
@@ -1948,6 +1999,10 @@ class AfterBodyPhase(Phase):
         self.endTagHandler = utils.MethodDispatcher([("html", self.endTagHtml)])
         self.endTagHandler.default = self.endTagOther
 
+    def processEOF(self):
+        #Stop parsing
+        pass
+    
     def processComment(self, data):
         # This is needed because data is to be appended to the <html> element
         # here and not to whatever is currently open.
@@ -1966,7 +2021,7 @@ class AfterBodyPhase(Phase):
 
     def endTagHtml(self,name):
         if self.parser.innerHTML:
-            self.parser.parseError()
+            self.parser.parseError("unexpected-end-tag-after-body-innerhtml")
         else:
             # XXX: This may need to be done, not sure:
             # Don't set lastPhase to the current phase but to the inBody phase
@@ -2000,6 +2055,12 @@ class InFramesetPhase(Phase):
             ("noframes", self.endTagNoframes)
         ])
         self.endTagHandler.default = self.endTagOther
+
+    def processEOF(self):
+        if self.tree.openElements[-1].name != "html":
+            self.parser.parseError("eof-in-frameset")
+        else:
+            assert self.parser.innerHTML
 
     def processCharacters(self, data):
         self.parser.parseError("unexpected-char-in-frameset")
@@ -2053,6 +2114,10 @@ class AfterFramesetPhase(Phase):
             ("html", self.endTagHtml)
         ])
         self.endTagHandler.default = self.endTagOther
+
+    def processEOF(self):
+        #Stop parsing
+        pass
 
     def processCharacters(self, data):
         self.parser.parseError("unexpected-char-after-frameset")
