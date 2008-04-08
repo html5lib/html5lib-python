@@ -108,6 +108,9 @@ class XmlInitialPhase(html5parser.InitialPhase):
 
 class XmlRootPhase(html5parser.Phase):
     """ Consume XML Prologs """
+    def processEOF(self):
+        pass
+
     def processComment(self, data):
         print repr(data)
         if not data.startswith('?xml') or not data.endswith('?'):
@@ -142,6 +145,9 @@ class XmlElementPhase(html5parser.Phase):
                 break
             else:
                 self.parser.parseError()
+
+    def processEOF(self):
+        pass
 
     def processCharacters(self, data):
         self.tree.insertText(data)
