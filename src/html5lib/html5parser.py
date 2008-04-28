@@ -306,6 +306,7 @@ class Phase(object):
         element = self.tree.insertElement(name, attributes)
         self.parser.tokenizer.contentModelFlag = contentModelFlags[contentType]
         for token in self.parser.tokenizer:
+            token = self.parser.normalizeToken(token)
             if token["type"] in ("Characters", "SpaceCharacters"):
                 self.tree.insertText(token["data"])
             elif token["type"] == "ParseError":

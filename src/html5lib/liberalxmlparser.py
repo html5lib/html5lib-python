@@ -14,6 +14,8 @@ References:
  * Selectively lowercase only XHTML, but not foreign markup
 """
 
+import sys
+
 import html5parser
 from constants import voidElements, contentModelFlags
 
@@ -25,7 +27,6 @@ class XMLParser(html5parser.HTMLParser):
 
     def __init__(self, *args, **kwargs):
         html5parser.HTMLParser.__init__(self, *args, **kwargs)
-        
         self.phases["initial"] = XmlRootPhase(self, self.tree)
 
     def normalizeToken(self, token):
@@ -68,7 +69,7 @@ class XHTMLParser(XMLParser):
     def __init__(self, *args, **kwargs):
         html5parser.HTMLParser.__init__(self, *args, **kwargs)
         self.phases["initial"] = XmlInitialPhase(self, self.tree)
-        self.phases["rootElement"] = XhmlRootPhase(self, self.tree)
+        self.phases["beforeHtml"] = XhmlRootPhase(self, self.tree)
 
     def normalizeToken(self, token):
         token = XMLParser.normalizeToken(self, token)
@@ -112,7 +113,6 @@ class XmlRootPhase(html5parser.Phase):
         pass
 
     def processComment(self, data):
-        print repr(data)
         if not data.startswith('?xml') or not data.endswith('?'):
             html5parser.InitialPhase.processComment(self, data)
 
