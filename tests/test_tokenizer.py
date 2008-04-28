@@ -1,9 +1,12 @@
+import sys
 import os
 import unittest
 from support import simplejson, html5lib_test_files
 
 from html5lib.tokenizer import HTMLTokenizer
 from html5lib import constants
+
+import cStringIO
 
 class TokenizerTestParser(object):
     def __init__(self, contentModelFlag, lastStartTag=None):
@@ -104,19 +107,29 @@ class TestCase(unittest.TestCase):
         output = concatenateCharacterTokens(test['output'])
         if 'lastStartTag' not in test:
             test['lastStartTag'] = None
+        outBuffer = cStringIO.StringIO()
+        stdout = sys.stdout
+        sys.stdout = outBuffer
         parser = TokenizerTestParser(test['contentModelFlag'], 
                                      test['lastStartTag'])
         tokens = parser.parse(test['input'])
         tokens = concatenateCharacterTokens(tokens)
+        tokens = normalizeTokens(tokens)
         errorMsg = "\n".join(["\n\nContent Model Flag:",
                               test['contentModelFlag'] ,
-                              "\nInput:", str(test['input']),
-                              "\nExpected:", str(output),
-                              "\nreceived:", str(tokens)])
-        tokens = normalizeTokens(tokens)
+                              "\nInput:", test['input'],
+                              "\nExpected:", unicode(output),
+                              "\nreceived:", unicode(tokens)])
         ignoreErrorOrder = test.get('ignoreErrorOrder', False)
-        self.assertEquals(tokensMatch(tokens, output, ignoreErrorOrder), True,
-                          errorMsg)
+        sys.stdout = stdout
+        try:
+            self.assertEquals(tokensMatch(tokens, output, ignoreErrorOrder), True,
+                              errorMsg)
+        except AssertionError:
+            outBuffer.seek(0)
+            print outBuffer.read()
+            print errorMsg
+            raise
 
 def buildTestSuite():
     for filename in html5lib_test_files('tokenizer', '*.test'):
