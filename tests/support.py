@@ -16,17 +16,7 @@ test_dir = os.path.join(os.path.pardir,os.path.pardir,'testdata')
 #RELEASE add
 #test_dir = './testdata'
 #END RELEASE
-
-try:
-    import simplejson
-except:
-    import re
-    class simplejson:
-        def load(f):
-            true, false, null = True, False, None
-            input = re.sub(r'(".*?(?<!\\)")',r'u\1',f.read().decode('utf-8'))
-            return eval(input.replace('\r',''))
-        load = staticmethod(load)
+import simplejson
 
 #Build a dict of avaliable trees
 treeTypes = {"simpletree":treebuilders.getTreeBuilder("simpletree"),
