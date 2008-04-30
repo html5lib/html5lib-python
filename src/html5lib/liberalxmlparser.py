@@ -63,6 +63,9 @@ class XMLParser(html5parser.HTMLParser):
                                       encoding, lowercaseElementName=False,
                                       lowercaseAttrName=False)
 
+    def parseRCDataCData(self, name, attributes, contentType):
+        self.tree.insertElement(name, attributes)
+
 class XHTMLParser(XMLParser):
     """ liberal XMTHML parser """
 

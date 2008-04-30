@@ -75,7 +75,7 @@ class HTMLParser(object):
             "afterBody": AfterBodyPhase(self, self.tree),
             "inFrameset": InFramesetPhase(self, self.tree),
             "afterFrameset": AfterFramesetPhase(self, self.tree),
-            "trailingEnd": TrailingEndPhase(self, self.tree)
+            "trailingEnd": TrailingEndPhase(self, self.tree),
             # XXX after after body
             # XXX after after frameset
             # XXX trailingEnd is gone
@@ -117,10 +117,11 @@ class HTMLParser(object):
         # relevant ... need others too
         self.lastPhase = None
 
+        self.beforeRCDataPhase = None
+
         # XXX This is temporary for the moment so there isn't any other
         # changes needed for the parser to work with the iterable tokenizer
-        for token in self.tokenizer:
-            token = self.normalizeToken(token)
+        for token in self.normalizedTokens():
             type = token["type"]
             method = getattr(self.phase, "process%s" % type, None)
             if type in ("Characters", "SpaceCharacters", "Comment"):
@@ -136,6 +137,10 @@ class HTMLParser(object):
 
         # When the loop finishes it's EOF
         self.phase.processEOF()
+
+    def normalizedTokens(self):
+        for token in self.tokenizer:
+            yield self.normalizeToken(token)
 
     def parse(self, stream, encoding=None, parseMeta=True, useChardet=True):
         """Parse a HTML document into a well-formed tree
@@ -238,6 +243,29 @@ class HTMLParser(object):
                 self.phase = self.phases["inBody"]
                 break
 
+    def parseRCDataCData(self, name, attributes, contentType):
+        """Generic (R)CDATA Parsing algorithm
+        contentType - RCDATA or CDATA
+        """
+        assert contentType in ("CDATA", "RCDATA")
+        
+        element = self.tree.insertElement(name, attributes)
+        self.tokenizer.contentModelFlag = contentModelFlags[contentType]
+
+        for token in self.normalizedTokens():
+            if token["type"] in ("Characters", "SpaceCharacters"):
+                self.tree.insertText(token["data"])
+            elif token["type"] == "ParseError":
+                self.parseError(token["data"], token.get("datavars", {}))
+            else:
+                assert self.tokenizer.contentModelFlag == contentModelFlags["PCDATA"]
+                assert token["type"] == "EndTag" and token["name"] == name, repr(token)
+                assert self.tree.openElements.pop() == element
+                return
+        #Otherwise we hit EOF
+        assert self.tree.openElements.pop() == element
+        self.parseError("expected-closing-tag-but-got-eof")
+
 class Phase(object):
     """Base class for helper object that implements each phase of processing
     """
@@ -297,29 +325,6 @@ class Phase(object):
 
     def processEndTag(self, name):
         self.endTagHandler[name](name)
-
-    def parseRCDataCData(self, name, attributes, contentType):
-        """Generic (R)CDATA Parsing algorithm
-        contentType - RCDATA or CDATA
-        """
-        assert contentType in ("CDATA", "RCDATA")
-        element = self.tree.insertElement(name, attributes)
-        self.parser.tokenizer.contentModelFlag = contentModelFlags[contentType]
-        for token in self.parser.tokenizer:
-            token = self.parser.normalizeToken(token)
-            if token["type"] in ("Characters", "SpaceCharacters"):
-                self.tree.insertText(token["data"])
-            elif token["type"] == "ParseError":
-                self.parser.parseError(token["data"], token.get("datavars", {}))
-            else:
-                assert self.parser.tokenizer.contentModelFlag == contentModelFlags["PCDATA"]
-                assert token["type"] == "EndTag" and token["name"] == name, repr(token)
-                assert self.tree.openElements.pop() == element
-                return
-        #Otherwise we hit EOF
-        assert self.tree.openElements.pop() == element
-        self.parser.parseError("expected-closing-tag-but-got-eof")
-
 
 class InitialPhase(Phase):
     # This phase deals with error handling as well which is currently not
@@ -586,18 +591,18 @@ class InHeadPhase(Phase):
         self.parser.parseError("two-heads-are-not-better-than-one")
 
     def startTagTitle(self, name, attributes):
-        self.parseRCDataCData(name, attributes, "RCDATA")
+        self.parser.parseRCDataCData(name, attributes, "RCDATA")
 
     def startTagStyle(self, name, attributes):
-        self.parseRCDataCData(name, attributes, "CDATA")
+        self.parser.parseRCDataCData(name, attributes, "CDATA")
 
     def startTagNoScript(self, name, attributes):
         #Need to decide whether to implement the scripting-disabled case
-        self.parseRCDataCData(name, attributes, "CDATA")
+        self.parser.parseRCDataCData(name, attributes, "CDATA")
 
     def startTagScript(self, name, attributes):
         #I think this is equivalent to the CDATA stuff since we don't execute script
-        self.parseRCDataCData(name, attributes, "CDATA")
+        self.parser.parseRCDataCData(name, attributes, "CDATA")
 
     def startTagBaseLinkMeta(self, name, attributes):
         if (self.tree.headPointer is not None and self.parser.phase == self.parser.phases["inHead"]):
@@ -612,7 +617,7 @@ class InHeadPhase(Phase):
         self.parser.phase.processStartTag(name, attributes)
 
     def endTagHead(self, name):
-        assert self.tree.openElements[-1].name == "head"
+        assert self.tree.openElements[-1].name == "head", "Expected head got %s"%self.tree.openElements[-1].name 
         self.tree.openElements.pop()
         self.parser.phase = self.parser.phases["afterHead"]
 
@@ -922,7 +927,7 @@ class InBodyPhase(Phase):
 
     def startTagXmp(self, name, attributes):
         self.tree.reconstructActiveFormattingElements()
-        self.parseRCDataCData(name, attributes, "CDATA")
+        self.parser.parseRCDataCData(name, attributes, "CDATA")
 
     def startTagTable(self, name, attributes):
         if self.tree.elementInScope("p"):
@@ -982,7 +987,7 @@ class InBodyPhase(Phase):
 
     def startTagCdata(self, name, attributes):
         """iframe, noembed noframes, noscript(if scripting enabled)"""
-        self.parseRCDataCData(name, attributes, "CDATA")
+        self.parser.parseRCDataCData(name, attributes, "CDATA")
 
     def startTagSelect(self, name, attributes):
         self.tree.reconstructActiveFormattingElements()

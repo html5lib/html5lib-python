@@ -315,10 +315,11 @@ class HTMLTokenizer(object):
           self.escapeFlag and "".join(self.lastFourChars) == "<!--":
             self.escapeFlag = True
             self.tokenQueue.append({"type": "Characters", "data":data})
-        elif data == "<" and (self.contentModelFlag ==\
-          contentModelFlags["PCDATA"] or (self.contentModelFlag in
-          (contentModelFlags["CDATA"], contentModelFlags["RCDATA"]) and\
-          self.escapeFlag == False)):
+        elif (data == "<" and (self.contentModelFlag == contentModelFlags["PCDATA"]
+                               or (self.contentModelFlag in
+                                   (contentModelFlags["CDATA"],
+                                    contentModelFlags["RCDATA"]) and
+                                   self.escapeFlag == False))):
             self.state = self.states["tagOpen"]
         elif data == ">" and self.contentModelFlag in\
           (contentModelFlags["CDATA"], contentModelFlags["RCDATA"]) and\
@@ -343,7 +344,7 @@ class HTMLTokenizer(object):
             self.lastFourChars += chars[-4:]
             self.lastFourChars = self.lastFourChars[-4:]
         return True
-
+            
     def entityDataState(self):
         entity = self.consumeEntity()
         if entity:
