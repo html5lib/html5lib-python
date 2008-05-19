@@ -1265,7 +1265,8 @@ class InBodyPhase(Phase):
         """New HTML5 elements, "event-source", "section", "nav",
         "article", "aside", "header", "footer", "datagrid", "command"
         """
-        sys.stderr.write("Warning: Undefined behaviour for end tag %s"%name)
+        # Commented out for consistency with startTagNew
+        #sys.stderr.write("Warning: Undefined behaviour for end tag %s"%name)
         self.endTagOther(name)
         #raise NotImplementedError
 
