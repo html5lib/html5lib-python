@@ -260,10 +260,12 @@ class HTMLParser(object):
             else:
                 assert self.tokenizer.contentModelFlag == contentModelFlags["PCDATA"]
                 assert token["type"] == "EndTag" and token["name"] == name, repr(token)
-                assert self.tree.openElements.pop() == element
+                popped = self.tree.openElements.pop()
+                assert popped == element
                 return
         #Otherwise we hit EOF
-        assert self.tree.openElements.pop() == element
+        popped = self.tree.openElements.pop()
+        assert popped == element
         self.parseError("expected-closing-tag-but-got-eof")
 
 class Phase(object):
