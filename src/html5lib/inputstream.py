@@ -13,10 +13,8 @@ asciiUppercaseBytes = [str(item) for item in asciiUppercase]
 
 invalid_unicode_re = re.compile(u"[\u0001-\u0008]|[\u000E-\u001F]|[\u007F-\u009F]|[\uD800-\uDFFF]|[\uFDD0-\uFDDF]|\uFFFE|\uFFFF|\U0001FFFE|\U0001FFFF|\U0002FFFE|\U0002FFFF|\U0003FFFE|\U0003FFFF|\U0004FFFE|\U0004FFFF|\U0005FFFE|\U0005FFFF|\U0006FFFE|\U0006FFFF|\U0007FFFE|\U0007FFFF|\U0008FFFE|\U0008FFFF|\U0009FFFE|\U0009FFFF|\U000AFFFE|\U000AFFFF|\U000BFFFE\U000BFFFF|\U000CFFFE|\U000CFFFF|\U000DFFFE|\U000DFFFF|\U000EFFFE|\U000EFFFF|\U000FFFFE|\U000FFFFF|\U0010FFFE|\U0010FFFF")
 
-try:
-    from collections import deque
-except ImportError:
-    from utils import deque
+# Cache for charsUntil()
+charsUntilRegEx = {}
 
 class HTMLInputStream(object):
     """Provides a unicode stream of characters to the HTMLTokenizer.
@@ -68,7 +66,9 @@ class HTMLInputStream(object):
         self.dataStream = codecs.getreader(self.charEncoding[0])(self.rawStream,
                                                                  'replace')
 
-        self.queue = deque([])
+        self.chunk = u""
+        self.chunkOffset = 0
+        self.ungetBuffer = [] # reversed list of chars from unget()
         self.readChars = []
         self.errors = []
 
@@ -247,21 +247,25 @@ class HTMLInputStream(object):
         """ Read one character from the stream or queue if available. Return
             EOF when EOF is reached.
         """
-        if not self.queue:
-            self.readChunk()
-        #If we still don't have a character we have reached EOF
-        if not self.queue:
-            return EOF
-        
-        char = self.queue.popleft()
-        
+        if self.ungetBuffer:
+            return self.ungetBuffer.pop()
+
+        if self.chunkOffset >= len(self.chunk):
+            if not self.readChunk():
+                return EOF
+
+        char = self.chunk[self.chunkOffset]
+        self.chunkOffset += 1
+
         self.readChars.append(char)
         return char
 
     def readChunk(self, chunkSize=10240):
         data = self.dataStream.read(chunkSize)
         if not data:
-            return
+            self.chunk = u""
+            self.chunkOffset = 0
+            return False
         #Replace null characters
         for i in xrange(data.count(u"\u0000")):
             self.errors.append("null-character")
@@ -275,53 +279,67 @@ class HTMLInputStream(object):
         self._lastChunkEndsWithCR = data[-1] == "\r"
         data = data.replace("\r\n", "\n")
         data = data.replace("\r", "\n")
-        
+
         data = unicode(data)
-        self.queue.extend(list(data))
+        self.chunk = data
+        self.chunkOffset = 0
 
         self.updatePosition()
+        return True
 
     def charsUntil(self, characters, opposite = False):
         """ Returns a string of characters from the stream up to but not
-        including any character in characters or EOF. characters can be
-        any container that supports the in method being called on it.
+        including any character in 'characters' or EOF. 'characters' must be
+        a container that supports the 'in' method and iteration over its
+        characters.
         """
 
-        #This method is currently 40-50% of our total runtime and badly needs
-        #optimizing
-        #Possible improvements:
-        # - use regexp to find characters that match the required character set
-        #   (with regexp cache since we do the same searches many many times)
-        # - improve EOF handling for fewer if statements
+        rv = []
 
-        if not self.queue:
-            self.readChunk()
-        #Break if we have reached EOF
-        if not self.queue or self.queue[0] == None:
-            return u""
-        
-        i = 0
-        while (self.queue[i] in characters) == opposite:
-            i += 1
-            if i == len(self.queue):
-                self.readChunk()
-            #If the queue doesn't grow we have reached EOF
-            if i == len(self.queue) or self.queue[i] is EOF:
+        # The unget buffer is typically small and rarely used, so
+        # just check each character individually
+        while self.ungetBuffer:
+            if self.ungetBuffer[-1] == EOF or (self.ungetBuffer[-1] in characters) != opposite:
+                r = u"".join(rv)
+                self.readChars.extend(list(r))
+                return r
+            else:
+                rv.append(self.ungetBuffer.pop())
+
+        # Use a cache of regexps to find the required characters
+        try:
+            chars = charsUntilRegEx[characters]
+        except KeyError:
+            for c in characters: assert(ord(c) < 128)
+            regex = u"".join("\\x%02x" % ord(c) for c in characters)
+            if not opposite:
+                regex = u"^%s" % regex
+            chars = charsUntilRegEx[characters] = re.compile(u"[%s]*" % regex)
+
+        while True:
+            # Find the longest matching prefix
+            m = chars.match(self.chunk, self.chunkOffset)
+            # If not everything matched, return everything up to the part that didn't match
+            if m.end() != len(self.chunk):
+                rv.append(self.chunk[self.chunkOffset:m.end()])
+                self.chunkOffset = m.end()
+                break
+            # If the whole chunk matched, use it all and read the next chunk
+            rv.append(self.chunk[self.chunkOffset:])
+            if not self.readChunk():
+                # Reached EOF
                 break
 
-        rv = [self.queue.popleft() for c in range(i)]
-        
-        self.readChars.extend(rv)
-        
-        rv = u"".join(rv)
-        return rv
+        r = u"".join(rv)
+        self.readChars.extend(list(r))
+        return r
 
     def unget(self, chars):
         self.updatePosition()
         if chars:
             l = list(chars)
             l.reverse()
-            self.queue.extendleft(l)
+            self.ungetBuffer.extend(l)
             #Alter the current line, col position
             for c in chars[::-1]:
                 if c is None:
