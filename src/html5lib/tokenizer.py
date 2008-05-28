@@ -16,6 +16,11 @@ from constants import digits, hexDigits, EOF
 
 from inputstream import HTMLInputStream
 
+# Group entities by their first character, for faster lookups
+entitiesByFirstChar = {}
+for e in entities:
+    entitiesByFirstChar.setdefault(e[0], []).append(e)
+
 class HTMLTokenizer(object):
     """ This class takes care of tokenizing HTML.
 
@@ -224,8 +229,7 @@ class HTMLTokenizer(object):
             #
             # Consume characters and compare to these to a substring of the
             # entity names in the list until the substring no longer matches.
-            filteredEntityList = [e for e in entities if \
-              e.startswith(charStack[0])]
+            filteredEntityList = entitiesByFirstChar.get(charStack[0], [])
 
             def entitiesStartingWith(name):
                 return [e for e in filteredEntityList if e.startswith(name)]
