@@ -308,13 +308,13 @@ class HTMLInputStream(object):
 
         # Use a cache of regexps to find the required characters
         try:
-            chars = charsUntilRegEx[characters]
+            chars = charsUntilRegEx[(characters, opposite)]
         except KeyError:
             for c in characters: assert(ord(c) < 128)
             regex = u"".join("\\x%02x" % ord(c) for c in characters)
             if not opposite:
                 regex = u"^%s" % regex
-            chars = charsUntilRegEx[characters] = re.compile(u"[%s]*" % regex)
+            chars = charsUntilRegEx[(characters, opposite)] = re.compile(u"[%s]*" % regex)
 
         while True:
             # Find the longest matching prefix
