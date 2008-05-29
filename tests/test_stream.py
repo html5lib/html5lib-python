@@ -46,6 +46,11 @@ class HTMLInputStreamTest(unittest.TestCase):
         self.assertEquals(stream.charsUntil('e'),u"x")
         self.assertEquals(stream.position(), (4,5))
 
+    def test_newlines2(self):
+        size = HTMLInputStream._defaultChunkSize
+        stream = HTMLInputStream("\r" * size + "\n")
+        self.assertEquals(stream.charsUntil('x'), "\n" * size)
+
     def test_position(self):
         stream = HTMLInputStream(codecs.BOM_UTF8 + "a\nbb\nccc\nddd")
         self.assertEquals(stream.position(), (1, 0))

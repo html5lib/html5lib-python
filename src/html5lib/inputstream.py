@@ -24,6 +24,8 @@ class HTMLInputStream(object):
 
     """
 
+    _defaultChunkSize = 10240
+
     def __init__(self, source, encoding=None, parseMeta=True, chardet=True):
         """Initialises the HTMLInputStream.
 
@@ -260,11 +262,12 @@ class HTMLInputStream(object):
         self.readChars.append(char)
         return char
 
-    def readChunk(self, chunkSize=10240):
+    def readChunk(self, chunkSize=_defaultChunkSize):
+        self.chunk = u""
+        self.chunkOffset = 0
+
         data = self.dataStream.read(chunkSize)
         if not data:
-            self.chunk = u""
-            self.chunkOffset = 0
             return False
         #Replace null characters
         for i in xrange(data.count(u"\u0000")):
@@ -276,13 +279,15 @@ class HTMLInputStream(object):
         #Check for CR LF broken across chunks
         if (self._lastChunkEndsWithCR and data[0] == "\n"):
             data = data[1:]
+            # Stop if the chunk is now empty
+            if not data:
+                return False
         self._lastChunkEndsWithCR = data[-1] == "\r"
         data = data.replace("\r\n", "\n")
         data = data.replace("\r", "\n")
 
         data = unicode(data)
         self.chunk = data
-        self.chunkOffset = 0
 
         self.updatePosition()
         return True
