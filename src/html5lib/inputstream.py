@@ -45,7 +45,7 @@ class HTMLInputStream(object):
         # List of where new lines occur
         self.newLines = [0]
 
-        self.charEncoding = (encoding, "certian")
+        self.charEncoding = (encoding, "certain")
 
         # Raw Stream - for unicode objects this will encode to utf-8 and set
         #              self.charEncoding as appropriate
@@ -92,7 +92,7 @@ class HTMLInputStream(object):
             # Otherwise treat source as a string and convert to a file object
             if isinstance(source, unicode):
                 source = source.encode('utf-8')
-                self.charEncoding = ("utf-8", "certian")
+                self.charEncoding = ("utf-8", "certain")
             import cStringIO
             stream = cStringIO.StringIO(str(source))
         return stream
@@ -316,7 +316,7 @@ class HTMLInputStream(object):
             chars = charsUntilRegEx[(characters, opposite)]
         except KeyError:
             for c in characters: assert(ord(c) < 128)
-            regex = u"".join("\\x%02x" % ord(c) for c in characters)
+            regex = u"".join(["\\x%02x" % ord(c) for c in characters])
             if not opposite:
                 regex = u"^%s" % regex
             chars = charsUntilRegEx[(characters, opposite)] = re.compile(u"[%s]*" % regex)
