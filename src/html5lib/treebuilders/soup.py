@@ -25,19 +25,35 @@ class Element(_base.Node):
     def __init__(self, element, soup):
         _base.Node.__init__(self, element.name)
         self.element = element
-        self.soup=soup
+        self.soup = soup
+
+    def _nodeIndex(self, node, refNode):
+        # Finds a node by identity rather than equality
+        for index in range(len(self.element.contents)):
+            if id(self.element.contents[index]) == id(refNode.element):
+                return index
+        return None
 
     def appendChild(self, node):
         if (node.element.__class__ == NavigableString and self.element.contents
             and self.element.contents[-1].__class__ == NavigableString):
-            newNode = TextNode(NavigableString(
-                self.element.contents[-1]+node.element), self.soup)
-            self.element.contents[-1].extract()
-            self.appendChild(newNode)
+            # Concatenate new text onto old text node
+            # (TODO: This has O(n^2) performance, for input like "a</a>a</a>a</a>...")
+            newStr = NavigableString(self.element.contents[-1]+node.element)
+
+            # Remove the old text node
+            # (Can't simply use .extract() by itself, because it fails if
+            # an equal text node exists within the parent node)
+            oldElement = self.element.contents[-1]
+            del self.element.contents[-1]
+            oldElement.parent = None
+            oldElement.extract()
+
+            self.element.insert(len(self.element.contents), newStr)
         else:
             self.element.insert(len(self.element.contents), node.element)
             node.parent = self
-    
+
     def getAttributes(self):
         return AttrList(self.element)
 
@@ -56,18 +72,25 @@ class Element(_base.Node):
             self.appendChild(text)
 
     def insertBefore(self, node, refNode):
-        index = self.element.contents.index(refNode.element)
+        index = self._nodeIndex(node, refNode)
         if (node.element.__class__ == NavigableString and self.element.contents
             and self.element.contents[index-1].__class__ == NavigableString):
-            newNode = TextNode(NavigableString(
-                self.element.contents[index-1]+node.element), self.soup)
-            self.element.contents[index-1].extract()
-            self.insertBefore(newNode, refNode)
+            # (See comments in appendChild)
+            newStr = NavigableString(self.element.contents[index-1]+node.element)
+            oldNode = self.element.contents[index-1]
+            del self.element.contents[index-1]
+            oldNode.parent = None
+            oldNode.extract()
+
+            self.element.insert(index-1, newStr)
         else:
             self.element.insert(index, node.element)
             node.parent = self
 
     def removeChild(self, node):
+        index = self._nodeIndex(node.parent, node)
+        del node.parent.element.contents[index]
+        node.element.parent = None
         node.element.extract()
         node.parent = None
 
@@ -93,7 +116,7 @@ class TextNode(Element):
     def __init__(self, element, soup):
         _base.Node.__init__(self, None)
         self.element = element
-        self.soup=soup
+        self.soup = soup
     
     def cloneNode(self):
         raise NotImplementedError
