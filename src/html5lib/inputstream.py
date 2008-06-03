@@ -250,7 +250,9 @@ class HTMLInputStream(object):
             EOF when EOF is reached.
         """
         if self.ungetBuffer:
-            return self.ungetBuffer.pop()
+            char = self.ungetBuffer.pop()
+            self.readChars.append(char)
+            return char
 
         if self.chunkOffset >= len(self.chunk):
             if not self.readChunk():

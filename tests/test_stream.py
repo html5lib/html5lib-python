@@ -60,7 +60,10 @@ class HTMLInputStreamTest(unittest.TestCase):
         self.assertEquals(stream.position(), (1, 0))
         self.assertEquals(stream.charsUntil('c'),u"a\nbb\n")
         self.assertEquals(stream.position(), (3, 0))
-	self.assertEquals(stream.charsUntil('e'),u"ccc\nddd")
+        stream.unget("\n")
+        self.assertEquals(stream.char(), u"\n")
+        self.assertEquals(stream.position(), (3, 0))
+        self.assertEquals(stream.charsUntil('e'),u"ccc\nddd")
         self.assertEquals(stream.position(), (4, 3))
 
 def buildTestSuite():
