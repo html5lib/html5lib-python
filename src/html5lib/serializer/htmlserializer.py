@@ -147,7 +147,7 @@ class HTMLSerializer(object):
                             quote_attr = True
                         else:
                             quote_attr = reduce(lambda x,y: x or (y in v),
-                                spaceCharacters + "<>\"'", False)
+                                spaceCharacters + ">\"'=", False)
                         v = v.replace("&", "&amp;")
                         if self.escape_lt_in_attrs: v = v.replace("<", "&lt;")
                         if encoding:
