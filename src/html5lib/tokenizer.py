@@ -114,11 +114,19 @@ class HTMLTokenizer(object):
         an EmptyTag
         """
 
+        rv = False
+
         # We need to consume another character to make sure it's a ">"
         data = self.stream.char()
 
         if self.currentToken["type"] == "StartTag" and data == u">":
             self.currentToken["type"] = "EmptyTag"
+        elif data == EOF:
+            self.tokenQueue.append({"type": "ParseError", "data":
+              "EOF following solidus"})
+            self.state = self.states["data"]
+            self.emitCurrentToken()
+            rv = True
         else:
             self.tokenQueue.append({"type": "ParseError", "data":
               "incorrectly-placed-solidus"})
@@ -126,6 +134,8 @@ class HTMLTokenizer(object):
         # The character we just consumed need to be put back on the stack so it
         # doesn't get lost...
         self.stream.unget(data)
+
+        return rv
 
     def consumeNumberEntity(self, isHex):
         """This function returns either U+FFFD or the character based on the
@@ -524,8 +534,8 @@ class HTMLTokenizer(object):
         elif data in spaceCharacters:
             self.state = self.states["afterAttributeName"]
         elif data == u"/":
-            self.processSolidusInTag()
-            self.state = self.states["beforeAttributeName"]
+            if not self.processSolidusInTag():
+                self.state = self.states["beforeAttributeName"]
         elif data == u"'" or data == u'"':
             self.tokenQueue.append({"type": "ParseError", "data":
               "invalid-character-in-attribute-name"})
@@ -569,8 +579,8 @@ class HTMLTokenizer(object):
             self.currentToken["data"].append([data, ""])
             self.state = self.states["attributeName"]
         elif data == u"/":
-            self.processSolidusInTag()
-            self.state = self.states["beforeAttributeName"]
+            if not self.processSolidusInTag():
+                self.state = self.states["beforeAttributeName"]
         elif data == EOF:
             self.tokenQueue.append({"type": "ParseError", "data":
               "expected-end-of-tag-but-got-eof"})
@@ -666,8 +676,14 @@ class HTMLTokenizer(object):
             self.emitCurrentToken()
             self.state = self.states["data"]
         elif data == u"/":
-            self.processSolidusInTag()
-            self.state = self.states["beforeAttributeName"]
+            if not self.processSolidusInTag():
+                self.state = self.states["beforeAttributeName"]
+        elif data == EOF:
+            self.tokenQueue.append({"type": "ParseError", "data":
+              "unexpected-EOF-after-attribute-value"})
+            self.emitCurrentToken()
+            self.stream.unget(data)
+            self.state = self.states["data"]
         else:
             self.tokenQueue.append({"type": "ParseError", "data":
               "unexpected-character-after-attribute-value"})
