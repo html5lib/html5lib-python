@@ -1,12 +1,13 @@
 import sys
 import os
 import unittest
+import cStringIO
+import warnings
+
 from support import simplejson, html5lib_test_files
 
 from html5lib.tokenizer import HTMLTokenizer
 from html5lib import constants
-
-import cStringIO
 
 class TokenizerTestParser(object):
     def __init__(self, contentModelFlag, lastStartTag=None):
@@ -56,6 +57,7 @@ class TokenizerTestParser(object):
         pass
 
     def processParseError(self, token):
+        print token
         self.outputTokens.append([u"ParseError", token["data"]])
 
 def concatenateCharacterTokens(tokens):
@@ -137,6 +139,14 @@ def buildTestSuite():
         testName = os.path.basename(filename).replace(".test","")
         if 'tests' in tests:
             for index,test in enumerate(tests['tests']):
+                #Skip tests with a self closing flag
+                skip = False
+                for token in test["output"]:
+                    if token[0] == "StartTag" and len(token) == 4:
+                        skip = True
+                        break
+                if skip:
+                    continue
                 if 'contentModelFlags' not in test:
                     test["contentModelFlags"] = ["PCDATA"]
                 for contentModelFlag in test["contentModelFlags"]:
