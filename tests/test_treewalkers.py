@@ -239,7 +239,7 @@ class TestCase(unittest.TestCase):
             self.assertEquals(expected, output, "\n".join([
                 "", "Input:", input,
                 "", "Expected:", expected,
-                "", "Recieved:", output
+                "", "Received:", output
             ]))
         except NotImplementedError:
             pass # Amnesty for those that confess...

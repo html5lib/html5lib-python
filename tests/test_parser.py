@@ -99,7 +99,7 @@ class TestCase(unittest.TestCase):
         expected = convertExpected(expected)
         expected = attrlist.sub(sortattrs, expected)
         errorMsg = "\n".join(["\n\nInput:", input, "\nExpected:", expected,
-                              "\nRecieved:", output])
+                              "\nReceived:", output])
         self.assertEquals(expected, output, errorMsg)
         errStr = ["Line: %i Col: %i %s"%(line, col, constants.E[errorcode] % datavars) for
                   ((line,col), errorcode, datavars) in p.errors]
