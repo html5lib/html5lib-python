@@ -14,8 +14,12 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             return (_base.DOCUMENT,)
 
         elif isinstance(node, Declaration): # DocumentType
-            #Slice needed to remove markup added during unicode conversion
-            m = self.doctype_regexp.match(unicode(node.string)[2:-1])
+            string = unicode(node.string)
+            #Slice needed to remove markup added during unicode conversion,
+            #but only in some versions of BeautifulSoup/Python
+            if string.startswith('<!') and string.endswith('>'):
+                string = string[2:-1]
+            m = self.doctype_regexp.match(string)
             #This regexp approach seems wrong and fragile
             #but beautiful soup stores the doctype as a single thing and we want the seperate bits
             #It should work as long as the tree is created by html5lib itself but may be wrong if it's
@@ -31,7 +35,10 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             return _base.DOCTYPE, name, publicId or "", systemId or ""
 
         elif isinstance(node, Comment):
-            return _base.COMMENT, unicode(node.string)[4:-3]
+            string = unicode(node.string)
+            if string.startswith('<!--') and string.endswith('-->'):
+                string = string[4:-3]
+            return _base.COMMENT, string
 
         elif isinstance(node, unicode): # TextNode
             return _base.TEXT, node
