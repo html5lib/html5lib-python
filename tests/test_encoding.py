@@ -6,7 +6,12 @@ from html5lib import inputstream
 
 import re, unittest
 
-class Html5EncodingTestCase(unittest.TestCase): pass
+class Html5EncodingTestCase(unittest.TestCase):
+    def test_codec_name(self):
+        self.assertEquals(inputstream.codecName("utf-8"), "utf-8")
+        self.assertEquals(inputstream.codecName("utf8"), "utf-8")
+        self.assertEquals(inputstream.codecName("  utf8  "), "utf-8")
+        self.assertEquals(inputstream.codecName("ISO_8859--1"), "windows-1252")
 
 def buildTestSuite():
     for filename in html5lib_test_files("encoding"):
@@ -16,7 +21,9 @@ def buildTestSuite():
         for idx, test in enumerate(tests):
             def encodingTest(self, data=test['data'], encoding=test['encoding']):
                 stream = inputstream.HTMLInputStream(data,chardet=False)
-                self.assertEquals(encoding.lower(), stream.charEncoding[0])
+                errorMessage = "Input:\n%s\nExpected:\n%s\nRecieved\n%s\n"%(data, encoding.lower(),
+                                                                            stream.charEncoding[0])
+                self.assertEquals(encoding.lower(), stream.charEncoding[0], errorMessage)
             setattr(Html5EncodingTestCase, 'test_%s_%d' % (test_name, idx+1),
                 encodingTest)
 
@@ -29,6 +36,7 @@ def buildTestSuite():
         setattr(Html5EncodingTestCase, 'test_chardet', test_chardet)
     except ImportError:
         print "chardet not found, skipping chardet tests"
+        
 
     return unittest.defaultTestLoader.loadTestsFromName(__name__)
 
