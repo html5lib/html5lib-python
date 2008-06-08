@@ -13,6 +13,8 @@ asciiUppercaseBytes = [str(item) for item in asciiUppercase]
 
 invalid_unicode_re = re.compile(u"[\u0001-\u0008\u000E-\u001F\u007F-\u009F\uD800-\uDFFF\uFDD0-\uFDDF\uFFFE\uFFFF\U0001FFFE\U0001FFFF\U0002FFFE\U0002FFFF\U0003FFFE\U0003FFFF\U0004FFFE\U0004FFFF\U0005FFFE\U0005FFFF\U0006FFFE\U0006FFFF\U0007FFFE\U0007FFFF\U0008FFFE\U0008FFFF\U0009FFFE\U0009FFFF\U000AFFFE\U000AFFFF\U000BFFFE\U000BFFFF\U000CFFFE\U000CFFFF\U000DFFFE\U000DFFFF\U000EFFFE\U000EFFFF\U000FFFFE\U000FFFFF\U0010FFFE\U0010FFFF]")
 
+ascii_punctuation_re = re.compile(ur"[\u0009-\u000D\u0020-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007E]")
+
 # Cache for charsUntil()
 charsUntilRegEx = {}
 
@@ -45,7 +47,7 @@ class HTMLInputStream(object):
         # List of where new lines occur
         self.newLines = [0]
 
-        self.charEncoding = (encoding, "certain")
+        self.charEncoding = (codecName(encoding), "certain")
 
         # Raw Stream - for unicode objects this will encode to utf-8 and set
         #              self.charEncoding as appropriate
@@ -61,8 +63,7 @@ class HTMLInputStream(object):
         self.defaultEncoding = "windows-1252"
         
         #Detect encoding iff no explicit "transport level" encoding is supplied
-        if (self.charEncoding[0] is None or
-            not isValidEncoding(self.charEncoding[0])):
+        if (self.charEncoding[0] is None):
             self.charEncoding = self.detectEncoding(parseMeta, chardet)
 
         self.dataStream = codecs.getreader(self.charEncoding[0])(self.rawStream,
@@ -458,8 +459,9 @@ class EncodingParser(object):
         if self.encoding is not None:
             self.encoding = self.encoding.strip()        
             #Spec violation that complies with hsivonen + mjs
-            if self.encoding.upper() in ("UTF-16", "UTF-16BE", "UTF-16LE",
-                                         "UTF-32", "UTF-32BE", "UTF-32LE"):
+            if (ascii_punctuation_re.sub("", self.encoding) in
+                ("utf16", "utf16be", "utf16le",
+                 "utf32", "utf32be", "utf32le")):
                 self.encoding = "utf-8"
         
         return self.encoding
@@ -481,14 +483,16 @@ class EncodingParser(object):
             else:
                 if attr[0] == "charset":
                     tentativeEncoding = attr[1]
-                    if isValidEncoding(tentativeEncoding):
-                        self.encoding = tentativeEncoding    
+                    codec = codecName(tentativeEncoding)
+                    if codec is not None:
+                        self.encoding = codec
                         return False
                 elif attr[0] == "content":
                     contentParser = ContentAttrParser(EncodingBytes(attr[1]))
                     tentativeEncoding = contentParser.parse()
-                    if isValidEncoding(tentativeEncoding):
-                        self.encoding = tentativeEncoding    
+                    codec = codecName(tentativeEncoding)
+                    if codec is not None:
+                        self.encoding = codec
                         return False
 
     def handlePossibleStartTag(self):
@@ -633,7 +637,11 @@ class ContentAttrParser(object):
         except StopIteration:
             return None
 
-def isValidEncoding(encoding):
-    """Determine if a string is a supported encoding"""
-    return (encoding is not None and type(encoding) == types.StringType and
-            encoding.lower().strip() in encodings)
+def codecName(encoding):
+    """Return the python codec name corresponding to an encoding or None if the
+    string doesn't correspond to a valid encoding."""
+    if (encoding is not None and type(encoding) == types.StringType):
+        canonicalName = ascii_punctuation_re.sub("", encoding).lower()
+        return encodings.get(canonicalName, None) 
+    else:
+        return None
