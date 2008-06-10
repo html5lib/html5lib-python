@@ -7,8 +7,8 @@ parses invalid documents using well-defined error handling rules compatible
 with the behaviour of major desktop web browsers.
 
 Output is to a tree structure; the current release supports output to
-a custom tree similar to DOM and to ElementTree.
-"""
+DOM, ElementTree, lxml and BeautifulSoup tree formats as well as a
+simple custom format"""
 
 classifiers=[
     'Development Status :: %(status)s',
@@ -34,7 +34,7 @@ setup(name='html5lib',
           for name in os.listdir(os.path.join('src','html5lib'))
           if os.path.isdir(os.path.join('src','html5lib',name)) and
               not name.startswith('.')],
-      package_dir = {'html5lib': 'src/html5lib'},
+      package_dir = {'': 'src/'},
       test_suite = "tests.buildTestSuite",
       tests_require = ['simplejson']
       )

@@ -23,6 +23,7 @@ class Package(object):
         self.inDir = os.path.abspath(inDir)
         self.outDir = os.path.abspath(outDir)
         self.exclude = self.getExcludeList()
+        print self.exclude
         self.fileList = self.getFileList()
         self.installDir = installDir
         self.outFiles = []
@@ -45,12 +46,15 @@ class Package(object):
         return rv
 
     def copyTestData(self):
-        outDir = "tests/testdata"
+        outDir = os.path.join(self.inDir, "tests/testdata")
+        print 
         try:
             os.mkdir(outDir)
         except OSError:
-            #the directory already exists    
-            pass
+            #the directory already exists
+            if not os.path.exists(outDir):
+                raise
+            
         inBaseDir = os.path.abspath(os.path.join(self.inDir, "../testdata"))
         dirWalker = os.walk(inBaseDir)
         for (curDir, dirs, files) in dirWalker:
@@ -152,7 +156,8 @@ class Package(object):
     
     def makeZipFile(self):
         z = zipfile.ZipFile(os.path.join(self.outDir,
-                                         "html5lib-%s.zip"%self.version), 'w')
+                                         "html5lib-%s.zip"%self.version), 'w',
+                            zipfile.ZIP_DEFLATED)
         for f in self.outFiles:
             z.write(f, os.path.join("html5lib-%s"%self.version,
                                     f[len(self.outDir)+1:]))
