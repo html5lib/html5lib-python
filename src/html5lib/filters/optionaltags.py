@@ -112,14 +112,28 @@ class Filter(_base.Filter):
                 return False
         elif tagname == 'p':
             # A p element's end tag may be omitted if the p element is
-            # immediately followed by an address, blockquote, dl, fieldset,
-            # form, h1, h2, h3, h4, h5, h6, hr, menu, ol, p, pre, table,
-            # or ul  element, or if there is no more content in the parent
-            # element.
+            # immediately followed by an address, article, aside,
+            # blockquote, datagrid, dialog, dir, div, dl, fieldset,
+            # footer, form, h1, h2, h3, h4, h5, h6, header, hr, menu,
+            # nav, ol, p, pre, section, table, or ul, element, or if
+            # there is no more content in the parent element.
             if type == "StartTag":
-                return next["name"] in ('address', 'blockquote', \
-                    'dl', 'fieldset', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', \
-                    'h6', 'hr', 'menu', 'ol', 'p', 'pre', 'table', 'ul')
+                return next["name"] in ('address', 'article', 'aside',     \
+                    'blockquote', 'datagrid', 'dialog', 'dir', 'div',      \
+                    'dl', 'fieldset', 'footer', 'form', 'h1', 'h2', 'h3',  \
+                    'h4', 'h5', 'h6', 'header', 'hr', 'menu', 'nav', 'ol', \
+                    'p', 'pre', 'section', 'table', 'ul')
+            else:
+                return type == "EndTag" or type is None
+        elif tagname in ('rt', 'rp'):
+            # An rt element's end tag may be omitted if the rt element is
+            # immediately followed by an rt or rp element, or if there is
+            # no more content in the parent element.
+            # An rp element's end tag may be omitted if the rp element is
+            # immediately followed by an rt or rp element, or if there is
+            # no more content in the parent element.
+            if type == "StartTag":
+                return next["name"] in ('rt', 'rp')
             else:
                 return type == "EndTag" or type is None
         elif tagname == 'colgroup':

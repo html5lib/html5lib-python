@@ -709,8 +709,10 @@ class InBodyPhase(Phase):
             (("base", "link", "meta", "script", "style", "title"),
               self.startTagProcessInHead),
             ("body", self.startTagBody),
-            (("address", "blockquote", "center", "dir", "div", "dl",
-              "fieldset", "listing", "menu", "ol", "p", "pre", "ul"),
+            (("address", "article", "aside", "blockquote", "center", "datagrid",
+              "details", "dialog", "dir", "div", "dl", "fieldset", "figure",
+              "footer", "h1", "h2", "h3", "h4", "h5", "h6", "header", "listing",
+              "menu", "nav", "ol", "p", "pre", "section", "ul"),
               self.startTagCloseP),
             ("form", self.startTagForm),
             (("li", "dd", "dt"), self.startTagListItem),
@@ -736,8 +738,7 @@ class InBodyPhase(Phase):
             (("caption", "col", "colgroup", "frame", "frameset", "head",
               "option", "optgroup", "tbody", "td", "tfoot", "th", "thead",
               "tr"), self.startTagMisplaced),
-            (("event-source", "section", "nav", "article", "aside", "header",
-              "footer", "datagrid", "command"), self.startTagNew)
+            (("event-source", "command"), self.startTagNew)
         ])
         self.startTagHandler.default = self.startTagOther
 
@@ -745,8 +746,10 @@ class InBodyPhase(Phase):
             ("p",self.endTagP),
             ("body",self.endTagBody),
             ("html",self.endTagHtml),
-            (("address", "blockquote", "center", "div", "dl", "fieldset",
-              "listing", "menu", "ol", "pre", "ul"), self.endTagBlock),
+            (("address", "article", "aside", "blockquote", "center", "datagrid",
+              "details", "dialog", "dir", "div", "dl", "fieldset", "figure",
+              "footer", "header", "listing", "menu", "nav", "ol", "pre", "section",
+              "ul"), self.endTagBlock),
             ("form", self.endTagForm),
             (("dd", "dt", "li"), self.endTagListItem),
             (headingElements, self.endTagHeading),
@@ -762,8 +765,7 @@ class InBodyPhase(Phase):
               self.endTagNone),
             (("noframes", "noscript", "noembed", "textarea", "xmp", "iframe"),
               self.endTagCdataTextAreaXmp),
-            (("event-source", "section", "nav", "article", "aside", "header",
-              "footer", "datagrid", "command"), self.endTagNew)
+            (("event-source", "command"), self.endTagNew)
             ])
         self.endTagHandler.default = self.endTagOther
 

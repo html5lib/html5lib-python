@@ -292,6 +292,8 @@ formattingElements = frozenset((
 specialElements = frozenset((
     "address",
     "area",
+    "article",
+    "aside",
     "base",
     "basefont",
     "bgsound",
@@ -301,13 +303,20 @@ specialElements = frozenset((
     "center",
     "col",
     "colgroup",
+    "command",
+    "datagrid",
     "dd",
+    "details",
+    "dialog",
     "dir",
     "div",
     "dl",
     "dt",
     "embed",
+    "event-source",
     "fieldset",
+    "figure",
+    "footer",
     "form",
     "frame",
     "frameset",
@@ -318,9 +327,12 @@ specialElements = frozenset((
     "h5",
     "h6",
     "head",
+    "header",
     "hr",
     "iframe",
-    "image",
+    # Note that image is commented out in the spec as "this isn't an
+    # element that can end up on the stack, so it doesn't matter"
+    "image", 
     "img",
     "input",
     "isindex",
@@ -329,6 +341,7 @@ specialElements = frozenset((
     "listing",
     "menu",
     "meta",
+    "nav",
     "noembed",
     "noframes",
     "noscript",
@@ -340,6 +353,7 @@ specialElements = frozenset((
     "plaintext",
     "pre",
     "script",
+    "section",
     "select",
     "spacer",
     "style",
@@ -389,9 +403,10 @@ headingElements = (
     "h6"
 )
 
-# XXX What about event-source and command?
 voidElements = frozenset((
     "base",
+    "command",
+    "event-source",
     "link",
     "meta",
     "hr",
@@ -401,7 +416,8 @@ voidElements = frozenset((
     "param",
     "area",
     "col",
-    "input"
+    "input",
+    "source"
 ))
 
 cdataElements = frozenset(('title', 'textarea'))
