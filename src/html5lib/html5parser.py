@@ -32,8 +32,8 @@ class HTMLParser(object):
     """HTML parser. Generates a tree structure from a stream of (possibly
         malformed) HTML"""
 
-    def __init__(self, strict = False, tree=simpletree.TreeBuilder,
-                 tokenizer=tokenizer.HTMLTokenizer):
+    def __init__(self, tree=simpletree.TreeBuilder,
+                 tokenizer=tokenizer.HTMLTokenizer, strict = False):
         """
         strict - raise an exception when a parse error is encountered
 
