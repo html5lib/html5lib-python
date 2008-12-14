@@ -1,13 +1,3 @@
-# Differences from the current specification are as follows:
-# * Phases and insertion modes are one concept in parser.py.
-# * EOF handling is slightly different to make sure <html>, <head> and <body>
-#   always exist.
-# * We're not detecting all DOCTYPE modes yet
-#
-# XXXAvK: I think there are some other quirks, but it might make sense to
-# wait with fixing them until browsers start more seriously implementing the
-# HTML5 parsing algorithm.
-
 try:
     frozenset
 except NameError:
@@ -28,12 +18,17 @@ from constants import scopingElements, formattingElements, specialElements
 from constants import headingElements, tableInsertModeElements
 from constants import cdataElements, rcdataElements, voidElements
 
+def parse(doc, treebuilderName="simpletree", encoding=None):
+    tb = treebuilders.gettreebuilder(treebuilderName)
+    p = HTMLParser(tb, encoding=None)
+    return p.parse(doc)
+
 class HTMLParser(object):
     """HTML parser. Generates a tree structure from a stream of (possibly
         malformed) HTML"""
 
-    def __init__(self, tree=simpletree.TreeBuilder,
-                 tokenizer=tokenizer.HTMLTokenizer, strict = False):
+    def __init__(self, tree = simpletree.TreeBuilder,
+                 tokenizer = tokenizer.HTMLTokenizer, strict = False):
         """
         strict - raise an exception when a parse error is encountered
 
@@ -64,6 +59,7 @@ class HTMLParser(object):
             # XXX "inHeadNoscript": InHeadNoScriptPhase(self, self.tree),
             "afterHead": AfterHeadPhase(self, self.tree),
             "inBody": InBodyPhase(self, self.tree),
+            "inCDataRCData": InCDataRCDataPhase(self, self.tree),
             "inTable": InTablePhase(self, self.tree),
             "inCaption": InCaptionPhase(self, self.tree),
             "inColumnGroup": InColumnGroupPhase(self, self.tree),
@@ -75,10 +71,9 @@ class HTMLParser(object):
             "afterBody": AfterBodyPhase(self, self.tree),
             "inFrameset": InFramesetPhase(self, self.tree),
             "afterFrameset": AfterFramesetPhase(self, self.tree),
-            "trailingEnd": TrailingEndPhase(self, self.tree),
-            # XXX after after body
+            "afterAfterBody": AfterAfterBodyPhase(self, self.tree),
+            "afterAfterFrameset": AfterAfterFramesetPhase(self, self.tree),
             # XXX after after frameset
-            # XXX trailingEnd is gone
         }
 
     def _parse(self, stream, innerHTML=False, container="div",
@@ -252,21 +247,9 @@ class HTMLParser(object):
         element = self.tree.insertElement(name, attributes)
         self.tokenizer.contentModelFlag = contentModelFlags[contentType]
 
-        for token in self.normalizedTokens():
-            if token["type"] in ("Characters", "SpaceCharacters"):
-                self.tree.insertText(token["data"])
-            elif token["type"] == "ParseError":
-                self.parseError(token["data"], token.get("datavars", {}))
-            else:
-                assert self.tokenizer.contentModelFlag == contentModelFlags["PCDATA"]
-                assert token["type"] == "EndTag" and token["name"] == name, repr(token)
-                popped = self.tree.openElements.pop()
-                assert popped == element
-                return
-        #Otherwise we hit EOF
-        popped = self.tree.openElements.pop()
-        assert popped == element
-        self.parseError("expected-closing-tag-but-got-eof")
+        self.originalPhase = self.phase
+
+        self.phase = self.phases["inCDataRCData"]
 
 class Phase(object):
     """Base class for helper object that implements each phase of processing
@@ -552,19 +535,18 @@ class InHeadPhase(Phase):
         self.startTagHandler =  utils.MethodDispatcher([
             ("html", self.startTagHtml),
             ("title", self.startTagTitle),
-            ("style", self.startTagStyle),
-            ("noscript", self.startTagNoScript),
+            (("noscript", "noframes", "style"), self.startTagNoScriptNoFramesStyle),
             ("script", self.startTagScript),
-            (("base", "link", "meta"), self.startTagBaseLinkMeta),
+            (("base", "link", "command", "eventsource"), 
+             self.startTagBaseLinkCommandEventsource),
+            ("meta", self.startTagMeta),
             ("head", self.startTagHead)
         ])
         self.startTagHandler.default = self.startTagOther
 
         self. endTagHandler = utils.MethodDispatcher([
             ("head", self.endTagHead),
-            (("html", "body", "br", "p"), self.endTagImplyAfterHead),
-            (("title", "style", "script", "noscript"),
-              self.endTagTitleStyleScriptNoScript)
+            ("br", self.endTagBr)
         ])
         self.endTagHandler.default = self.endTagOther
 
@@ -582,56 +564,56 @@ class InHeadPhase(Phase):
         self.parser.phase.processEOF()
 
     def processCharacters(self, data):
-        if self.tree.openElements[-1].name in\
-          ("title", "style", "script", "noscript"):
-            self.tree.insertText(data)
-        else:
-            self.anythingElse()
-            self.parser.phase.processCharacters(data)
+        self.anythingElse()
+        self.parser.phase.processCharacters(data)
+
+    def startTagHtml(self, name, attributes):
+        self.parser.phases["inBody"].processStartTag(name, attributes)
 
     def startTagHead(self, name, attributes):
         self.parser.parseError("two-heads-are-not-better-than-one")
 
+    def startTagBaseLinkCommandEventsource(self, name, attributes):
+        self.tree.insertElement(name, attributes)
+        self.tree.openElements.pop()
+        #XXX Acknowledge self closing flag
+
+    def startTagMeta(self, name, attributes):
+        self.tree.insertElement(name, attributes)
+        self.tree.openElements.pop()
+        #XXX Acknowledge self closing flag
+
+        if self.parser.tokenizer.stream.charEncoding[1] == "tentative":
+            if "charset" in attributes:
+                codec = inputstream.codecName(atributes["charset"])
+                self.parser.tokenizer.stream.changeEncoding(codec)
+            if "content" in attributes:
+                raise NotImplementedError
+
     def startTagTitle(self, name, attributes):
         self.parser.parseRCDataCData(name, attributes, "RCDATA")
 
-    def startTagStyle(self, name, attributes):
-        self.parser.parseRCDataCData(name, attributes, "CDATA")
-
-    def startTagNoScript(self, name, attributes):
+    def startTagNoScriptNoFramesStyle(self, name, attributes):
         #Need to decide whether to implement the scripting-disabled case
         self.parser.parseRCDataCData(name, attributes, "CDATA")
 
     def startTagScript(self, name, attributes):
         #I think this is equivalent to the CDATA stuff since we don't execute script
+        #self.tree.insertElement(name, attributes)
         self.parser.parseRCDataCData(name, attributes, "CDATA")
-
-    def startTagBaseLinkMeta(self, name, attributes):
-        if (self.tree.headPointer is not None and self.parser.phase == self.parser.phases["inHead"]):
-            element = self.tree.createElement(name, attributes)
-            self.appendToHead(element)
-        else:
-            self.tree.insertElement(name, attributes)
-            self.tree.openElements.pop()
 
     def startTagOther(self, name, attributes):
         self.anythingElse()
         self.parser.phase.processStartTag(name, attributes)
 
     def endTagHead(self, name):
-        assert self.tree.openElements[-1].name == "head", "Expected head got %s"%self.tree.openElements[-1].name 
-        self.tree.openElements.pop()
+        node = self.parser.tree.openElements.pop()
+        assert node.name == "head"
         self.parser.phase = self.parser.phases["afterHead"]
 
-    def endTagImplyAfterHead(self, name):
+    def endTagBr(self, name):
         self.anythingElse()
         self.parser.phase.processEndTag(name)
-
-    def endTagTitleStyleScriptNoScript(self, name):
-        if self.tree.openElements[-1].name == name:
-            self.tree.openElements.pop()
-        else:
-            self.parser.parseError("unexpected-end-tag", {"name": name})
 
     def endTagOther(self, name):
         self.parser.parseError("unexpected-end-tag", {"name": name})
@@ -653,10 +635,13 @@ class AfterHeadPhase(Phase):
             ("html", self.startTagHtml),
             ("body", self.startTagBody),
             ("frameset", self.startTagFrameset),
-            (("base", "link", "meta", "script", "style", "title"),
-              self.startTagFromHead)
+            (("base", "link", "meta", "noframes", "script", "style", "title"),
+              self.startTagFromHead),
+            ("head", self.startTagHead)
         ])
         self.startTagHandler.default = self.startTagOther
+        self.endTagHandler = utils.MethodDispatcher([("br", self.endTagBr)])
+        self.endTagHandler.default = self.endTagOther
 
     def processEOF(self):
         self.anythingElse()
@@ -679,16 +664,25 @@ class AfterHeadPhase(Phase):
           {"name": name})
         self.tree.openElements.append(self.tree.headPointer)
         self.parser.phases["inHead"].processStartTag(name, attributes)
-        node = self.tree.openElements.pop()
-        assert node is self.tree.headPointer, "Node name is %s, expected head"%node.name
+        for node in self.tree.openElements[::-1]:
+            if node.name == "head":
+                self.tree.openElements.remove(node)
+                break
+
+    def startTagHead(self, name, attributes):
+        self.parser.parseError("unexpected-start-tag", {"name":name})
 
     def startTagOther(self, name, attributes):
         self.anythingElse()
         self.parser.phase.processStartTag(name, attributes)
 
-    def processEndTag(self, name):
+    def endTagBr(self, name):
+        #This is not currently in the spec
         self.anythingElse()
-        self.parser.phase.processEndTag(name)
+        self.parser.phase.processEndTag("br")
+
+    def endTagOther(self, name):
+        self.parser.parseError("unexpected-end-tag", {"name":name})
 
     def anythingElse(self):
         self.tree.insertElement("body", {})
@@ -735,15 +729,16 @@ class InBodyPhase(Phase):
             ("textarea", self.startTagTextarea),
             (("iframe", "noembed", "noframes", "noscript"), self.startTagCdata),
             ("select", self.startTagSelect),
+            (("rp", "rt"), self.startTagRpRt),
+            (("option", "optgroup"), self.startTagOpt),
             (("caption", "col", "colgroup", "frame", "frameset", "head",
-              "option", "optgroup", "tbody", "td", "tfoot", "th", "thead",
+              "tbody", "td", "tfoot", "th", "thead",
               "tr"), self.startTagMisplaced),
             (("event-source", "command"), self.startTagNew)
         ])
         self.startTagHandler.default = self.startTagOther
 
         self.endTagHandler = utils.MethodDispatcher([
-            ("p",self.endTagP),
             ("body",self.endTagBody),
             ("html",self.endTagHtml),
             (("address", "article", "aside", "blockquote", "center", "datagrid",
@@ -751,21 +746,13 @@ class InBodyPhase(Phase):
               "footer", "header", "listing", "menu", "nav", "ol", "pre", "section",
               "ul"), self.endTagBlock),
             ("form", self.endTagForm),
+            ("p",self.endTagP),
             (("dd", "dt", "li"), self.endTagListItem),
             (headingElements, self.endTagHeading),
             (("a", "b", "big", "em", "font", "i", "nobr", "s", "small",
               "strike", "strong", "tt", "u"), self.endTagFormatting),
-            (("applet", "marquee", "object", "button"), self.endTagAppletButtonMarqueeObject),
-            (("head", "frameset", "select", "optgroup", "option", "table",
-              "caption", "colgroup", "col", "thead", "tfoot", "tbody", "tr",
-              "td", "th"), self.endTagMisplaced),
+            (("applet", "button", "marquee", "object"), self.endTagAppletButtonMarqueeObject),
             ("br", self.endTagBr),
-            (("area", "basefont", "bgsound", "embed", "hr", "image",
-              "img", "input", "isindex", "param", "spacer", "wbr", "frame"),
-              self.endTagNone),
-            (("noframes", "noscript", "noembed", "textarea", "xmp", "iframe"),
-              self.endTagCdataTextAreaXmp),
-            (("event-source", "command"), self.endTagNew)
             ])
         self.endTagHandler.default = self.endTagOther
 
@@ -993,6 +980,12 @@ class InBodyPhase(Phase):
         """iframe, noembed noframes, noscript(if scripting enabled)"""
         self.parser.parseRCDataCData(name, attributes, "CDATA")
 
+    def startTagOpt(self, name, attributes):
+        if self.tree.elementInScope("option"):
+            self.parser.phase.processEndTag("option")
+        self.tree.reconstructActiveFormattingElements()
+        self.parser.tree.insertElement(name, attributes)
+
     def startTagSelect(self, name, attributes):
         self.tree.reconstructActiveFormattingElements()
         self.tree.insertElement(name, attributes)
@@ -1004,6 +997,15 @@ class InBodyPhase(Phase):
             self.parser.phase = self.parser.phases["inSelectInTable"]
         else:
             self.parser.phase = self.parser.phases["inSelect"]
+
+    def startTagRpRt(self, name, attributes):
+        if self.tree.elementInScope("ruby"):
+            self.tree.generateImpliedEndTags()
+            if self.tree.openElements[-1].name != "ruby":
+                self.parser.parseError()
+                while self.tree.openElements[-1].name != "ruby":
+                    self.tree.openElements.pop()
+        self.tree.insertElement(name, attributes)
 
     def startTagMisplaced(self, name, attributes):
         """ Elements that should be children of other elements that have a
@@ -1185,9 +1187,6 @@ class InBodyPhase(Phase):
                     break
                 # Step 7.4
                 if lastNode == furthestBlock:
-                    # XXX should this be index(node) or index(node)+1
-                    # Anne: I think +1 is ok. Given x = [2,3,4,5]
-                    # x.index(3) gives 1 and then x[1 +1] gives 4...
                     bookmark = self.tree.activeFormattingElements.\
                       index(node) + 1
                 # Step 7.5
@@ -1244,10 +1243,6 @@ class InBodyPhase(Phase):
                 element = self.tree.openElements.pop()
             self.tree.clearActiveFormattingElements()
 
-    def endTagMisplaced(self, name):
-        # This handles elements with end tags in other insertion modes.
-        self.parser.parseError("unexpected-end-tag", {"name": name})
-
     def endTagBr(self, name):
         self.parser.parseError("unexpected-end-tag-treated-as",
           {"originalName": "br", "newName": "br element"})
@@ -1255,28 +1250,7 @@ class InBodyPhase(Phase):
         self.tree.insertElement(name, {})
         self.tree.openElements.pop()
 
-    def endTagNone(self, name):
-        # This handles elements with no end tag.
-        self.parser.parseError("no-end-tag", {"name": name})
-
-    def endTagCdataTextAreaXmp(self, name):
-        if self.tree.openElements[-1].name == name:
-            self.tree.openElements.pop()
-        else:
-            self.parser.parseError("unexpected-end-tag", {"name": name})
-
-    def endTagNew(self, name):
-        """New HTML5 elements, "event-source", "section", "nav",
-        "article", "aside", "header", "footer", "datagrid", "command"
-        """
-        # Commented out for consistency with startTagNew
-        #sys.stderr.write("Warning: Undefined behaviour for end tag %s"%name)
-        self.endTagOther(name)
-        #raise NotImplementedError
-
     def endTagOther(self, name):
-        # XXX This logic should be moved into the treebuilder
-        # AT should use reversed instead of [::-1] when Python 2.4 == True.
         for node in self.tree.openElements[::-1]:
             if node.name == name:
                 self.tree.generateImpliedEndTags()
@@ -1289,6 +1263,39 @@ class InBodyPhase(Phase):
                 if node.name in specialElements | scopingElements:
                     self.parser.parseError("unexpected-end-tag", {"name": name})
                     break
+
+class InCDataRCDataPhase(Phase):
+    def __init__(self, parser, tree):
+        Phase.__init__(self, parser, tree)
+        self.startTagHandler = utils.MethodDispatcher([])
+        self.startTagHandler.default = self.startTagOther
+        self.endTagHandler = utils.MethodDispatcher([
+                ("script", self.endTagScript)])
+        self.endTagHandler.default = self.endTagOther
+
+    def processCharacters(self, data):
+        self.tree.insertText(data)
+    
+    def processEOF(self):
+        self.parser.parseError("expected-named-closing-tag-but-got-eof", 
+                               self.tree.openElements[-1].name)
+        self.tree.openElements.pop()
+        self.parser.phase = self.parser.originalPhase
+        self.parser.phase.processEOF()
+
+    def startTagOther(self, name, attributes):
+        assert False, "Tried to process start tag %s in (R)CDATA mode"%name
+
+    def endTagScript(self, name):
+        node = self.tree.openElements.pop()
+        assert node.name == "script"
+        self.parser.phase = self.parser.originalPhase
+        #The rest of this method is all stuff that only happens if
+        #document.write works
+    
+    def endTagOther(self, name):
+        node = self.tree.openElements.pop()
+        self.parser.phase = self.parser.originalPhase
 
 class InTablePhase(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-table
@@ -1403,8 +1410,8 @@ class InTablePhase(Phase):
             self.startTagOther(name, attributes)
 
     def startTagOther(self, name, attributes):
+        self.parser.parseError("unexpected-start-tag-implies-table-voodoo", {"name": name})
         if "tainted" not in self.getCurrentTable()._flags:
-            self.parser.parseError("unexpected-start-tag-implies-table-voodoo", {"name": name})
             self.getCurrentTable()._flags.append("tainted")
         # Do the table magic!
         self.tree.insertFromTable = True
@@ -1437,8 +1444,8 @@ class InTablePhase(Phase):
         self.parser.parseError("unexpected-end-tag", {"name": name})
 
     def endTagOther(self, name):
+        self.parser.parseError("unexpected-end-tag-implies-table-voodoo", {"name": name})
         if "tainted" not in self.getCurrentTable()._flags:
-            self.parser.parseError("unexpected-end-tag-implies-table-voodoo", {"name": name})
             self.getCurrentTable()._flags.append("tainted")
         # Do the table magic!
         self.tree.insertFromTable = True
@@ -1993,7 +2000,11 @@ class AfterBodyPhase(Phase):
     def __init__(self, parser, tree):
         Phase.__init__(self, parser, tree)
 
-        # XXX We should prolly add a handler for                here as well...
+        self.startTagHandler = utils.MethodDispatcher([
+                ("html", self.startTagHtml)
+                ])
+        self.startTagHandler.default = self.startTagOther
+
         self.endTagHandler = utils.MethodDispatcher([("html", self.endTagHtml)])
         self.endTagHandler.default = self.endTagOther
 
@@ -2011,7 +2022,10 @@ class AfterBodyPhase(Phase):
         self.parser.phase = self.parser.phases["inBody"]
         self.parser.phase.processCharacters(data)
 
-    def processStartTag(self, name, attributes):
+    def startTagHtml(self, name, attributes):
+        self.parser.phases["inBody"].processStartTag(name, attributes)
+
+    def startTagOther(self, name, attributes):
         self.parser.parseError("unexpected-start-tag-after-body",
           {"name": name})
         self.parser.phase = self.parser.phases["inBody"]
@@ -2021,13 +2035,7 @@ class AfterBodyPhase(Phase):
         if self.parser.innerHTML:
             self.parser.parseError("unexpected-end-tag-after-body-innerhtml")
         else:
-            # XXX: This may need to be done, not sure:
-            # Don't set lastPhase to the current phase but to the inBody phase
-            # instead. No need for extra parse errors if there's something
-            # after </html>.
-            # Try "<!doctype html>X</html>X" for instance.
-            self.parser.lastPhase = self.parser.phase
-            self.parser.phase = self.parser.phases["trailingEnd"]
+            self.parser.phase = self.parser.phases["afterAfterBody"]
 
     def endTagOther(self, name):
         self.parser.parseError("unexpected-end-tag-after-body",
@@ -2121,22 +2129,29 @@ class AfterFramesetPhase(Phase):
         self.parser.parseError("unexpected-char-after-frameset")
 
     def startTagNoframes(self, name, attributes):
-        self.parser.phases["inBody"].processStartTag(name, attributes)
+        self.parser.phases["inHead"].processStartTag(name, attributes)
 
     def startTagOther(self, name, attributes):
         self.parser.parseError("unexpected-start-tag-after-frameset",
           {"name": name})
 
     def endTagHtml(self, name):
-        self.parser.lastPhase = self.parser.phase
-        self.parser.phase = self.parser.phases["trailingEnd"]
+        self.parser.phase = self.parser.phases["afterAfterFrameset"]
 
     def endTagOther(self, name):
         self.parser.parseError("unexpected-end-tag-after-frameset",
           {"name": name})
 
 
-class TrailingEndPhase(Phase):
+class AfterAfterBodyPhase(Phase):
+    def __init__(self, parser, tree):
+        Phase.__init__(self, parser, tree)
+
+        self.startTagHandler = utils.MethodDispatcher([
+            ("html", self.startTagHtml)
+        ])
+        self.startTagHandler.default = self.startTagOther
+
     def processEOF(self):
         pass
 
@@ -2144,25 +2159,69 @@ class TrailingEndPhase(Phase):
         self.tree.insertComment(data, self.tree.document)
 
     def processSpaceCharacters(self, data):
-        self.parser.lastPhase.processSpaceCharacters(data)
+        self.parser.phases["inBody"].processSpaceCharacters(data)
 
     def processCharacters(self, data):
         self.parser.parseError("expected-eof-but-got-char")
-        self.parser.phase = self.parser.lastPhase
+        self.parser.phase = self.parser.phases["inBody"]
         self.parser.phase.processCharacters(data)
 
-    def processStartTag(self, name, attributes):
+    def startTagHtml(self, name, attributes):
+        self.parser.phases["inBody"].processStartTag(name, attributes)
+
+    def startTagOther(self, name, attributes):
         self.parser.parseError("expected-eof-but-got-start-tag",
           {"name": name})
-        self.parser.phase = self.parser.lastPhase
+        self.parser.phase = self.parser.phases["inBody"]
         self.parser.phase.processStartTag(name, attributes)
 
     def processEndTag(self, name):
         self.parser.parseError("expected-eof-but-got-end-tag",
           {"name": name})
-        self.parser.phase = self.parser.lastPhase
+        self.parser.phase = self.parser.phases["inBody"]
         self.parser.phase.processEndTag(name)
 
+class AfterAfterFramesetPhase(Phase):
+    def __init__(self, parser, tree):
+        Phase.__init__(self, parser, tree)
+
+        self.startTagHandler = utils.MethodDispatcher([
+            ("html", self.startTagHtml),
+            ("noframes", self.startTagNoFrames)
+        ])
+        self.startTagHandler.default = self.startTagOther
+
+    def processEOF(self):
+        pass
+
+    def processComment(self, data):
+        self.tree.insertComment(data, self.tree.document)
+
+    def processSpaceCharacters(self, data):
+        self.parser.phases["inBody"].processSpaceCharacters(data)
+
+    def processCharacters(self, data):
+        self.parser.parseError("expected-eof-but-got-char")
+        self.parser.phase = self.parser.phases["inBody"]
+        self.parser.phase.processCharacters(data)
+
+    def startTagHtml(self, name, attributes):
+        self.parser.phases["inBody"].processStartTag(name, attributes)
+
+    def startTagNoFrames(self, name, attributes):
+        self.parser.phases["inHead"].processStartTag(name, attributes)
+
+    def startTagOther(self, name, attributes):
+        self.parser.parseError("expected-eof-but-got-start-tag",
+          {"name": name})
+        self.parser.phase = self.parser.phases["inBody"]
+        self.parser.phase.processStartTag(name, attributes)
+
+    def processEndTag(self, name):
+        self.parser.parseError("expected-eof-but-got-end-tag",
+          {"name": name})
+        self.parser.phase = self.parser.phases["inBody"]
+        self.parser.phase.processEndTag(name)
 
 class ParseError(Exception):
     """Error in parsed document"""
