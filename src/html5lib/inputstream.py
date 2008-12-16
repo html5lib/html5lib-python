@@ -70,6 +70,7 @@ class HTMLInputStream(object):
                                                                  'replace')
 
         self.chunk = u""
+        self.chunkSize = 0
         self.chunkOffset = 0
         self.ungetBuffer = [] # reversed list of chars from unget()
         self.readChars = []
@@ -255,7 +256,7 @@ class HTMLInputStream(object):
             self.readChars.append(char)
             return char
 
-        if self.chunkOffset >= len(self.chunk):
+        if self.chunkOffset >= self.chunkSize:
             if not self.readChunk():
                 return EOF
 
@@ -267,6 +268,7 @@ class HTMLInputStream(object):
 
     def readChunk(self, chunkSize=_defaultChunkSize):
         self.chunk = u""
+        self.chunkSize = 0
         self.chunkOffset = 0
 
         data = self.dataStream.read(chunkSize)
@@ -291,6 +293,7 @@ class HTMLInputStream(object):
 
         data = unicode(data)
         self.chunk = data
+        self.chunkSize = len(data)
 
         self.updatePosition()
         return True
@@ -329,7 +332,7 @@ class HTMLInputStream(object):
             m = chars.match(self.chunk, self.chunkOffset)
             # If not everything matched, return everything up to the part that didn't match
             end = m.end()
-            if end != len(self.chunk):
+            if end != self.chunkSize:
                 rv.append(self.chunk[self.chunkOffset:end])
                 self.chunkOffset = end
                 break
