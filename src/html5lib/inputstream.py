@@ -18,7 +18,7 @@ ascii_punctuation_re = re.compile(ur"[\u0009-\u000D\u0020-\u002F\u003A-\u0040\u0
 # Cache for charsUntil()
 charsUntilRegEx = {}
 
-class HTMLInputStream(object):
+class HTMLInputStream:
     """Provides a unicode stream of characters to the HTMLTokenizer.
 
     This class takes care of character encoding and removing or replacing

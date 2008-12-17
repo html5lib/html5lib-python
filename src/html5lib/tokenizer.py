@@ -21,7 +21,7 @@ entitiesByFirstChar = {}
 for e in entities:
     entitiesByFirstChar.setdefault(e[0], []).append(e)
 
-class HTMLTokenizer(object):
+class HTMLTokenizer:
     """ This class takes care of tokenizing HTML.
 
     * self.currentToken
