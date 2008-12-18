@@ -173,8 +173,17 @@ class HTMLTokenizer:
 
             charAsInt = entitiesWindows1252[charAsInt - 128]
 
-        # 0 is not a good number, neither are illegal Unicode code points (higher than 0x10FFFF) or surrogate characters (in the range 0xD800 to 0xDFFF).
-        if 0 < charAsInt and charAsInt <= 1114111 and not (55296 <= charAsInt and charAsInt <= 57343):
+        # Certain characters get replaced with U+FFFD
+        if ((charAsInt <= 0x0008) or (charAsInt == 0x000B) or (0x000E <= charAsInt <= 0x001F)
+         or (0x007F <= charAsInt <= 0x009F)
+         or (0xD800 <= charAsInt <= 0xDFFF) or (0xFDD0 <= charAsInt <= 0xFDDF)
+         or (charAsInt & 0xFFFE == 0xFFFE) # catch all U+?FFFE and U+?FFFF, where ? is 0..10
+         or (0x10FFFF < charAsInt)):
+            char = u"\uFFFD"
+            self.tokenQueue.append({"type": "ParseError", "data":
+              "illegal-codepoint-for-numeric-entity",
+              "datavars": {"charAsInt": charAsInt}})
+        else:
             try:
                 # XXX We should have a separate function that does "int" to
                 # "unicodestring" conversion since this doesn't always work
@@ -187,11 +196,6 @@ class HTMLTokenizer:
                     self.tokenQueue.append({"type": "ParseError", "data":
                       "cant-convert-numeric-entity",
                       "datavars": {"charAsInt": charAsInt}})
-        else:
-            char = u"\uFFFD"
-            self.tokenQueue.append({"type": "ParseError", "data":
-              "illegal-codepoint-for-numeric-entity",
-              "datavars": {"charAsInt": charAsInt}})
 
         # Discard the ; if present. Otherwise, put it back on the queue and
         # invoke parseError on parser.
