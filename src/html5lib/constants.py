@@ -100,8 +100,6 @@ E = {
        _(u"Unexpected end of DOCTYPE."),
     "unexpected-char-in-doctype":
        _(u"Unexpected character in DOCTYPE."),
-    "eof-in-bogus-doctype":
-       _(u"Unexpected end of file in bogus doctype."),
     "eof-in-innerhtml":
        _(u"XXX innerHTML EOF"),
     "unexpected-doctype":

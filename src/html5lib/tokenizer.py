@@ -1090,8 +1090,6 @@ class HTMLTokenizer:
         elif data == EOF:
             # XXX EMIT
             self.stream.unget(data)
-            self.tokenQueue.append({"type": "ParseError", "data":
-              "eof-in-bogus-doctype"})
             self.tokenQueue.append(self.currentToken)
             self.state = self.states["data"]
         else:
