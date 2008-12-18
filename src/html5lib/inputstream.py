@@ -73,8 +73,6 @@ class HTMLInputStream:
         self.chunkSize = 0
         self.chunkOffset = 0
         self.errors = []
-        # Single-character buffer to handle 'unget'
-        self.ungetChar = u"" # use u"" to mean 'no character' (because None means EOF)
 
         # Remember the current position in the document
         self.positionLine = 1
@@ -257,18 +255,13 @@ class HTMLInputStream:
         """ Read one character from the stream or queue if available. Return
             EOF when EOF is reached.
         """
-        char = self.ungetChar
-        if char != u"":
-            # Use the ungot character, and reset the buffer
-            self.ungetChar = u""
-        else:
-            # Read a new chunk from the input stream if necessary
-            if self.chunkOffset >= self.chunkSize:
-                if not self.readChunk():
-                    return EOF
+        # Read a new chunk from the input stream if necessary
+        if self.chunkOffset >= self.chunkSize:
+            if not self.readChunk():
+                return EOF
 
-            char = self.chunk[self.chunkOffset]
-            self.chunkOffset += 1
+        char = self.chunk[self.chunkOffset]
+        self.chunkOffset += 1
 
         # Update the position attributes
         if char == u"\n":
@@ -317,18 +310,6 @@ class HTMLInputStream:
         characters.
         """
 
-        rv = []
-
-        # Check the ungot character, if any.
-        # (Since it's only a single character, don't use the regex here)
-        char = self.ungetChar
-        if char != u"":
-            if char is EOF or (char in characters) != opposite:
-                return u""
-            else:
-                rv.append(char)
-                self.ungetChar = u""
-
         # Use a cache of regexps to find the required characters
         try:
             chars = charsUntilRegEx[(characters, opposite)]
@@ -338,6 +319,8 @@ class HTMLInputStream:
             if not opposite:
                 regex = u"^%s" % regex
             chars = charsUntilRegEx[(characters, opposite)] = re.compile(u"[%s]+" % regex)
+
+        rv = []
 
         while True:
             # Find the longest matching prefix
@@ -369,21 +352,29 @@ class HTMLInputStream:
     def unget(self, char):
         # Only one character is allowed to be ungotten at once - it must
         # be consumed again before any further call to unget
-        assert self.ungetChar == u""
 
-        self.ungetChar = char
+        if char is not None:
+            if self.chunkOffset == 0:
+                # unget is called quite rarely, so it's a good idea to do
+                # more work here if it saves a bit of work in the frequently
+                # called char and charsUntil.
+                # So, just prepend the ungotten character onto the current
+                # chunk:
+                self.chunk = char + self.chunk
+                self.chunkSize += 1
+            else:
+                self.chunkOffset -= 1
+                assert self.chunk[self.chunkOffset] == char
 
-        # Update the position attributes
-        if char is None:
-            pass
-        elif char == u"\n":
-            assert self.positionLine >= 1
-            assert self.lastLineLength is not None
-            self.positionLine -= 1
-            self.positionCol = self.lastLineLength
-            self.lastLineLength = None
-        else:
-            self.positionCol -= 1
+            # Update the position attributes
+            if char == u"\n":
+                assert self.positionLine >= 1
+                assert self.lastLineLength is not None
+                self.positionLine -= 1
+                self.positionCol = self.lastLineLength
+                self.lastLineLength = None
+            else:
+                self.positionCol -= 1
 
 class EncodingBytes(str):
     """String-like object with an assosiated position and various extra methods
