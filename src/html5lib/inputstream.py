@@ -343,15 +343,20 @@ class HTMLInputStream:
             # Find the longest matching prefix
             m = chars.match(self.chunk, self.chunkOffset)
             if m is None:
-                end = self.chunkOffset
+                # If nothing matched, and it wasn't because we ran out of chunk,
+                # then stop
+                if self.chunkOffset != self.chunkSize:
+                    break
             else:
                 end = m.end()
-            # If not everything matched, return everything up to the part that didn't match
-            if end != self.chunkSize:
-                rv.append(self.chunk[self.chunkOffset:end])
-                self.chunkOffset = end
-                break
-            # If the whole chunk matched, use it all and read the next chunk
+                # If not the whole chunk matched, return everything
+                # up to the part that didn't match
+                if end != self.chunkSize:
+                    rv.append(self.chunk[self.chunkOffset:end])
+                    self.chunkOffset = end
+                    break
+            # If the whole remainder of the chunk matched,
+            # use it all and read the next chunk
             rv.append(self.chunk[self.chunkOffset:])
             if not self.readChunk():
                 # Reached EOF
