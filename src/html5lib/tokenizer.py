@@ -354,15 +354,22 @@ class HTMLTokenizer:
             self.tokenQueue.append({"type": "SpaceCharacters", "data":
               data + self.stream.charsUntil(spaceCharacters, True)})
             # No need to update lastFourChars here, since the first space will
-            # have already broken any <!-- or --> sequences
+            # have already been appended to lastFourChars and will have broken
+            # any <!-- or --> sequences
         else:
-            chars = self.stream.charsUntil(("&", "<", ">", "-"))
-            self.tokenQueue.append({"type": "Characters", "data": 
+            if self.contentModelFlag in\
+              (contentModelFlags["CDATA"], contentModelFlags["RCDATA"]):
+                chars = self.stream.charsUntil((u"&", u"<", u">", u"-"))
+                self.lastFourChars += chars[-4:]
+                self.lastFourChars = self.lastFourChars[-4:]
+            else:
+                chars = self.stream.charsUntil((u"&", u"<"))
+                # lastFourChars only needs to be kept up-to-date if we're
+                # in CDATA or RCDATA, so ignore it here
+            self.tokenQueue.append({"type": "Characters", "data":
               data + chars})
-            self.lastFourChars += chars[-4:]
-            self.lastFourChars = self.lastFourChars[-4:]
         return True
-            
+
     def entityDataState(self):
         entity = self.consumeEntity()
         if entity:
