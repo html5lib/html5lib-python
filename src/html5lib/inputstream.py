@@ -337,11 +337,13 @@ class HTMLInputStream:
             regex = u"".join([u"\\x%02x" % ord(c) for c in characters])
             if not opposite:
                 regex = u"^%s" % regex
-            chars = charsUntilRegEx[(characters, opposite)] = re.compile(u"[%s]*" % regex)
+            chars = charsUntilRegEx[(characters, opposite)] = re.compile(u"[%s]+" % regex)
 
         while True:
             # Find the longest matching prefix
             m = chars.match(self.chunk, self.chunkOffset)
+            if m is None:
+                break
             # If not everything matched, return everything up to the part that didn't match
             end = m.end()
             if end != self.chunkSize:
