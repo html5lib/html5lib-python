@@ -489,9 +489,6 @@ class HTMLTokenizer:
         data = self.stream.char()
         if data in spaceCharacters:
             self.state = self.states["beforeAttributeName"]
-        elif data in asciiLetters:
-            self.currentToken["name"] += data +\
-              self.stream.charsUntil(asciiLetters, True)
         elif data == u">":
             self.emitCurrentToken()
         elif data is EOF:
@@ -503,6 +500,8 @@ class HTMLTokenizer:
                 self.state = self.states["beforeAttributeName"]
         else:
             self.currentToken["name"] += data
+            # (Don't use charsUntil here, because tag names are
+            # very short and it's faster to not do anything fancy)
         return True
 
     def beforeAttributeNameState(self):
