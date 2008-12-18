@@ -343,9 +343,10 @@ class HTMLInputStream:
             # Find the longest matching prefix
             m = chars.match(self.chunk, self.chunkOffset)
             if m is None:
-                break
+                end = self.chunkOffset
+            else:
+                end = m.end()
             # If not everything matched, return everything up to the part that didn't match
-            end = m.end()
             if end != self.chunkSize:
                 rv.append(self.chunk[self.chunkOffset:end])
                 self.chunkOffset = end
