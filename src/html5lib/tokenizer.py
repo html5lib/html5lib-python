@@ -436,7 +436,7 @@ class HTMLTokenizer:
             if self.currentToken \
               and self.currentToken["name"].lower() == "".join(charStack[:-1]).lower() \
               and charStack[-1] in (spaceCharacters |
-              frozenset((u">", u"/", u"<", EOF))):
+              frozenset((u">", u"/", EOF))):
                 # Because the characters are correct we can safely switch to
                 # PCDATA mode now. This also means we don't have to do it when
                 # emitting the end tag token.
@@ -485,8 +485,8 @@ class HTMLTokenizer:
               "eof-in-tag-name"})
             self.emitCurrentToken()
         elif data == u"/":
-            self.processSolidusInTag()
-            self.state = self.states["beforeAttributeName"]
+            if not self.processSolidusInTag():
+                self.state = self.states["beforeAttributeName"]
         else:
             self.currentToken["name"] += data
         return True
