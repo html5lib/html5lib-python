@@ -62,6 +62,7 @@ class HTMLTokenizer:
             "attributeValueUnQuoted":self.attributeValueUnQuotedState,
             "afterAttributeValue":self.afterAttributeValueState,
             "bogusComment":self.bogusCommentState,
+            "bogusCommentContinuation":self.bogusCommentContinuationState,
             "markupDeclarationOpen":self.markupDeclarationOpenState,
             "commentStart":self.commentStartState,
             "commentStartDash":self.commentStartDashState,
@@ -207,36 +208,35 @@ class HTMLTokenizer:
         return char
 
     def consumeEntity(self, allowedChar=None, fromAttribute=False):
-        char = None
+        # Initialise to the default output for when no entity is matched
+        output = u"&"
+
         charStack = [self.stream.char()]
-        if charStack[0] in spaceCharacters or charStack[0] in (EOF, "<", "&")\
+        if charStack[0] in spaceCharacters or charStack[0] in (EOF, u"<", u"&") \
          or (allowedChar is not None and allowedChar == charStack[0]):
-            self.stream.unget(charStack)
+            self.stream.unget(charStack[0])
+
         elif charStack[0] == u"#":
-            # We might have a number entity here.
-            charStack.extend([self.stream.char(), self.stream.char()])
-            if EOF in charStack[:2]:
-                # If we reach the end of the file put everything up to EOF
-                # back in the queue
-                charStack = charStack[:charStack.index(EOF)]
-                self.stream.unget(charStack)
-                self.tokenQueue.append({"type": "ParseError", "data":
-                  "expected-numeric-entity-but-got-eof"})
+            # Read the next character to see if it's hex or decimal
+            hex = False
+            charStack.append(self.stream.char())
+            if charStack[-1] in (u"x", u"X"):
+                hex = True
+                charStack.append(self.stream.char())
+
+            # charStack[-1] should be the first digit
+            if (hex and charStack[-1] in hexDigits) \
+             or (not hex and charStack[-1] in digits):
+                # At least one digit found, so consume the whole number
+                self.stream.unget(charStack[-1])
+                output = self.consumeNumberEntity(hex)
             else:
-                if charStack[1].lower() == u"x" \
-                  and charStack[2] in hexDigits:
-                    # Hexadecimal entity detected.
-                    self.stream.unget(charStack[2])
-                    char = self.consumeNumberEntity(True)
-                elif charStack[1] in digits:
-                    # Decimal entity detected.
-                    self.stream.unget(charStack[1:])
-                    char = self.consumeNumberEntity(False)
-                else:
-                    # No number entity detected.
-                    self.stream.unget(charStack)
-                    self.tokenQueue.append({"type": "ParseError", "data":
-                      "expected-numeric-entity"})
+                # No digits found
+                self.tokenQueue.append({"type": "ParseError",
+                    "data": "expected-numeric-entity"})
+                self.stream.unget(charStack.pop())
+                output = u"&" + u"".join(charStack)
+
         else:
             # At this point in the process might have named entity. Entities
             # are stored in the global variable "entities".
@@ -258,7 +258,7 @@ class HTMLTokenizer:
 
             # Try to find the longest entity the string will match to take care
             # of &noti for instance.
-            for entityLength in xrange(len(charStack)-1,1,-1):
+            for entityLength in xrange(len(charStack)-1, 1, -1):
                 possibleEntityName = "".join(charStack[:entityLength])
                 if possibleEntityName in entities:
                     entityName = possibleEntityName
@@ -271,24 +271,27 @@ class HTMLTokenizer:
                 if entityName[-1] != ";" and fromAttribute and \
                   (charStack[entityLength] in asciiLetters
                   or charStack[entityLength] in digits):
-                    self.stream.unget(charStack)
+                    self.stream.unget(charStack.pop())
+                    output = u"&" + u"".join(charStack)
                 else:
-                    char = entities[entityName]
-                    self.stream.unget(charStack[entityLength:])
+                    output = entities[entityName]
+                    self.stream.unget(charStack.pop())
+                    output += u"".join(charStack[entityLength:])
             else:
                 self.tokenQueue.append({"type": "ParseError", "data":
                   "expected-named-entity"})
-                self.stream.unget(charStack)
-        return char
+                self.stream.unget(charStack.pop())
+                output = u"&" + u"".join(charStack)
+
+        if fromAttribute:
+            self.currentToken["data"][-1][1] += output
+        else:
+            self.tokenQueue.append({"type": "Characters", "data": output})
 
     def processEntityInAttribute(self, allowedChar):
         """This method replaces the need for "entityInAttributeValueState".
         """
-        entity = self.consumeEntity(allowedChar=allowedChar, fromAttribute=True)
-        if entity:
-            self.currentToken["data"][-1][1] += entity
-        else:
-            self.currentToken["data"][-1][1] += u"&"
+        self.consumeEntity(allowedChar=allowedChar, fromAttribute=True)
 
     def emitCurrentToken(self):
         """This method is a generic handler for emitting the tags. It also sets
@@ -314,6 +317,7 @@ class HTMLTokenizer:
     # statements should be.
 
     def dataState(self):
+        
         data = self.stream.char()
 
         # Keep a charbuffer to handle the escapeFlag
@@ -364,18 +368,12 @@ class HTMLTokenizer:
                 self.lastFourChars = self.lastFourChars[-4:]
             else:
                 chars = self.stream.charsUntil((u"&", u"<"))
-                # lastFourChars only needs to be kept up-to-date if we're
-                # in CDATA or RCDATA, so ignore it here
-            self.tokenQueue.append({"type": "Characters", "data":
+            self.tokenQueue.append({"type": "Characters", "data": 
               data + chars})
         return True
 
     def entityDataState(self):
-        entity = self.consumeEntity()
-        if entity:
-            self.tokenQueue.append({"type": "Characters", "data": entity})
-        else:
-            self.tokenQueue.append({"type": "Characters", "data": u"&"})
+        self.consumeEntity()
         self.state = self.states["data"]
         return True
 
@@ -426,43 +424,48 @@ class HTMLTokenizer:
     def closeTagOpenState(self):
         if (self.contentModelFlag in (contentModelFlags["RCDATA"],
             contentModelFlags["CDATA"])):
-            if self.currentToken:
-                charStack = []
 
+            charStack = []
+            if self.currentToken:
                 # So far we know that "</" has been consumed. We now need to know
                 # whether the next few characters match the name of last emitted
-                # start tag which also happens to be the currentToken. We also need
-                # to have the character directly after the characters that could
-                # match the start tag name.
-                for x in xrange(len(self.currentToken["name"]) + 1):
+                # start tag which also happens to be the currentToken.
+                matched = True
+                for expected in self.currentToken["name"].lower():
                     charStack.append(self.stream.char())
-                    # Make sure we don't get hit by EOF
-                    if charStack[-1] is EOF:
+                    if charStack[-1] not in (expected, expected.upper()):
+                        matched = False
                         break
 
-                # Since this is just for checking. We put the characters back on
-                # the stack.
-                self.stream.unget(charStack)
+                # If the tag name prefix matched, we also need to check the
+                # subsequent character
+                if matched:
+                    charStack.append(self.stream.char())
+                    if charStack[-1] in (spaceCharacters | frozenset((u">", u"/", EOF))):
+                        self.contentModelFlag = contentModelFlags["PCDATA"]
+                        # Unget the last character, so it can be re-processed
+                        # in the next state
+                        self.stream.unget(charStack.pop())
+                        # The remaining characters in charStack are the tag name
+                        self.currentToken = {"type": "EndTag",
+                            "name": u"".join(charStack), "data": []}
+                        self.state = self.states["tagName"]
+                        return True
 
-            if self.currentToken \
-              and self.currentToken["name"].lower() == "".join(charStack[:-1]).lower() \
-              and charStack[-1] in (spaceCharacters |
-              frozenset((u">", u"/", EOF))):
-                # Because the characters are correct we can safely switch to
-                # PCDATA mode now. This also means we don't have to do it when
-                # emitting the end tag token.
-                self.contentModelFlag = contentModelFlags["PCDATA"]
-            else:
-                self.tokenQueue.append({"type": "Characters", "data": u"</"})
-                self.state = self.states["data"]
+                # Didn't find the end tag. The last character in charStack could be
+                # anything, so it has to be re-processed in the data state
+                self.stream.unget(charStack.pop())
 
-                # Need to return here since we don't want the rest of the
-                # method to be walked through.
-                return True
+            # The remaining characters are a prefix of the tag name, so they're
+            # just letters and digits, so they can be output as character
+            # tokens immediately
+            self.tokenQueue.append({"type": "Characters", "data": u"</" + u"".join(charStack)})
+            self.state = self.states["data"]
+            return True
 
         data = self.stream.char()
         if data in asciiLetters:
-            self.currentToken = {"type":"EndTag", "name":data, "data":[]}
+            self.currentToken = {"type": "EndTag", "name": data, "data": []}
             self.state = self.states["tagName"]
         elif data == u">":
             self.tokenQueue.append({"type": "ParseError", "data":
@@ -707,7 +710,19 @@ class HTMLTokenizer:
         # until the first > or EOF (charsUntil checks for EOF automatically)
         # and emit it.
         self.tokenQueue.append(
-          {"type": "Comment", "data": self.stream.charsUntil((u">"))})
+          {"type": "Comment", "data": self.stream.charsUntil(u">")})
+
+        # Eat the character directly after the bogus comment which is either a
+        # ">" or an EOF.
+        self.stream.char()
+        self.state = self.states["data"]
+        return True
+
+    def bogusCommentContinuationState(self):
+        # Like bogusCommentState, but the caller must create the comment token
+        # and this state just adds more characters to it
+        self.currentToken["data"] += self.stream.charsUntil(u">")
+        self.tokenQueue.append(self.currentToken)
 
         # Eat the character directly after the bogus comment which is either a
         # ">" or an EOF.
@@ -716,24 +731,35 @@ class HTMLTokenizer:
         return True
 
     def markupDeclarationOpenState(self):
-        charStack = [self.stream.char(), self.stream.char()]
-        if charStack == [u"-", u"-"]:
-            self.currentToken = {"type": "Comment", "data": u""}
-            self.state = self.states["commentStart"]
-        else:
-            for x in xrange(5):
+        charStack = [self.stream.char()]
+        if charStack[-1] == u"-":
+            charStack.append(self.stream.char())
+            if charStack[-1] == u"-":
+                self.currentToken = {"type": "Comment", "data": u""}
+                self.state = self.states["commentStart"]
+                return True
+        elif charStack[-1] in (u'd', u'D'):
+            matched = True
+            for expected in ((u'o', u'O'), (u'c', u'C'), (u't', u'T'),
+                             (u'y', u'Y'), (u'p', u'P'), (u'e', u'E')):
                 charStack.append(self.stream.char())
-            # Put in explicit EOF check
-            if (not EOF in charStack and
-                "".join(charStack).upper() == u"DOCTYPE"):
-                self.currentToken = {"type":"Doctype", "name":u"",
-                  "publicId":None, "systemId":None, "correct":True}
+                if charStack[-1] not in expected:
+                    matched = False
+                    break
+            if matched:
+                self.currentToken = {"type": "Doctype", "name": u"",
+                  "publicId": None, "systemId": None, "correct": True}
                 self.state = self.states["doctype"]
-            else:
-                self.tokenQueue.append({"type": "ParseError", "data":
-                  "expected-dashes-or-doctype"})
-                self.stream.unget(charStack)
-                self.state = self.states["bogusComment"]
+                return True
+
+        self.tokenQueue.append({"type": "ParseError", "data":
+          "expected-dashes-or-doctype"})
+        # charStack[:-2] consists of 'safe' characters ('-', 'd', 'o', etc)
+        # so they can be copied directly into the bogus comment data, and only
+        # the last character might be '>' or EOF and needs to be ungetted
+        self.stream.unget(charStack.pop())
+        self.currentToken = {"type": "Comment", "data": u"".join(charStack)}
+        self.state = self.states["bogusCommentContinuation"]
         return True
 
     def commentStartState(self):
@@ -892,24 +918,42 @@ class HTMLTokenizer:
             self.tokenQueue.append(self.currentToken)
             self.state = self.states["data"]
         else:
-            charStack = [data]  
-            for x in xrange(5):
-                charStack.append(self.stream.char())
-            if EOF not in charStack and\
-              "".join(charStack).translate(asciiUpper2Lower) == "public":
-                self.state = self.states["beforeDoctypePublicIdentifier"]
-            elif EOF not in charStack and\
-              "".join(charStack).translate(asciiUpper2Lower) == "system":
-                self.state = self.states["beforeDoctypeSystemIdentifier"]
-            else:
-                self.stream.unget(charStack)
-                self.tokenQueue.append({"type": "ParseError", "data":
-                  "expected-space-or-right-bracket-in-doctype", "datavars":
-                  {"data": data}})
-                self.currentToken["correct"] = False
-                self.state = self.states["bogusDoctype"]
+            if data in (u"p", u"P"):
+                matched = True
+                for expected in ((u"u", u"U"), (u"b", u"B"), (u"l", u"L"),
+                                 (u"i", u"I"), (u"c", u"C")):
+                    data = self.stream.char()
+                    if data not in expected:
+                        matched = False
+                        break
+                if matched:
+                    self.state = self.states["beforeDoctypePublicIdentifier"]
+                    return True
+            elif data in (u"s", u"S"):
+                matched = True
+                for expected in ((u"y", u"Y"), (u"s", u"S"), (u"t", u"T"),
+                                 (u"e", u"E"), (u"m", u"M")):
+                    data = self.stream.char()
+                    if data not in expected:
+                        matched = False
+                        break
+                if matched:
+                    self.state = self.states["beforeDoctypeSystemIdentifier"]
+                    return True
+
+            # All the characters read before the current 'data' will be
+            # [a-zA-Z], so they're garbage in the bogus doctype and can be
+            # discarded; only the latest character might be '>' or EOF
+            # and needs to be ungetted
+            self.stream.unget(data)
+            self.tokenQueue.append({"type": "ParseError", "data":
+                "expected-space-or-right-bracket-in-doctype", "datavars":
+                {"data": data}})
+            self.currentToken["correct"] = False
+            self.state = self.states["bogusDoctype"]
+
         return True
-    
+
     def beforeDoctypePublicIdentifierState(self):
         data = self.stream.char()
         if data in spaceCharacters:

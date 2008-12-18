@@ -72,11 +72,17 @@ class HTMLInputStream:
         self.chunk = u""
         self.chunkSize = 0
         self.chunkOffset = 0
-        self.ungetBuffer = [] # reversed list of chars from unget()
-        self.readChars = []
         self.errors = []
+        # Single-character buffer to handle 'unget'
+        self.ungetChar = u"" # use u"" to mean 'no character' (because None means EOF)
 
-        self.lineLengths = []
+        # Remember the current position in the document
+        self.positionLine = 1
+        self.positionCol = 0
+        # Remember the length of the last line, so unget("\n") can restore
+        # positionCol. (Only one character can be ungot at once, so we only
+        # need to remember the single last line.)
+        self.lastLineLength = None
         
         #Flag to indicate we may have a CR LF broken across a data chunk
         self._lastChunkEndsWithCR = False
@@ -219,51 +225,59 @@ class HTMLInputStream:
         encoding = parser.getEncoding()
         return encoding
 
-    def updatePosition(self):
-        #Remove EOF from readChars, if present
-        if not self.readChars:
-            return
-        if self.readChars and self.readChars[-1] == EOF:
-            #There may be more than one EOF in readChars so we cannot assume
-            #readChars.index(EOF) == -1
-            self.readChars = self.readChars[:self.readChars.index(EOF)]
-        readChars = "".join(self.readChars)
-        lines = readChars.split("\n")
-        if self.lineLengths:
-            self.lineLengths[-1] += len(lines[0])
+    def updatePosition(self, chars):
+        # Update the position attributes to correspond to some sequence of
+        # read characters
+
+        # Find the last newline character
+        idx = chars.rfind(u"\n")
+        if idx == -1:
+            # No newlines in chars
+            self.positionCol += len(chars)
         else:
-            self.lineLengths.append(len(lines[0]))
-        for line in lines[1:]:
-            self.lineLengths.append(len(line))
-        self.readChars = []
-        #print self.lineLengths
+            # Find the last-but-one newline character
+            idx2 = chars.rfind(u"\n", 0, idx)
+            if idx2 == -1:
+                # Only one newline in chars
+                self.positionLine += 1
+                self.lastLineLength = self.positionCol + idx
+                self.positionCol = len(chars) - (idx + 1)
+            else:
+                # At least two newlines in chars
+                newlines = chars.count(u"\n")
+                self.positionLine += newlines
+                self.lastLineLength = idx - (idx2 + 1)
+                self.positionCol = len(chars) - (idx + 1)
 
     def position(self):
         """Returns (line, col) of the current position in the stream."""
-        self.updatePosition()
-        if self.lineLengths:
-            line, col = len(self.lineLengths), self.lineLengths[-1]
-        else:
-            line, col = 1,0
-        return (line, col)
+        return (self.positionLine, self.positionCol)
 
     def char(self):
         """ Read one character from the stream or queue if available. Return
             EOF when EOF is reached.
         """
-        if self.ungetBuffer:
-            char = self.ungetBuffer.pop()
-            self.readChars.append(char)
-            return char
+        char = self.ungetChar
+        if char != u"":
+            # Use the ungot character, and reset the buffer
+            self.ungetChar = u""
+        else:
+            # Read a new chunk from the input stream if necessary
+            if self.chunkOffset >= self.chunkSize:
+                if not self.readChunk():
+                    return EOF
 
-        if self.chunkOffset >= self.chunkSize:
-            if not self.readChunk():
-                return EOF
+            char = self.chunk[self.chunkOffset]
+            self.chunkOffset += 1
 
-        char = self.chunk[self.chunkOffset]
-        self.chunkOffset += 1
+        # Update the position attributes
+        if char == u"\n":
+            self.lastLineLength = self.positionCol
+            self.positionCol = 0
+            self.positionLine += 1
+        elif char is not EOF:
+            self.positionCol += 1
 
-        self.readChars.append(char)
         return char
 
     def readChunk(self, chunkSize=_defaultChunkSize):
@@ -282,20 +296,18 @@ class HTMLInputStream:
 
         data = data.replace(u"\u0000", u"\ufffd")
         #Check for CR LF broken across chunks
-        if (self._lastChunkEndsWithCR and data[0] == "\n"):
+        if (self._lastChunkEndsWithCR and data[0] == u"\n"):
             data = data[1:]
             # Stop if the chunk is now empty
             if not data:
                 return False
-        self._lastChunkEndsWithCR = data[-1] == "\r"
-        data = data.replace("\r\n", "\n")
-        data = data.replace("\r", "\n")
+        self._lastChunkEndsWithCR = data[-1] == u"\r"
+        data = data.replace(u"\r\n", u"\n")
+        data = data.replace(u"\r", u"\n")
 
-        data = unicode(data)
         self.chunk = data
         self.chunkSize = len(data)
 
-        self.updatePosition()
         return True
 
     def charsUntil(self, characters, opposite = False):
@@ -307,22 +319,22 @@ class HTMLInputStream:
 
         rv = []
 
-        # The unget buffer is typically small and rarely used, so
-        # just check each character individually
-        while self.ungetBuffer:
-            if self.ungetBuffer[-1] == EOF or (self.ungetBuffer[-1] in characters) != opposite:
-                r = u"".join(rv)
-                self.readChars.extend(list(r))
-                return r
+        # Check the ungot character, if any.
+        # (Since it's only a single character, don't use the regex here)
+        char = self.ungetChar
+        if char != u"":
+            if char is EOF or (char in characters) != opposite:
+                return u""
             else:
-                rv.append(self.ungetBuffer.pop())
+                rv.append(char)
+                self.ungetChar = u""
 
         # Use a cache of regexps to find the required characters
         try:
             chars = charsUntilRegEx[(characters, opposite)]
         except KeyError:
             for c in characters: assert(ord(c) < 128)
-            regex = u"".join(["\\x%02x" % ord(c) for c in characters])
+            regex = u"".join([u"\\x%02x" % ord(c) for c in characters])
             if not opposite:
                 regex = u"^%s" % regex
             chars = charsUntilRegEx[(characters, opposite)] = re.compile(u"[%s]*" % regex)
@@ -343,24 +355,27 @@ class HTMLInputStream:
                 break
 
         r = u"".join(rv)
-        self.readChars.extend(list(r))
+        self.updatePosition(r)
         return r
 
-    def unget(self, chars):
-        self.updatePosition()
-        if chars:
-            l = list(chars)
-            l.reverse()
-            self.ungetBuffer.extend(l)
-            #Alter the current line, col position
-            for c in chars[::-1]:
-                if c is None:
-                    continue
-                elif c == '\n':
-                    assert self.lineLengths[-1] == 0
-                    self.lineLengths.pop()
-                else:
-                    self.lineLengths[-1] -= 1
+    def unget(self, char):
+        # Only one character is allowed to be ungotten at once - it must
+        # be consumed again before any further call to unget
+        assert self.ungetChar == u""
+
+        self.ungetChar = char
+
+        # Update the position attributes
+        if char is None:
+            pass
+        elif char == u"\n":
+            assert self.positionLine >= 1
+            assert self.lastLineLength is not None
+            self.positionLine -= 1
+            self.positionCol = self.lastLineLength
+            self.lastLineLength = None
+        else:
+            self.positionCol -= 1
 
 class EncodingBytes(str):
     """String-like object with an assosiated position and various extra methods

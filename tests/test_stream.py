@@ -33,18 +33,18 @@ class HTMLInputStreamTest(unittest.TestCase):
 
     def test_utf_16(self):
         stream = HTMLInputStream((' '*1025).encode('utf-16'))
-        self.assert_(stream.charEncoding[0] in ['utf-16-le','utf-16-be'], stream.charEncoding)
-        self.assertEquals(len(stream.charsUntil(' ',True)),1025)
+        self.assert_(stream.charEncoding[0] in ['utf-16-le', 'utf-16-be'], stream.charEncoding)
+        self.assertEquals(len(stream.charsUntil(' ', True)), 1025)
 
     def test_newlines(self):
         stream = HTMLInputStream(codecs.BOM_UTF8 + "a\nbb\r\nccc\rddddxe")
         self.assertEquals(stream.position(), (1, 0))
-        self.assertEquals(stream.charsUntil('c'),u"a\nbb\n")
-        self.assertEquals(stream.position(), (3,0))
-        self.assertEquals(stream.charsUntil('x'),u"ccc\ndddd")
-        self.assertEquals(stream.position(), (4,4))
-        self.assertEquals(stream.charsUntil('e'),u"x")
-        self.assertEquals(stream.position(), (4,5))
+        self.assertEquals(stream.charsUntil('c'), u"a\nbb\n")
+        self.assertEquals(stream.position(), (3, 0))
+        self.assertEquals(stream.charsUntil('x'), u"ccc\ndddd")
+        self.assertEquals(stream.position(), (4, 4))
+        self.assertEquals(stream.charsUntil('e'), u"x")
+        self.assertEquals(stream.position(), (4, 5))
 
     def test_newlines2(self):
         size = HTMLInputStream._defaultChunkSize
@@ -52,19 +52,36 @@ class HTMLInputStreamTest(unittest.TestCase):
         self.assertEquals(stream.charsUntil('x'), "\n" * size)
 
     def test_position(self):
-        stream = HTMLInputStream(codecs.BOM_UTF8 + "a\nbb\nccc\nddd")
+        stream = HTMLInputStream(codecs.BOM_UTF8 + "a\nbb\nccc\nddde\nf\ngh")
         self.assertEquals(stream.position(), (1, 0))
-        self.assertEquals(stream.charsUntil('c'),u"a\nbb\n")
+        self.assertEquals(stream.charsUntil('c'), u"a\nbb\n")
         self.assertEquals(stream.position(), (3, 0))
-        stream.unget("a\nbb\n")
-        self.assertEquals(stream.position(), (1, 0))
-        self.assertEquals(stream.charsUntil('c'),u"a\nbb\n")
+        stream.unget(u"\n")
+        self.assertEquals(stream.position(), (2, 2))
+        self.assertEquals(stream.charsUntil('c'), u"\n")
         self.assertEquals(stream.position(), (3, 0))
-        stream.unget("\n")
+        stream.unget(u"\n")
+        self.assertEquals(stream.position(), (2, 2))
         self.assertEquals(stream.char(), u"\n")
         self.assertEquals(stream.position(), (3, 0))
-        self.assertEquals(stream.charsUntil('e'),u"ccc\nddd")
+        self.assertEquals(stream.charsUntil('e'), u"ccc\nddd")
         self.assertEquals(stream.position(), (4, 3))
+        self.assertEquals(stream.charsUntil('h'), u"e\nf\ng")
+        self.assertEquals(stream.position(), (6, 1))
+
+    def test_position2(self):
+        stream = HTMLInputStream("abc\nd")
+        self.assertEquals(stream.position(), (1, 0))
+        self.assertEquals(stream.char(), u"a")
+        self.assertEquals(stream.position(), (1, 1))
+        self.assertEquals(stream.char(), u"b")
+        self.assertEquals(stream.position(), (1, 2))
+        self.assertEquals(stream.char(), u"c")
+        self.assertEquals(stream.position(), (1, 3))
+        self.assertEquals(stream.char(), u"\n")
+        self.assertEquals(stream.position(), (2, 0))
+        self.assertEquals(stream.char(), u"d")
+        self.assertEquals(stream.position(), (2, 1))
 
 def buildTestSuite():
     return unittest.defaultTestLoader.loadTestsFromName(__name__)
