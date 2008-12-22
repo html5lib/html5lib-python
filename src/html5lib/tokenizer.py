@@ -594,6 +594,11 @@ class HTMLTokenizer:
         elif data == u"/":
             if not self.processSolidusInTag():
                 self.state = self.states["beforeAttributeName"]
+        elif data == u"'" or data == u'"':
+            self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
+              "invalid-character-after-attribute-name"})
+            self.currentToken["data"].append([data, ""])
+            self.state = self.states["attributeName"]
         elif data is EOF:
             self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
               "expected-end-of-tag-but-got-eof"})
