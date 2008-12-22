@@ -4,7 +4,6 @@ import types
 
 from constants import EOF, spaceCharacters, asciiLetters, asciiUppercase
 from constants import encodings
-from utils import MethodDispatcher
 
 #Non-unicode versions of constants for use in the pre-parser
 spaceCharactersBytes = [str(item) for item in spaceCharacters]

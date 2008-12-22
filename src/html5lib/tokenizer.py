@@ -615,7 +615,7 @@ class HTMLTokenizer:
         elif data == u"'":
             self.state = self.states["attributeValueSingleQuoted"]
         elif data == u">":
-            self.tokenQueue.append({"type": "ParseError", "data":
+            self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
               "expected-attribute-value-but-got-right-bracket"})
             self.emitCurrentToken()
         elif data == u"=":
