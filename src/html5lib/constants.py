@@ -64,6 +64,8 @@ E = {
        _(u"Unexpected end of file. Expected = or end of tag."),
     "expected-attribute-value-but-got-eof":
        _(u"Unexpected end of file. Expected attribute value."),
+    "expected-attribute-value-but-got-right-bracket":
+       _(u"Expected attribute value. Got '>' instead."),
     "eof-in-attribute-value-double-quote":
        _(u"Unexpected end of file in attribute value (\")."),
     "eof-in-attribute-value-single-quote":

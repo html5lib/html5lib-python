@@ -615,6 +615,8 @@ class HTMLTokenizer:
         elif data == u"'":
             self.state = self.states["attributeValueSingleQuoted"]
         elif data == u">":
+            self.tokenQueue.append({"type": "ParseError", "data":
+              "expected-attribute-value-but-got-right-bracket"})
             self.emitCurrentToken()
         elif data == u"=":
             self.tokenQueue.append({"type": "ParseError", "data":
@@ -888,14 +890,17 @@ class HTMLTokenizer:
     def doctypeNameState(self):
         data = self.stream.char()
         if data in spaceCharacters:
+            self.currentToken["name"] = self.currentToken["name"].translate(asciiUpper2Lower)
             self.state = self.states["afterDoctypeName"]
         elif data == u">":
+            self.currentToken["name"] = self.currentToken["name"].translate(asciiUpper2Lower)
             self.tokenQueue.append(self.currentToken)
             self.state = self.states["data"]
         elif data is EOF:
             self.tokenQueue.append({"type": "ParseError", "data":
               "eof-in-doctype-name"})
             self.currentToken["correct"] = False
+            self.currentToken["name"] = self.currentToken["name"].translate(asciiUpper2Lower)
             self.tokenQueue.append(self.currentToken)
             self.state = self.states["data"]
         else:
