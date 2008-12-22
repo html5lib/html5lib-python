@@ -145,6 +145,18 @@ class HTMLInputStream:
 
         return encoding, confidence
 
+    def changeEncoding(self, newEncoding):
+        newEncoding = codecName(newEncoding)
+        if newEncoding == "utf16":
+            newEncoding = "utf8"
+
+        if newEncoding is None:
+            return
+        elif newEncoding == self.charEncoding[0]:
+            self.charEncoding = (self.charEncoding[0] and "certian")
+        else:
+            raise NotImplementedError, "Cannot change character encoding mid stream"
+
     def detectBOM(self):
         """Attempts to detect at BOM at the start of the stream. If
         an encoding can be determined from the BOM return the name of the
@@ -279,6 +291,7 @@ class HTMLInputStream:
         self.chunkOffset = 0
 
         data = self.dataStream.read(chunkSize)
+
         if not data:
             return False
         #Replace null characters

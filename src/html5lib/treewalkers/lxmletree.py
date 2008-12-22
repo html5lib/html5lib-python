@@ -6,6 +6,7 @@ _ = gettext
 import _base
 
 from html5lib.constants import voidElements
+from html5lib import ihatexml
 
 class Root(object):
     def __init__(self, et):
@@ -105,6 +106,7 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
         elif isinstance(tree, list):
             tree = FragmentRoot(tree)
         _base.NonRecursiveTreeWalker.__init__(self, tree)
+        self.filter = ihatexml.InfosetFilter()
     def getNodeDetails(self, node):
         if isinstance(node, tuple): # Text node
             node, key = node
@@ -125,7 +127,10 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
 
         else:
             #This is assumed to be an ordinary element
-            return _base.ELEMENT, node.tag, node.attrib.items(), len(node) > 0 or node.text
+            return (_base.ELEMENT, self.filter.fromXmlName(node.tag), 
+                    [(self.filter.fromXmlName(name), value) for 
+                     name,value in node.attrib.iteritems()], 
+                     len(node) > 0 or node.text)
 
     def getFirstChild(self, node):
         assert not isinstance(node, tuple), _("Text nodes have no children")

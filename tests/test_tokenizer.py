@@ -24,13 +24,15 @@ class TokenizerTestParser(object):
             tokenizer.currentToken = {"type": "startTag", 
                                       "name":self._lastStartTag}
 
+        types = dict((v,k) for k,v in constants.tokenTypes.iteritems())
         for token in tokenizer:
-            getattr(self, 'process%s' % token["type"])(token)
+            getattr(self, 'process%s' % types[token["type"]])(token)
 
         return self.outputTokens
 
     def processDoctype(self, token):
-        self.outputTokens.append([u"DOCTYPE", token["name"], token["publicId"], token["systemId"], token["correct"]])
+        self.outputTokens.append([u"DOCTYPE", token["name"], token["publicId"],
+                                  token["systemId"], token["correct"]])
 
     def processStartTag(self, token):
         self.outputTokens.append([u"StartTag", token["name"], dict(token["data"][::-1])])
@@ -57,7 +59,6 @@ class TokenizerTestParser(object):
         pass
 
     def processParseError(self, token):
-        print token
         self.outputTokens.append([u"ParseError", token["data"]])
 
 def concatenateCharacterTokens(tokens):
@@ -117,9 +118,9 @@ class TestCase(unittest.TestCase):
         tokens = parser.parse(test['input'])
         tokens = concatenateCharacterTokens(tokens)
         tokens = normalizeTokens(tokens)
-        errorMsg = "\n".join(["\n\nContent Model Flag:",
+        errorMsg = u"\n".join(["\n\nContent Model Flag:",
                               test['contentModelFlag'] ,
-                              "\nInput:", test['input'],
+                              "\nInput:", unicode(test['input']),
                               "\nExpected:", unicode(output),
                               "\nreceived:", unicode(tokens)])
         ignoreErrorOrder = test.get('ignoreErrorOrder', False)
@@ -130,7 +131,7 @@ class TestCase(unittest.TestCase):
         except AssertionError:
             outBuffer.seek(0)
             print outBuffer.read()
-            print errorMsg
+            print errorMsg.encode('utf-8')
             raise
 
 def buildTestSuite():

@@ -12,7 +12,7 @@ from optparse import OptionParser
 #RELEASE remove
 sys.path.insert(0,os.path.abspath(os.path.join(__file__,'../src')))
 #END RELEASE
-from html5lib import html5parser, liberalxmlparser
+from html5lib import html5parser, liberalxmlparser, sanitizer, tokenizer
 from html5lib import treebuilders, serializer, treewalkers
 from html5lib import constants
 
@@ -46,10 +46,15 @@ def parse():
 
     treebuilder = treebuilders.getTreeBuilder(opts.treebuilder)
 
-    if opts.xml:
-        p = liberalxmlparser.XHTMLParser(tree=treebuilder)
+    if opts.sanitize:
+        tokenizer = sanitizer.HTMLSanitizer
     else:
-        p = html5parser.HTMLParser(tree=treebuilder)
+        tokenizer = HTMLTokenizer
+
+    if opts.xml:
+        p = liberalxmlparser.XHTMLParser(tree=treebuilder, tokenizer=tokenizer)
+    else:
+        p = html5parser.HTMLParser(tree=treebuilder, tokenizer=tokenizer)
 
     if opts.fragment:
         parseMethod = p.parseFragment
@@ -57,6 +62,7 @@ def parse():
         parseMethod = p.parse
 
     if opts.profile:
+        #XXX should import cProfile instead and use that
         import hotshot
         import hotshot.stats
         prof = hotshot.Profile('stats.prof')

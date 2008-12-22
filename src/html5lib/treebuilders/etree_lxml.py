@@ -3,10 +3,12 @@ import new
 import warnings
 from html5lib.constants import DataLossWarning
 import etree as etree_builders
+from html5lib import ihatexml
+
 try:
     import lxml.etree as etree
 except ImportError:
-    import lxml.etree as etree
+    pass
 
 fullTree = True
 
@@ -16,7 +18,6 @@ names that break between releases. The downside of this is that we cannot repres
 all possible trees; specifically the following are known to cause problems:
 
 Text or comments as siblings of the root element
-Doctypes with mixed case names
 Docypes with no name
 
 When any of these things occur, we emit a DataLossWarning
@@ -138,17 +139,76 @@ def tostring(element):
         rv.append("%s\""%(' '*2, finalText))
 
     return "".join(rv)
+        
 
 class TreeBuilder(_base.TreeBuilder):
     documentClass = Document
     doctypeClass = DocumentType
     elementClass = None
     commentClass = None
-    fragmentClass = Document
-    
+    fragmentClass = Document    
+
     def __init__(self, fullTree = False):
         builder = etree_builders.getETreeModule(etree, fullTree=fullTree)
-        self.elementClass = builder.Element
+        filter = self.filter = ihatexml.InfosetFilter()
+
+        class Attributes(dict):
+            def __init__(self, element, value={}):
+                self._element = element
+                dict.__init__(self, value)
+                for k, v in self.iteritems():
+                    self._element._element.attrib[filter.coerceAttribute(k)] = v
+
+            def __setitem__(self, key, value):
+                dict.__setitem__(self, key, value)
+                self._element._element.attrib[filter.coerceAttribute(key)] = value
+
+        class Element(builder.Element):
+            def __init__(self, name):
+                self._name = name
+                builder.Element.__init__(self, filter.coerceElement(name))
+                self._attributes = Attributes(self)
+
+            def _setName(self, name):
+                self._name = name
+                self._element.tag = filter.coerceElement(name)
+
+            def _getName(self):
+                return self._name
+
+            name = property(_getName, _setName)
+
+            def _getAttributes(self):
+                return self._attributes
+
+            def _setAttributes(self, attributes):
+                self._attributes = Attributes(self, attributes)
+    
+            attributes = property(_getAttributes, _setAttributes)
+
+            def insertText(self, data, insertBefore=None):
+                data = filter.coerceCharacters(data)
+                builder.Element.insertText(self, data, insertBefore)
+
+            def appendChild(self, child):
+                builder.Element.appendChild(self, child)
+                
+
+        class Comment(builder.Comment):
+            def __init__(self, data):
+                data = filter.coerceComment(data)
+                builder.Comment.__init__(self, data)
+
+            def _setData(self, data):
+                data = filter.coerceComment(data)
+                self._element.text = data
+
+            def _getData(self):
+                return self._element.text
+
+            data = property(_getData, _setData)
+
+        self.elementClass = Element
         self.commentClass = builder.Comment
         #self.fragmentClass = builder.DocumentFragment
         _base.TreeBuilder.__init__(self)
@@ -177,7 +237,7 @@ class TreeBuilder(_base.TreeBuilder):
         if element.tail:
             fragment.append(element.tail)
         return fragment
-    
+
     def insertDoctype(self, name, publicId, systemId):
         if not name:
             warnings.warn("lxml cannot represent null doctype", DataLossWarning)
@@ -190,7 +250,7 @@ class TreeBuilder(_base.TreeBuilder):
     def insertRoot(self, name):
         """Create the document root"""
         #Because of the way libxml2 works, it doesn't seem to be possible to
-        #alter informatioN like the doctype after the tree has been parsed. 
+        #alter information like the doctype after the tree has been parsed. 
         #Therefore we need to use the built-in parser to create our iniial 
         #tree, after which we can add elements like normal
         docStr = ""

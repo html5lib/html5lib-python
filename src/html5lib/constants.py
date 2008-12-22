@@ -370,7 +370,6 @@ specialElements = frozenset((
 spaceCharacters = frozenset((
     u"\t",
     u"\n",
-    u"\u000B",
     u"\u000C",
     u" ",
     u"\r"
@@ -1087,6 +1086,17 @@ encodings = {
     'windows1258': 'cp1258',
     'windows936': 'gbk',
     'x-x-big5': 'big5'}
+
+tokenTypes = {
+    "Doctype":0,
+    "Characters":1,
+    "SpaceCharacters":2,
+    "StartTag":3,
+    "EndTag":4,
+    "EmptyTag":5,
+    "Comment":6,
+    "ParseError":7
+}
 
 class DataLossWarning(UserWarning):
     pass

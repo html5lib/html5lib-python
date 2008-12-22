@@ -17,7 +17,7 @@ References:
 import sys
 
 import html5parser
-from constants import voidElements, contentModelFlags
+from constants import voidElements, contentModelFlags, tokenTypes
 
 from xml.dom import XHTML_NAMESPACE
 from xml.sax.saxutils import unescape
@@ -31,23 +31,23 @@ class XMLParser(html5parser.HTMLParser):
 
     def normalizeToken(self, token):
 
-        if token["type"] in ("StartTag", "EmptyTag"):
+        if token["type"] in (tokenTypes["StartTag"], tokenTypes["EmptyTag"]):
             token["data"] = dict(token["data"][::-1])
 
         # For EmptyTags, process both a Start and an End tag
-        if token["type"] == "EmptyTag":
+        if token["type"] == tokenTypes["EmptyTag"]:
             save = self.tokenizer.contentModelFlag
             self.phase.processStartTag(token["name"], token["data"])
             self.tokenizer.contentModelFlag = save
             token["data"] = {}
-            token["type"] = "EndTag"
+            token["type"] = tokenTypes["EndTag"]
 
-        elif token["type"] == "Characters":
+        elif token["type"] == tokenTypes["Characters"]:
             # un-escape rcdataElements (e.g. style, script)
             if self.tokenizer.contentModelFlag == contentModelFlags["CDATA"]:
                 token["data"] = unescape(token["data"])
 
-        elif token["type"] == "Comment":
+        elif token["type"] == tokenTypes["Comment"]:
             # Rescue CDATA from the comments
             if (token["data"].startswith("[CDATA[") and
                 token["data"].endswith("]]")):
@@ -79,11 +79,11 @@ class XHTMLParser(XMLParser):
 
         # ensure that non-void XHTML elements have content so that separate
         # open and close tags are emitted
-        if token["type"]  == "EndTag":
+        if token["type"]  == tokenTypes["EndTag"]:
             if token["name"] in voidElements:
                 if not self.tree.openElements or \
                   self.tree.openElements[-1].name != token["name"]:
-                    token["type"] = "EmptyTag"
+                    token["type"] = tokenTypes["EmptyTag"]
                     if not token.has_key("data"): token["data"] = {}
             else:
                 if token["name"] == self.tree.openElements[-1].name and \

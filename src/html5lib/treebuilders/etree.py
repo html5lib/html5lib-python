@@ -1,6 +1,8 @@
 import _base
 import new
 
+from html5lib import ihatexml
+
 moduleCache = {}
 
 def getETreeModule(ElementTreeImplementation, fullTree=False):
@@ -46,8 +48,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
         attributes = property(_getAttributes, _setAttributes)
     
         def _getChildNodes(self):
-            return self._childNodes
-    
+            return self._childNodes    
         def _setChildNodes(self, value):
             del self._element[:]
             self._childNodes = []
@@ -209,6 +210,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
         """Serialize an element and its child nodes to a string"""
         rv = []
         finalText = None
+        filter = ihatexml.InfosetFilter()
         def serializeElement(element):
             if type(element) == type(ElementTree.ElementTree):
                 element = element.getroot()
@@ -235,9 +237,10 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             else:
                 #This is assumed to be an ordinary element
                 if not element.attrib:
-                    rv.append("<%s>"%(element.tag,))
+                    rv.append("<%s>"%(filter.fromXmlName(element.tag),))
                 else:
-                    attr = " ".join(["%s=\"%s\""%(name, value) 
+                    attr = " ".join(["%s=\"%s\""%(
+                                filter.fromXmlName(name), value) 
                                      for name, value in element.attrib.iteritems()])
                     rv.append("<%s %s>"%(element.tag, attr))
                 if element.text:

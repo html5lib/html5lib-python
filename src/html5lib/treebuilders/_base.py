@@ -43,7 +43,7 @@ class Node(object):
             return "<%s>"%(self.name)
 
     def __repr__(self):
-        return "<%s %s>" % (self.__class__, self.name)
+        return "<%s>" % (self.name)
 
     def appendChild(self, node):
         """Insert node as a child of the current node

@@ -6,6 +6,7 @@ except NameError:
     from sets import ImmutableSet as frozenset
 import sys
 
+import inputstream
 import tokenizer
 
 import treebuilders
@@ -17,11 +18,12 @@ from constants import contentModelFlags, spaceCharacters, asciiUpper2Lower
 from constants import scopingElements, formattingElements, specialElements
 from constants import headingElements, tableInsertModeElements
 from constants import cdataElements, rcdataElements, voidElements
+from constants import tokenTypes
 
 def parse(doc, treebuilderName="simpletree", encoding=None):
-    tb = treebuilders.gettreebuilder(treebuilderName)
-    p = HTMLParser(tb, encoding=None)
-    return p.parse(doc)
+    tb = treebuilders.getTreeBuilder(treebuilderName)
+    p = HTMLParser(tb)
+    return p.parse(doc, encoding=encoding)
 
 class HTMLParser(object):
     """HTML parser. Generates a tree structure from a stream of (possibly
@@ -114,19 +116,33 @@ class HTMLParser(object):
 
         self.beforeRCDataPhase = None
 
-        # XXX This is temporary for the moment so there isn't any other
-        # changes needed for the parser to work with the iterable tokenizer
+        (CharactersToken, 
+         SpaceCharactersToken, 
+         StartTagToken,
+         EndTagToken, 
+         CommentToken,
+         DoctypeToken) = (tokenTypes["Characters"],
+                          tokenTypes["SpaceCharacters"],
+                          tokenTypes["StartTag"],
+                          tokenTypes["EndTag"],
+                          tokenTypes["Comment"],
+                          tokenTypes["Doctype"])
+
         for token in self.normalizedTokens():
             type = token["type"]
-            method = getattr(self.phase, "process%s" % type, None)
-            if type in ("Characters", "SpaceCharacters", "Comment"):
-                method(token["data"])
-            elif type == "StartTag":
-                method(token["name"], token["data"])
-            elif type == "EndTag":
-                method(token["name"])
-            elif type == "Doctype":
-                method(token["name"], token["publicId"], token["systemId"], token["correct"])
+            if type == CharactersToken:
+                self.phase.processCharacters(token["data"])
+            elif type == SpaceCharactersToken:
+                self.phase.processSpaceCharacters(token["data"])
+            elif type == StartTagToken:
+                self.phase.processStartTag(token["name"], token["data"])
+            elif type == EndTagToken:
+                self.phase.processEndTag(token["name"])
+            elif type == CommentToken:
+                self.phase.processComment(token["data"])
+            elif type == DoctypeToken:
+                self.phase.processDoctype(token["name"], token["publicId"],
+                token["systemId"], token["correct"])
             else:
                 self.parseError(token["data"], token.get("datavars", {}))
 
@@ -176,7 +192,7 @@ class HTMLParser(object):
     def normalizeToken(self, token):
         """ HTML5 specific normalizations to the token stream """
 
-        if token["type"] == "EmptyTag":
+        if token["type"] == tokenTypes["EmptyTag"]:
             # When a solidus (/) is encountered within a tag name what happens
             # depends on whether the current tag name matches that of a void
             # element.  If it matches a void element atheists did the wrong
@@ -185,9 +201,9 @@ class HTMLParser(object):
             if token["name"] not in voidElements:
                 self.parseError("incorrectly-placed-solidus")
 
-            token["type"] = "StartTag"
+            token["type"] = tokenTypes["StartTag"]
 
-        if token["type"] == "StartTag":
+        if token["type"] == tokenTypes["StartTag"]:
             token["data"] = dict(token["data"][::-1])
 
         return token
@@ -496,7 +512,7 @@ class BeforeHeadPhase(Phase):
         self.startTagHandler.default = self.startTagOther
 
         self.endTagHandler = utils.MethodDispatcher([
-            (("html", "head", "body", "br", "p"), self.endTagImplyHead)
+            (("head", "br"), self.endTagImplyHead)
         ])
         self.endTagHandler.default = self.endTagOther
 
@@ -585,10 +601,13 @@ class InHeadPhase(Phase):
 
         if self.parser.tokenizer.stream.charEncoding[1] == "tentative":
             if "charset" in attributes:
-                codec = inputstream.codecName(atributes["charset"])
+                codec = inputstream.codecName(attributes["charset"])
                 self.parser.tokenizer.stream.changeEncoding(codec)
-            if "content" in attributes:
-                raise NotImplementedError
+            elif "content" in attributes:
+                data = inputstream.EncodingBytes(attributes["content"])
+                parser = inputstream.ContentAttrParser(data)
+                codec = parser.parse()
+                self.parser.tokenizer.stream.changeEncoding(codec)
 
     def startTagTitle(self, name, attributes):
         self.parser.parseRCDataCData(name, attributes, "RCDATA")
@@ -764,8 +783,9 @@ class InBodyPhase(Phase):
 
     # the real deal
     def processEOF(self):
-        allowed_elements = set(("dd", "dt", "li", "p", "tbody", "td", "tfoot",
-                                "th", "thead", "tr", "body", "html"))
+        allowed_elements = frozenset(("dd", "dt", "li", "p", "tbody", "td",
+                                      "tfoot", "th", "thead", "tr", "body",
+                                      "html"))
         for node in self.tree.openElements[::-1]:
             if node.name not in allowed_elements:
                 self.parser.parseError("expected-closing-tag-but-got-eof")
@@ -1051,10 +1071,16 @@ class InBodyPhase(Phase):
             # innerHTML case
             self.parser.parseError()
             return
-        if self.tree.openElements[-1].name != "body":
-            self.parser.parseError("expected-one-end-tag-but-got-another",
-              {"expectedName": "body",
-               "gotName": self.tree.openElements[-1].name})
+        elif self.tree.openElements[-1].name != "body":
+            for node in self.tree.openElements[2:]:
+                if node.name not in frozenset(("dd", "dt", "li", "p",
+                                               "tbody", "td", "tfoot",
+                                               "th", "thead", "tr")):
+                    #Not sure this is the correct name for the parse error
+                    self.parser.parseError(
+                        "expected-one-end-tag-but-got-another",
+                        {"expectedName": "body", "gotName": node.name})
+                    break
         self.parser.phase = self.parser.phases["afterBody"]
 
     def endTagHtml(self, name):
@@ -1316,7 +1342,6 @@ class InTablePhase(Phase):
 
         self.endTagHandler = utils.MethodDispatcher([
             ("table", self.endTagTable),
-            (("style", "script"), self.endTagStyleScript),
             (("body", "caption", "col", "colgroup", "html", "tbody", "td",
               "tfoot", "th", "thead", "tr"), self.endTagIgnore)
         ])
@@ -1433,12 +1458,6 @@ class InTablePhase(Phase):
             # innerHTML case
             assert self.parser.innerHTML
             self.parser.parseError()
-
-    def endTagStyleScript(self, name):
-        if "tainted" not in self.getCurrentTable()._flags:
-            self.parser.phases["inHead"].processEndTag(name)
-        else:
-            self.endTagOther(name)
 
     def endTagIgnore(self, name):
         self.parser.parseError("unexpected-end-tag", {"name": name})

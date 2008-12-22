@@ -22,7 +22,7 @@ import _base
 import iso639codes
 import rfc3987
 import rfc2046
-from html5lib.constants import E, spaceCharacters, digits
+from html5lib.constants import E, spaceCharacters, digits, tokenTypes
 from html5lib import tokenizer
 import gettext
 _ = gettext.gettext
@@ -267,8 +267,9 @@ class HTMLConformanceChecker(_base.Filter):
         self.IDsWeHaveKnownAndLoved = []
 
     def __iter__(self):
+        types = dict((v,k) for k,v in tokenTypes.iteritems())
         for token in _base.Filter.__iter__(self):
-            fakeToken = {"type": token.get("type", "-"),
+            fakeToken = {"type": types.get(token.get("type", "-"), "-"),
                          "name": token.get("name", "-").capitalize()}
             method = getattr(self, "validate%(type)s%(name)s" % fakeToken, None)
             if method:
@@ -301,23 +302,23 @@ class HTMLConformanceChecker(_base.Filter):
         attrDict = dict([(name.lower(), value) for name, value in token.get("data", [])])
         inputType = attrDict.get("type", "text")
         if inputType not in inputTypeAllowedAttributeMap.keys():
-            yield {"type": "ParseError",
+            yield {"type": tokenTypes["ParseError"],
                    "data": "unknown-input-type",
                    "datavars": {"attrValue": inputType}}
         allowedAttributes = inputTypeAllowedAttributeMap.get(inputType, [])
         for attrName, attrValue in attrDict.items():
             if attrName not in allowedAttributeMap['input']:
-                yield {"type": "ParseError",
+                yield {"type": tokenTypes["ParseError"],
                        "data": "unknown-attribute",
                        "datavars": {"tagName": "input",
                                     "attributeName": attrName}}
             elif attrName not in allowedAttributes:
-                yield {"type": "ParseError",
+                yield {"type": tokenTypes["ParseError"],
                        "data": "attribute-not-allowed-on-this-input-type",
                        "datavars": {"attributeName": attrName,
                                     "inputType": inputType}}
             if attrName in inputTypeDeprecatedAttributeMap.get(inputType, []):
-                yield {"type": "ParseError",
+                yield {"type": tokenTypes["ParseError"],
                        "data": "deprecated-attribute",
                        "datavars": {"attributeName": attrName,
                                     "inputType": inputType}}
@@ -330,7 +331,7 @@ class HTMLConformanceChecker(_base.Filter):
         # check for recognized tag name
         name = token.get("name", "").lower()
         if name not in allowedAttributeMap.keys():
-            yield {"type": "ParseError",
+            yield {"type": tokenTypes["ParseError"],
                    "data": "unknown-start-tag",
                    "datavars": {"tagName": name}}
 
@@ -342,7 +343,7 @@ class HTMLConformanceChecker(_base.Filter):
                             in token.get("data", [])]
             for attrName in requiredAttributeMap[name]:
                 if attrName not in attrsPresent:
-                    yield {"type": "ParseError",
+                    yield {"type": tokenTypes["ParseError"],
                            "data": "missing-required-attribute",
                            "datavars": {"tagName": name,
                                         "attributeName": attrName}}
@@ -353,7 +354,7 @@ class HTMLConformanceChecker(_base.Filter):
         allowedAttributes = globalAttributes | allowedAttributeMap.get(name, frozenset(()))
         for attrName, attrValue in token.get("data", []):
             if attrName.lower() not in allowedAttributes:
-                yield {"type": "ParseError",
+                yield {"type": tokenTypes["ParseError"],
                        "data": "unknown-attribute",
                        "datavars": {"tagName": name,
                                     "attributeName": attrName}}
@@ -365,11 +366,11 @@ class HTMLConformanceChecker(_base.Filter):
 #    def checkURI(self, token, tagName, attrName, attrValue):
 #        isValid, errorCode = rfc3987.isValidURI(attrValue)
 #        if not isValid:
-#            yield {"type": "ParseError",
+#            yield {"type": tokenTypes["ParseError"],
 #                   "data": errorCode,
 #                   "datavars": {"tagName": tagName,
 #                                "attributeName": attrName}}
-#            yield {"type": "ParseError",
+#            yield {"type": tokenTypes["ParseError"],
 #                   "data": "invalid-attribute-value",
 #                   "datavars": {"tagName": tagName,
 #                                "attributeName": attrName}}
@@ -377,28 +378,28 @@ class HTMLConformanceChecker(_base.Filter):
     def checkIRI(self, token, tagName, attrName, attrValue):
         isValid, errorCode = rfc3987.isValidIRI(attrValue)
         if not isValid:
-            yield {"type": "ParseError",
+            yield {"type": tokenTypes["ParseError"],
                    "data": errorCode,
                    "datavars": {"tagName": tagName,
                                 "attributeName": attrName}}
-            yield {"type": "ParseError",
+            yield {"type": tokenTypes["ParseError"],
                    "data": "invalid-attribute-value",
                    "datavars": {"tagName": tagName,
                                 "attributeName": attrName}}
 
     def checkID(self, token, tagName, attrName, attrValue):
         if not attrValue:
-            yield {"type": "ParseError",
+            yield {"type": tokenTypes["ParseError"],
                    "data": "attribute-value-can-not-be-blank",
                    "datavars": {"tagName": tagName,
                                 "attributeName": attrName}}
         for c in attrValue:
             if c in spaceCharacters:
-                yield {"type": "ParseError",
+                yield {"type": tokenTypes["ParseError"],
                        "data": "space-in-id",
                        "datavars": {"tagName": tagName,
                                     "attributeName": attrName}}
-                yield {"type": "ParseError",
+                yield {"type": tokenTypes["ParseError"],
                        "data": "invalid-attribute-value",
                        "datavars": {"tagName": tagName,
                                     "attributeName": attrName}}
@@ -427,7 +428,7 @@ class HTMLConformanceChecker(_base.Filter):
         valueDict = {}
         for currentValue in valueList:
             if valueDict.has_key(currentValue):
-                yield {"type": "ParseError",
+                yield {"type": tokenTypes["ParseError"],
                        "data": "duplicate-value-in-token-list",
                        "datavars": {"tagName": tagName,
                                     "attributeName": attrName,
@@ -437,19 +438,19 @@ class HTMLConformanceChecker(_base.Filter):
 
     def checkEnumeratedValue(self, token, tagName, attrName, attrValue, enumeratedValues):
         if not attrValue and ('' not in enumeratedValues):
-            yield {"type": "ParseError",
+            yield {"type": tokenTypes["ParseError"],
                    "data": "attribute-value-can-not-be-blank",
                    "datavars": {"tagName": tagName,
                                 "attributeName": attrName}}
             return
         attrValue = attrValue.lower()
         if attrValue not in enumeratedValues:
-            yield {"type": "ParseError",
+            yield {"type": tokenTypes["ParseError"],
                    "data": "invalid-enumerated-value",
                    "datavars": {"tagName": tagName,
                                 "attributeName": attrName,
                                 "enumeratedValues": tuple(enumeratedValues)}}
-            yield {"type": "ParseError",
+            yield {"type": tokenTypes["ParseError"],
                    "data": "invalid-attribute-value",
                    "datavars": {"tagName": tagName,
                                 "attributeName": attrName}}
@@ -457,12 +458,12 @@ class HTMLConformanceChecker(_base.Filter):
     def checkBoolean(self, token, tagName, attrName, attrValue):
         enumeratedValues = frozenset((attrName, ''))
         if attrValue not in enumeratedValues:
-            yield {"type": "ParseError",
+            yield {"type": tokenTypes["ParseError"],
                    "data": "invalid-boolean-value",
                    "datavars": {"tagName": tagName,
                                 "attributeName": attrName,
                                 "enumeratedValues": tuple(enumeratedValues)}}
-            yield {"type": "ParseError",
+            yield {"type": tokenTypes["ParseError"],
                    "data": "invalid-attribute-value",
                    "datavars": {"tagName": tagName,
                                 "attributeName": attrName}}
@@ -471,7 +472,7 @@ class HTMLConformanceChecker(_base.Filter):
         sign = 1
         numberString = ''
         state = 'begin' # ('begin', 'initial-number', 'number', 'trailing-junk')
-        error = {"type": "ParseError",
+        error = {"type": tokenTypes["ParseError"],
                  "data": "invalid-integer-value",
                  "datavars": {"tagName": tagName,
                               "attributeName": attrName,
@@ -503,7 +504,7 @@ class HTMLConformanceChecker(_base.Filter):
             elif state == 'trailing-junk':
                 pass
         if not numberString:
-            yield {"type": "ParseError",
+            yield {"type": tokenTypes["ParseError"],
                    "data": "attribute-value-can-not-be-blank",
                    "datavars": {"tagName": tagName,
                                 "attributeName": attrName}}
@@ -517,7 +518,7 @@ class HTMLConformanceChecker(_base.Filter):
         if attrValue[0] != '_': return
         attrValue = attrValue.lower()
         if attrValue in frozenset(('_self', '_parent', '_top', '_blank')): return
-        yield {"type": "ParseError",
+        yield {"type": tokenTypes["ParseError"],
                "data": "invalid-browsing-context",
                "datavars": {"tagName": tagName,
                             "attributeName": attrName}}
@@ -525,7 +526,7 @@ class HTMLConformanceChecker(_base.Filter):
     def checkLangCode(self, token, tagName, attrName, attrValue):
         if not attrValue: return # blank is OK
         if not iso639codes.isValidLangCode(attrValue):
-            yield {"type": "ParseError",
+            yield {"type": tokenTypes["ParseError"],
                    "data": "invalid-lang-code",
                    "datavars": {"tagName": tagName,
                                 "attributeName": attrName,
@@ -534,13 +535,13 @@ class HTMLConformanceChecker(_base.Filter):
     def checkMIMEType(self, token, tagName, attrName, attrValue):
         # XXX needs tests
         if not attrValue:
-            yield {"type": "ParseError",
+            yield {"type": tokenTypes["ParseError"],
                    "data": "attribute-value-can-not-be-blank",
                    "datavars": {"tagName": tagName,
                                 "attributeName": attrName}}
 
         if not rfc2046.isValidMIMEType(attrValue):
-            yield {"type": "ParseError",
+            yield {"type": tokenTypes["ParseError"],
                    "data": "invalid-mime-type",
                    "datavars": {"tagName": tagName,
                                 "attributeName": attrName,
@@ -556,7 +557,7 @@ class HTMLConformanceChecker(_base.Filter):
         allowedValues = (tagName == 'link') and linkRelValues or aRelValues
         for currentValue in valueList:
             if currentValue not in allowedValues:
-                yield {"type": "ParseError",
+                yield {"type": tokenTypes["ParseError"],
                        "data": "invalid-rel",
                        "datavars": {"tagName": tagName,
                                     "attributeName": attrName}}
@@ -593,7 +594,7 @@ class HTMLConformanceChecker(_base.Filter):
     def validateAttributeValueClass(self, token, tagName, attrName, attrValue):
         for t in self.checkTokenList(tagName, attrName, attrValue) or []:
             yield t
-            yield {"type": "ParseError",
+            yield {"type": tokenTypes["ParseError"],
                    "data": "invalid-attribute-value",
                    "datavars": {"tagName": tagName,
                                 "attributeName": attrName}}
@@ -623,7 +624,7 @@ class HTMLConformanceChecker(_base.Filter):
         for t in self.checkID(token, tagName, attrName, attrValue) or []: yield t
         if not attrValue: return
         if attrValue in self.IDsWeHaveKnownAndLoved:
-            yield {"type": "ParseError",
+            yield {"type": tokenTypes["ParseError"],
                    "data": "duplicate-id",
                    "datavars": {"tagName": tagName}}
         self.IDsWeHaveKnownAndLoved.append(attrValue)
@@ -641,7 +642,7 @@ class HTMLConformanceChecker(_base.Filter):
 
     def validateAttributeValueHtmlXmlns(self, token, tagName, attrName, attrValue):
         if attrValue != "http://www.w3.org/1999/xhtml":
-            yield {"type": "ParseError",
+            yield {"type": tokenTypes["ParseError"],
                    "data": "invalid-root-namespace",
                    "datavars": {"tagName": tagName,
                                 "attributeName": attrName}}
@@ -699,7 +700,7 @@ class HTMLConformanceChecker(_base.Filter):
                                       # hooray for obscure side effects!
             attrValue = attrsDict.get("contextmenu", "")
             if attrValue and (attrValue not in self.IDsWeHaveKnownAndLoved):
-                yield {"type": "ParseError",
+                yield {"type": tokenTypes["ParseError"],
                        "data": "id-does-not-exist",
                        "datavars": {"tagName": tagName,
                                     "attributeName": "contextmenu",
@@ -710,6 +711,6 @@ class HTMLConformanceChecker(_base.Filter):
                     if not id: continue
                     if id == attrValue:
                         if refToken.get("name", "").lower() != "menu":
-                            yield {"type": "ParseError",
+                            yield {"type": tokenTypes["ParseError"],
                                    "data": "contextmenu-must-point-to-menu"}
                         break

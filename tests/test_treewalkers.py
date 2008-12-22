@@ -222,7 +222,6 @@ def sortattrs(x):
 class TestCase(unittest.TestCase):
     def runTest(self, innerHTML, input, expected, errors, treeClass):
         p = html5parser.HTMLParser(tree = treeClass["builder"])
-        
         try:
             if innerHTML:
                 document = p.parseFragment(StringIO.StringIO(input), innerHTML)
@@ -231,6 +230,7 @@ class TestCase(unittest.TestCase):
         except constants.DataLossWarning:
             #Ignore testcases we know we don't pass
             return
+
         document = treeClass.get("adapter", lambda x: x)(document)
         try:
             output = convertTokens(treeClass["walker"](document))
@@ -272,7 +272,10 @@ def buildTestSuite():
     sys.stdout.write('Testing tree walkers '+ " ".join(treeTypes.keys()) + "\n")
 
     for treeName, treeCls in treeTypes.iteritems():
-        for filename in html5lib_test_files('tree-construction'):
+        files = html5lib_test_files('tree-construction')
+        files = [f for f in files if 
+                 not f.split(".")[-2][-2:] in ("s9", "10", "11", "12")] #skip namespace tests for now
+        for filename in files:
             testName = os.path.basename(filename).replace(".dat","")
             if testName == "tests5": continue # TODO
 
