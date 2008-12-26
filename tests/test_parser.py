@@ -151,10 +151,10 @@ def main():
     except SystemExit:
 	    pass
 	
-    f = open("graph.dot", "w")
-    f.write(str(g))
+    # f = open("graph.dot", "w")
+    # f.write(str(g))
     
-    print g.nodes.keys()
+    # print g.nodes.keys()
 
 if __name__ == "__main__":
     print sys.argv
