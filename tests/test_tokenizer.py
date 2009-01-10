@@ -123,16 +123,10 @@ class TestCase(unittest.TestCase):
                               "\nInput:", unicode(test['input']),
                               "\nExpected:", unicode(output),
                               "\nreceived:", unicode(tokens)])
+        errorMsg = errorMsg.encode("utf-8")
         ignoreErrorOrder = test.get('ignoreErrorOrder', False)
-        sys.stdout = stdout
-        try:
-            self.assertEquals(tokensMatch(tokens, output, ignoreErrorOrder), True,
-                              errorMsg)
-        except AssertionError:
-            outBuffer.seek(0)
-            print outBuffer.read()
-            print errorMsg.encode('utf-8')
-            raise
+        self.assertEquals(tokensMatch(tokens, output, ignoreErrorOrder), True,
+                          errorMsg)
 
 def buildTestSuite():
     for filename in html5lib_test_files('tokenizer', '*.test'):

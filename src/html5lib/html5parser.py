@@ -18,10 +18,10 @@ from constants import contentModelFlags, spaceCharacters, asciiUpper2Lower
 from constants import scopingElements, formattingElements, specialElements
 from constants import headingElements, tableInsertModeElements
 from constants import cdataElements, rcdataElements, voidElements
-from constants import tokenTypes
+from constants import tokenTypes, ReparseException
 
-def parse(doc, treebuilderName="simpletree", encoding=None):
-    tb = treebuilders.getTreeBuilder(treebuilderName)
+def parse(doc, treebuilder="simpletree", encoding=None):
+    tb = treebuilders.getTreeBuilder(treebuilder)
     p = HTMLParser(tb)
     return p.parse(doc, encoding=encoding)
 
@@ -80,18 +80,29 @@ class HTMLParser(object):
 
     def _parse(self, stream, innerHTML=False, container="div",
                encoding=None, parseMeta=True, useChardet=True, **kwargs):
-        
+
+        self.innerHTMLMode = innerHTML
+        self.container = container
+        self.tokenizer = self.tokenizer_class(stream, encoding=encoding,
+                                              parseMeta=parseMeta,
+                                              useChardet=useChardet, **kwargs)
+        self.reset()
+
+        while True:
+            try:
+                self.mainLoop()
+                break
+            except ReparseException, e:
+                self.reset()
+
+    def reset(self):
         self.tree.reset()
         self.firstStartTag = False
         self.errors = []
         self.compatMode = "no quirks"
 
-        self.tokenizer = self.tokenizer_class(stream, encoding=encoding,
-                                              parseMeta=parseMeta,
-                                              useChardet=useChardet, **kwargs)
-
-        if innerHTML:
-            self.innerHTML = container.lower()
+        if self.innerHTMLMode:
+            self.innerHTML = self.container.lower()
 
             if self.innerHTML in cdataElements:
                 self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["RCDATA"]
@@ -113,9 +124,9 @@ class HTMLParser(object):
         # We only seem to have InBodyPhase testcases where the following is
         # relevant ... need others too
         self.lastPhase = None
-
         self.beforeRCDataPhase = None
-
+        
+    def mainLoop(self):
         (CharactersToken, 
          SpaceCharactersToken, 
          StartTagToken,
@@ -287,18 +298,6 @@ class Phase(object):
 
     def processEOF(self):
         raise NotImplementedError
-        self.tree.generateImpliedEndTags()
-        if len(self.tree.openElements) > 2:
-            self.parser.parseError("expected-closing-tag-but-got-eof")
-        elif len(self.tree.openElements) == 2 and\
-          self.tree.openElements[1].name != "body":
-            # This happens for framesets or something?
-            self.parser.parseError("expected-closing-tag-but-got-eof")
-        elif self.parser.innerHTML and len(self.tree.openElements) > 1 :
-            # XXX This is not what the specification says. Not sure what to do
-            # here.
-            self.parser.parseError("eof-in-innerhtml")
-        # Betting ends.
 
     def processComment(self, data):
         # For most phases the following is correct. Where it's not it will be
@@ -601,8 +600,7 @@ class InHeadPhase(Phase):
 
         if self.parser.tokenizer.stream.charEncoding[1] == "tentative":
             if "charset" in attributes:
-                codec = inputstream.codecName(attributes["charset"])
-                self.parser.tokenizer.stream.changeEncoding(codec)
+                self.parser.tokenizer.stream.changeEncoding(attributes["charset"])
             elif "content" in attributes:
                 data = inputstream.EncodingBytes(attributes["content"])
                 parser = inputstream.ContentAttrParser(data)

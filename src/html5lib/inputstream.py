@@ -3,7 +3,7 @@ import re
 import types
 
 from constants import EOF, spaceCharacters, asciiLetters, asciiUppercase
-from constants import encodings
+from constants import encodings, ReparseException
 
 #Non-unicode versions of constants for use in the pre-parser
 spaceCharactersBytes = [str(item) for item in spaceCharacters]
@@ -16,6 +16,82 @@ ascii_punctuation_re = re.compile(ur"[\u0009-\u000D\u0020-\u002F\u003A-\u0040\u0
 
 # Cache for charsUntil()
 charsUntilRegEx = {}
+        
+class BufferedStream:
+    """Buffering for streams that do not have buffering of their own
+
+    The buffer is implemented as a list of chunks on the assumption that 
+    joining many strings will be slow since it is O(n**2)
+    """
+    
+    def __init__(self, stream):
+        self.stream = stream
+        self.buffer = []
+        self.position = [-1,0] #chunk number, offset
+
+    def tell(self):
+        pos = 0
+        for chunk in self.buffer[:self.position[0]]:
+            pos += len(chunk)
+        pos += self.position[1]
+        return pos
+
+    def seek(self, pos):
+        assert pos < self._bufferedBytes()
+        offset = pos
+        i = 0
+        while len(self.buffer[i]) < offset:
+            offset -= pos
+            i += 1
+        self.position = [i, offset]
+
+    def read(self, bytes):
+        if not self.buffer:
+            return self._readStream(bytes)
+        elif (self.position[0] == len(self.buffer) and
+              self.position[1] == len(self.buffer[-1])):
+            return self._readStream(bytes)
+        else:
+            return self._readFromBuffer(bytes)
+    
+    def _bufferedBytes(self):
+        return sum([len(item) for item in self.buffer])
+
+    def _readStream(self, bytes):
+        data = self.stream.read(bytes)
+        self.buffer.append(data)
+        self.position[0] += 1
+        self.position[1] = len(data)
+        return data
+
+    def _readFromBuffer(self, bytes):
+        remainingBytes = bytes
+        rv = []
+        bufferIndex = self.position[0]
+        bufferOffset = self.position[1]
+        while bufferIndex < len(self.buffer) and remainingBytes != 0:
+            assert remainingBytes > 0
+            bufferedData = self.buffer[bufferIndex]
+            
+            if remainingBytes <= len(bufferedData) - bufferOffset:
+                bytesToRead = remainingBytes
+                self.position = [bufferIndex, bufferOffset + bytesToRead]
+            else:
+                bytesToRead = len(bufferedData) - bufferOffset
+                self.position = [bufferIndex, len(bufferedData)]
+                bufferIndex += 1
+            data = rv.append(bufferedData[bufferOffset: 
+                                          bufferOffset + bytesToRead])
+            remainingBytes -= bytesToRead
+
+            bufferOffset = 0
+
+        if remainingBytes:
+            rv.append(self._readStream(remainingBytes))
+        
+        return "".join(rv)
+        
+
 
 class HTMLInputStream:
     """Provides a unicode stream of characters to the HTMLTokenizer.
@@ -65,6 +141,9 @@ class HTMLInputStream:
         if (self.charEncoding[0] is None):
             self.charEncoding = self.detectEncoding(parseMeta, chardet)
 
+        self.reset()
+
+    def reset(self):
         self.dataStream = codecs.getreader(self.charEncoding[0])(self.rawStream,
                                                                  'replace')
 
@@ -100,6 +179,10 @@ class HTMLInputStream:
                 self.charEncoding = ("utf-8", "certain")
             import cStringIO
             stream = cStringIO.StringIO(str(source))
+
+        if not(hasattr(stream, "tell") and hasattr(stream, "seek")):
+            stream = BufferedStream(stream)
+
         return stream
 
     def detectEncoding(self, parseMeta=True, chardet=True):
@@ -128,7 +211,7 @@ class HTMLInputStream:
                     detector.feed(buffer)
                 detector.close()
                 encoding = detector.result['encoding']
-                self.seek("".join(buffers), 0)
+                self.rawStream.seek(0)
             except ImportError:
                 pass
         # If all else fails use the default encoding
@@ -146,16 +229,18 @@ class HTMLInputStream:
 
     def changeEncoding(self, newEncoding):
         newEncoding = codecName(newEncoding)
-        if newEncoding == "utf16":
-            newEncoding = "utf8"
-
+        if newEncoding in ("utf-16", "utf-16-be", "utf-16-le"):
+            newEncoding = "utf-8"
         if newEncoding is None:
             return
         elif newEncoding == self.charEncoding[0]:
-            self.charEncoding = (self.charEncoding[0] and "certian")
+            self.charEncoding = (self.charEncoding[0], "certian")
         else:
-            raise NotImplementedError, "Cannot change character encoding mid stream"
-
+            self.rawStream.seek(0)
+            self.reset()
+            self.charEncoding = (newEncoding, "certian")
+            raise ReparseException, "Encoding changed from %s to %s"%(self.charEncoding[0], newEncoding)
+            
     def detectBOM(self):
         """Attempts to detect at BOM at the start of the stream. If
         an encoding can be determined from the BOM return the name of the
@@ -182,56 +267,21 @@ class HTMLInputStream:
 
         # Set the read position past the BOM if one was found, otherwise
         # set it to the start of the stream
-        self.seek(string, encoding and seek or 0)
+        self.rawStream.seek(encoding and seek or 0)
 
         return encoding
-
-    def seek(self, buffer, n):
-        """Unget buffer[n:]"""
-        if hasattr(self.rawStream, 'unget'):
-            self.rawStream.unget(buffer[n:])
-            return 
-
-        if hasattr(self.rawStream, 'seek'):
-            try:
-                self.rawStream.seek(n)
-                return
-            except IOError:
-                pass
-
-        class BufferedStream:
-             def __init__(self, data, stream):
-                 self.data = data
-                 self.stream = stream
-             def read(self, chars=-1):
-                 if chars == -1 or chars > len(self.data):
-                     result = self.data
-                     self.data = ''
-                     if chars == -1:
-                         return result + self.stream.read()
-                     else:
-                         return result + self.stream.read(chars-len(result))
-                 elif not self.data:
-                     return self.stream.read(chars)
-                 else:
-                     result = self.data[:chars]
-                     self.data = self.data[chars:]
-                     return result
-             def unget(self, data):
-                 if self.data:
-                     self.data += data
-                 else:
-                     self.data = data
-
-        self.rawStream = BufferedStream(buffer[n:], self.rawStream)
 
     def detectEncodingMeta(self):
         """Report the encoding declared by the meta element
         """
         buffer = self.rawStream.read(self.numBytesMeta)
         parser = EncodingParser(buffer)
-        self.seek(buffer, 0)
+        self.rawStream.seek(0)
         encoding = parser.getEncoding()
+        
+        if encoding in ("utf-16", "utf-16-be", "utf-16-le"):
+            encoding = "utf-8"
+
         return encoding
 
     def updatePosition(self, chars):
@@ -485,13 +535,6 @@ class EncodingParser(object):
                         break
             if not keepParsing:
                 break
-        if self.encoding is not None:
-            self.encoding = self.encoding.strip()        
-            #Spec violation that complies with hsivonen + mjs
-            if (ascii_punctuation_re.sub("", self.encoding) in
-                ("utf16", "utf16be", "utf16le",
-                 "utf32", "utf32be", "utf32le")):
-                self.encoding = "utf-8"
         
         return self.encoding
 
@@ -666,11 +709,12 @@ class ContentAttrParser(object):
         except StopIteration:
             return None
 
+
 def codecName(encoding):
     """Return the python codec name corresponding to an encoding or None if the
     string doesn't correspond to a valid encoding."""
-    if (encoding is not None and type(encoding) == types.StringType):
+    if (encoding is not None and type(encoding) in types.StringTypes):
         canonicalName = ascii_punctuation_re.sub("", encoding).lower()
-        return encodings.get(canonicalName, None) 
+        return encodings.get(canonicalName, None)
     else:
         return None

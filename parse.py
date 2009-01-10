@@ -12,7 +12,8 @@ from optparse import OptionParser
 #RELEASE remove
 sys.path.insert(0,os.path.abspath(os.path.join(__file__,'../src')))
 #END RELEASE
-from html5lib import html5parser, liberalxmlparser, sanitizer, tokenizer
+from html5lib import html5parser, liberalxmlparser, sanitizer
+from html5lib.tokenizer import HTMLTokenizer
 from html5lib import treebuilders, serializer, treewalkers
 from html5lib import constants
 

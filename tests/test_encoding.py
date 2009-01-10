@@ -2,7 +2,7 @@ import os
 import unittest
 from support import html5lib_test_files, TestData, test_dir
 
-from html5lib import inputstream
+from html5lib import HTMLParser, inputstream
 
 import re, unittest
 
@@ -19,11 +19,17 @@ def buildTestSuite():
             replace('-','')
         tests = TestData(filename, "data")
         for idx, test in enumerate(tests):
-            def encodingTest(self, data=test['data'], encoding=test['encoding']):
-                stream = inputstream.HTMLInputStream(data,chardet=False)
-                errorMessage = "Input:\n%s\nExpected:\n%s\nRecieved\n%s\n"%(data, encoding.lower(),
-                                                                            stream.charEncoding[0])
-                self.assertEquals(encoding.lower(), stream.charEncoding[0], errorMessage)
+            def encodingTest(self, data=test['data'], 
+                             encoding=test['encoding']):
+                p = HTMLParser()
+                t = p.parse(data, useChardet=False)
+                
+                errorMessage = ("Input:\n%s\nExpected:\n%s\nRecieved\n%s\n"%
+                                (data, repr(encoding.lower()), 
+                                 repr(p.tokenizer.stream.charEncoding)))
+                self.assertEquals(encoding.lower(),
+                                  p.tokenizer.stream.charEncoding[0], 
+                                  errorMessage)
             setattr(Html5EncodingTestCase, 'test_%s_%d' % (test_name, idx+1),
                 encodingTest)
 

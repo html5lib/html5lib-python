@@ -47,6 +47,7 @@ class Document(object):
 def testSerializer(element):
     rv = []
     finalText = None
+    filter = ihatexml.InfosetFilter()
     def serializeElement(element, indent=0):
         if not hasattr(element, "tag"):
             if  hasattr(element, "getroot"):
@@ -79,10 +80,11 @@ def testSerializer(element):
         elif type(element.tag) == type(etree.Comment):
             rv.append("|%s<!-- %s -->"%(' '*indent, element.text))
         else:
-            rv.append("|%s<%s>"%(' '*indent, element.tag))
+            rv.append("|%s<%s>"%(' '*indent, filter.fromXmlName(element.tag)))
             if hasattr(element, "attrib"):
                 for name, value in element.attrib.iteritems():
-                    rv.append('|%s%s="%s"' % (' '*(indent+2), name, value))
+                    rv.append('|%s%s="%s"' % (' '*(indent+2), 
+                                              filter.fromXmlName(name), value))
             if element.text:
                 rv.append("|%s\"%s\"" %(' '*(indent+2), element.text))
             indent += 2
@@ -239,8 +241,8 @@ class TreeBuilder(_base.TreeBuilder):
         return fragment
 
     def insertDoctype(self, name, publicId, systemId):
-        if not name:
-            warnings.warn("lxml cannot represent null doctype", DataLossWarning)
+        if not name or ihatexml.nonXmlBMPRegexp.search(name):
+            warnings.warn("lxml cannot represent null or non-xml doctype", DataLossWarning)
         doctype = self.doctypeClass(name, publicId, systemId)
         self.doctype = doctype
     
