@@ -52,7 +52,7 @@ def parse():
     else:
         tokenizer = HTMLTokenizer
 
-    if opts.xml:
+    if opts.liberalxml:
         p = liberalxmlparser.XHTMLParser(tree=treebuilder, tokenizer=tokenizer)
     else:
         p = html5parser.HTMLParser(tree=treebuilder, tokenizer=tokenizer)
@@ -195,6 +195,9 @@ def getOptParser():
 
     parser.add_option("", "--sanitize", action="store_true", default=False,
                       dest="sanitize", help="sanitize")
+
+    parser.add_option("", "--liberal-xml-parser", action="store_true", default=False,
+                      dest="liberalxml", help="parse with liberal xml parser")
 
     return parser
 
