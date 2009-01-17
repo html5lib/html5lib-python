@@ -47,6 +47,7 @@ class Document(object):
 def testSerializer(element):
     rv = []
     finalText = None
+    filter = ihatexml.InfosetFilter()
     def serializeElement(element, indent=0):
         if not hasattr(element, "tag"):
             if  hasattr(element, "getroot"):
@@ -79,10 +80,11 @@ def testSerializer(element):
         elif type(element.tag) == type(etree.Comment):
             rv.append("|%s<!-- %s -->"%(' '*indent, element.text))
         else:
-            rv.append("|%s<%s>"%(' '*indent, element.tag))
+            rv.append("|%s<%s>"%(' '*indent, filter.fromXmlName(element.tag)))
             if hasattr(element, "attrib"):
                 for name, value in element.attrib.iteritems():
-                    rv.append('|%s%s="%s"' % (' '*(indent+2), name, value))
+                    rv.append('|%s%s="%s"' % (' '*(indent+2), 
+                                              filter.fromXmlName(name), value))
             if element.text:
                 rv.append("|%s\"%s\"" %(' '*(indent+2), element.text))
             indent += 2
@@ -148,7 +150,7 @@ class TreeBuilder(_base.TreeBuilder):
     commentClass = None
     fragmentClass = Document    
 
-    def __init__(self, fullTree = False):
+    def __init__(self, namespaceHTMLElements, fullTree = False):
         builder = etree_builders.getETreeModule(etree, fullTree=fullTree)
         filter = self.filter = ihatexml.InfosetFilter()
 
@@ -164,9 +166,15 @@ class TreeBuilder(_base.TreeBuilder):
                 self._element._element.attrib[filter.coerceAttribute(key)] = value
 
         class Element(builder.Element):
-            def __init__(self, name):
+            def __init__(self, name, namespace = None):
+                name = filter.coerceElement(name)
+                if namespace is None:
+                    etree_tag = name
+                else:
+                    etree_tag = "{%s}%s"%(namespace, name)
                 self._name = name
-                builder.Element.__init__(self, filter.coerceElement(name))
+                self.namespace = namespace
+                builder.Element.__init__(self, name)
                 self._attributes = Attributes(self)
 
             def _setName(self, name):
@@ -211,7 +219,7 @@ class TreeBuilder(_base.TreeBuilder):
         self.elementClass = Element
         self.commentClass = builder.Comment
         #self.fragmentClass = builder.DocumentFragment
-        _base.TreeBuilder.__init__(self)
+        _base.TreeBuilder.__init__(self, namespaceHTMLElements)
     
     def reset(self):
         _base.TreeBuilder.reset(self)
@@ -238,16 +246,20 @@ class TreeBuilder(_base.TreeBuilder):
             fragment.append(element.tail)
         return fragment
 
-    def insertDoctype(self, name, publicId, systemId):
-        if not name:
-            warnings.warn("lxml cannot represent null doctype", DataLossWarning)
+    def insertDoctype(self, token):
+        name = token["name"]
+        publicId = token["publicId"]
+        systemId = token["systemId"]
+
+        if not name or ihatexml.nonXmlBMPRegexp.search(name):
+            warnings.warn("lxml cannot represent null or non-xml doctype", DataLossWarning)
         doctype = self.doctypeClass(name, publicId, systemId)
         self.doctype = doctype
     
     def insertCommentInitial(self, data, parent=None):
         self.initial_comments.append(data)
     
-    def insertRoot(self, name):
+    def insertRoot(self, token):
         """Create the document root"""
         #Because of the way libxml2 works, it doesn't seem to be possible to
         #alter information like the doctype after the tree has been parsed. 
@@ -256,7 +268,8 @@ class TreeBuilder(_base.TreeBuilder):
         docStr = ""
         if self.doctype and self.doctype.name:
             docStr += "<!DOCTYPE %s"%self.doctype.name
-            if self.doctype.publicId is not None or self.doctype.systemId is not None:
+            if (self.doctype.publicId is not None or 
+                self.doctype.systemId is not None):
                 docStr += ' PUBLIC "%s" "%s"'%(self.doctype.publicId or "",
                                                self.doctype.systemId or "")
             docStr += ">"
@@ -269,15 +282,16 @@ class TreeBuilder(_base.TreeBuilder):
             raise
         
         #Append the initial comments:
-        for comment_data in self.initial_comments:
-            root.addprevious(etree.Comment(comment_data))
+        for comment_token in self.initial_comments:
+            root.addprevious(etree.Comment(comment_token["data"]))
         
         #Create the root document and add the ElementTree to it
         self.document = self.documentClass()
         self.document._elementTree = root.getroottree()
         
         #Add the root element to the internal child/open data structures
-        root_element = self.elementClass(name)
+        namespace = token.get("namespace", None)
+        root_element = self.elementClass(token["name"], namespace)
         root_element._element = root
         self.document._childNodes.append(root_element)
         self.openElements.append(root_element)

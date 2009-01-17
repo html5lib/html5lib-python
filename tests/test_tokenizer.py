@@ -35,7 +35,8 @@ class TokenizerTestParser(object):
                                   token["systemId"], token["correct"]])
 
     def processStartTag(self, token):
-        self.outputTokens.append([u"StartTag", token["name"], dict(token["data"][::-1])])
+        self.outputTokens.append([u"StartTag", token["name"], 
+                                  dict(token["data"][::-1]), token["selfClosing"]])
 
     def processEmptyTag(self, token):
         if token["name"] not in constants.voidElements:
@@ -43,7 +44,8 @@ class TokenizerTestParser(object):
         self.outputTokens.append([u"StartTag", token["name"], dict(token["data"][::-1])])
 
     def processEndTag(self, token):
-        self.outputTokens.append([u"EndTag", token["name"]])
+        self.outputTokens.append([u"EndTag", token["name"], 
+                                  token["selfClosing"]])
 
     def processComment(self, token):
         self.outputTokens.append([u"Comment", token["data"]])
@@ -87,6 +89,18 @@ def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder):
     If the ignoreErrorOrder flag is set to true we don't test the relative
     positions of parse errors and non parse errors
     """
+    checkSelfClosing= False
+    for token in expectedTokens:
+        if (token[0] == "StartTag" and len(token) == 4
+            or token[0] == "EndTag" and len(token) == 3):
+            checkSelfClosing = True
+            break
+
+    if not checkSelfClosing:
+        for token in receivedTokens:
+            if token[0] == "StartTag" or token[0] == "EndTag":
+                token.pop()
+
     if not ignoreErrorOrder:    
         return expectedTokens == receivedTokens
     else:
@@ -107,7 +121,7 @@ class TestCase(unittest.TestCase):
     def runTokenizerTest(self, test):
         #XXX - move this out into the setup function
         #concatenate all consecutive character tokens into a single token
-        output = concatenateCharacterTokens(test['output'])
+        expected = concatenateCharacterTokens(test['output'])
         if 'lastStartTag' not in test:
             test['lastStartTag'] = None
         outBuffer = cStringIO.StringIO()
@@ -117,22 +131,16 @@ class TestCase(unittest.TestCase):
                                      test['lastStartTag'])
         tokens = parser.parse(test['input'])
         tokens = concatenateCharacterTokens(tokens)
-        tokens = normalizeTokens(tokens)
+        received = normalizeTokens(tokens)
         errorMsg = u"\n".join(["\n\nContent Model Flag:",
                               test['contentModelFlag'] ,
                               "\nInput:", unicode(test['input']),
-                              "\nExpected:", unicode(output),
+                              "\nExpected:", unicode(expected),
                               "\nreceived:", unicode(tokens)])
+        errorMsg = errorMsg.encode("utf-8")
         ignoreErrorOrder = test.get('ignoreErrorOrder', False)
-        sys.stdout = stdout
-        try:
-            self.assertEquals(tokensMatch(tokens, output, ignoreErrorOrder), True,
-                              errorMsg)
-        except AssertionError:
-            outBuffer.seek(0)
-            print outBuffer.read()
-            print errorMsg.encode('utf-8')
-            raise
+        self.assertEquals(tokensMatch(expected, received, ignoreErrorOrder), 
+                          True, errorMsg)
 
 def buildTestSuite():
     for filename in html5lib_test_files('tokenizer', '*.test'):
@@ -142,12 +150,6 @@ def buildTestSuite():
             for index,test in enumerate(tests['tests']):
                 #Skip tests with a self closing flag
                 skip = False
-                for token in test["output"]:
-                    if token[0] == "StartTag" and len(token) == 4:
-                        skip = True
-                        break
-                if skip:
-                    continue
                 if 'contentModelFlags' not in test:
                     test["contentModelFlags"] = ["PCDATA"]
                 for contentModelFlag in test["contentModelFlags"]:

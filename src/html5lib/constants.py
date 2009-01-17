@@ -72,6 +72,10 @@ E = {
        _(u"Unexpected end of file in attribute value (')."),
     "eof-in-attribute-value-no-quotes":
        _(u"Unexpected end of file in attribute value."),
+    "unexpected-EOF-after-solidus-in-tag":
+        _(u"Unexpected end of file in tag. Expected >"),
+    "unexpected-character-after-soldius-in-tag":
+        _(u"Unexpected character after / in tag. Expected >"),
     "expected-dashes-or-doctype":
        _(u"Expected '--' or 'DOCTYPE'. Not found."),
     "incorrect-comment":
@@ -1098,5 +1102,18 @@ tokenTypes = {
     "ParseError":7
 }
 
+namespaces = {
+    "html":"http://www.w3.org/1999/xhtml",
+    "mathml":"http://www.w3.org/1998/Math/MathML",
+    "svg":"http://www.w3.org/2000/svg",
+    "xlink":"http://www.w3.org/1999/xlink",
+    "xml":"http://www.w3.org/XML/1998/namespace",
+    "xmlns":"http://www.w3.org/2000/xmlns/"
+}
+
+
 class DataLossWarning(UserWarning):
+    pass
+
+class ReparseException(Exception):
     pass

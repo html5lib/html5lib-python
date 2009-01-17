@@ -12,7 +12,8 @@ from optparse import OptionParser
 #RELEASE remove
 sys.path.insert(0,os.path.abspath(os.path.join(__file__,'../src')))
 #END RELEASE
-from html5lib import html5parser, liberalxmlparser, sanitizer, tokenizer
+from html5lib import html5parser, liberalxmlparser, sanitizer
+from html5lib.tokenizer import HTMLTokenizer
 from html5lib import treebuilders, serializer, treewalkers
 from html5lib import constants
 
@@ -80,7 +81,7 @@ def parse():
         t1 = time.time()
         printOutput(p, document, opts)
         t2 = time.time()
-        print "\n\nRun took: %fs (plus %fs to print the output)"%(t1-t0, t2-t1)
+        sys.stderr.write("\n\nRun took: %fs (plus %fs to print the output)"%(t1-t0, t2-t1))
     else:
         document = parseMethod(f, encoding=encoding)
         printOutput(p, document, opts)

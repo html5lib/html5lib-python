@@ -62,6 +62,7 @@ class HTMLTokenizer:
             "attributeValueSingleQuoted":self.attributeValueSingleQuotedState,
             "attributeValueUnQuoted":self.attributeValueUnQuotedState,
             "afterAttributeValue":self.afterAttributeValueState,
+            "selfClosingStartTag":self.selfClosingStartTagState,
             "bogusComment":self.bogusCommentState,
             "bogusCommentContinuation":self.bogusCommentContinuationState,
             "markupDeclarationOpen":self.markupDeclarationOpenState,
@@ -90,6 +91,7 @@ class HTMLTokenizer:
         self.escapeFlag = False
         self.lastFourChars = []
         self.state = self.states["data"]
+        self.escape = False
 
         # The current token being created
         self.currentToken = None
@@ -109,35 +111,6 @@ class HTMLTokenizer:
                 yield {"type": tokenTypes["ParseError"], "data": self.stream.errors.pop(0)}
             while self.tokenQueue:
                 yield self.tokenQueue.popleft()
-
-    # Below are various helper functions the tokenizer states use worked out.
-    def processSolidusInTag(self):
-        """If the next character is a '>', convert the currentToken into
-        an EmptyTag
-        """
-
-        rv = False
-
-        # We need to consume another character to make sure it's a ">"
-        data = self.stream.char()
-
-        if self.currentToken["type"] == tokenTypes["StartTag"] and data == u">":
-            self.currentToken["type"] = tokenTypes["EmptyTag"]
-        elif data is EOF:
-            self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
-              "EOF following solidus"})
-            self.state = self.states["data"]
-            self.emitCurrentToken()
-            rv = True
-        else:
-            self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
-              "incorrectly-placed-solidus"})
-
-        # The character we just consumed need to be put back on the stack so it
-        # doesn't get lost...
-        self.stream.unget(data)
-
-        return rv
 
     def consumeNumberEntity(self, isHex):
         """This function returns either U+FFFD or the character based on the
@@ -305,9 +278,13 @@ class HTMLTokenizer:
                               tokenTypes["EmptyTag"])):
             if self.lowercaseElementName:
                 token["name"] = token["name"].translate(asciiUpper2Lower)
-            if token["type"] == tokenTypes["EndTag"] and token["data"]:
-               self.tokenQueue.append({"type":tokenTypes["ParseError"],
-                                       "data":"attributes-in-end-tag"})
+            if token["type"] == tokenTypes["EndTag"]:
+                if token["data"]:
+                    self.tokenQueue.append({"type":tokenTypes["ParseError"],
+                                            "data":"attributes-in-end-tag"})
+                if token["selfClosing"]:
+                    self.tokenQueue.append({"type":tokenTypes["ParseError"],
+                                            "data":"self-closing-flag-on-end-tag"})
         self.tokenQueue.append(token)
         self.state = self.states["data"]
 
@@ -385,8 +362,9 @@ class HTMLTokenizer:
             elif data == u"/":
                 self.state = self.states["closeTagOpen"]
             elif data in asciiLetters:
-                self.currentToken =\
-                  {"type": tokenTypes["StartTag"], "name": data, "data": []}
+                self.currentToken = {"type": tokenTypes["StartTag"], 
+                                     "name": data, "data": [],
+                                     "selfClosing": False}
                 self.state = self.states["tagName"]
             elif data == u">":
                 # XXX In theory it could be something besides a tag name. But
@@ -448,7 +426,9 @@ class HTMLTokenizer:
                         self.stream.unget(charStack.pop())
                         # The remaining characters in charStack are the tag name
                         self.currentToken = {"type": tokenTypes["EndTag"],
-                            "name": u"".join(charStack), "data": []}
+                                             "name": u"".join(charStack), 
+                                             "data": [],
+                                             "selfClosing":False}
                         self.state = self.states["tagName"]
                         return True
 
@@ -465,7 +445,8 @@ class HTMLTokenizer:
 
         data = self.stream.char()
         if data in asciiLetters:
-            self.currentToken = {"type": tokenTypes["EndTag"], "name": data, "data": []}
+            self.currentToken = {"type": tokenTypes["EndTag"], "name": data,
+                                 "data": [], "selfClosing":False}
             self.state = self.states["tagName"]
         elif data == u">":
             self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
@@ -496,8 +477,7 @@ class HTMLTokenizer:
               "eof-in-tag-name"})
             self.emitCurrentToken()
         elif data == u"/":
-            if not self.processSolidusInTag():
-                self.state = self.states["beforeAttributeName"]
+            self.state = self.states["selfClosingStartTag"]
         else:
             self.currentToken["name"] += data
             # (Don't use charsUntil here, because tag names are
@@ -514,7 +494,7 @@ class HTMLTokenizer:
         elif data == u">":
             self.emitCurrentToken()
         elif data == u"/":
-            self.processSolidusInTag()
+            self.state = self.states["selfClosingStartTag"]
         elif data == u"'" or data == u'"' or data == u"=":
             self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
               "invalid-character-in-attribute-name"})
@@ -547,8 +527,7 @@ class HTMLTokenizer:
         elif data in spaceCharacters:
             self.state = self.states["afterAttributeName"]
         elif data == u"/":
-            if not self.processSolidusInTag():
-                self.state = self.states["beforeAttributeName"]
+            self.state = self.states["selfClosingStartTag"]
         elif data == u"'" or data == u'"':
             self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
               "invalid-character-in-attribute-name"})
@@ -592,8 +571,7 @@ class HTMLTokenizer:
             self.currentToken["data"].append([data, ""])
             self.state = self.states["attributeName"]
         elif data == u"/":
-            if not self.processSolidusInTag():
-                self.state = self.states["beforeAttributeName"]
+            self.state = self.states["selfClosingStartTag"]
         elif data == u"'" or data == u'"':
             self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
               "invalid-character-after-attribute-name"})
@@ -694,10 +672,8 @@ class HTMLTokenizer:
             self.state = self.states["beforeAttributeName"]
         elif data == u">":
             self.emitCurrentToken()
-            self.state = self.states["data"]
         elif data == u"/":
-            if not self.processSolidusInTag():
-                self.state = self.states["beforeAttributeName"]
+            self.state = self.states["selfClosingStartTag"]
         elif data is EOF:
             self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
               "unexpected-EOF-after-attribute-value"})
@@ -707,6 +683,25 @@ class HTMLTokenizer:
         else:
             self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
               "unexpected-character-after-attribute-value"})
+            self.stream.unget(data)
+            self.state = self.states["beforeAttributeName"]
+        return True
+
+    def selfClosingStartTagState(self):
+        data = self.stream.char()
+        if data == ">":
+            self.currentToken["selfClosing"] = True
+            self.emitCurrentToken()
+        elif data is EOF:
+            self.tokenQueue.append({"type": tokenTypes["ParseError"], 
+                                    "data":
+                                        "unexpected-EOF-after-solidus-in-tag"})
+            self.emitCurrentToken()
+            self.stream.unget(data)
+            self.state = self.states["data"]
+        else:
+            self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
+              "unexpected-character-after-soldius-in-tag"})
             self.stream.unget(data)
             self.state = self.states["beforeAttributeName"]
         return True
@@ -753,8 +748,10 @@ class HTMLTokenizer:
                     matched = False
                     break
             if matched:
-                self.currentToken = {"type": tokenTypes["Doctype"], "name": u"",
-                  "publicId": None, "systemId": None, "correct": True}
+                self.currentToken = {"type": tokenTypes["Doctype"],
+                                     "name": u"",
+                                     "publicId": None, "systemId": None, 
+                                     "correct": True}
                 self.state = self.states["doctype"]
                 return True
 

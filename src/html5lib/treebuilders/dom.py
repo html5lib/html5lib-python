@@ -37,9 +37,13 @@ def getDomBuilder(DomImplementation):
     
     class NodeBuilder(_base.Node):
         def __init__(self, element):
-            _base.Node.__init__(self, element.nodeName)
+            _base.Node.__init__(self, element.localName)
             self.element = element
-    
+
+        namespace = property(lambda self:(hasattr(self.element, "namespace")
+                                          and self.element.namespace 
+                                          or None))
+
         def appendChild(self, node):
             node.parent = self
             self.element.appendChild(node.element)
@@ -90,15 +94,24 @@ def getDomBuilder(DomImplementation):
             self.dom = Dom.getDOMImplementation().createDocument(None,None,None)
             return self
     
-        def insertDoctype(self, name, publicId, systemId):
+        def insertDoctype(self, token):
+            name = token["name"]
+            publicId = token["publicId"]
+            systemId = token["systemId"]
+
             domimpl = Dom.getDOMImplementation()
             doctype = domimpl.createDocumentType(name, publicId, systemId)
             self.document.appendChild(NodeBuilder(doctype))
             if Dom == minidom:
                 doctype.ownerDocument = self.dom
     
-        def elementClass(self, name):
-            return NodeBuilder(self.dom.createElement(name))
+        def elementClass(self, name, namespace=None):
+            if namespace is None and self.defaultNamespace is None:
+                node = self.dom.createElement(name)
+            else:
+                node = self.dom.createElementNS(namespace, name)
+
+            return NodeBuilder(node)
             
         def commentClass(self, data):
             return NodeBuilder(self.dom.createComment(data))

@@ -19,9 +19,14 @@ def getETreeModule(ElementTreeImplementation, fullTree=False):
 def getETreeBuilder(ElementTreeImplementation, fullTree=False):
     ElementTree = ElementTreeImplementation
     class Element(_base.Node):
-        def __init__(self, name):
-            self._element = ElementTree.Element(name)
+        def __init__(self, name, namespace=None):
+            if namespace is None:
+                etree_tag = name
+            else:
+                etree_tag = "{%s}%s"%(name, namespace)
+            self._element = ElementTree.Element(etree_tag)
             self.name = name
+            self.namespace = namespace
             self.parent = None
             self._childNodes = []
             self._flags = []
