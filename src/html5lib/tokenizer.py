@@ -364,7 +364,8 @@ class HTMLTokenizer:
             elif data in asciiLetters:
                 self.currentToken = {"type": tokenTypes["StartTag"], 
                                      "name": data, "data": [],
-                                     "selfClosing": False}
+                                     "selfClosing": False,
+                                     "selfClosingAcknowledged": False}
                 self.state = self.states["tagName"]
             elif data == u">":
                 # XXX In theory it could be something besides a tag name. But
@@ -761,7 +762,8 @@ class HTMLTokenizer:
         # so they can be copied directly into the bogus comment data, and only
         # the last character might be '>' or EOF and needs to be ungetted
         self.stream.unget(charStack.pop())
-        self.currentToken = {"type": tokenTypes["Comment"], "data": u"".join(charStack)}
+        self.currentToken = {"type": tokenTypes["Comment"], 
+                             "data": u"".join(charStack)}
         self.state = self.states["bogusCommentContinuation"]
         return True
 

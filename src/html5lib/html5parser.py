@@ -2022,6 +2022,21 @@ class InSelectInTablePhase(Phase):
         self.parser.phases["inSelect"].processEndTag(token)
 
 
+class InForeignContentPhase(Phase):
+        def __init__(self, parser, tree):
+            Phase.__init__(self, parser, tree)
+            self.secondardInsertionMode = None
+
+        def processStartTag(self, token):
+            
+            self.startTagHandler = utils.MethodDispatcher([
+                    ("html", self.startTagHtml)
+                    ])
+            self.startTagHandler.default = self.startTagOther
+
+            self.endTagHandler = utils.MethodDispatcher([("html", self.endTagHtml)])
+            self.endTagHandler.default = self.endTagOther
+
 class AfterBodyPhase(Phase):
     def __init__(self, parser, tree):
         Phase.__init__(self, parser, tree)
