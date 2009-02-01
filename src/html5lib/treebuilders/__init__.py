@@ -29,7 +29,7 @@ The supplied simpletree module provides a python-only implementation
 of a full treebuilder and is a useful reference for the semantics of
 the various methods.
 """
-
+print(__path__)
 treeBuilderCache = {}
 
 def getTreeBuilder(treeType, implementation=None, **kwargs):
@@ -64,7 +64,7 @@ def getTreeBuilder(treeType, implementation=None, **kwargs):
             # XXX: NEVER cache here, caching is done in the dom submodule
             return dom.getDomModule(implementation, **kwargs).TreeBuilder
         elif treeType == "simpletree":
-            import simpletree
+            from . import simpletree
             treeBuilderCache[treeType] = simpletree.TreeBuilder
         elif treeType == "beautifulsoup":
             import soup

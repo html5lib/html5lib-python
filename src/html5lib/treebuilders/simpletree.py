@@ -1,5 +1,5 @@
-import _base
-from html5lib.constants import voidElements
+from . import _base
+from ..constants import voidElements
 from xml.sax.saxutils import escape
 
 # Really crappy basic implementation of a DOM-core like thing
@@ -25,7 +25,7 @@ class Node(_base.Node):
         raise NotImplementedError
 
     def printTree(self, indent=0):
-        tree = '\n|%s%s' % (' '* indent, unicode(self))
+        tree = '\n|%s%s' % (' '* indent, str(self))
         for child in self.childNodes:
             tree += child.printTree(indent + 2)
         return tree
@@ -66,7 +66,7 @@ class Node(_base.Node):
         if hasattr(self, 'namespace'):
             newNode.namespace = self.namespace
         if hasattr(self, 'attributes'):
-            for attr, value in self.attributes.iteritems():
+            for attr, value in self.attributes.items():
                 newNode.attributes[attr] = value
         newNode.value = self.value
         return newNode
@@ -99,7 +99,7 @@ class Document(Node):
         return result.encode(encoding) + "</pre>"
     
     def printTree(self):
-        tree = unicode(self)
+        tree = str(self)
         for child in self.childNodes:
             tree += child.printTree(2)
         return tree
@@ -124,7 +124,7 @@ class DocumentType(Node):
                 self.name, publicId, systemId)
                             
         else:
-            return u"<!DOCTYPE %s>" % self.name
+            return "<!DOCTYPE %s>" % self.name
     
 
     toxml = __unicode__
@@ -139,7 +139,7 @@ class TextNode(Node):
         self.value = value
 
     def __unicode__(self):
-        return u"\"%s\"" % self.value
+        return "\"%s\"" % self.value
 
     def toxml(self):
         return escape(self.value)
@@ -154,26 +154,26 @@ class Element(Node):
         self.attributes = {}
 
     def __unicode__(self):
-        return u"<%s>" % self.name
+        return "<%s>" % self.name
 
     def toxml(self):
         result = '<' + self.name
         if self.attributes:
-            for name,value in self.attributes.iteritems():
-                result += u' %s="%s"' % (name, escape(value,{'"':'&quot;'}))
+            for name,value in self.attributes.items():
+                result += ' %s="%s"' % (name, escape(value,{'"':'&quot;'}))
         if self.childNodes:
             result += '>'
             for child in self.childNodes:
                 result += child.toxml()
-            result += u'</%s>' % self.name
+            result += '</%s>' % self.name
         else:
-            result += u'/>'
+            result += '/>'
         return result
     
     def hilite(self):
         result = '&lt;<code class="markup element-name">%s</code>' % self.name
         if self.attributes:
-            for name, value in self.attributes.iteritems():
+            for name, value in self.attributes.items():
                 result += ' <code class="markup attribute-name">%s</code>=<code class="markup attribute-value">"%s"</code>' % (name, escape(value, {'"':'&quot;'}))
         if self.childNodes:
             result += ">"
@@ -184,10 +184,10 @@ class Element(Node):
         return result + '&lt;/<code class="markup element-name">%s</code>>' % self.name
 
     def printTree(self, indent):
-        tree = '\n|%s%s' % (' '*indent, unicode(self))
+        tree = '\n|%s%s' % (' '*indent, str(self))
         indent += 2
         if self.attributes:
-            for name, value in self.attributes.iteritems():
+            for name, value in self.attributes.items():
                 tree += '\n|%s%s="%s"' % (' ' * indent, name, value)
         for child in self.childNodes:
             tree += child.printTree(indent)

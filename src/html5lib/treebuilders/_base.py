@@ -1,10 +1,6 @@
-from html5lib.constants import scopingElements, tableInsertModeElements
-try:
-    frozenset
-except NameError:
-    # Import from the sets module for python 2.3
-    from sets import Set as set
-    from sets import ImmutableSet as frozenset
+print(__name__)
+from html5lib import constants 
+from ..constants import scopingElements, tableInsertModeElements
 
 # The scope markers are inserted when entering buttons, object elements,
 # marquees, table cells, and table captions, and are used to prevent formatting
@@ -36,7 +32,7 @@ class Node(object):
     def __unicode__(self):
         attributesStr =  " ".join(["%s=\"%s\""%(name, value) 
                                    for name, value in 
-                                   self.attributes.iteritems()])
+                                   self.attributes.items()])
         if attributesStr:
             return "<%s %s>"%(self.name,attributesStr)
         else:
@@ -136,10 +132,7 @@ class TreeBuilder(object):
         if self.openElements[-1].name == target:
             return True
 
-        # AT Use reverse instead of [::-1] when we can rely on Python 2.4
-        # AT How about while True and simply set node to [-1] and set it to
-        # [-2] at the end...
-        for node in self.openElements[::-1]:
+        for node in reversed(self.openElements):
             if node.name == target:
                 return True
             elif node.name == "table":

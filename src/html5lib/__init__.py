@@ -8,10 +8,12 @@ Example usage:
 
 import html5lib
 f = open("my_document.html")
-p = html5lib.HTMLParser()
-tree = p.parse(f) 
+tree = html5lib.parse(f) 
 """
-from html5parser import HTMLParser, parse
-from treebuilders import getTreeBuilder
+print(__path__)
 
-from liberalxmlparser import XMLParser, XHTMLParser
+#from .html5parser import HTMLParser, parse
+#from treebuilders import getTreeBuilder
+
+#from .liberalxmlparser import XMLParser, XHTMLParser
+

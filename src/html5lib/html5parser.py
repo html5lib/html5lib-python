@@ -1,24 +1,19 @@
-try:
-    frozenset
-except NameError:
-    # Import from the sets module for python 2.3
-    from sets import Set as set
-    from sets import ImmutableSet as frozenset
 import sys
 
-import inputstream
-import tokenizer
+from . import inputstream
+from . import tokenizer
 
-import treebuilders
-from treebuilders._base import Marker
-from treebuilders import simpletree
+from . import treebuilders
+from .treebuilders._base import Marker
+from .treebuilders import simpletree
 
-import utils
-from constants import contentModelFlags, spaceCharacters, asciiUpper2Lower
-from constants import scopingElements, formattingElements, specialElements
-from constants import headingElements, tableInsertModeElements
-from constants import cdataElements, rcdataElements, voidElements
-from constants import tokenTypes
+from . import utils
+
+from .constants import contentModelFlags, spaceCharacters, asciiUpper2Lower
+from .constants import scopingElements, formattingElements, specialElements
+from .constants import headingElements, tableInsertModeElements
+from .constants import cdataElements, rcdataElements, voidElements
+from .constants import tokenTypes
 
 def parse(doc, treebuilderName="simpletree", encoding=None):
     tb = treebuilders.getTreeBuilder(treebuilderName)
@@ -307,7 +302,7 @@ class Phase(object):
            self.parser.parseError("non-html-root")
         # XXX Need a check here to see if the first start tag token emitted is
         # this token... If it's not, invoke self.parser.parseError().
-        for attr, value in token["data"].iteritems():
+        for attr, value in token["data"].items():
             if attr not in self.tree.openElements[0].attributes:
                 self.tree.openElements[0].attributes[attr] = value
         self.parser.firstStartTag = False
@@ -821,7 +816,7 @@ class InBodyPhase(Phase):
             or self.tree.openElements[1].name != "body"):
             assert self.parser.innerHTML
         else:
-            for attr, value in token["data"].iteritems():
+            for attr, value in token["data"].items():
                 if attr not in self.tree.openElements[1].attributes:
                     self.tree.openElements[1].attributes[attr] = value
 
@@ -834,7 +829,7 @@ class InBodyPhase(Phase):
 
     def startTagForm(self, token):
         if self.tree.formPointer:
-            self.parser.parseError(u"unexpected-start-tag", {"name": "form"})
+            self.parser.parseError("unexpected-start-tag", {"name": "form"})
         else:
             if self.tree.elementInScope("p"):
                 self.endTagP("p")
@@ -855,7 +850,7 @@ class InBodyPhase(Phase):
                 if i >= 1:
                     self.parser.parseError(
                         i == 1 and "missing-end-tag" or "missing-end-tags",
-                        {"name": u", ".join([item.name
+                        {"name": ", ".join([item.name
                                              for item
                                              in poppedNodes[:-1]])})
                 break
