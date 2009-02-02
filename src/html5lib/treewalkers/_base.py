@@ -2,7 +2,7 @@ import gettext
 _ = gettext.gettext
 
 from html5lib.constants import voidElements, spaceCharacters
-spaceCharacters = u"".join(spaceCharacters)
+spaceCharacters = "".join(spaceCharacters)
 
 class TreeWalker(object):
     def __init__(self, tree):
@@ -18,24 +18,24 @@ class TreeWalker(object):
         if not attrs:
             attrs = []
         elif hasattr(attrs, 'items'):
-            attrs = attrs.items()
-        return [(unicode(name),unicode(value)) for name,value in attrs]
+            attrs = list(attrs.items())
+        return [(str(name),str(value)) for name,value in attrs]
 
     def emptyTag(self, name, attrs, hasChildren=False):
-        yield {"type": "EmptyTag", "name": unicode(name), \
+        yield {"type": "EmptyTag", "name": str(name), \
                 "data": self.normalizeAttrs(attrs)}
         if hasChildren:
             yield self.error(_("Void element has children"))
 
     def startTag(self, name, attrs):
-        return {"type": "StartTag", "name": unicode(name), \
+        return {"type": "StartTag", "name": str(name), \
                  "data": self.normalizeAttrs(attrs)}
 
     def endTag(self, name):
-        return {"type": "EndTag", "name": unicode(name), "data": []}
+        return {"type": "EndTag", "name": str(name), "data": []}
 
     def text(self, data):
-        data = unicode(data)
+        data = str(data)
         middle = data.lstrip(spaceCharacters)
         left = data[:len(data)-len(middle)]
         if left:
@@ -49,11 +49,11 @@ class TreeWalker(object):
             yield {"type": "SpaceCharacters", "data": right}
 
     def comment(self, data):
-        return {"type": "Comment", "data": unicode(data)}
+        return {"type": "Comment", "data": str(data)}
 
     def doctype(self, name, publicId=None, systemId=None, correct=True):
         return {"type": "Doctype",
-                "name": name is not None and unicode(name) or u"",
+                "name": name is not None and str(name) or "",
                 "publicId": publicId, "systemId": systemId,
                 "correct": correct}
 

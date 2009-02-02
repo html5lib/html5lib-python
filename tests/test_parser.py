@@ -1,7 +1,7 @@
 import os
 import sys
 import traceback
-import StringIO
+import io
 import unittest
 import warnings
 
@@ -79,18 +79,28 @@ class TestCase(unittest.TestCase):
         #XXX - move this out into the setup function
         #concatenate all consecutive character tokens into a single token
         p = html5parser.HTMLParser(tree = treeClass)
-        
+
+        if innerHTML:
+            innerHTML = str(innerHTML, "utf8")
+
+        if errors:
+            errors = str(errors, "utf8")
+            errors = errors.split("\n")
+
+        expected = str(expected, "utf8")
+
         try:
             if innerHTML:
-                document = p.parseFragment(StringIO.StringIO(input), innerHTML)
+                document = p.parseFragment(io.BytesIO(input), innerHTML)
             else:
                 try:
-                    document = p.parse(StringIO.StringIO(input))
+                    document = p.parse(io.BytesIO(input))
                 except constants.DataLossWarning:
                     sys.stderr.write("Test input causes known dataloss, skipping")
                     return 
         except:
-            errorMsg = "\n".join(["\n\nInput:", input, "\nExpected:", expected,
+            errorMsg = "\n".join(["\n\nInput:", str(input, "utf8"), 
+                                  "\nExpected:", expected,
                                   "\nTraceback:", traceback.format_exc()])
             self.assertTrue(False, errorMsg)
         
@@ -99,22 +109,23 @@ class TestCase(unittest.TestCase):
         
         expected = convertExpected(expected)
         expected = attrlist.sub(sortattrs, expected)
-        errorMsg = "\n".join(["\n\nInput:", input, "\nExpected:", expected,
+        errorMsg = "\n".join(["\n\nInput:", str(input, "utf8"), 
+                              "\nExpected:", expected,
                               "\nReceived:", output])
         self.assertEquals(expected, output, errorMsg)
         errStr = ["Line: %i Col: %i %s %s"%(line, col, 
                                          constants.E[errorcode], datavars) for
                   ((line,col), errorcode, datavars) in p.errors]
-        errorMsg2 = "\n".join(["\n\nInput:", input,
+        errorMsg2 = "\n".join(["\n\nInput:", str(input, "utf8"),
                                "\nExpected errors (" + str(len(errors)) + "):\n" + "\n".join(errors),
                                "\nActual errors (" + str(len(p.errors)) + "):\n" + "\n".join(errStr)])
         if checkParseErrors:
             self.assertEquals(len(p.errors), len(errors), errorMsg2)
 
 def buildTestSuite():
-    sys.stdout.write('Testing tree builders '+ " ".join(treeTypes.keys()) + "\n")
+    sys.stdout.write('Testing tree builders '+ " ".join(list(treeTypes.keys())) + "\n")
 
-    for treeName, treeCls in treeTypes.iteritems():
+    for treeName, treeCls in treeTypes.items():
         files = html5lib_test_files('tree-construction')
         files = [f for f in files if 
                  not f.split(".")[-2][-2:] in ("s9", "10", "11", "12")] #skip namespace tests for now
@@ -122,14 +133,12 @@ def buildTestSuite():
             testName = os.path.basename(filename).replace(".dat","")
 
             tests = TestData(filename, "data")
-
             for index, test in enumerate(tests):
                 input, errors, innerHTML, expected = [test[key] for key in
-                                                      'data', 'errors',
+                                                      ('data', 'errors',
                                                       'document-fragment',
-                                                      'document']
-                if errors:
-                    errors = errors.split("\n")
+                                                      'document')]
+
                 def testFunc(self, innerHTML=innerHTML, input=input,
                     expected=expected, errors=errors, treeCls=treeCls): 
                     return self.runParserTest(innerHTML, input, expected, errors, treeCls)
@@ -150,12 +159,7 @@ def main():
         unittest.main()
     except SystemExit:
 	    pass
-	
-    f = open("graph.dot", "w")
-    f.write(str(g))
-    
-    print g.nodes.keys()
 
 if __name__ == "__main__":
-    print sys.argv
+    print(sys.argv)
     main()

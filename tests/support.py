@@ -16,11 +16,11 @@ test_dir = os.path.join(os.path.pardir,os.path.pardir,'testdata')
 #RELEASE add
 #test_dir = './testdata'
 #END RELEASE
-import simplejson
+import json as simplejson
 
 #Build a dict of avaliable trees
-treeTypes = {"simpletree":treebuilders.getTreeBuilder("simpletree"),
-             "DOM":treebuilders.getTreeBuilder("dom")}
+treeTypes = {"simpletree":treebuilders.getTreeBuilder("simpletree")}
+             #"DOM":treebuilders.getTreeBuilder("dom")}
 
 #Try whatever etree implementations are avaliable from a list that are
 #"supposed" to work
@@ -69,7 +69,7 @@ class DefaultDict(dict):
 
 class TestData(object):
     def __init__(self, filename, newTestHeading="data"):
-        self.f = open(filename)
+        self.f = open(filename, "rb")
         self.newTestHeading = newTestHeading
     
     def __iter__(self):
@@ -84,7 +84,7 @@ class TestData(object):
                     yield self.normaliseOutput(data)
                     data = DefaultDict(None)
                 key = heading
-                data[key]=""
+                data[key]=b""
             elif key is not None:
                 data[key] += line
         if data:
@@ -93,15 +93,15 @@ class TestData(object):
     def isSectionHeading(self, line):
         """If the current heading is a test section heading return the heading,
         otherwise return False"""
-        if line.startswith("#"):
-            return line[1:].strip()
+        if line.startswith(b"#"):
+            return str(line[1:].strip(), "ascii")
         else:
             return False
     
     def normaliseOutput(self, data):
         #Remove trailing newlines
-        for key,value in data.iteritems():
-            if value.endswith("\n"):
+        for key,value in data.items():
+            if value.endswith(b"\n"):
                 data[key] = value[:-1]
         return data
 

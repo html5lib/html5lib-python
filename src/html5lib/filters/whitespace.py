@@ -6,11 +6,11 @@ except NameError:
 
 import re
 
-import _base
+from . import _base
 from html5lib.constants import rcdataElements, spaceCharacters
-spaceCharacters = u"".join(spaceCharacters)
+spaceCharacters = "".join(spaceCharacters)
 
-SPACES_REGEX = re.compile(u"[%s]+" % spaceCharacters)
+SPACES_REGEX = re.compile("[%s]+" % spaceCharacters)
 
 class Filter(_base.Filter):
 
@@ -29,7 +29,7 @@ class Filter(_base.Filter):
 
             elif not preserve and type == "SpaceCharacters" and token["data"]:
                 # Test on token["data"] above to not introduce spaces where there were not
-                token["data"] = u" "
+                token["data"] = " "
 
             elif not preserve and type == "Characters":
                 token["data"] = collapse_spaces(token["data"])

@@ -1,7 +1,7 @@
 import gettext
 _ = gettext.gettext
 
-import _base
+from . import _base
 
 class TreeWalker(_base.NonRecursiveTreeWalker):
     """Given that simpletree has no performant way of getting a node's
@@ -33,7 +33,7 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
 
         elif node.type == 5: # Element
             return _base.ELEMENT, node.name, \
-                node.attributes.items(), node.hasContent()
+                list(node.attributes.items()), node.hasContent()
 
         elif node.type == 6: # CommentNode
             return _base.COMMENT, node.data

@@ -18,10 +18,10 @@ except NameError:
     # Import from the sets module for python 2.3
     from sets import Set as set
     from sets import ImmutableSet as frozenset
-import _base
-import iso639codes
-import rfc3987
-import rfc2046
+from . import _base
+from . import iso639codes
+from . import rfc3987
+from . import rfc2046
 from html5lib.constants import E, spaceCharacters, digits, tokenTypes
 from html5lib import tokenizer
 import gettext
@@ -29,61 +29,61 @@ _ = gettext.gettext
 
 E.update({
     "unknown-start-tag":
-        _(u"Unknown start tag <%(tagName)s>."),
+        _("Unknown start tag <%(tagName)s>."),
     "unknown-attribute":
-        _(u"Unknown '%(attributeName)s' attribute on <%(tagName)s>."),
+        _("Unknown '%(attributeName)s' attribute on <%(tagName)s>."),
     "missing-required-attribute":
-        _(u"The '%(attributeName)s' attribute is required on <%(tagName)s>."),
+        _("The '%(attributeName)s' attribute is required on <%(tagName)s>."),
     "unknown-input-type":
-        _(u"Illegal value for attribute on <input type='%(inputType)s'>."),
+        _("Illegal value for attribute on <input type='%(inputType)s'>."),
     "attribute-not-allowed-on-this-input-type":
-        _(u"The '%(attributeName)s' attribute is not allowed on <input type=%(inputType)s>."),
+        _("The '%(attributeName)s' attribute is not allowed on <input type=%(inputType)s>."),
     "deprecated-attribute":
-        _(u"This attribute is deprecated: '%(attributeName)s' attribute on <%(tagName)s>."),
+        _("This attribute is deprecated: '%(attributeName)s' attribute on <%(tagName)s>."),
     "duplicate-value-in-token-list":
-        _(u"Duplicate value in token list: '%(attributeValue)s' in '%(attributeName)s' attribute on <%(tagName)s>."),
+        _("Duplicate value in token list: '%(attributeValue)s' in '%(attributeName)s' attribute on <%(tagName)s>."),
     "invalid-attribute-value":
-        _(u"Invalid attribute value: '%(attributeName)s' attribute on <%(tagName)s>."),
+        _("Invalid attribute value: '%(attributeName)s' attribute on <%(tagName)s>."),
     "space-in-id":
-        _(u"Whitespace is not allowed here: '%(attributeName)s' attribute on <%(tagName)s>."),
+        _("Whitespace is not allowed here: '%(attributeName)s' attribute on <%(tagName)s>."),
     "duplicate-id":
-        _(u"This ID was already defined earlier: 'id' attribute on <%(tagName)s>."),
+        _("This ID was already defined earlier: 'id' attribute on <%(tagName)s>."),
     "attribute-value-can-not-be-blank":
-        _(u"This value can not be blank: '%(attributeName)s' attribute on <%(tagName)s>."),
+        _("This value can not be blank: '%(attributeName)s' attribute on <%(tagName)s>."),
     "id-does-not-exist":
-        _(u"This value refers to a non-existent ID: '%(attributeName)s' attribute on <%(tagName)s>."),
+        _("This value refers to a non-existent ID: '%(attributeName)s' attribute on <%(tagName)s>."),
     "invalid-enumerated-value":
-        _(u"Value must be one of %(enumeratedValues)s: '%(attributeName)s' attribute on <%tagName)s>."),
+        _("Value must be one of %(enumeratedValues)s: '%(attributeName)s' attribute on <%tagName)s>."),
     "invalid-boolean-value":
-        _(u"Value must be one of %(enumeratedValues)s: '%(attributeName)s' attribute on <%tagName)s>."),
+        _("Value must be one of %(enumeratedValues)s: '%(attributeName)s' attribute on <%tagName)s>."),
     "contextmenu-must-point-to-menu":
-        _(u"The contextmenu attribute must point to an ID defined on a <menu> element."),
+        _("The contextmenu attribute must point to an ID defined on a <menu> element."),
     "invalid-lang-code":
-        _(u"Invalid language code: '%(attributeName)s' attibute on <%(tagName)s>."),
+        _("Invalid language code: '%(attributeName)s' attibute on <%(tagName)s>."),
     "invalid-integer-value":
-        _(u"Value must be an integer: '%(attributeName)s' attribute on <%tagName)s>."),
+        _("Value must be an integer: '%(attributeName)s' attribute on <%tagName)s>."),
     "invalid-root-namespace":
-        _(u"Root namespace must be 'http://www.w3.org/1999/xhtml', or omitted."),
+        _("Root namespace must be 'http://www.w3.org/1999/xhtml', or omitted."),
     "invalid-browsing-context":
-        _(u"Value must be one of ('_self', '_parent', '_top'), or a name that does not start with '_': '%(attributeName)s' attribute on <%(tagName)s>."),
+        _("Value must be one of ('_self', '_parent', '_top'), or a name that does not start with '_': '%(attributeName)s' attribute on <%(tagName)s>."),
     "invalid-tag-uri":
-        _(u"Invalid URI: '%(attributeName)s' attribute on <%(tagName)s>."),
+        _("Invalid URI: '%(attributeName)s' attribute on <%(tagName)s>."),
     "invalid-urn":
-        _(u"Invalid URN: '%(attributeName)s' attribute on <%(tagName)s>."),
+        _("Invalid URN: '%(attributeName)s' attribute on <%(tagName)s>."),
     "invalid-uri-char":
-        _(u"Illegal character in URI: '%(attributeName)s' attribute on <%(tagName)s>."),
+        _("Illegal character in URI: '%(attributeName)s' attribute on <%(tagName)s>."),
     "uri-not-iri":
-        _(u"Expected a URI but found an IRI: '%(attributeName)s' attribute on <%(tagName)s>."),
+        _("Expected a URI but found an IRI: '%(attributeName)s' attribute on <%(tagName)s>."),
     "invalid-uri":
-        _(u"Invalid URI: '%(attributeName)s' attribute on <%(tagName)s>."),
+        _("Invalid URI: '%(attributeName)s' attribute on <%(tagName)s>."),
     "invalid-http-or-ftp-uri":
-        _(u"Invalid URI: '%(attributeName)s' attribute on <%(tagName)s>."),
+        _("Invalid URI: '%(attributeName)s' attribute on <%(tagName)s>."),
     "invalid-scheme":
-        _(u"Unregistered URI scheme: '%(attributeName)s' attribute on <%(tagName)s>."),
+        _("Unregistered URI scheme: '%(attributeName)s' attribute on <%(tagName)s>."),
     "invalid-rel":
-        _(u"Invalid link relation: '%(attributeName)s' attribute on <%(tagName)s>."),
+        _("Invalid link relation: '%(attributeName)s' attribute on <%(tagName)s>."),
     "invalid-mime-type":
-        _(u"Invalid MIME type: '%(attributeName)s' attribute on <%(tagName)s>."),
+        _("Invalid MIME type: '%(attributeName)s' attribute on <%(tagName)s>."),
 })
 
 globalAttributes = frozenset(('class', 'contenteditable', 'contextmenu', 'dir',
@@ -267,7 +267,7 @@ class HTMLConformanceChecker(_base.Filter):
         self.IDsWeHaveKnownAndLoved = []
 
     def __iter__(self):
-        types = dict((v,k) for k,v in tokenTypes.iteritems())
+        types = dict((v,k) for k,v in tokenTypes.items())
         for token in _base.Filter.__iter__(self):
             fakeToken = {"type": types.get(token.get("type", "-"), "-"),
                          "name": token.get("name", "-").capitalize()}
@@ -301,12 +301,12 @@ class HTMLConformanceChecker(_base.Filter):
         for t in self.checkAttributeValues(token) or []: yield t
         attrDict = dict([(name.lower(), value) for name, value in token.get("data", [])])
         inputType = attrDict.get("type", "text")
-        if inputType not in inputTypeAllowedAttributeMap.keys():
+        if inputType not in list(inputTypeAllowedAttributeMap.keys()):
             yield {"type": tokenTypes["ParseError"],
                    "data": "unknown-input-type",
                    "datavars": {"attrValue": inputType}}
         allowedAttributes = inputTypeAllowedAttributeMap.get(inputType, [])
-        for attrName, attrValue in attrDict.items():
+        for attrName, attrValue in list(attrDict.items()):
             if attrName not in allowedAttributeMap['input']:
                 yield {"type": tokenTypes["ParseError"],
                        "data": "unknown-attribute",
@@ -330,7 +330,7 @@ class HTMLConformanceChecker(_base.Filter):
     def checkUnknownStartTag(self, token):
         # check for recognized tag name
         name = token.get("name", "").lower()
-        if name not in allowedAttributeMap.keys():
+        if name not in list(allowedAttributeMap.keys()):
             yield {"type": tokenTypes["ParseError"],
                    "data": "unknown-start-tag",
                    "datavars": {"tagName": name}}
@@ -338,7 +338,7 @@ class HTMLConformanceChecker(_base.Filter):
     def checkStartTagRequiredAttributes(self, token):
         # check for presence of required attributes
         name = token.get("name", "").lower()
-        if name in requiredAttributeMap.keys():
+        if name in list(requiredAttributeMap.keys()):
             attrsPresent = [attrName for attrName, attrValue
                             in token.get("data", [])]
             for attrName in requiredAttributeMap[name]:
@@ -427,7 +427,7 @@ class HTMLConformanceChecker(_base.Filter):
         valueList = self.parseTokenList(attrValue)
         valueDict = {}
         for currentValue in valueList:
-            if valueDict.has_key(currentValue):
+            if currentValue in valueDict:
                 yield {"type": tokenTypes["ParseError"],
                        "data": "duplicate-value-in-token-list",
                        "datavars": {"tagName": tagName,

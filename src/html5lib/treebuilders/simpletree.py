@@ -18,7 +18,7 @@ class Node(_base.Node):
             for item in node:
                 yield item
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def toxml(self):
@@ -80,7 +80,7 @@ class Document(Node):
     def __init__(self):
         Node.__init__(self, None)
 
-    def __unicode__(self):
+    def __str__(self):
         return "#document"
 
     def appendChild(self, child):
@@ -106,7 +106,7 @@ class Document(Node):
 
 class DocumentFragment(Document):
     type = 2
-    def __unicode__(self):
+    def __str__(self):
         return "#document-fragment"
 
 class DocumentType(Node):
@@ -116,7 +116,7 @@ class DocumentType(Node):
         self.publicId = publicId
         self.systemId = systemId
 
-    def __unicode__(self):
+    def __str__(self):
         if self.publicId or self.systemId:
             publicId = self.publicId or ""
             systemId = self.systemId or ""
@@ -127,7 +127,7 @@ class DocumentType(Node):
             return "<!DOCTYPE %s>" % self.name
     
 
-    toxml = __unicode__
+    toxml = __str__
     
     def hilite(self):
         return '<code class="markup doctype">&lt;!DOCTYPE %s></code>' % self.name
@@ -138,7 +138,7 @@ class TextNode(Node):
         Node.__init__(self, None)
         self.value = value
 
-    def __unicode__(self):
+    def __str__(self):
         return "\"%s\"" % self.value
 
     def toxml(self):
@@ -153,7 +153,7 @@ class Element(Node):
         self.namespace = namespace
         self.attributes = {}
 
-    def __unicode__(self):
+    def __str__(self):
         return "<%s>" % self.name
 
     def toxml(self):
@@ -199,7 +199,7 @@ class CommentNode(Node):
         Node.__init__(self, None)
         self.data = data
 
-    def __unicode__(self):
+    def __str__(self):
         return "<!-- %s -->" % self.data
     
     def toxml(self):

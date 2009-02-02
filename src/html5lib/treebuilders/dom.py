@@ -1,6 +1,6 @@
-import _base
+from . import _base
 from xml.dom import minidom, Node, XML_NAMESPACE, XMLNS_NAMESPACE
-import new
+import types
 
 import re
 illegal_xml_chars = re.compile("[\x01-\x08\x0B\x0C\x0E-\x1F]")
@@ -12,7 +12,7 @@ def getDomModule(DomImplementation):
     if name in moduleCache:
         return moduleCache[name]
     else:
-        mod = new.module(name)
+        mod = types.ModuleType(name)
         objs = getDomBuilder(DomImplementation)
         mod.__dict__.update(objs)
         moduleCache[name] = mod    
@@ -24,14 +24,14 @@ def getDomBuilder(DomImplementation):
         def __init__(self, element):
             self.element = element
         def __iter__(self):
-            return self.element.attributes.items().__iter__()
+            return list(self.element.attributes.items()).__iter__()
         def __setitem__(self, name, value):
-            value=illegal_xml_chars.sub(u'\uFFFD',value)
+            value=illegal_xml_chars.sub('\uFFFD',value)
             self.element.setAttribute(name, value)
         def items(self):
-            return self.element.attributes.items()
+            return list(self.element.attributes.items())
         def keys(self):
-            return self.element.attributes.keys()
+            return list(self.element.attributes.keys())
         def __getitem__(self, name):
             return self.element.getAttribute(name)
     
@@ -49,7 +49,7 @@ def getDomBuilder(DomImplementation):
             self.element.appendChild(node.element)
     
         def insertText(self, data, insertBefore=None):
-            data=illegal_xml_chars.sub(u'\uFFFD',data)
+            data=illegal_xml_chars.sub('\uFFFD',data)
             text = self.element.ownerDocument.createTextNode(data)
             if insertBefore:
                 self.element.insertBefore(text, insertBefore.element)
@@ -77,8 +77,8 @@ def getDomBuilder(DomImplementation):
     
         def setAttributes(self, attributes):
             if attributes:
-                for name, value in attributes.items():
-                    value=illegal_xml_chars.sub(u'\uFFFD',value)
+                for name, value in list(attributes.items()):
+                    value=illegal_xml_chars.sub('\uFFFD',value)
                     self.element.setAttribute(name, value)
     
         attributes = property(getAttributes, setAttributes)
@@ -132,8 +132,8 @@ def getDomBuilder(DomImplementation):
             return _base.TreeBuilder.getFragment(self).element
     
         def insertText(self, data, parent=None):
-            data=illegal_xml_chars.sub(u'\uFFFD',data)
-            if parent <> self:
+            data=illegal_xml_chars.sub('\uFFFD',data)
+            if parent != self:
                 _base.TreeBuilder.insertText(self, data, parent)
             else:
                 # HACK: allow text nodes as children of the document node
@@ -171,7 +171,7 @@ def getDomBuilder(DomImplementation):
             else:
                 rv.append("|%s<%s>"%(' '*indent, element.nodeName))
                 if element.hasAttributes():
-                    for name, value in element.attributes.items():
+                    for name, value in list(element.attributes.items()):
                         rv.append('|%s%s="%s"' % (' '*(indent+2), name, value))
             indent += 2
             for child in element.childNodes:
@@ -191,7 +191,7 @@ def getDomBuilder(DomImplementation):
     
           # gather namespace declarations
           prefixes = []
-          for attrname in node.attributes.keys():
+          for attrname in list(node.attributes.keys()):
             attr = node.getAttributeNode(attrname)
             if (attr.namespaceURI == XMLNS_NAMESPACE or
                (attr.namespaceURI == None and attr.nodeName.startswith('xmlns'))):
@@ -203,11 +203,11 @@ def getDomBuilder(DomImplementation):
               del attributes[(attr.namespaceURI, attr.localName)]
     
           # apply namespace declarations
-          for attrname in node.attributes.keys():
+          for attrname in list(node.attributes.keys()):
             attr = node.getAttributeNode(attrname)
             if attr.namespaceURI == None and ':' in attr.nodeName:
               prefix = attr.nodeName.split(':')[0]
-              if nsmap.has_key(prefix):
+              if prefix in nsmap:
                 del attributes[(attr.namespaceURI, attr.localName)]
                 attributes[(nsmap[prefix],attr.localName)]=attr.nodeValue
     
@@ -241,5 +241,5 @@ def getDomBuilder(DomImplementation):
     return locals()
 
 # XXX: Keep backwards compatibility with things that directly load classes/functions from this module
-for key, value in getDomModule(minidom).__dict__.items():
+for key, value in list(getDomModule(minidom).__dict__.items()):
 	globals()[key] = value

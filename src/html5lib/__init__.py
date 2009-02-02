@@ -10,10 +10,9 @@ import html5lib
 f = open("my_document.html")
 tree = html5lib.parse(f) 
 """
-print(__path__)
 
-#from .html5parser import HTMLParser, parse
-#from treebuilders import getTreeBuilder
+from .html5parser import HTMLParser, parse
+from .treebuilders import getTreeBuilder
 
 #from .liberalxmlparser import XMLParser, XHTMLParser
 

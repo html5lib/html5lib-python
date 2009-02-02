@@ -1,4 +1,4 @@
-import _base
+from . import _base
 
 class Filter(_base.Filter):
     def __init__(self, source, encoding):
@@ -23,7 +23,7 @@ class Filter(_base.Filter):
                    content_index = -1
                    for i,(name,value) in enumerate(token["data"]):
                        if name.lower() == 'charset':
-                          token["data"][i] = (u'charset', self.encoding)
+                          token["data"][i] = ('charset', self.encoding)
                           meta_found = True
                           break
                        elif name == 'http-equiv' and value.lower() == 'content-type':
@@ -32,7 +32,7 @@ class Filter(_base.Filter):
                            content_index = i
                    else:
                        if has_http_equiv_content_type and content_index >= 0:
-                           token["data"][content_index] = (u'content', u'text/html; charset=%s' % self.encoding)
+                           token["data"][content_index] = ('content', 'text/html; charset=%s' % self.encoding)
                            meta_found = True
 
                 elif token["name"].lower() == "head" and not meta_found:

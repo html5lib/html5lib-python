@@ -746,4 +746,4 @@ def isValidLangCode(value):
         lang, sublang = value.split('-', 1)
     else:
         lang = value
-    return isoLang.has_key(unicode.lower(unicode(lang)))
+    return str.lower(str(lang)) in isoLang

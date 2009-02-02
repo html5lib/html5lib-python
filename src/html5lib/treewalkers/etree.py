@@ -4,7 +4,7 @@ _ = gettext.gettext
 import new
 import copy
 
-import _base
+from . import _base
 from html5lib.constants import voidElements
 
 moduleCache = {}
@@ -60,7 +60,7 @@ def getETreeBuilder(ElementTreeImplementation):
 
             else:
                 #This is assumed to be an ordinary element
-                return _base.ELEMENT, node.tag, node.attrib.items(), len(node) or node.text
+                return _base.ELEMENT, node.tag, list(node.attrib.items()), len(node) or node.text
     
         def getFirstChild(self, node):
             if isinstance(node, tuple):

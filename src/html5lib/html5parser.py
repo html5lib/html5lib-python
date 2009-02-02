@@ -15,8 +15,9 @@ from .constants import headingElements, tableInsertModeElements
 from .constants import cdataElements, rcdataElements, voidElements
 from .constants import tokenTypes
 
-def parse(doc, treebuilderName="simpletree", encoding=None):
-    tb = treebuilders.getTreeBuilder(treebuilderName)
+def parse(doc, treebuilderName="simpletree", encoding=None, implementation=None):
+    tb = treebuilders.getTreeBuilder(treebuilderName, 
+                                     implementation=implementation)
     p = HTMLParser(tb)
     return p.parse(doc, encoding=encoding)
 

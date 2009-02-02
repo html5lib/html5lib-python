@@ -56,7 +56,7 @@ def getTreeBuilder(treeType, implementation=None, **kwargs):
     treeType = treeType.lower()
     if treeType not in treeBuilderCache:
         if treeType == "dom":
-            import dom
+            from . import dom
             # XXX: Keep backwards compatibility by using minidom if no implementation is given
             if implementation == None:
                 from xml.dom import minidom
@@ -73,7 +73,13 @@ def getTreeBuilder(treeType, implementation=None, **kwargs):
             import etree_lxml
             treeBuilderCache[treeType] = etree_lxml.TreeBuilder
         elif treeType == "etree":
-            import etree
+            if implementation is None:
+                try:
+                    import xml.etree.cElementTree as etree
+                except:
+                    import xml.etree.ElementTree as etree
+                implementation = etree
+            from . import etree
             # XXX: NEVER cache here, caching is done in the etree submodule
             return etree.getETreeModule(implementation, **kwargs).TreeBuilder
     return treeBuilderCache.get(treeType)

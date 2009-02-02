@@ -171,7 +171,12 @@ class HTMLInputStream:
         """
         # Already a file object
         if hasattr(source, 'read'):
-            if 'b' in f.mode:
+            #This is wrong. We need a generic way to tell the difference 
+            #between file-like objects that produce strings and those that 
+            #produce bytes. We also need a good way to deal with the ones 
+            #that produce strings, in particular getting the replacement 
+            #characters right.
+            if not hasattr(source, 'encoding'):
                 stream = source
             else:
                 raise NotImplementedError("Files not opened in binary mode not yet supported")
@@ -448,8 +453,7 @@ class EncodingBytes(bytes):
     If the position is ever greater than the string length then an exception is
     raised"""
     def __init__(self, value):
-        bytes.__init__(self, value)
-        self._position=-1
+        self._position = -1
     
     def __iter__(self):
         return self

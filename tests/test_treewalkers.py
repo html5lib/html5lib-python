@@ -1,6 +1,6 @@
 import os
 import sys
-import StringIO
+import io
 import unittest
 import warnings
 
@@ -179,15 +179,15 @@ def convertTokens(tokens):
     for token in concatenateCharacterTokens(tokens):
         type = token["type"]
         if type in ("StartTag", "EmptyTag"):
-            output.append(u"%s<%s>" % (" "*indent, token["name"]))
+            output.append("%s<%s>" % (" "*indent, token["name"]))
             indent += 2
             attrs = token["data"]
             if attrs:
                 if hasattr(attrs, "items"):
-                    attrs = attrs.items()
+                    attrs = list(attrs.items())
                 attrs.sort()
                 for name, value in attrs:
-                    output.append(u"%s%s=\"%s\"" % (" "*indent, name, value))
+                    output.append("%s%s=\"%s\"" % (" "*indent, name, value))
             if type == "EmptyTag":
                 indent -= 2
         elif type == "EndTag":
@@ -199,8 +199,8 @@ def convertTokens(tokens):
                 if token["publicId"] or token["systemId"]:
                     output.append("""%s<!DOCTYPE %s "%s" "%s">"""% 
                                   (" "*indent, token["name"], 
-                                   token["publicId"],
-                                   token["systemId"]))
+                                   token["publicId"] or "",
+                                   token["systemId"] or ""))
                 else:
                     output.append("%s<!DOCTYPE %s>"%(" "*indent,
                                                      token["name"]))
@@ -210,7 +210,7 @@ def convertTokens(tokens):
             output.append("%s\"%s\"" % (" "*indent, token["data"]))
         else:
             pass # TODO: what to do with errors?
-    return u"\n".join(output)
+    return "\n".join(output)
 
 import re
 attrlist = re.compile(r"^(\s+)\w+=.*(\n\1\w+=.*)+",re.M)
@@ -221,12 +221,20 @@ def sortattrs(x):
 
 class TestCase(unittest.TestCase):
     def runTest(self, innerHTML, input, expected, errors, treeClass):
+
+        if innerHTML is not None:
+            innerHTML = str(innerHTML, "utf8")
+        expected = str(expected, "utf8")
+        if errors is not None:
+            errors = str(errors, "utf8")
+            errors = errors.split("\n")
+
         p = html5parser.HTMLParser(tree = treeClass["builder"])
         try:
             if innerHTML:
-                document = p.parseFragment(StringIO.StringIO(input), innerHTML)
+                document = p.parseFragment(io.BytesIO(input), innerHTML)
             else:
-                document = p.parse(StringIO.StringIO(input))
+                document = p.parse(io.BytesIO(input))
         except constants.DataLossWarning:
             #Ignore testcases we know we don't pass
             return
@@ -237,7 +245,7 @@ class TestCase(unittest.TestCase):
             output = attrlist.sub(sortattrs, output)
             expected = attrlist.sub(sortattrs, convertExpected(expected))
             self.assertEquals(expected, output, "\n".join([
-                "", "Input:", input,
+                "", "Input:", str(input, "utf8"),
                 "", "Expected:", expected,
                 "", "Received:", output
             ]))
@@ -247,19 +255,19 @@ class TestCase(unittest.TestCase):
 class TokenTestCase(unittest.TestCase):
     def test_all_tokens(self):
         expected = [
-            {'data': [], 'type': 'StartTag', 'name': u'html'},
-            {'data': [], 'type': 'StartTag', 'name': u'head'},
-            {'data': [], 'type': 'EndTag', 'name': u'head'},
-            {'data': [], 'type': 'StartTag', 'name': u'body'},
-            {'data': u'a', 'type': 'Characters'},
-            {'data': [], 'type': 'StartTag', 'name': u'div'},
-            {'data': u'b', 'type': 'Characters'},
-            {'data': [], 'type': 'EndTag', 'name': u'div'},
-            {'data': u'c', 'type': 'Characters'},
-            {'data': [], 'type': 'EndTag', 'name': u'body'},
-            {'data': [], 'type': 'EndTag', 'name': u'html'}
+            {'data': [], 'type': 'StartTag', 'name': 'html'},
+            {'data': [], 'type': 'StartTag', 'name': 'head'},
+            {'data': [], 'type': 'EndTag', 'name': 'head'},
+            {'data': [], 'type': 'StartTag', 'name': 'body'},
+            {'data': 'a', 'type': 'Characters'},
+            {'data': [], 'type': 'StartTag', 'name': 'div'},
+            {'data': 'b', 'type': 'Characters'},
+            {'data': [], 'type': 'EndTag', 'name': 'div'},
+            {'data': 'c', 'type': 'Characters'},
+            {'data': [], 'type': 'EndTag', 'name': 'body'},
+            {'data': [], 'type': 'EndTag', 'name': 'html'}
             ]
-        for treeName, treeCls in treeTypes.iteritems():
+        for treeName, treeCls in treeTypes.items():
             p = html5parser.HTMLParser(tree = treeCls["builder"])
             document = p.parse("<html><head></head><body>a<div>b</div>c</body></html>")
             document = treeCls.get("adapter", lambda x: x)(document)
@@ -269,9 +277,9 @@ class TokenTestCase(unittest.TestCase):
 
             
 def buildTestSuite():
-    sys.stdout.write('Testing tree walkers '+ " ".join(treeTypes.keys()) + "\n")
+    sys.stdout.write('Testing tree walkers '+ " ".join(list(treeTypes.keys())) + "\n")
 
-    for treeName, treeCls in treeTypes.iteritems():
+    for treeName, treeCls in treeTypes.items():
         files = html5lib_test_files('tree-construction')
         files = [f for f in files if 
                  not f.split(".")[-2][-2:] in ("s9", "10", "11", "12")] #skip namespace tests for now
@@ -286,7 +294,6 @@ def buildTestSuite():
                  innerHTML, expected) = [test[key] for key in ("data", "errors",
                                                                "document-fragment",
                                                                "document")]
-                errors = errors.split("\n")
                 def testFunc(self, innerHTML=innerHTML, input=input,
                     expected=expected, errors=errors, treeCls=treeCls):
                     self.runTest(innerHTML, input, expected, errors, treeCls)

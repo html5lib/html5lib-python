@@ -4,10 +4,10 @@
 # See http://www.whatwg.org/specs/web-forms/current-work/#seeding
 #
 
-import _base
+from . import _base
 
 from html5lib.constants import spaceCharacters
-spaceCharacters = u"".join(spaceCharacters)
+spaceCharacters = "".join(spaceCharacters)
 
 class SimpleFilter(_base.Filter):
     def __init__(self, source, fieldStorage):
@@ -29,13 +29,13 @@ class SimpleFilter(_base.Filter):
                     input_checked_index = -1
                     for i,(n,v) in enumerate(token["data"]):
                         n = n.lower()
-                        if n == u"name":
+                        if n == "name":
                             field_name = v.strip(spaceCharacters)
-                        elif n == u"type":
+                        elif n == "type":
                             field_type = v.strip(spaceCharacters)
-                        elif n == u"checked":
+                        elif n == "checked":
                             input_checked_index = i
-                        elif n == u"value":
+                        elif n == "value":
                             input_value_index = i
 
                     value_list = self.fieldStorage.getlist(field_name)
@@ -45,20 +45,20 @@ class SimpleFilter(_base.Filter):
                     else:
                         value = ""
 
-                    if field_type in (u"checkbox", u"radio"):
+                    if field_type in ("checkbox", "radio"):
                         if value_list:
                             if token["data"][input_value_index][1] == value:
                                 if input_checked_index < 0:
-                                    token["data"].append((u"checked", u""))
+                                    token["data"].append(("checked", ""))
                                 field_indices[field_name] = field_index + 1
                             elif input_checked_index >= 0:
                                 del token["data"][input_checked_index]
 
-                    elif field_type not in (u"button", u"submit", u"reset"):
+                    elif field_type not in ("button", "submit", "reset"):
                         if input_value_index >= 0:
-                            token["data"][input_value_index] = (u"value", value)
+                            token["data"][input_value_index] = ("value", value)
                         else:
-                            token["data"].append((u"value", value))
+                            token["data"].append(("value", value))
                         field_indices[field_name] = field_index + 1
 
                     field_type = None
@@ -96,7 +96,7 @@ class SimpleFilter(_base.Filter):
                                 value = ""
                             if (is_select_multiple or not is_selected_option_found) and option_value == value:
                                 if option_selected_index < 0:
-                                    token["data"].append((u"selected", u""))
+                                    token["data"].append(("selected", ""))
                                 field_indices[field_name] = field_index + 1
                                 is_selected_option_found = True
                             elif option_selected_index >= 0:

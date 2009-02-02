@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.0
 """usage: %prog [options] filename
 
 Parse a document to a simpletree tree, with optional profiling
@@ -9,11 +9,16 @@ import sys
 import os
 from optparse import OptionParser
 
+print(sys.stdout.encoding)
+
 #RELEASE remove
 sys.path.insert(0,os.path.abspath(os.path.join(__file__,'../src')))
 #END RELEASE
-from html5lib import html5parser, liberalxmlparser, sanitizer
+print(sys.path)
+import html5lib
+import html5lib.html5parser as html5parser
 from html5lib.tokenizer import HTMLTokenizer
+from html5lib import treebuilders
 from html5lib import treebuilders, serializer, treewalkers
 from html5lib import constants
 
@@ -27,8 +32,8 @@ def parse():
         # Try opening from the internet
         if f.startswith('http://'):
             try:
-                import urllib, cgi
-                f = urllib.urlopen(f)
+                from urllib import request
+                f = request.urlopen(f)
                 contentType = f.headers.get('content-type')
                 if contentType:
                     (mediaType, params) = cgi.parse_header(contentType)
@@ -39,7 +44,7 @@ def parse():
         else:
             try:
                 # Try opening from file system
-                f = open(f)
+                f = open(f, "rb")
             except IOError: pass
     except IndexError:
         sys.stderr.write("No filename provided. Use -h for help\n")
@@ -64,16 +69,16 @@ def parse():
 
     if opts.profile:
         #XXX should import cProfile instead and use that
-        import hotshot
-        import hotshot.stats
-        prof = hotshot.Profile('stats.prof')
-        prof.runcall(parseMethod, f, encoding=encoding)
+        try:
+            import cProfile as profile
+        except ImportError:
+            import profile
+        import pstats
+        prof = profile.run('parseMethod(f, encoding=encoding)', 'prof.out')
         prof.close()
         # XXX - We should use a temp file here
-        stats = hotshot.stats.load('stats.prof')
-        stats.strip_dirs()
-        stats.sort_stats('time')
-        stats.print_stats()
+        stats = pstats.stats('prof.out')
+        stats.strip_dirs().sort_stats('time').print_stats()
     elif opts.time:
         import time
         t0 = time.time()
@@ -88,13 +93,14 @@ def parse():
 
 def printOutput(parser, document, opts):
     if opts.encoding:
-        print "Encoding:", parser.tokenizer.stream.charEncoding
+        print("Encoding:", parser.tokenizer.stream.charEncoding)
     if opts.xml:
         sys.stdout.write(document.toxml("utf-8"))
     elif opts.tree:
         if not hasattr(document,'__getitem__'): document = [document]
         for fragment in document:
-            print parser.tree.testSerializer(fragment).encode("utf-8")
+            sys.stdout.write(parser.tree.testSerializer(fragment))
+        sys.stdout.write("\n")
     elif opts.hilite:
         sys.stdout.write(document.hilite("utf-8"))
     elif opts.html:
@@ -103,7 +109,7 @@ def printOutput(parser, document, opts):
             kwargs[opt] = getattr(opts,opt)
         if not kwargs['quote_char']: del kwargs['quote_char']
         tokens = treewalkers.getTreeWalker(opts.treebuilder)(document)
-        for text in serializer.HTMLSerializer(**kwargs).serialize(tokens, encoding='utf-8'):
+        for text in serializer.HTMLSerializer(**kwargs).serialize(tokens):
             sys.stdout.write(text)
         if not text.endswith('\n'): sys.stdout.write('\n')
     if opts.error:

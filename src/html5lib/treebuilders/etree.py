@@ -1,5 +1,5 @@
-import _base
-import new
+from . import _base
+import types
 
 from html5lib import ihatexml
 
@@ -10,7 +10,7 @@ def getETreeModule(ElementTreeImplementation, fullTree=False):
     if name in moduleCache:
         return moduleCache[name]
     else:
-        mod = new.module("_" + ElementTreeImplementation.__name__+"builder")
+        mod = types.ModuleType("_" + ElementTreeImplementation.__name__+"builder")
         objs = getETreeBuilder(ElementTreeImplementation, fullTree)
         mod.__dict__.update(objs)
         moduleCache[name] = mod    
@@ -45,17 +45,19 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
         def _setAttributes(self, attributes):
             #Delete existing attributes first
             #XXX - there may be a better way to do this...
-            for key in self._element.attrib.keys():
+            for key in list(self._element.attrib.keys()):
                 del self._element.attrib[key]
-            for key, value in attributes.iteritems():
+            for key, value in attributes.items():
                 self._element.set(key, value)
     
         attributes = property(_getAttributes, _setAttributes)
     
         def _getChildNodes(self):
             return self._childNodes    
+
         def _setChildNodes(self, value):
-            del self._element[:]
+            while len(self._element):
+                del self._element[0]
             self._childNodes = []
             for element in value:
                 self.insertChild(element)
@@ -105,7 +107,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
     
         def cloneNode(self):
             element = Element(self.name)
-            for name, value in self.attributes.iteritems():
+            for name, value in self.attributes.items():
                 element.attributes[name] = value
             return element
     
@@ -145,20 +147,20 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             self.systemId = systemId
 
         def _getPublicId(self):
-            return self._element.get(u"publicId", "")
+            return self._element.get("publicId", "")
 
         def _setPublicId(self, value):
             if value is not None:
-                self._element.set(u"publicId", value)
+                self._element.set("publicId", value)
 
         publicId = property(_getPublicId, _setPublicId)
     
         def _getSystemId(self):
-            return self._element.get(u"systemId", "")
+            return self._element.get("systemId", "")
 
         def _setSystemId(self, value):
             if value is not None:
-                self._element.set(u"systemId", value)
+                self._element.set("systemId", value)
 
         systemId = property(_getSystemId, _setSystemId)
     
@@ -195,7 +197,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             else:
                 rv.append("|%s<%s>"%(' '*indent, element.tag))
                 if hasattr(element, "attrib"):
-                    for name, value in element.attrib.iteritems():
+                    for name, value in element.attrib.items():
                         rv.append('|%s%s="%s"' % (' '*(indent+2), name, value))
                 if element.text:
                     rv.append("|%s\"%s\"" %(' '*(indent+2), element.text))
@@ -246,7 +248,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                 else:
                     attr = " ".join(["%s=\"%s\""%(
                                 filter.fromXmlName(name), value) 
-                                     for name, value in element.attrib.iteritems()])
+                                     for name, value in element.attrib.items()])
                     rv.append("<%s %s>"%(element.tag, attr))
                 if element.text:
                     rv.append(element.text)
