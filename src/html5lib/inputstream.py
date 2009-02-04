@@ -12,6 +12,14 @@ asciiUppercaseBytes = [str(item) for item in asciiUppercase]
 
 invalid_unicode_re = re.compile(u"[\u0001-\u0008\u000B\u000E-\u001F\u007F-\u009F\uD800-\uDFFF\uFDD0-\uFDDF\uFFFE\uFFFF\U0001FFFE\U0001FFFF\U0002FFFE\U0002FFFF\U0003FFFE\U0003FFFF\U0004FFFE\U0004FFFF\U0005FFFE\U0005FFFF\U0006FFFE\U0006FFFF\U0007FFFE\U0007FFFF\U0008FFFE\U0008FFFF\U0009FFFE\U0009FFFF\U000AFFFE\U000AFFFF\U000BFFFE\U000BFFFF\U000CFFFE\U000CFFFF\U000DFFFE\U000DFFFF\U000EFFFE\U000EFFFF\U000FFFFE\U000FFFFF\U0010FFFE\U0010FFFF]")
 
+non_bmp_invalid_codepoints = set([0x1FFFE, 0x1FFFF, 0x2FFFE, 0x2FFFF, 0x3FFFE,
+                                  0x3FFFF, 0x4FFFE, 0x4FFFF, 0x5FFFE, 0x5FFFF,
+                                  0x6FFFE, 0x6FFFF, 0x7FFFE, 0x7FFFF, 0x8FFFE,
+                                  0x8FFFF, 0x9FFFE, 0x9FFFF, 0xAFFFE, 0xAFFFF,
+                                  0xBFFFE, 0xBFFFF, 0xCFFFE, 0xCFFFF, 0xDFFFE,
+                                  0xDFFFF, 0xEFFFE, 0xEFFFF, 0xFFFFE, 0xFFFFF,
+                                  0x10FFFE, 0x10FFFF])
+
 ascii_punctuation_re = re.compile(ur"[\u0009-\u000D\u0020-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007E]")
 
 # Cache for charsUntil()
@@ -119,6 +127,13 @@ class HTMLInputStream:
         parseMeta - Look for a <meta> element containing encoding information
 
         """
+
+        #Craziness
+        if len(u"\U0010FFFF") == 1:
+            self.reportCharacterErrors = self.characterErrorsUCS4
+        else:
+            self.reportCharacterErrors = self.characterErrorsUCS2
+
         # List of where new lines occur
         self.newLines = [0]
 
@@ -140,6 +155,7 @@ class HTMLInputStream:
         #Detect encoding iff no explicit "transport level" encoding is supplied
         if (self.charEncoding[0] is None):
             self.charEncoding = self.detectEncoding(parseMeta, chardet)
+
 
         self.reset()
 
@@ -343,11 +359,8 @@ class HTMLInputStream:
 
         if not data:
             return False
-        #Replace null characters
-        for i in xrange(data.count(u"\u0000")):
-            self.errors.append("null-character")
-        for i in xrange(len(invalid_unicode_re.findall(data))):
-            self.errors.append("invalid-codepoint")
+        
+        self.reportCharacterErrors(data)
 
         data = data.replace(u"\u0000", u"\ufffd")
         #Check for CR LF broken across chunks
@@ -364,6 +377,45 @@ class HTMLInputStream:
         self.chunkSize = len(data)
 
         return True
+
+    def characterErrorsUCS4(self, data):
+        for i in xrange(data.count(u"\u0000")):
+            self.errors.append("null-character")
+        for i in xrange(len(invalid_unicode_re.findall(data))):
+            self.errors.append("invalid-codepoint")
+
+    def characterErrorsUCS2(self, data):
+        #Someone picked the wrong compile option
+        #You lose
+        for i in xrange(data.count(u"\u0000")):
+            self.errors.append("null-character")
+        skip = False
+        import sys
+        for match in invalid_unicode_re.finditer(data):
+            if skip:
+                continue
+            codepoint = ord(match.group())
+            pos = match.start()
+            #Pretty sure there should be endianness issues here
+            if (codepoint >= 0xD800 and codepoint <= 0xDBFF and
+                pos < len(data) - 1 and
+                ord(data[pos + 1]) >= 0xDC00 and
+                ord(data[pos + 1]) <= 0xDFFF):
+                #We have a surrogate pair!
+                #From a perl manpage
+                char_val = (0x10000 + (codepoint - 0xD800) * 0x400 + 
+                            (ord(data[pos + 1]) - 0xDC00))
+                if char_val in non_bmp_invalid_codepoints:
+                    self.errors.append("invalid-codepoint")
+                skip = True
+            elif (codepoint >= 0xD800 and codepoint <= 0xDFFF and
+                  pos == len(data) - 1):
+                self.errors.append("invalid-codepoint")
+            else:
+                skip = False
+                self.errors.append("invalid-codepoint")
+        #This is still wrong if it is possible for a surrogate pair to break a
+        #chunk boundary
 
     def charsUntil(self, characters, opposite = False):
         """ Returns a string of characters from the stream up to but not
