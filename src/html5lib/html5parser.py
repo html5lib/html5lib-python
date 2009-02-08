@@ -18,7 +18,7 @@ from constants import contentModelFlags, spaceCharacters, asciiUpper2Lower
 from constants import scopingElements, formattingElements, specialElements
 from constants import headingElements, tableInsertModeElements
 from constants import cdataElements, rcdataElements, voidElements
-from constants import tokenTypes
+from constants import tokenTypes, namespaces
 
 def parse(doc, treebuilderName="simpletree", encoding=None):
     tb = treebuilders.getTreeBuilder(treebuilderName)
@@ -68,6 +68,7 @@ class HTMLParser(object):
             "inCell": InCellPhase(self, self.tree),
             "inSelect": InSelectPhase(self, self.tree),
             "inSelectInTable": InSelectInTablePhase(self, self.tree),
+            "inForeignContent": InForeignContentPhase(self, self.tree),
             "afterBody": AfterBodyPhase(self, self.tree),
             "inFrameset": InFramesetPhase(self, self.tree),
             "afterFrameset": AfterFramesetPhase(self, self.tree),
@@ -109,9 +110,8 @@ class HTMLParser(object):
             self.innerHTML = False
             self.phase = self.phases["initial"]
 
-        # We only seem to have InBodyPhase testcases where the following is
-        # relevant ... need others too
         self.lastPhase = None
+        self.secondaryPhase = None
 
         self.beforeRCDataPhase = None
 
@@ -196,6 +196,105 @@ class HTMLParser(object):
 
         return token
 
+    def adjustMathMLAttributes(self, token):
+        replacements = {"definitionurl":"definitionURL"}
+        for k,v in replacements.iteritems():
+            if k in token["data"]:
+                token["data"][v] = token["data"][k]
+                del token["data"][k]
+
+    def adjustSVGAttributes(self, token):
+        replacements = {
+            "attributename" : "attributeName",
+            "attributetype" : "attributeType",
+            "basefrequency" : "baseFrequency",
+            "baseprofile" : "baseProfile",
+            "calcmode" : "calcMode",
+            "clippathunits" : "clipPathUnits",
+            "contentscripttype" : "contentScriptType",
+            "contentstyletype" : "contentStyleType",
+            "diffuseconstant" : "diffuseConstant",
+            "edgemode" : "edgeMode",
+            "externalresourcesrequired" : "externalResourcesRequired",
+            "filterres" : "filterRes",
+            "filterunits" : "filterUnits",
+            "glyphref" : "glyphRef",
+            "gradienttransform" : "gradientTransform",
+            "gradientunits" : "gradientUnits",
+            "kernelmatrix" : "kernelMatrix",
+            "kernelunitlength" : "kernelUnitLength",
+            "keypoints" : "keyPoints",
+            "keysplines" : "keySplines",
+            "keytimes" : "keyTimes",
+            "lengthadjust" : "lengthAdjust",
+            "limitingconeangle" : "limitingConeAngle",
+            "markerheight" : "markerHeight",
+            "markerunits" : "markerUnits",
+            "markerwidth" : "markerWidth",
+            "maskcontentunits" : "maskContentUnits",
+            "maskunits" : "maskUnits",
+            "numoctaves" : "numOctaves",
+            "pathlength" : "pathLength",
+            "patterncontentunits" : "patternContentUnits",
+            "patterntransform" : "patternTransform",
+            "patternunits" : "patternUnits",
+            "pointsatx" : "pointsAtX",
+            "pointsaty" : "pointsAtY",
+            "pointsatz" : "pointsAtZ",
+            "preservealpha" : "preserveAlpha",
+            "preserveaspectratio" : "preserveAspectRatio",
+            "primitiveunits" : "primitiveUnits",
+            "refx" : "refX",
+            "refy" : "refY",
+            "repeatcount" : "repeatCount",
+            "repeatdur" : "repeatDur",
+            "requiredextensions" : "requiredExtensions",
+            "requiredfeatures" : "requiredFeatures",
+            "specularconstant" : "specularConstant",
+            "specularexponent" : "specularExponent",
+            "spreadmethod" : "spreadMethod",
+            "startoffset" : "startOffset",
+            "stddeviation" : "stdDeviation",
+            "stitchtiles" : "stitchTiles",
+            "surfacescale" : "surfaceScale",
+            "systemlanguage" : "systemLanguage",
+            "tablevalues" : "tableValues",
+            "targetx" : "targetX",
+            "targety" : "targetY",
+            "textlength" : "textLength",
+            "viewbox" : "viewBox",
+            "viewtarget" : "viewTarget",
+            "xchannelselector" : "xChannelSelector",
+            "ychannelselector" : "yChannelSelector",
+            "zoomandpan" : "zoomAndPan"
+            }
+        for originalName in token["data"].iterkeys():
+            if originalName in replacements:
+                svgName = replacements[originalName]
+                token["data"][svgName] = token["data"][originalName]
+                del token["data"][originalName]
+
+    def adjustForeignAttributes(self, token):
+        replacements = {
+            "xlink:actuate":("xlink", "actuate", namespaces["xlink"]),
+            "xlink:arcrole":("xlink", "arcrole", namespaces["xlink"]),
+            "xlink:href":("xlink", "href", namespaces["xlink"]),
+            "xlink:role":("xlink", "role", namespaces["xlink"]),
+            "xlink:show":("xlink", "show", namespaces["xlink"]),
+            "xlink:title":("xlink", "title", namespaces["xlink"]),
+            "xlink:type":("xlink", "type", namespaces["xlink"]),
+            "xml:base":("xml", "base", namespaces["xml"]),
+            "xml:lang":("xml", "lang", namespaces["xml"]),
+            "xml:space":("xml", "space", namespaces["xml"]),
+            "xmlns":(None, "xmlns", namespaces["xmlns"]),
+            "xmlns:xlink":("xmlns", "xlink", namespaces["xmlns"])
+            }
+
+        for originalName in token["data"].iterkeys():
+            if originalName in replacements:
+                foreignName = replacements[originalName]
+                token["data"][foreignName] = token["data"][originalName]
+                del token["data"][originalName]
 
     def resetInsertionMode(self):
         # The name of this method is mostly historical. (It's also used in the
@@ -295,6 +394,9 @@ class Phase(object):
 
     def processDoctype(self, token):
         self.parser.parseError("unexpected-doctype")
+
+    def processCharacters(self, token):
+        self.tree.insertText(token["data"])
 
     def processSpaceCharacters(self, token):
         self.tree.insertText(token["data"])
@@ -745,6 +847,8 @@ class InBodyPhase(Phase):
             ("select", self.startTagSelect),
             (("rp", "rt"), self.startTagRpRt),
             (("option", "optgroup"), self.startTagOpt),
+            (("math"), self.startTagMath),
+            (("svg"), self.startTagSvg),
             (("caption", "col", "colgroup", "frame", "frameset", "head",
               "tbody", "td", "tfoot", "th", "thead",
               "tr"), self.startTagMisplaced),
@@ -1029,6 +1133,34 @@ class InBodyPhase(Phase):
                 while self.tree.openElements[-1].name != "ruby":
                     self.tree.openElements.pop()
         self.tree.insertElement(token)
+
+    def startTagMath(self, token):
+        self.tree.reconstructActiveFormattingElements()
+        self.parser.adjustMathMLAttributes(token)
+        self.parser.adjustForeignAttributes(token)
+        token["namespace"] = namespaces["mathml"]
+        self.tree.insertElement(token)
+        #Need to get the parse error right for the case where the token 
+        #has a namespace not equal to the xmlns attribute
+        self.parser.phase = self.parser.phases["inForeignContent"]
+        self.parser.secondaryPhase = self
+        if token["selfClosing"]:
+            self.tree.openElements.pop()
+            token["selfClosingAcknowledged"] = True
+
+    def startTagSvg(self, token):
+        self.tree.reconstructActiveFormattingElements()
+        self.parser.adjustSVGAttributes(token)
+        self.parser.adjustForeignAttributes(token)
+        token["namespace"] = namespaces["svg"]
+        self.tree.insertElement(token)
+        #Need to get the parse error right for the case where the token 
+        #has a namespace not equal to the xmlns attribute
+        self.parser.phase = self.parser.phases["inForeignContent"]
+        self.parser.secondaryPhase = self
+        if token["selfClosing"]:
+            self.tree.openElements.pop()
+            token["selfClosingAcknowledged"] = True
 
     def startTagMisplaced(self, token):
         """ Elements that should be children of other elements that have a
@@ -2015,7 +2147,7 @@ class InSelectInTablePhase(Phase):
     def endTagTable(self, token):
         self.parser.parseError("unexpected-table-element-end-tag-in-select-in-table", {"name": token["name"]})
         if self.tree.elementInScope(token["name"]):
-            self.endTagOther(impliedTgToken("select"))
+            self.endTagOther(impliedTagToken("select"))
             self.parser.phase.processEndTag(token)
 
     def endTagOther(self, token):
@@ -2023,19 +2155,110 @@ class InSelectInTablePhase(Phase):
 
 
 class InForeignContentPhase(Phase):
-        def __init__(self, parser, tree):
+    breakoutElements = frozenset(["b", "big", "blockquote", "body", "br", 
+                                  "center", "code", "dd", "div", "dl", "dt",
+                                  "em", "embed", "font", "h1", "h2", "h3", 
+                                  "h4", "h5", "h6", "head", "hr", "i", "img",
+                                  "li", "listing", "menu", "meta", "nobr", 
+                                  "ol", "p", "pre", "ruby", "s",  "small", 
+                                  "span", "strong", "strike",  "sub", "sup", 
+                                  "table", "tt", "u", "ul", "var"])
+    def __init__(self, parser, tree):
             Phase.__init__(self, parser, tree)
-            self.secondardInsertionMode = None
 
-        def processStartTag(self, token):
+    def nonHTMLElementOpen(self):
+        for item in self.tree.openElements[::-1]:
+            if item.namespace != self.tree.defaultNamespace:
+                return True
+        return False
+
+    def adjustSVGTagNames(self, token):
+        replacements = {"altglyph":"altGlyph",
+                        "altglyphdef":"altGlyphDef",
+                        "altglyphitem":"altGlyphItem",
+                        "animatecolor":"animateColor",
+                        "animatemotion":"animateMotion",
+                        "animatetransform":"animateTransform",
+                        "clippath":"clipPath",
+                        "feblend":"feBlend",
+                        "fecolormatrix":"feColorMatrix",
+                        "fecomponenttransfer":"feComponentTransfer",
+                        "fecomposite":"feComposite",
+                        "feconvolvematrix":"feConvolveMatrix",
+                        "fediffuselighting":"feDiffuseLighting",
+                        "fedisplacementmap":"feDisplacementMap",
+                        "fedistantlight":"feDistantLight",
+                        "feflood":"feFlood",
+                        "fefunca":"feFuncA",
+                        "fefuncb":"feFuncB",
+                        "fefuncg":"feFuncG",
+                        "fefuncr":"feFuncR",
+                        "fegaussianblur":"feGaussianBlur",
+                        "feimage":"feImage",
+                        "femerge":"feMerge",
+                        "femergenode":"feMergeNode",
+                        "femorphology":"feMorphology",
+                        "feoffset":"feOffset",
+                        "fepointlight":"fePointLight",
+                        "fespecularlighting":"feSpecularLighting",
+                        "fespotlight":"feSpotLight",
+                        "fetile":"feTile",
+                        "feturbulence":"feTurbulence",
+                        "foreignobject":"foreignObject",
+                        "glyphref":"glyphRef",
+                        "lineargradient":"linearGradient",
+                        "radialgradient":"radialGradient",
+                        "textpath":"textPath"}
+
+        if token["name"] in replacements:
+            token["name"] = replacements[token["name"]]
+
+    def processEOF(self):
+        pass
+
+    def processStartTag(self, token):
+        currentNode = self.tree.openElements[-1]
+        if (currentNode.namespace == self.tree.defaultNamespace or
+            (currentNode.namespace == namespaces["mathml"] and 
+             token["name"] not in frozenset(["mglyph", "malignmark"]) and
+             currentNode.name in frozenset(["mi", "mo", "mn", 
+                                            "ms", "mtext"])) or
+            (currentNode.namespace == namespaces["mathml"] and
+             token["name"] == "svg" and 
+             currentNode.name == "annotation-xml") or
+            (currentNode.namespace == namespaces["svg"] and 
+             currentNode.name in frozenset(["foreignObject", 
+                                            "desc", "title"])
+             )):
             
-            self.startTagHandler = utils.MethodDispatcher([
-                    ("html", self.startTagHtml)
-                    ])
-            self.startTagHandler.default = self.startTagOther
+            self.parser.secondaryPhase.processStartTag(token)
+            if self.parser.phase == self and not self.nonHTMLElementOpen():
+                self.parser.phase = self.parser.secondaryPhase
+        elif token["name"] in self.breakoutElements:
+            self.parser.parseError("unexpected_html_element_in_foreign_content",
+                                   token["name"])
+            while (self.tree.openElements[-1].namespace !=
+                   self.tree.defaultNamespace):
+                self.tree.openElements.pop()
+            self.parser.phase = self.parser.secondaryPhase
+            self.parser.phase.processStartTag(token)
+        else:
+            if currentNode.namespace == namespaces["mathml"]:
+                self.parser.adjustMathMLAttributes(token)
+            elif currentNode.namespace == namespaces["svg"]:
+                self.adjustSVGTagNames(token)
+                self.parser.adjustSVGAttributes(token)
+            self.parser.adjustForeignAttributes(token)
+            token["namespace"] = currentNode.namespace
+            self.tree.insertElement(token)
+            if token["selfClosing"]:
+                self.tree.openElements.pop()
+                token["selfClosingAcknowledged"] = True
 
-            self.endTagHandler = utils.MethodDispatcher([("html", self.endTagHtml)])
-            self.endTagHandler.default = self.endTagOther
+    def processEndTag(self, token):
+        self.parser.secondaryPhase.processEndTag(token)
+        if self.parser.phase == self and not self.nonHTMLElementOpen():
+            self.parser.phase = self.parser.secondaryPhase
 
 class AfterBodyPhase(Phase):
     def __init__(self, parser, tree):

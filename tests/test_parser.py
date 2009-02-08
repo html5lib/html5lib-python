@@ -11,28 +11,28 @@ from support import html5lib_test_files, TestData, convert, convertExpected
 import html5lib
 from html5lib import html5parser, treebuilders, constants
 
-treeTypes = {"simpletree":treebuilders.getTreeBuilder("simpletree"),
-             "DOM":treebuilders.getTreeBuilder("dom")}
+treeTypes = {"simpletree":treebuilders.getTreeBuilder("simpletree")}
+             #"DOM":treebuilders.getTreeBuilder("dom")}
 
 #Try whatever etree implementations are avaliable from a list that are
 #"supposed" to work
 try:
     import xml.etree.ElementTree as ElementTree
-    treeTypes['ElementTree'] = treebuilders.getTreeBuilder("etree", ElementTree, fullTree=True)
+    #treeTypes['ElementTree'] = treebuilders.getTreeBuilder("etree", ElementTree, fullTree=True)
 except ImportError:
     try:
         import elementtree.ElementTree as ElementTree
-        treeTypes['ElementTree'] = treebuilders.getTreeBuilder("etree", ElementTree, fullTree=True)
+        #treeTypes['ElementTree'] = treebuilders.getTreeBuilder("etree", ElementTree, fullTree=True)
     except ImportError:
         pass
 
 try:
     import xml.etree.cElementTree as cElementTree
-    treeTypes['cElementTree'] = treebuilders.getTreeBuilder("etree", cElementTree, fullTree=True)
+    #treeTypes['cElementTree'] = treebuilders.getTreeBuilder("etree", cElementTree, fullTree=True)
 except ImportError:
     try:
         import cElementTree
-        treeTypes['cElementTree'] = treebuilders.getTreeBuilder("etree", cElementTree, fullTree=True)
+        #treeTypes['cElementTree'] = treebuilders.getTreeBuilder("etree", cElementTree, fullTree=True)
     except ImportError:
         pass
     
@@ -41,13 +41,13 @@ try:
         import lxml.html as lxml
     except ImportError:
         import lxml.etree as lxml
-    treeTypes['lxml'] = treebuilders.getTreeBuilder("lxml", lxml, fullTree=True)
+    #treeTypes['lxml'] = treebuilders.getTreeBuilder("lxml", lxml, fullTree=True)
 except ImportError:
     pass
 
 try:
     import BeautifulSoup
-    treeTypes["beautifulsoup"] = treebuilders.getTreeBuilder("beautifulsoup", fullTree=True)
+    #treeTypes["beautifulsoup"] = treebuilders.getTreeBuilder("beautifulsoup", fullTree=True)
 except ImportError:
     pass
 
@@ -55,7 +55,7 @@ except ImportError:
 #"supposed" to work
 try:
     import pxdom
-    treeTypes["pxdom"] = treebuilders.getTreeBuilder("dom", pxdom)
+    #treeTypes["pxdom"] = treebuilders.getTreeBuilder("dom", pxdom)
 except ImportError:
     pass
 
@@ -116,8 +116,8 @@ def buildTestSuite():
 
     for treeName, treeCls in treeTypes.iteritems():
         files = html5lib_test_files('tree-construction')
-        files = [f for f in files if 
-                 not f.split(".")[-2][-2:] in ("s9", "10", "11", "12")] #skip namespace tests for now
+        #files = [f for f in files if 
+        #         not f.split(".")[-2][-2:] in ("s9", "10", "11", "12")] #skip namespace tests for now
         for filename in files:
             testName = os.path.basename(filename).replace(".dat","")
 
@@ -150,11 +150,6 @@ def main():
         unittest.main()
     except SystemExit:
 	    pass
-	
-    f = open("graph.dot", "w")
-    f.write(str(g))
-    
-    print g.nodes.keys()
 
 if __name__ == "__main__":
     print sys.argv

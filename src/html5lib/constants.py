@@ -1111,6 +1111,8 @@ namespaces = {
     "xmlns":"http://www.w3.org/2000/xmlns/"
 }
 
+prefixes = dict([(v,k) for k,v in namespaces.iteritems()])
+prefixes["http://www.w3.org/1998/Math/MathML"] = "math"
 
 class DataLossWarning(UserWarning):
     pass

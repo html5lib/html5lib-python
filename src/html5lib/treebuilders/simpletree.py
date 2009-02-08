@@ -1,5 +1,5 @@
 import _base
-from html5lib.constants import voidElements
+from html5lib.constants import voidElements, namespaces, prefixes
 from xml.sax.saxutils import escape
 
 # Really crappy basic implementation of a DOM-core like thing
@@ -154,7 +154,10 @@ class Element(Node):
         self.attributes = {}
 
     def __unicode__(self):
-        return u"<%s>" % self.name
+        if self.namespace in (None, namespaces["html"]):
+            return u"<%s>" % self.name
+        else:
+            return u"<%s %s>"%(prefixes[self.namespace], self.name)
 
     def toxml(self):
         result = '<' + self.name
@@ -188,6 +191,8 @@ class Element(Node):
         indent += 2
         if self.attributes:
             for name, value in self.attributes.iteritems():
+                if isinstance(name, tuple):
+                    name - "%s %s"%(name[0], name[1])
                 tree += '\n|%s%s="%s"' % (' ' * indent, name, value)
         for child in self.childNodes:
             tree += child.printTree(indent)

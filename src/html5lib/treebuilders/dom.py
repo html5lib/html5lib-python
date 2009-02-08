@@ -79,7 +79,15 @@ def getDomBuilder(DomImplementation):
             if attributes:
                 for name, value in attributes.items():
                     value=illegal_xml_chars.sub(u'\uFFFD',value)
-                    self.element.setAttribute(name, value)
+                    if isinstance(name, tuple):
+                        if name[0] is not None:
+                            qualifiedName = name[0] + ":" + name[1]
+                        else:
+                            qualifiedName = name[1]
+                        self.element.setAttributeNS(name[2], qualifiedName, 
+                                                    value)
+                    else:
+                        self.element.setAttribute(name, value)
     
         attributes = property(getAttributes, setAttributes)
     
@@ -240,6 +248,7 @@ def getDomBuilder(DomImplementation):
         
     return locals()
 
-# XXX: Keep backwards compatibility with things that directly load classes/functions from this module
+# Keep backwards compatibility with things that directly load 
+# classes/functions from this module
 for key, value in getDomModule(minidom).__dict__.items():
 	globals()[key] = value

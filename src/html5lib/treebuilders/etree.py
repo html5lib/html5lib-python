@@ -48,7 +48,11 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             for key in self._element.attrib.keys():
                 del self._element.attrib[key]
             for key, value in attributes.iteritems():
-                self._element.set(key, value)
+                if isinstance(key, tuple):
+                    name = "{%s}%s"%(key[2], key[1])
+                else:
+                    name = key
+                self._element.set(name, value)
     
         attributes = property(_getAttributes, _setAttributes)
     
@@ -193,6 +197,12 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             elif type(element.tag) == type(ElementTree.Comment):
                 rv.append("|%s<!-- %s -->"%(' '*indent, element.text))
             else:
+                if element.namespave == self.defaultNamespace:
+                    name = element.tag
+                else:
+                    ns, name = element.tag.split("}")
+                    ns = ns[1:]
+                    name = "%s %s"%(ns, name)
                 rv.append("|%s<%s>"%(' '*indent, element.tag))
                 if hasattr(element, "attrib"):
                     for name, value in element.attrib.iteritems():

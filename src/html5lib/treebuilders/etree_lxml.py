@@ -158,11 +158,19 @@ class TreeBuilder(_base.TreeBuilder):
             def __init__(self, element, value={}):
                 self._element = element
                 dict.__init__(self, value)
-                for k, v in self.iteritems():
-                    self._element._element.attrib[filter.coerceAttribute(k)] = v
+                for key, value in self.iteritems():
+                    if isinstance(key, tuple):
+                        name = "{%s}%s"%(key[2], key[1])
+                    else:
+                        name = key
+                    self._element._element.attrib[filter.coerceAttribute(name)] = value
 
             def __setitem__(self, key, value):
                 dict.__setitem__(self, key, value)
+                if isinstance(key, tuple):
+                    name = "{%s}%s"%(key[2], key[1])
+                else:
+                    name = key
                 self._element._element.attrib[filter.coerceAttribute(key)] = value
 
         class Element(builder.Element):
