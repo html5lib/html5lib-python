@@ -1,6 +1,7 @@
 import codecs
 import re
 import types
+import sys
 
 from constants import EOF, spaceCharacters, asciiLetters, asciiUppercase
 from constants import encodings, ReparseException
@@ -180,7 +181,8 @@ class HTMLInputStream:
             import cStringIO
             stream = cStringIO.StringIO(str(source))
 
-        if not(hasattr(stream, "tell") and hasattr(stream, "seek")):
+        if (not(hasattr(stream, "tell") and hasattr(stream, "seek")) or
+            stream is sys.stdin):
             stream = BufferedStream(stream)
 
         return stream
