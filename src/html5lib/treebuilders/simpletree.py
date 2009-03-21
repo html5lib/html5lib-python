@@ -81,7 +81,7 @@ class Document(Node):
     def __unicode__(self):
         return "#document"
 
-    def toxml(self, encoding="utf=8"):
+    def toxml(self, encoding="utf-8"):
         result = ""
         for child in self.childNodes:
             result += child.toxml()
