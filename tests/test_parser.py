@@ -68,7 +68,7 @@ def convertTreeDump(data):
     return "\n".join(convert(3)(data).split("\n")[1:])
 
 import re
-attrlist = re.compile(r"^(\s+)\w+=.*(\n\1\w+=.*)+",re.M)
+attrlist = re.compile(r"^(\s+)\w+(?:\s\w+)?=.*(?:\n\1\w+(?:\s\w+)?=.*)+",re.M)
 def sortattrs(x):
   lines = x.group(0).split("\n")
   lines.sort()
@@ -79,6 +79,8 @@ class TestCase(unittest.TestCase):
         #XXX - move this out into the setup function
         #concatenate all consecutive character tokens into a single token
         p = html5parser.HTMLParser(tree = treeClass)
+
+        errors = [item.decode("utf-8") for item in errors]
         
         try:
             if innerHTML:
@@ -101,15 +103,16 @@ class TestCase(unittest.TestCase):
         expected = attrlist.sub(sortattrs, expected)
         errorMsg = "\n".join(["\n\nInput:", input, "\nExpected:", expected,
                               "\nReceived:", output])
-        self.assertEquals(expected, output, errorMsg)
-        errStr = ["Line: %i Col: %i %s %s"%(line, col, 
+        self.assertEquals(expected, output, errorMsg.encode("utf-8"))
+        errStr = [u"Line: %i Col: %i %s %s"%(line, col, 
                                          constants.E[errorcode], datavars) for
                   ((line,col), errorcode, datavars) in p.errors]
-        errorMsg2 = "\n".join(["\n\nInput:", input,
-                               "\nExpected errors (" + str(len(errors)) + "):\n" + "\n".join(errors),
-                               "\nActual errors (" + str(len(p.errors)) + "):\n" + "\n".join(errStr)])
+        
+        errorMsg2 = u"\n".join([u"\n\nInput:", input,
+                                u"\nExpected errors (" + str(len(errors)) + u"):\n" + u"\n".join(errors),
+                                u"\nActual errors (" + str(len(p.errors)) + u"):\n" + u"\n".join(errStr)])
         if checkParseErrors:
-            self.assertEquals(len(p.errors), len(errors), errorMsg2)
+            self.assertEquals(len(p.errors), len(errors), errorMsg2.encode("utf-8"))
 
 def buildTestSuite():
     sys.stdout.write('Testing tree builders '+ " ".join(treeTypes.keys()) + "\n")

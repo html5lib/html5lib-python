@@ -31,7 +31,7 @@ class HTMLParser(object):
 
     def __init__(self, tree = simpletree.TreeBuilder,
                  tokenizer = tokenizer.HTMLTokenizer, strict = False,
-                 namespaceHTMLElements = False):
+                 namespaceHTMLElements = True):
         """
         strict - raise an exception when a parse error is encountered
 
@@ -134,7 +134,7 @@ class HTMLParser(object):
                 self.phase.processStartTag(token)
                 if (token["selfClosing"]
                     and not self.selfClosingAcknowledged):
-                    self.parseError("non-void-element-with-trailing-soldius",
+                    self.parseError("non-void-element-with-trailing-solidus",
                                     {"name":token["name"]})
             elif type == EndTagToken:
                 self.phase.processEndTag(token)
@@ -268,7 +268,7 @@ class HTMLParser(object):
             "ychannelselector" : "yChannelSelector",
             "zoomandpan" : "zoomAndPan"
             }
-        for originalName in token["data"].iterkeys():
+        for originalName in token["data"].keys():
             if originalName in replacements:
                 svgName = replacements[originalName]
                 token["data"][svgName] = token["data"][originalName]
@@ -331,6 +331,9 @@ class HTMLParser(object):
             if nodeName in newModes:
                 self.phase = self.phases[newModes[nodeName]]
                 break
+            elif node.namespace in (namespaces["mathml"], namespaces["svg"]):
+                self.phase = self.phases["inForeignContent"]
+                self.secondaryPhase = self.phases["inBody"]
             elif nodeName == "html":
                 if self.tree.headPointer is None:
                     self.phase = self.phases["beforeHead"]
@@ -967,8 +970,9 @@ class InBodyPhase(Phase):
 
             # Phrasing elements are all non special, non scoping, non
             # formatting elements
-            if (node.name in (specialElements | scopingElements)
-              and node.name not in ("address", "div")):
+            if ((node.namespace, node.name) in
+                (specialElements | scopingElements)
+                and node.name not in ("address", "div")):
                 break
         # Always insert an <li> element.
         self.tree.insertElement(token)
@@ -1142,8 +1146,8 @@ class InBodyPhase(Phase):
         self.tree.insertElement(token)
         #Need to get the parse error right for the case where the token 
         #has a namespace not equal to the xmlns attribute
+        self.parser.secondaryPhase = self.parser.phase
         self.parser.phase = self.parser.phases["inForeignContent"]
-        self.parser.secondaryPhase = self
         if token["selfClosing"]:
             self.tree.openElements.pop()
             token["selfClosingAcknowledged"] = True
@@ -1156,8 +1160,8 @@ class InBodyPhase(Phase):
         self.tree.insertElement(token)
         #Need to get the parse error right for the case where the token 
         #has a namespace not equal to the xmlns attribute
+        self.parser.secondaryPhase = self.parser.phase
         self.parser.phase = self.parser.phases["inForeignContent"]
-        self.parser.secondaryPhase = self
         if token["selfClosing"]:
             self.tree.openElements.pop()
             token["selfClosingAcknowledged"] = True
@@ -1308,7 +1312,8 @@ class InBodyPhase(Phase):
             afeIndex = self.tree.openElements.index(afeElement)
             furthestBlock = None
             for element in self.tree.openElements[afeIndex:]:
-                if element.name in specialElements | scopingElements:
+                if ((element.namespace, element.name) in
+                    specialElements | scopingElements):
                     furthestBlock = element
                     break
 
@@ -1422,7 +1427,8 @@ class InBodyPhase(Phase):
                     pass
                 break
             else:
-                if node.name in specialElements | scopingElements:
+                if ((node.namespace, node.name) in
+                    specialElements | scopingElements):
                     self.parser.parseError("unexpected-end-tag", {"name": token["name"]})
                     break
 
@@ -2121,12 +2127,14 @@ class InSelectInTablePhase(Phase):
         Phase.__init__(self, parser, tree)
 
         self.startTagHandler = utils.MethodDispatcher([
-            (("caption", "table", "tbody", "tfoot", "thead", "tr", "td", "th"), self.startTagTable)
+            (("caption", "table", "tbody", "tfoot", "thead", "tr", "td", "th"),
+             self.startTagTable)
         ])
         self.startTagHandler.default = self.startTagOther
 
         self.endTagHandler = utils.MethodDispatcher([
-            (("caption", "table", "tbody", "tfoot", "thead", "tr", "td", "th"), self.endTagTable)
+            (("caption", "table", "tbody", "tfoot", "thead", "tr", "td", "th"),
+             self.endTagTable)
         ])
         self.endTagHandler.default = self.endTagOther
 
@@ -2146,7 +2154,7 @@ class InSelectInTablePhase(Phase):
 
     def endTagTable(self, token):
         self.parser.parseError("unexpected-table-element-end-tag-in-select-in-table", {"name": token["name"]})
-        if self.tree.elementInScope(token["name"]):
+        if self.tree.elementInScope(token["name"], tableVariant=True):
             self.endTagOther(impliedTagToken("select"))
             self.parser.phase.processEndTag(token)
 
@@ -2164,12 +2172,14 @@ class InForeignContentPhase(Phase):
                                   "span", "strong", "strike",  "sub", "sup", 
                                   "table", "tt", "u", "ul", "var"])
     def __init__(self, parser, tree):
-            Phase.__init__(self, parser, tree)
+        Phase.__init__(self, parser, tree)
 
-    def nonHTMLElementOpen(self):
+    def nonHTMLElementInScope(self):
         for item in self.tree.openElements[::-1]:
-            if item.namespace != self.tree.defaultNamespace:
+            if item.namespace == self.tree.defaultNamespace:
                 return True
+            elif (item.namespace, item.name) in scopingElements:
+                return False
         return False
 
     def adjustSVGTagNames(self, token):
@@ -2224,18 +2234,20 @@ class InForeignContentPhase(Phase):
              currentNode.name in frozenset(["mi", "mo", "mn", 
                                             "ms", "mtext"])) or
             (currentNode.namespace == namespaces["mathml"] and
-             token["name"] == "svg" and 
-             currentNode.name == "annotation-xml") or
+             currentNode.name == "annotation-xml" and
+             token["name"] == "svg") or
             (currentNode.namespace == namespaces["svg"] and 
              currentNode.name in frozenset(["foreignObject", 
                                             "desc", "title"])
              )):
-            
+            print currentNode, token, self.nonHTMLElementInScope()
+            print self.tree.openElements
+            assert self.parser.secondaryPhase != self
             self.parser.secondaryPhase.processStartTag(token)
-            if self.parser.phase == self and not self.nonHTMLElementOpen():
+            if self.parser.phase == self and not self.nonHTMLElementInScope():
                 self.parser.phase = self.parser.secondaryPhase
         elif token["name"] in self.breakoutElements:
-            self.parser.parseError("unexpected_html_element_in_foreign_content",
+            self.parser.parseError("unexpected-html-element-in-foreign-content",
                                    token["name"])
             while (self.tree.openElements[-1].namespace !=
                    self.tree.defaultNamespace):
@@ -2257,7 +2269,7 @@ class InForeignContentPhase(Phase):
 
     def processEndTag(self, token):
         self.parser.secondaryPhase.processEndTag(token)
-        if self.parser.phase == self and not self.nonHTMLElementOpen():
+        if self.parser.phase == self and not self.nonHTMLElementInScope():
             self.parser.phase = self.parser.secondaryPhase
 
 class AfterBodyPhase(Phase):

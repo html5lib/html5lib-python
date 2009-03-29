@@ -144,6 +144,7 @@ class TestCase(unittest.TestCase):
 
 def buildTestSuite():
     for filename in html5lib_test_files('tokenizer', '*.test'):
+        print filename
         tests = simplejson.load(file(filename))
         testName = os.path.basename(filename).replace(".test","")
         if 'tests' in tests:

@@ -144,7 +144,8 @@ class TreeBuilder(object):
                 return True
             elif node.name == "table":
                 return False
-            elif not tableVariant and node.name in scopingElements:
+            elif (not tableVariant and ((node.namespace, node.name) in
+                                        scopingElements)):
                 return False
             elif node.name == "html":
                 return False

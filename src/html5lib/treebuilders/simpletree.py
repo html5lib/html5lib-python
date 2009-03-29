@@ -192,7 +192,7 @@ class Element(Node):
         if self.attributes:
             for name, value in self.attributes.iteritems():
                 if isinstance(name, tuple):
-                    name - "%s %s"%(name[0], name[1])
+                    name = "%s %s"%(name[0], name[1])
                 tree += '\n|%s%s="%s"' % (' ' * indent, name, value)
         for child in self.childNodes:
             tree += child.printTree(indent)
