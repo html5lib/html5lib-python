@@ -334,6 +334,7 @@ class HTMLParser(object):
             elif node.namespace in (namespaces["mathml"], namespaces["svg"]):
                 self.phase = self.phases["inForeignContent"]
                 self.secondaryPhase = self.phases["inBody"]
+                break
             elif nodeName == "html":
                 if self.tree.headPointer is None:
                     self.phase = self.phases["beforeHead"]
@@ -1146,7 +1147,8 @@ class InBodyPhase(Phase):
         self.tree.insertElement(token)
         #Need to get the parse error right for the case where the token 
         #has a namespace not equal to the xmlns attribute
-        self.parser.secondaryPhase = self.parser.phase
+        if self.parser.phase != self.parser.phases["inForeignContent"]:
+            self.parser.secondaryPhase = self.parser.phase
         self.parser.phase = self.parser.phases["inForeignContent"]
         if token["selfClosing"]:
             self.tree.openElements.pop()
@@ -1160,7 +1162,8 @@ class InBodyPhase(Phase):
         self.tree.insertElement(token)
         #Need to get the parse error right for the case where the token 
         #has a namespace not equal to the xmlns attribute
-        self.parser.secondaryPhase = self.parser.phase
+        if self.parser.phase != self.parser.phases["inForeignContent"]:
+            self.parser.secondaryPhase = self.parser.phase
         self.parser.phase = self.parser.phases["inForeignContent"]
         if token["selfClosing"]:
             self.tree.openElements.pop()
@@ -2175,6 +2178,10 @@ class InForeignContentPhase(Phase):
         Phase.__init__(self, parser, tree)
 
     def nonHTMLElementInScope(self):
+        for element in self.tree.openElements[::-1]:
+            if element.namespace == self.tree.defaultNamespace:
+                return self.tree.elementInScope(element)
+        assert False
         for item in self.tree.openElements[::-1]:
             if item.namespace == self.tree.defaultNamespace:
                 return True
@@ -2240,11 +2247,9 @@ class InForeignContentPhase(Phase):
              currentNode.name in frozenset(["foreignObject", 
                                             "desc", "title"])
              )):
-            print currentNode, token, self.nonHTMLElementInScope()
-            print self.tree.openElements
             assert self.parser.secondaryPhase != self
             self.parser.secondaryPhase.processStartTag(token)
-            if self.parser.phase == self and not self.nonHTMLElementInScope():
+            if self.parser.phase == self and self.nonHTMLElementInScope():
                 self.parser.phase = self.parser.secondaryPhase
         elif token["name"] in self.breakoutElements:
             self.parser.parseError("unexpected-html-element-in-foreign-content",
@@ -2268,8 +2273,9 @@ class InForeignContentPhase(Phase):
                 token["selfClosingAcknowledged"] = True
 
     def processEndTag(self, token):
+        self.adjustSVGTagNames(token)
         self.parser.secondaryPhase.processEndTag(token)
-        if self.parser.phase == self and not self.nonHTMLElementInScope():
+        if self.parser.phase == self and self.nonHTMLElementInScope():
             self.parser.phase = self.parser.secondaryPhase
 
 class AfterBodyPhase(Phase):
