@@ -3,6 +3,7 @@ import re
 
 import _base
 from html5lib import ihatexml
+from html5lib import constants
 
 tag_regexp = re.compile("{([^}]*)}(.*)")
 
@@ -214,15 +215,24 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             elif type(element.tag) == type(ElementTree.Comment):
                 rv.append("|%s<!-- %s -->"%(' '*indent, element.text))
             else:
-                if element.namespace == self.defaultNamespace:
+                nsmatch = tag_regexp.match(element.tag)
+
+                if nsmatch is None:
                     name = element.tag
                 else:
-                    ns, name = element.tag.split("}")
-                    ns = ns[1:]
-                    name = "%s %s"%(ns, name)
-                rv.append("|%s<%s>"%(' '*indent, element.tag))
+                    ns, name = nsmatch.groups()
+                    prefix = constants.prefixes[ns]
+                    if prefix != "html":
+                        name = "%s %s"%(prefix, name)
+                rv.append("|%s<%s>"%(' '*indent, name))
+
                 if hasattr(element, "attrib"):
                     for name, value in element.attrib.iteritems():
+                        nsmatch = tag_regexp.match(name)
+                        if nsmatch is not None:
+                            ns, name = nsmatch.groups()
+                            prefix = constants.prefixes[ns]
+                            name = "%s %s"%(prefix, name)
                         rv.append('|%s%s="%s"' % (' '*(indent+2), name, value))
                 if element.text:
                     rv.append("|%s\"%s\"" %(' '*(indent+2), element.text))
