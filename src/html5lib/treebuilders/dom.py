@@ -31,11 +31,20 @@ def getDomBuilder(DomImplementation):
             self.element.setAttribute(infoset_filter.coerceAttribute(name),
                                       infoset_filter.coerceCharacters(value))
         def items(self):
-            return self.element.attributes.items()
+            return [(infoset_filter.fromXmlName(item[0]), item[1]) for item in
+                     self.element.attributes.items()]
         def keys(self):
-            return self.element.attributes.keys()
+            return [infoset_filter.fromXmlName(item) for item in
+                    self.element.attributes.keys()]
         def __getitem__(self, name):
+            name = infoset_filter.toXmlName(name)
             return self.element.getAttribute(name)
+
+        def __contains__(self, name):
+            if isinstance(name, tuple):
+                raise NotImplementedError
+            else:
+                return self.element.hasAttribute(infoset_filter.toXmlName(name))
     
     class NodeBuilder(_base.Node):
         def __init__(self, element):
