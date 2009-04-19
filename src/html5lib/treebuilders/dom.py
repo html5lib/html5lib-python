@@ -1,9 +1,10 @@
-import _base
+
 from xml.dom import minidom, Node, XML_NAMESPACE, XMLNS_NAMESPACE
 import new
-
 import re
-illegal_xml_chars = re.compile("[\x01-\x08\x0B\x0C\x0E-\x1F]")
+
+import _base
+from html5lib import constants, ihatexml
 
 moduleCache = {}
 
@@ -20,14 +21,15 @@ def getDomModule(DomImplementation):
 
 def getDomBuilder(DomImplementation):
     Dom = DomImplementation
+    infoset_filter = ihatexml.InfosetFilter()
     class AttrList:
         def __init__(self, element):
             self.element = element
         def __iter__(self):
             return self.element.attributes.items().__iter__()
         def __setitem__(self, name, value):
-            value=illegal_xml_chars.sub(u'\uFFFD',value)
-            self.element.setAttribute(name, value)
+            self.element.setAttribute(infoset_filter.coerceAttribute(name),
+                                      infoset_filter.coerceCharacters(value))
         def items(self):
             return self.element.attributes.items()
         def keys(self):
@@ -40,16 +42,15 @@ def getDomBuilder(DomImplementation):
             _base.Node.__init__(self, element.localName)
             self.element = element
 
-        namespace = property(lambda self:(hasattr(self.element, "namespace")
-                                          and self.element.namespace 
-                                          or None))
+        namespace = property(lambda self:hasattr(self.element, "namespaceURI")
+                             and self.element.namespaceURI or None)
 
         def appendChild(self, node):
             node.parent = self
             self.element.appendChild(node.element)
     
         def insertText(self, data, insertBefore=None):
-            data=illegal_xml_chars.sub(u'\uFFFD',data)
+            data=infoset_filter.coerceCharacters(data)
             text = self.element.ownerDocument.createTextNode(data)
             if insertBefore:
                 self.element.insertBefore(text, insertBefore.element)
@@ -78,17 +79,19 @@ def getDomBuilder(DomImplementation):
         def setAttributes(self, attributes):
             if attributes:
                 for name, value in attributes.items():
-                    value=illegal_xml_chars.sub(u'\uFFFD',value)
                     if isinstance(name, tuple):
                         if name[0] is not None:
-                            qualifiedName = name[0] + ":" + name[1]
+                            qualifiedName = (name[0] + ":" +
+                                             infoset_filter.coerceAttribute(
+                                name[1]))
                         else:
-                            qualifiedName = name[1]
+                            qualifiedName = infoset_filter.coerceAttribute(
+                                name[1])
                         self.element.setAttributeNS(name[2], qualifiedName, 
                                                     value)
                     else:
-                        self.element.setAttribute(name, value)
-    
+                        self.element.setAttribute(
+                            infoset_filter.coerceAttribute(name), value)
         attributes = property(getAttributes, setAttributes)
     
         def cloneNode(self):
@@ -140,7 +143,7 @@ def getDomBuilder(DomImplementation):
             return _base.TreeBuilder.getFragment(self).element
     
         def insertText(self, data, parent=None):
-            data=illegal_xml_chars.sub(u'\uFFFD',data)
+            data=infoset_filter.coerceCharacters(data)
             if parent <> self:
                 _base.TreeBuilder.insertText(self, data, parent)
             else:
@@ -177,9 +180,26 @@ def getDomBuilder(DomImplementation):
             elif element.nodeType == Node.TEXT_NODE:
                 rv.append("|%s\"%s\"" %(' '*indent, element.nodeValue))
             else:
-                rv.append("|%s<%s>"%(' '*indent, element.nodeName))
+                if (hasattr(element, "namespaceURI") and
+                    element.namespaceURI not in (None,
+                                              constants.namespaces["html"])):
+                    name = "%s %s"%(constants.prefixes[element.namespaceURI],
+                                    element.nodeName)
+                else:
+                    name = element.nodeName
+                rv.append("|%s<%s>"%(' '*indent, name))
                 if element.hasAttributes():
-                    for name, value in element.attributes.items():
+                    i = 0
+                    attr = element.attributes.item(i)
+                    while attr:
+                        name = infoset_filter.fromXmlName(attr.localName)
+                        value = attr.value
+                        ns = attr.namespaceURI
+                        if ns:
+                            name = "%s %s"%(constants.prefixes[ns], name)
+                        i += 1
+                        attr = element.attributes.item(i)
+
                         rv.append('|%s%s="%s"' % (' '*(indent+2), name, value))
             indent += 2
             for child in element.childNodes:

@@ -11,8 +11,8 @@ from support import html5lib_test_files, TestData, convert, convertExpected
 import html5lib
 from html5lib import html5parser, treebuilders, constants
 
-treeTypes = {"simpletree":treebuilders.getTreeBuilder("simpletree")}
-             #"DOM":treebuilders.getTreeBuilder("dom")}
+treeTypes = {"simpletree":treebuilders.getTreeBuilder("simpletree"),
+             "DOM":treebuilders.getTreeBuilder("dom")}
 
 #Try whatever etree implementations are avaliable from a list that are
 #"supposed" to work
@@ -55,7 +55,7 @@ except ImportError:
 #"supposed" to work
 try:
     import pxdom
-    #treeTypes["pxdom"] = treebuilders.getTreeBuilder("dom", pxdom)
+    treeTypes["pxdom"] = treebuilders.getTreeBuilder("dom", pxdom)
 except ImportError:
     pass
 
