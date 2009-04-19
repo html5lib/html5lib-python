@@ -1,7 +1,10 @@
-import _base
 import new
+import re
 
+import _base
 from html5lib import ihatexml
+
+tag_regexp = re.compile("{([^}]*)}(.*)")
 
 moduleCache = {}
 
@@ -20,24 +23,38 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
     ElementTree = ElementTreeImplementation
     class Element(_base.Node):
         def __init__(self, name, namespace=None):
-            if namespace is None:
-                etree_tag = name
-            else:
-                etree_tag = "{%s}%s"%(name, namespace)
-            self._element = ElementTree.Element(etree_tag)
-            self.name = name
-            self.namespace = namespace
+            self._name = name
+            self._namespace = namespace
+            self._element = ElementTree.Element(self._getETreeTag(name,
+                                                                  namespace))
             self.parent = None
             self._childNodes = []
             self._flags = []
+
+        def _getETreeTag(self, name, namespace):
+            if namespace is None:
+                etree_tag = name
+            else:
+                etree_tag = "{%s}%s"%(namespace, name)
+            return etree_tag
     
         def _setName(self, name):
-            self._element.tag = name
+            self._name = name
+            self._element.tag = self._getETreeTag(self._name, self._namespace)
         
         def _getName(self):
-            return self._element.tag
-    
+            return self._name
+        
         name = property(_getName, _setName)
+
+        def _setNamespace(self, namespace):
+            self._namespace = namespace
+            self._element.tag = self._getETreeTag(self._name, self._namespace)
+
+        def _getNamespace(self):
+            return self._namespace
+
+        namespace = property(_getNamespace, _setNamespace)
     
         def _getAttributes(self):
             return self._element.attrib
@@ -197,7 +214,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             elif type(element.tag) == type(ElementTree.Comment):
                 rv.append("|%s<!-- %s -->"%(' '*indent, element.text))
             else:
-                if element.namespave == self.defaultNamespace:
+                if element.namespace == self.defaultNamespace:
                     name = element.tag
                 else:
                     ns, name = element.tag.split("}")

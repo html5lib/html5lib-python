@@ -1,7 +1,10 @@
-import _base
 import new
 import warnings
+import re
+
+import _base
 from html5lib.constants import DataLossWarning
+import html5lib.constants as constants
 import etree as etree_builders
 from html5lib import ihatexml
 
@@ -25,9 +28,7 @@ When any of these things occur, we emit a DataLossWarning
 
 class DocumentType(object):
     def __init__(self, name, publicId, systemId):
-        self.name = name
-        if name != name.lower():
-            warnings.warn("lxml does not preserve doctype case", DataLossWarning)           
+        self.name = name         
         self.publicId = publicId
         self.systemId = systemId
 
@@ -80,11 +81,36 @@ def testSerializer(element):
         elif type(element.tag) == type(etree.Comment):
             rv.append("|%s<!-- %s -->"%(' '*indent, element.text))
         else:
-            rv.append("|%s<%s>"%(' '*indent, filter.fromXmlName(element.tag)))
+            nsmatch = etree_builders.tag_regexp.match(element.tag)
+            if nsmatch is not None:
+                ns = nsmatch.group(1)
+                tag = nsmatch.group(2)
+                prefix = constants.prefixes[ns]
+                if prefix != "html":
+                    rv.append("|%s<%s %s>"%(' '*indent, prefix,
+                                            filter.fromXmlName(tag)))
+                else:
+                    rv.append("|%s<%s>"%(' '*indent,
+                                         filter.fromXmlName(tag)))
+            else:
+                rv.append("|%s<%s>"%(' '*indent,
+                                     filter.fromXmlName(element.tag)))
+
             if hasattr(element, "attrib"):
                 for name, value in element.attrib.iteritems():
-                    rv.append('|%s%s="%s"' % (' '*(indent+2), 
-                                              filter.fromXmlName(name), value))
+                    nsmatch = etree_builders.tag_regexp.match(name)
+                    if nsmatch:
+                        ns = nsmatch.group(1)
+                        name = nsmatch.group(2)
+                        prefix = constants.prefixes[ns]
+                        rv.append('|%s%s %s="%s"' % (' '*(indent+2), 
+                                                  prefix,
+                                                  filter.fromXmlName(name),
+                                                  value))
+                    else:        
+                        rv.append('|%s%s="%s"' % (' '*(indent+2), 
+                                                  filter.fromXmlName(name),
+                                                  value))
             if element.text:
                 rv.append("|%s\"%s\"" %(' '*(indent+2), element.text))
             indent += 2
@@ -160,38 +186,33 @@ class TreeBuilder(_base.TreeBuilder):
                 dict.__init__(self, value)
                 for key, value in self.iteritems():
                     if isinstance(key, tuple):
-                        name = "{%s}%s"%(key[2], key[1])
+                        name = "{%s}%s"%(key[2], filter.coerceAttribute(key[1]))
                     else:
-                        name = key
-                    self._element._element.attrib[filter.coerceAttribute(name)] = value
+                        name = filter.coerceAttribute(key)
+                    self._element._element.attrib[name] = value
 
             def __setitem__(self, key, value):
                 dict.__setitem__(self, key, value)
                 if isinstance(key, tuple):
-                    name = "{%s}%s"%(key[2], key[1])
+                    name = "{%s}%s"%(key[2], filter.coerceAttribute(key[1]))
                 else:
-                    name = key
-                self._element._element.attrib[filter.coerceAttribute(key)] = value
+                    name = filter.coerceAttribute(key)
+                self._element._element.attrib[name] = value
 
         class Element(builder.Element):
-            def __init__(self, name, namespace = None):
+            def __init__(self, name, namespace):
                 name = filter.coerceElement(name)
-                if namespace is None:
-                    etree_tag = name
-                else:
-                    etree_tag = "{%s}%s"%(namespace, name)
-                self._name = name
-                self.namespace = namespace
-                builder.Element.__init__(self, name)
+                builder.Element.__init__(self, name, namespace=namespace)
                 self._attributes = Attributes(self)
 
             def _setName(self, name):
-                self._name = name
-                self._element.tag = filter.coerceElement(name)
-
+                self._name = filter.coerceElement(name)                
+                self._element.tag = self._getETreeTag(
+                    self._name, self._namespace)
+        
             def _getName(self):
                 return self._name
-
+        
             name = property(_getName, _setName)
 
             def _getAttributes(self):
@@ -281,7 +302,8 @@ class TreeBuilder(_base.TreeBuilder):
                 docStr += ' PUBLIC "%s" "%s"'%(self.doctype.publicId or "",
                                                self.doctype.systemId or "")
             docStr += ">"
-        docStr += "<html></html>"
+        #TODO - this needs to work when elements are not put into the default ns
+        docStr += "<html xmlns='http://www.w3.org/1999/xhtml'></html>"
         
         try:
             root = etree.fromstring(docStr)

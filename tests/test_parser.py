@@ -41,7 +41,7 @@ try:
         import lxml.html as lxml
     except ImportError:
         import lxml.etree as lxml
-    #treeTypes['lxml'] = treebuilders.getTreeBuilder("lxml", lxml, fullTree=True)
+    treeTypes['lxml'] = treebuilders.getTreeBuilder("lxml", lxml, fullTree=True)
 except ImportError:
     pass
 
