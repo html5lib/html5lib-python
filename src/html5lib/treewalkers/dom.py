@@ -16,7 +16,8 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             return _base.TEXT, node.nodeValue
 
         elif node.nodeType == Node.ELEMENT_NODE:
-            return _base.ELEMENT, node.nodeName, node.attributes.items(), node.hasChildNodes
+            return (_base.ELEMENT, node.namespaceURI, node.nodeName, 
+                    node.attributes.items(), node.hasChildNodes)
 
         elif node.nodeType == Node.COMMENT_NODE:
             return _base.COMMENT, node.nodeValue

@@ -32,8 +32,8 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             return _base.TEXT, node.value
 
         elif node.type == 5: # Element
-            return _base.ELEMENT, node.name, \
-                node.attributes.items(), node.hasContent()
+            return (_base.ELEMENT, node.namespace, node.name, 
+                    node.attributes.items(), node.hasContent())
 
         elif node.type == 6: # CommentNode
             return _base.COMMENT, node.data
