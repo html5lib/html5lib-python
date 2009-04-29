@@ -444,8 +444,10 @@ class EncodingBytes(str):
     """String-like object with an assosiated position and various extra methods
     If the position is ever greater than the string length then an exception is
     raised"""
+    def __new__(self, value):
+        return str.__new__(self, value)
+
     def __init__(self, value):
-        str.__init__(self, value)
         self._position=-1
     
     def __iter__(self):
