@@ -428,7 +428,7 @@ class InitialPhase(Phase):
     # this.
     def processEOF(self):
         self.parser.parseError("expected-doctype-but-got-eof")
-        self.compatMode = "quirks"
+        self.parser.compatMode = "quirks"
         self.parser.phase = self.parser.phases["beforeHtml"]
         self.parser.phase.processEOF()
 
@@ -533,7 +533,7 @@ class InitialPhase(Phase):
                 systemId == None)
             or (systemId != None and
                 systemId == "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd")):
-            self.compatMode = "quirks"
+            self.parser.compatMode = "quirks"
         elif (publicId in
                 ("-//w3c//dtd xhtml 1.0 frameset//EN",
                  "-//w3c//dtd xhtml 1.0 transitional//EN")
@@ -541,7 +541,7 @@ class InitialPhase(Phase):
                   ("-//w3c//dtd html 4.01 frameset//EN",
                    "-//w3c//dtd html 4.01 transitional//EN") and 
                   systemId == None)):
-            self.compatMode = "limited quirks"
+            self.parser.compatMode = "limited quirks"
 
         self.parser.phase = self.parser.phases["beforeHtml"]
 
@@ -550,21 +550,21 @@ class InitialPhase(Phase):
 
     def processCharacters(self, token):
         self.parser.parseError("expected-doctype-but-got-chars")
-        self.compatMode = "quirks"
+        self.parser.compatMode = "quirks"
         self.parser.phase = self.parser.phases["beforeHtml"]
         self.parser.phase.processCharacters(token)
 
     def processStartTag(self, token):
         self.parser.parseError("expected-doctype-but-got-start-tag",
           {"name": token["name"]})
-        self.compatMode = "quirks"
+        self.parser.compatMode = "quirks"
         self.parser.phase = self.parser.phases["beforeHtml"]
         self.parser.phase.processStartTag(token)
 
     def processEndTag(self, token):
         self.parser.parseError("expected-doctype-but-got-end-tag",
           {"name": token["name"]})
-        self.compatMode = "quirks"
+        self.parser.compatMode = "quirks"
         self.parser.phase = self.parser.phases["beforeHtml"]
         self.parser.phase.processEndTag(token)
 
