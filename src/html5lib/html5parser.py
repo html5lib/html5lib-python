@@ -140,6 +140,8 @@ class HTMLParser(object):
                           tokenTypes["Doctype"])
 
         for token in self.normalizedTokens():
+            #print self.phase.__class__.__name__
+            #print token
             type = token["type"]
             if type == CharactersToken:
                 self.phase.processCharacters(token["data"])
@@ -562,7 +564,7 @@ class InHeadPhase(Phase):
 
         self. endTagHandler = utils.MethodDispatcher([
             ("head", self.endTagHead),
-            ("br", self.endTagBr)
+            (("html", "body", "br"), self.endTagBodyHtmlBr)
         ])
         self.endTagHandler.default = self.endTagOther
 
@@ -630,7 +632,7 @@ class InHeadPhase(Phase):
         assert node.name == "head"
         self.parser.phase = self.parser.phases["afterHead"]
 
-    def endTagBr(self, name):
+    def endTagBodyHtmlBr(self, name):
         self.anythingElse()
         self.parser.phase.processEndTag(name)
 
@@ -659,7 +661,7 @@ class AfterHeadPhase(Phase):
             ("head", self.startTagHead)
         ])
         self.startTagHandler.default = self.startTagOther
-        self.endTagHandler = utils.MethodDispatcher([("br", self.endTagBr)])
+        self.endTagHandler = utils.MethodDispatcher([(("body", "html", "br"), self.endTagBodyHtmlBr)])
         self.endTagHandler.default = self.endTagOther
 
     def processEOF(self):
@@ -695,10 +697,10 @@ class AfterHeadPhase(Phase):
         self.anythingElse()
         self.parser.phase.processStartTag(name, attributes)
 
-    def endTagBr(self, name):
+    def endTagBodyHtmlBr(self, name):
         #This is not currently in the spec
         self.anythingElse()
-        self.parser.phase.processEndTag("br")
+        self.parser.phase.processEndTag(name)
 
     def endTagOther(self, name):
         self.parser.parseError("unexpected-end-tag", {"name":name})
