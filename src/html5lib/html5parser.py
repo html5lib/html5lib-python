@@ -18,8 +18,7 @@ from constants import contentModelFlags, spaceCharacters, asciiUpper2Lower
 from constants import scopingElements, formattingElements, specialElements
 from constants import headingElements, tableInsertModeElements
 from constants import cdataElements, rcdataElements, voidElements
-from constants import tokenTypes, ReparseException
-from constants import tokenTypes, namespaces
+from constants import tokenTypes, ReparseException, namespaces
 
 def parse(doc, treebuilder="simpletree", encoding=None):
     tb = treebuilders.getTreeBuilder(treebuilder)
@@ -677,7 +676,7 @@ class InHeadPhase(Phase):
 
         self. endTagHandler = utils.MethodDispatcher([
             ("head", self.endTagHead),
-            ("br", self.endTagBr)
+            (("br", "html", "body"), self.endTagHtmlBodyBr)
         ])
         self.endTagHandler.default = self.endTagOther
 
@@ -746,7 +745,7 @@ class InHeadPhase(Phase):
         assert node.name == "head", "Expected head got %s"%node.name
         self.parser.phase = self.parser.phases["afterHead"]
 
-    def endTagBr(self, token):
+    def endTagHtmlBodyBr(self, token):
         self.anythingElse()
         self.parser.phase.processEndTag(token)
 
@@ -775,7 +774,8 @@ class AfterHeadPhase(Phase):
             ("head", self.startTagHead)
         ])
         self.startTagHandler.default = self.startTagOther
-        self.endTagHandler = utils.MethodDispatcher([("br", self.endTagBr)])
+        self.endTagHandler = utils.MethodDispatcher([(("body", "html", "br"), 
+                                                      self.endTagHtmlBodyBr)])
         self.endTagHandler.default = self.endTagOther
 
     def processEOF(self):
@@ -811,7 +811,7 @@ class AfterHeadPhase(Phase):
         self.anythingElse()
         self.parser.phase.processStartTag(token)
 
-    def endTagBr(self, token):
+    def endTagHtmlBodyBr(self, token):
         #This is not currently in the spec
         self.anythingElse()
         self.parser.phase.processEndTag(token)
@@ -1002,6 +1002,9 @@ class InBodyPhase(Phase):
     def startTagHeading(self, token):
         if self.tree.elementInScope("p"):
             self.endTagP(impliedTagToken("p"))
+        if self.tree.openElements[-1].name in headingElements:
+            self.parser.parseError("unexpected-start-tag", {"name": token["name"]})
+            self.tree.openElements.pop()
         # Uncomment the following for IE7 behavior:
         #
         #for item in headingElements:
@@ -1586,7 +1589,8 @@ class InTablePhase(Phase):
             self.startTagOther(token)
 
     def startTagInput(self, token):
-        if "type" in token["data"] and token["data"]["type"].translate(asciiUpper2Lower) == "hidden" and "tainted" not in self.getCurrentTable()._flags:
+        if ("type" in token["data"] and 
+            token["data"]["type"].translate(asciiUpper2Lower) == "hidden"):
             self.parser.parseError("unexpected-hidden-input-in-table")
             self.tree.insertElement(token)
             # XXX associate with form

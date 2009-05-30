@@ -295,6 +295,7 @@ formattingElements = frozenset((
     (namespaces["html"], "a"),
     (namespaces["html"], "b"),
     (namespaces["html"], "big"),
+    (namespaces["html"], "code"),
     (namespaces["html"], "em"),
     (namespaces["html"], "font"),
     (namespaces["html"], "i"),
