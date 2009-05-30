@@ -13,5 +13,6 @@ tree = p.parse(f)
 """
 from html5parser import HTMLParser, parse
 from treebuilders import getTreeBuilder
+from serializer import serialize
 
 from liberalxmlparser import XMLParser, XHTMLParser

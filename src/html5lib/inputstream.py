@@ -1,6 +1,7 @@
 import codecs
 import re
 import types
+import sys
 
 from constants import EOF, spaceCharacters, asciiLetters, asciiUppercase
 from constants import encodings, ReparseException
@@ -10,7 +11,7 @@ spaceCharactersBytes = [str(item) for item in spaceCharacters]
 asciiLettersBytes = [str(item) for item in asciiLetters]
 asciiUppercaseBytes = [str(item) for item in asciiUppercase]
 
-invalid_unicode_re = re.compile(u"[\u0001-\u0008\u000B\u000E-\u001F\u007F-\u009F\uD800-\uDFFF\uFDD0-\uFDDF\uFFFE\uFFFF\U0001FFFE\U0001FFFF\U0002FFFE\U0002FFFF\U0003FFFE\U0003FFFF\U0004FFFE\U0004FFFF\U0005FFFE\U0005FFFF\U0006FFFE\U0006FFFF\U0007FFFE\U0007FFFF\U0008FFFE\U0008FFFF\U0009FFFE\U0009FFFF\U000AFFFE\U000AFFFF\U000BFFFE\U000BFFFF\U000CFFFE\U000CFFFF\U000DFFFE\U000DFFFF\U000EFFFE\U000EFFFF\U000FFFFE\U000FFFFF\U0010FFFE\U0010FFFF]")
+invalid_unicode_re = re.compile(u"[\u0001-\u0008\u000B\u000E-\u001F\u007F-\u009F\uD800-\uDFFF\uFDD0-\uFDEF\uFFFE\uFFFF\U0001FFFE\U0001FFFF\U0002FFFE\U0002FFFF\U0003FFFE\U0003FFFF\U0004FFFE\U0004FFFF\U0005FFFE\U0005FFFF\U0006FFFE\U0006FFFF\U0007FFFE\U0007FFFF\U0008FFFE\U0008FFFF\U0009FFFE\U0009FFFF\U000AFFFE\U000AFFFF\U000BFFFE\U000BFFFF\U000CFFFE\U000CFFFF\U000DFFFE\U000DFFFF\U000EFFFE\U000EFFFF\U000FFFFE\U000FFFFF\U0010FFFE\U0010FFFF]")
 
 non_bmp_invalid_codepoints = set([0x1FFFE, 0x1FFFF, 0x2FFFE, 0x2FFFF, 0x3FFFE,
                                   0x3FFFF, 0x4FFFE, 0x4FFFF, 0x5FFFE, 0x5FFFF,
@@ -196,7 +197,8 @@ class HTMLInputStream:
             import cStringIO
             stream = cStringIO.StringIO(str(source))
 
-        if not(hasattr(stream, "tell") and hasattr(stream, "seek")):
+        if (not(hasattr(stream, "tell") and hasattr(stream, "seek")) or
+            stream is sys.stdin):
             stream = BufferedStream(stream)
 
         return stream
@@ -494,8 +496,10 @@ class EncodingBytes(str):
     """String-like object with an assosiated position and various extra methods
     If the position is ever greater than the string length then an exception is
     raised"""
+    def __new__(self, value):
+        return str.__new__(self, value)
+
     def __init__(self, value):
-        str.__init__(self, value)
         self._position=-1
     
     def __iter__(self):

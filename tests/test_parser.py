@@ -136,7 +136,8 @@ def buildTestSuite():
                 def testFunc(self, innerHTML=innerHTML, input=input,
                     expected=expected, errors=errors, treeCls=treeCls): 
                     return self.runParserTest(innerHTML, input, expected, errors, treeCls)
-                setattr(TestCase, "test_%s_%d_%s" % (testName,index+1,treeName),
+                testFunc.__name__ = "test_%s_%d_%s" % (testName,index+1,treeName)
+                setattr(TestCase, testFunc.__name__,
                      testFunc)
 
     return unittest.TestLoader().loadTestsFromTestCase(TestCase)
