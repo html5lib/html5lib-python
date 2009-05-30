@@ -31,7 +31,11 @@ class Filter(_base.Filter):
         elif tagname == 'head':
             # A head element's start tag may be omitted if the first thing
             # inside the head element is an element.
-            return type == "StartTag"
+            # XXX: we also omit the start tag if the head element is empty
+            if type in ("StartTag", "EmptyTag"):
+                return True
+            elif type == "EndTag":
+                return next["name"] == "head"
         elif tagname == 'body':
             # A body element's start tag may be omitted if the first thing
             # inside the body element is not a space character or a comment,
@@ -52,7 +56,7 @@ class Filter(_base.Filter):
             # inside the colgroup element is a col element, and if the element
             # is not immediately preceeded by another colgroup element whose
             # end tag has been omitted.
-            if type == "StartTag":
+            if type in ("StartTag", "EmptyTag"):
                 # XXX: we do not look at the preceding event, so instead we never
                 # omit the colgroup element's end tag when it is immediately
                 # followed by another colgroup element. See is_optional_end.
@@ -114,7 +118,7 @@ class Filter(_base.Filter):
             # footer, form, h1, h2, h3, h4, h5, h6, header, hr, menu,
             # nav, ol, p, pre, section, table, or ul, element, or if
             # there is no more content in the parent element.
-            if type == "StartTag":
+            if type in ("StartTag", "EmptyTag"):
                 return next["name"] in ('address', 'article', 'aside',     \
                     'blockquote', 'datagrid', 'dialog', 'dir', 'div',      \
                     'dl', 'fieldset', 'footer', 'form', 'h1', 'h2', 'h3',  \

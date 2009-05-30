@@ -1070,7 +1070,6 @@ encodings = {
     'utf16': 'utf-16',
     'utf16be': 'utf-16-be',
     'utf16le': 'utf-16-le',
-    'utf7': 'utf-7',
     'utf8': 'utf-8',
     'windows1250': 'cp1250',
     'windows1251': 'cp1251',

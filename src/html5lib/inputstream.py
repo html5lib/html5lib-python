@@ -1,6 +1,7 @@
 import codecs
 import re
 import types
+import sys
 
 from .constants import EOF, spaceCharacters, asciiLetters, asciiUppercase
 from .constants import encodings, ReparseException
@@ -188,7 +189,8 @@ class HTMLInputStream:
             import io
             stream = io.BytesIO(bytes(source))
 
-        if not(hasattr(stream, "tell") and hasattr(stream, "seek")):
+        if (not(hasattr(stream, "tell") and hasattr(stream, "seek")) or
+            stream is sys.stdin):
             stream = BufferedStream(stream)
 
         return stream
@@ -452,6 +454,9 @@ class EncodingBytes(bytes):
     """Bytes-like object with an assosiated position and various extra methods
     If the position is ever greater than the string length then an exception is
     raised"""
+    def __new__(self, value):
+        return str.__new__(self, value)
+
     def __init__(self, value):
         self._position = -1
     

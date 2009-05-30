@@ -108,7 +108,6 @@ class HTMLParser(object):
         # We only seem to have InBodyPhase testcases where the following is
         # relevant ... need others too
         self.lastPhase = None
-
         self.beforeRCDataPhase = None
 
         CharactersToken = tokenTypes["Characters"]
@@ -120,6 +119,8 @@ class HTMLParser(object):
         
         
         for token in self.normalizedTokens():
+            #print self.phase.__class__.__name__
+            #print token
             type = token["type"]
             if type == CharactersToken:
                 self.phase.processCharacters(token)
@@ -271,18 +272,6 @@ class Phase(object):
 
     def processEOF(self):
         raise NotImplementedError
-        self.tree.generateImpliedEndTags()
-        if len(self.tree.openElements) > 2:
-            self.parser.parseError("expected-closing-tag-but-got-eof")
-        elif len(self.tree.openElements) == 2 and\
-          self.tree.openElements[1].name != "body":
-            # This happens for framesets or something?
-            self.parser.parseError("expected-closing-tag-but-got-eof")
-        elif self.parser.innerHTML and len(self.tree.openElements) > 1 :
-            # XXX This is not what the specification says. Not sure what to do
-            # here.
-            self.parser.parseError("eof-in-innerhtml")
-        # Betting ends.
 
     def processComment(self, token):
         # For most phases the following is correct. Where it's not it will be
@@ -318,7 +307,7 @@ class InitialPhase(Phase):
     # this.
     def processEOF(self):
         self.parser.parseError("expected-doctype-but-got-eof")
-        self.compatMode = "quirks"
+        self.parser.compatMode = "quirks"
         self.parser.phase = self.parser.phases["beforeHtml"]
         self.parser.phase.processEOF()
 
@@ -346,8 +335,9 @@ class InitialPhase(Phase):
         if publicId != "":
             publicId = publicId.translate(asciiUpper2Lower)
 
-        if (not correct or token["name"] != "html"
-            or publicId in 
+
+        if ((not correct) or nameLower != "html"
+            or publicId in
             ("+//silmaril//dtd html pro v0r11 19970101//en",
              "-//advasoft ltd//dtd html 3.0 aswedit + extensions//en",
              "-//as//dtd html 3.0 aswedit + extensions//en",
@@ -419,19 +409,18 @@ class InitialPhase(Phase):
              "html")
             or (publicId in
                 ("-//w3c//dtd html 4.01 frameset//EN",
-                 "-//w3c//dtd html 4.01 transitional//EN") and 
-                systemId == None)
+                 "-//w3c//dtd html 4.01 transitional//EN") and systemId == None)
             or (systemId != None and
-                systemId == "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd")):
-            self.compatMode = "quirks"
+              systemId == 
+                "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd")):
+            self.parser.compatMode = "quirks"
         elif (publicId in
-                ("-//w3c//dtd xhtml 1.0 frameset//EN",
-                 "-//w3c//dtd xhtml 1.0 transitional//EN")
+              ("-//w3c//dtd xhtml 1.0 frameset//EN",
+               "-//w3c//dtd xhtml 1.0 transitional//EN")
               or (publicId in
                   ("-//w3c//dtd html 4.01 frameset//EN",
-                   "-//w3c//dtd html 4.01 transitional//EN") and 
-                  systemId == None)):
-            self.compatMode = "limited quirks"
+                   "-//w3c//dtd html 4.01 transitional//EN") and systemId == None)):
+            self.parser.compatMode = "limited quirks"
 
         self.parser.phase = self.parser.phases["beforeHtml"]
 
@@ -440,7 +429,7 @@ class InitialPhase(Phase):
 
     def processCharacters(self, token):
         self.parser.parseError("expected-doctype-but-got-chars")
-        self.compatMode = "quirks"
+        self.parser.compatMode = "quirks"
         self.parser.phase = self.parser.phases["beforeHtml"]
         self.parser.phase.processCharacters(token)
 
@@ -595,7 +584,8 @@ class InHeadPhase(Phase):
                 codec = inputstream.codecName(attributes["charset"])
                 self.parser.tokenizer.stream.changeEncoding(codec)
             elif "content" in attributes:
-                data = inputstream.EncodingBytes(attributes["content"])
+                data = inputstream.EncodingBytes(
+                    attributes["content"].encode(self.parser.tokenizer.stream.charEncoding[0]))
                 parser = inputstream.ContentAttrParser(data)
                 codec = parser.parse()
                 self.parser.tokenizer.stream.changeEncoding(codec)

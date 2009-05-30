@@ -57,7 +57,7 @@ def parse():
     else:
         tokenizer = HTMLTokenizer
 
-    if opts.xml:
+    if opts.liberalxml:
         p = liberalxmlparser.XHTMLParser(tree=treebuilder, tokenizer=tokenizer)
     else:
         p = html5parser.HTMLParser(tree=treebuilder, tokenizer=tokenizer)

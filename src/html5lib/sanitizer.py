@@ -152,7 +152,7 @@ class HTMLSanitizerMixin(object):
                             continue
                         val_unescaped = re.sub("[`\000-\040\177-\240\s]+", '',
                                                unescape(attrs[attr])).lower()
-                        if (re.match("^[a-z0-9][-+.a-z0-9]*:",val_unescaped) or
+                        if (re.match("^[a-z0-9][-+.a-z0-9]*:",val_unescaped) and
                             (val_unescaped.split(':')[0] not in 
                              self.allowed_protocols)):
                             del attrs[attr]
