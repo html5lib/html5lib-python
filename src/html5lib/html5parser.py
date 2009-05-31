@@ -1348,17 +1348,17 @@ class InBodyPhase(Phase):
             commonAncestor = self.tree.openElements[afeIndex-1]
 
             # Step 5
-            if furthestBlock.parent:
-                furthestBlock.parent.removeChild(furthestBlock)
+            #if furthestBlock.parent:
+            #    furthestBlock.parent.removeChild(furthestBlock)
 
-            # Step 6
+            # Step 5
             # The bookmark is supposed to help us identify where to reinsert
             # nodes in step 12. We have to ensure that we reinsert nodes after
             # the node before the active formatting element. Note the bookmark
             # can move in step 7.4
             bookmark = self.tree.activeFormattingElements.index(afeElement)
 
-            # Step 7
+            # Step 6
             lastNode = node = furthestBlock
             while True:
                 # AT replace this with a function and recursion?
@@ -1370,23 +1370,24 @@ class InBodyPhase(Phase):
                     node = self.tree.openElements[
                         self.tree.openElements.index(node)-1]
                     self.tree.openElements.remove(tmpNode)
-                # Step 7.3
+                # Step 6.3
                 if node == afeElement:
                     break
-                # Step 7.4
+                # Step 6.4
                 if lastNode == furthestBlock:
-                    bookmark = self.tree.activeFormattingElements.\
-                      index(node) + 1
-                # Step 7.5
-                cite = node.parent
-                if node.hasContent():
-                    clone = node.cloneNode()
-                    # Replace node with clone
-                    self.tree.activeFormattingElements[
-                      self.tree.activeFormattingElements.index(node)] = clone
-                    self.tree.openElements[
-                      self.tree.openElements.index(node)] = clone
-                    node = clone
+                    bookmark = (self.tree.activeFormattingElements.index(node)
+                                + 1)
+                # Step 6.5
+                #cite = node.parent
+                #if node.hasContent():
+                clone = node.cloneNode()
+                # Replace node with clone
+                self.tree.activeFormattingElements[
+                    self.tree.activeFormattingElements.index(node)] = clone
+                self.tree.openElements[
+                    self.tree.openElements.index(node)] = clone
+                node = clone
+                
                 # Step 7.6
                 # Remove lastNode from its parents, if any
                 if lastNode.parent:
@@ -1394,27 +1395,30 @@ class InBodyPhase(Phase):
                 node.appendChild(lastNode)
                 # Step 7.7
                 lastNode = node
-                # End of inner loop
+                # End of inner loop 
 
-            # Step 8
+            # Step 7
+            # Foster parent lastNode if commonAncestor is a
+            # table, tbody, tfoot, thead, or tr we need to foster parent the 
+            # lastNode
             if lastNode.parent:
                 lastNode.parent.removeChild(lastNode)
             commonAncestor.appendChild(lastNode)
 
-            # Step 9
+            # Step 8
             clone = afeElement.cloneNode()
 
-            # Step 10
+            # Step 9
             furthestBlock.reparentChildren(clone)
 
-            # Step 11
+            # Step 10
             furthestBlock.appendChild(clone)
 
-            # Step 12
+            # Step 11
             self.tree.activeFormattingElements.remove(afeElement)
             self.tree.activeFormattingElements.insert(bookmark, clone)
 
-            # Step 13
+            # Step 12
             self.tree.openElements.remove(afeElement)
             self.tree.openElements.insert(
               self.tree.openElements.index(furthestBlock) + 1, clone)
