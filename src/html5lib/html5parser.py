@@ -409,6 +409,7 @@ class InitialPhase(Phase):
              "-//netscape comm. corp.//dtd strict html//en",
              "-//o'reilly and associates//dtd html 2.0//en",
              "-//o'reilly and associates//dtd html extended 1.0//en",
+             "-//o'reilly and associates//dtd html extended relaxed 1.0//en",
              "-//spyglass//dtd html 2.0 extended//en",
              "-//sq//dtd html 2.0 hotmetal + extensions//en",
              "-//sun microsystems corp.//dtd hotjava html//en",
