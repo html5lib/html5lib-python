@@ -112,7 +112,11 @@ class TreeBuilder(object):
     #Fragment class
     fragmentClass = None
 
-    def __init__(self):
+    def __init__(self, namespaceHTMLElements):
+        if namespaceHTMLElements:
+            self.defaultNamespace = "http://www.w3.org/1999/xhtml"
+        else:
+            self.defaultNamespace = None
         self.reset()
     
     def reset(self):
@@ -140,7 +144,8 @@ class TreeBuilder(object):
                 return True
             elif node.name == "table":
                 return False
-            elif not tableVariant and node.name in scopingElements:
+            elif (not tableVariant and ((node.namespace, node.name) in
+                                        scopingElements)):
                 return False
             elif node.name == "html":
                 return False
@@ -179,7 +184,10 @@ class TreeBuilder(object):
             clone = self.activeFormattingElements[i].cloneNode()
 
             # Step 9
-            element = self.insertElement(clone.name, clone.attributes)
+            element = self.insertElement({"type":"StartTag", 
+                                          "name":clone.name, 
+                                          "namespace":clone.namespace, 
+                                          "data":clone.attributes})
 
             # Step 10
             self.activeFormattingElements[i] = element
@@ -207,24 +215,30 @@ class TreeBuilder(object):
                 return item
         return False
 
-    def insertRoot(self, name):
-        element = self.createElement("html", {})
+    def insertRoot(self, token):
+        element = self.createElement(token)
         self.openElements.append(element)
         self.document.appendChild(element)
 
-    def insertDoctype(self, name, publicId, systemId):
+    def insertDoctype(self, token):
+        name = token["name"]
+        publicId = token["publicId"]
+        systemId = token["systemId"]
+
         doctype = self.doctypeClass(name, publicId, systemId)
         self.document.appendChild(doctype)
 
-    def insertComment(self, data, parent=None):
+    def insertComment(self, token, parent=None):
         if parent is None:
             parent = self.openElements[-1]
-        parent.appendChild(self.commentClass(data))
+        parent.appendChild(self.commentClass(token["data"]))
                            
-    def createElement(self, name, attributes):
+    def createElement(self, token):
         """Create an element but don't insert it anywhere"""
-        element = self.elementClass(name)
-        element.attributes = attributes
+        name = token["name"]
+        namespace = token.get("namespace", self.defaultNamespace)
+        element = self.elementClass(name, namespace)
+        element.attributes = token["data"]
         return element
 
     def _getInsertFromTable(self):
@@ -241,19 +255,20 @@ class TreeBuilder(object):
 
     insertFromTable = property(_getInsertFromTable, _setInsertFromTable)
         
-    def insertElementNormal(self, name, attributes):
-        element = self.elementClass(name)
-        element.attributes = attributes
+    def insertElementNormal(self, token):
+        name = token["name"]
+        namespace = token.get("namespace", self.defaultNamespace)
+        element = self.elementClass(name, namespace)
+        element.attributes = token["data"]
         self.openElements[-1].appendChild(element)
         self.openElements.append(element)
         return element
 
-    def insertElementTable(self, name, attributes):
+    def insertElementTable(self, token):
         """Create an element and insert it into the tree""" 
-        element = self.elementClass(name)
-        element.attributes = attributes
+        element = self.createElement(token)
         if self.openElements[-1].name not in tableInsertModeElements:
-            return self.insertElementNormal(name, attributes)
+            return self.insertElementNormal(token)
         else:
             #We should be in the InTable mode. This means we want to do
             #special magic element rearranging
@@ -270,8 +285,9 @@ class TreeBuilder(object):
         if parent is None:
             parent = self.openElements[-1]
 
-        if (not(self.insertFromTable) or (self.insertFromTable and\
-          self.openElements[-1].name not in tableInsertModeElements)):
+        if (not self.insertFromTable or (self.insertFromTable and
+                                         self.openElements[-1].name 
+                                         not in tableInsertModeElements)):
             parent.insertText(data)
         else:
             # We should be in the InTable mode. This means we want to do

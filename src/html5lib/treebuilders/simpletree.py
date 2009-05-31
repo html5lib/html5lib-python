@@ -1,5 +1,5 @@
 import _base
-from html5lib.constants import voidElements
+from html5lib.constants import voidElements, namespaces, prefixes
 from xml.sax.saxutils import escape
 
 # Really crappy basic implementation of a DOM-core like thing
@@ -63,6 +63,8 @@ class Node(_base.Node):
 
     def cloneNode(self):
         newNode = type(self)(self.name)
+        if hasattr(self, 'namespace'):
+            newNode.namespace = self.namespace
         if hasattr(self, 'attributes'):
             for attr, value in self.attributes.iteritems():
                 newNode.attributes[attr] = value
@@ -81,7 +83,10 @@ class Document(Node):
     def __unicode__(self):
         return "#document"
 
-    def toxml(self, encoding="utf-8"):
+    def appendChild(self, child):
+        Node.appendChild(self, child)
+
+    def toxml(self, encoding="utf=8"):
         result = ""
         for child in self.childNodes:
             result += child.toxml()
@@ -113,8 +118,10 @@ class DocumentType(Node):
 
     def __unicode__(self):
         if self.publicId or self.systemId:
+            publicId = self.publicId or ""
+            systemId = self.systemId or ""
             return """<!DOCTYPE %s "%s" "%s">"""%(
-                self.name, self.publicId, self.systemId)
+                self.name, publicId, systemId)
                             
         else:
             return u"<!DOCTYPE %s>" % self.name
@@ -141,12 +148,16 @@ class TextNode(Node):
 
 class Element(Node):
     type = 5
-    def __init__(self, name):
+    def __init__(self, name, namespace=None):
         Node.__init__(self, name)
+        self.namespace = namespace
         self.attributes = {}
-        
+
     def __unicode__(self):
-        return u"<%s>" % self.name
+        if self.namespace in (None, namespaces["html"]):
+            return u"<%s>" % self.name
+        else:
+            return u"<%s %s>"%(prefixes[self.namespace], self.name)
 
     def toxml(self):
         result = '<' + self.name
@@ -180,6 +191,8 @@ class Element(Node):
         indent += 2
         if self.attributes:
             for name, value in self.attributes.iteritems():
+                if isinstance(name, tuple):
+                    name = "%s %s"%(name[0], name[1])
                 tree += '\n|%s%s="%s"' % (' ' * indent, name, value)
         for child in self.childNodes:
             tree += child.printTree(indent)

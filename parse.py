@@ -81,7 +81,7 @@ def parse():
         t1 = time.time()
         printOutput(p, document, opts)
         t2 = time.time()
-        print "\n\nRun took: %fs (plus %fs to print the output)"%(t1-t0, t2-t1)
+        sys.stderr.write("\n\nRun took: %fs (plus %fs to print the output)"%(t1-t0, t2-t1))
     else:
         document = parseMethod(f, encoding=encoding)
         printOutput(p, document, opts)
