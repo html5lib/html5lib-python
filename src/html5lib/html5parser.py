@@ -125,6 +125,8 @@ class HTMLParser(object):
         self.secondaryPhase = None
 
         self.beforeRCDataPhase = None
+
+        self.framesetOK = True
         
     def mainLoop(self):
         (CharactersToken, 
@@ -788,6 +790,7 @@ class AfterHeadPhase(Phase):
         self.parser.phase.processCharacters(token)
 
     def startTagBody(self, token):
+        self.parser.framesetOK = False
         self.tree.insertElement(token)
         self.parser.phase = self.parser.phases["inBody"]
 
@@ -823,6 +826,7 @@ class AfterHeadPhase(Phase):
     def anythingElse(self):
         self.tree.insertElement(impliedTagToken("body", "StartTag"))
         self.parser.phase = self.parser.phases["inBody"]
+        self.parser.framesetOK = True
 
 
 class InBodyPhase(Phase):
@@ -839,6 +843,7 @@ class InBodyPhase(Phase):
             (("base", "link", "meta", "script", "style", "title"),
               self.startTagProcessInHead),
             ("body", self.startTagBody),
+            ("frameset", self.startTagFrameset),
             (("address", "article", "aside", "blockquote", "center", "datagrid",
               "details", "dialog", "dir", "div", "dl", "fieldset", "figure",
               "footer", "h1", "h2", "h3", "h4", "h5", "h6", "header", "listing",
@@ -863,13 +868,14 @@ class InBodyPhase(Phase):
             ("input", self.startTagInput),
             ("isindex", self.startTagIsIndex),
             ("textarea", self.startTagTextarea),
-            (("iframe", "noembed", "noframes", "noscript"), self.startTagCdata),
+            ("iframe", self.startTagIFrame),
+            (("noembed", "noframes", "noscript"), self.startTagCdata),
             ("select", self.startTagSelect),
             (("rp", "rt"), self.startTagRpRt),
             (("option", "optgroup"), self.startTagOpt),
             (("math"), self.startTagMath),
             (("svg"), self.startTagSvg),
-            (("caption", "col", "colgroup", "frame", "frameset", "head",
+            (("caption", "col", "colgroup", "frame", "head",
               "tbody", "td", "tfoot", "th", "thead",
               "tr"), self.startTagMisplaced),
             (("event-source", "command"), self.startTagNew)
@@ -930,6 +936,7 @@ class InBodyPhase(Phase):
         # do it for space characters.
         self.tree.reconstructActiveFormattingElements()
         self.tree.insertText(token["data"])
+        self.framesetOK = False
 
     #This matches the current spec but may not match the real world
     def processSpaceCharacters(self, token):
@@ -949,11 +956,28 @@ class InBodyPhase(Phase):
                 if attr not in self.tree.openElements[1].attributes:
                     self.tree.openElements[1].attributes[attr] = value
 
+    def startTagFrameset(self, token):
+        self.parser.parseError("unexpected-start-tag", {"name": "frameset"})
+        print self.parser.framesetOK
+        if (self.tree.openElements[1].name != "body" or len(self.tree.openElements) == 1):
+            assert self.parser.innerHTML
+        elif not self.parser.framesetOK:
+            pass
+        else:
+            print self.tree.openElements[1].parent
+            if self.tree.openElements[1].parent:
+                self.tree.openElements[1].parent.removeChild(self.tree.openElements[1])
+            while self.tree.openElements[-1].name != "html":
+                self.tree.openElements.pop()
+            self.tree.insertElement(token)
+            self.parser.phase = self.parser.phases["inFrameset"]
+
     def startTagCloseP(self, token):
         if self.tree.elementInScope("p"):
             self.endTagP(impliedTagToken("p"))
         self.tree.insertElement(token)
         if token["name"] in ("pre", "listing"):
+            self.parser.framesetOK = False
             self.processSpaceCharacters = self.processSpaceCharactersDropNewline
 
     def startTagForm(self, token):
@@ -966,6 +990,7 @@ class InBodyPhase(Phase):
             self.tree.formPointer = self.tree.openElements[-1]
 
     def startTagListItem(self, token):
+        self.parser.framesetOK = False
         if self.tree.elementInScope("p"):
             self.endTagP(impliedTagToken("p"))
         stopNames = {"li":("li"), "dd":("dd", "dt"), "dt":("dd", "dt")}
@@ -1054,32 +1079,40 @@ class InBodyPhase(Phase):
             self.tree.reconstructActiveFormattingElements()
             self.tree.insertElement(token)
             self.tree.activeFormattingElements.append(Marker)
+            self.parser.framesetOK = False
 
     def startTagAppletMarqueeObject(self, token):
         self.tree.reconstructActiveFormattingElements()
         self.tree.insertElement(token)
         self.tree.activeFormattingElements.append(Marker)
+        self.parser.framesetOK = False
 
     def startTagXmp(self, token):
         self.tree.reconstructActiveFormattingElements()
         self.parser.parseRCDataCData(token, "CDATA")
+        self.parser.framesetOK = False
 
     def startTagTable(self, token):
         if self.tree.elementInScope("p"):
             self.processEndTag(impliedTagToken("p"))
         self.tree.insertElement(token)
+        self.parser.framesetOK = False
         self.parser.phase = self.parser.phases["inTable"]
 
     def startTagVoidFormatting(self, token):
         self.tree.reconstructActiveFormattingElements()
         self.tree.insertElement(token)
         self.tree.openElements.pop()
+        token["selfClosingAcknowledged"] = True
+        self.parser.framesetOK = False
 
     def startTagHr(self, token):
         if self.tree.elementInScope("p"):
             self.endTagP(impliedTagToken("p"))
         self.tree.insertElement(token)
         self.tree.openElements.pop()
+        token["selfClosingAcknowledged"] = True
+        self.parser.framesetOK = False
 
     def startTagImage(self, token):
         # No really...
@@ -1125,6 +1158,11 @@ class InBodyPhase(Phase):
         self.tree.insertElement(token)
         self.parser.tokenizer.contentModelFlag = contentModelFlags["RCDATA"]
         self.processSpaceCharacters = self.processSpaceCharactersDropNewline
+        self.parser.framesetOK = False
+
+    def startTagIFrame(self, token):
+        self.parser.framesetOK = False
+        self.startTagCdata(token)
 
     def startTagCdata(self, token):
         """iframe, noembed noframes, noscript(if scripting enabled)"""
@@ -1139,6 +1177,7 @@ class InBodyPhase(Phase):
     def startTagSelect(self, token):
         self.tree.reconstructActiveFormattingElements()
         self.tree.insertElement(token)
+        self.parser.framesetOK = False
         if self.parser.phase in (self.parser.phases["inTable"],
                                  self.parser.phases["inCaption"],
                                  self.parser.phases["inColumnGroup"],
@@ -1264,18 +1303,17 @@ class InBodyPhase(Phase):
                 node = self.tree.openElements.pop()
 
     def endTagForm(self, token):
+        node = self.tree.formPointer
         self.tree.formPointer = None
-        if not self.tree.elementInScope(token["name"]):
+        if node is None or not self.tree.elementInScope(token["name"]):
             self.parser.parseError("unexpected-end-tag",
                                    {"name":"form"})
         else:
             self.tree.generateImpliedEndTags()
-            if self.tree.openElements[-1].name != token["name"]:
+            if self.tree.openElements[-1].name != node:
                 self.parser.parseError("end-tag-too-early-ignored",
                                        {"name": "form"})
-            node = self.tree.openElements.pop()
-            while node.name != token["name"]:
-                node = self.tree.openElements.pop()
+                self.tree.openElements.remove(node)
 
     def endTagListItem(self, token):
         # AT Could merge this with the Block case
@@ -2253,6 +2291,10 @@ class InForeignContentPhase(Phase):
 
         if token["name"] in replacements:
             token["name"] = replacements[token["name"]]
+
+    def processCharacters(self, token):
+        self.parser.framesetOK = False
+        Phase.processCharacters(self, token)
 
     def processEOF(self):
         pass
