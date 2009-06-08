@@ -861,11 +861,10 @@ class InBodyPhase(Phase):
             (("applet", "marquee", "object"), self.startTagAppletMarqueeObject),
             ("xmp", self.startTagXmp),
             ("table", self.startTagTable),
-            (("area", "basefont", "bgsound", "br", "embed", "img", "param",
-              "spacer", "wbr"), self.startTagVoidFormatting),
+            (("area", "basefont", "bgsound", "br", "embed", "img", "input",
+              "keygen", "param", "spacer", "wbr"), self.startTagVoidFormatting),
             ("hr", self.startTagHr),
             ("image", self.startTagImage),
-            ("input", self.startTagInput),
             ("isindex", self.startTagIsIndex),
             ("textarea", self.startTagTextarea),
             ("iframe", self.startTagIFrame),
@@ -1120,14 +1119,6 @@ class InBodyPhase(Phase):
         self.processStartTag(impliedTagToken("img", "StartTag",
                                              attributes=token["data"],
                                              selfClosing=token["selfClosing"]))
-
-    def startTagInput(self, token):
-        self.tree.reconstructActiveFormattingElements()
-        self.tree.insertElement(token)
-        if self.tree.formPointer:
-            # XXX Not exactly sure what to do here
-            self.tree.openElements[-1].form = self.tree.formPointer
-        self.tree.openElements.pop()
 
     def startTagIsIndex(self, token):
         self.parser.parseError("deprecated-tag", {"name": "isindex"})
@@ -2095,7 +2086,7 @@ class InSelectPhase(Phase):
             ("option", self.startTagOption),
             ("optgroup", self.startTagOptgroup),
             ("select", self.startTagSelect),
-            ("input", self.startTagInput)
+            (("input", "keygen", "textarea"), self.startTagInput)
         ])
         self.startTagHandler.default = self.startTagOther
 
