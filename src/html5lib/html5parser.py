@@ -958,13 +958,11 @@ class InBodyPhase(Phase):
 
     def startTagFrameset(self, token):
         self.parser.parseError("unexpected-start-tag", {"name": "frameset"})
-        print self.parser.framesetOK
         if (self.tree.openElements[1].name != "body" or len(self.tree.openElements) == 1):
             assert self.parser.innerHTML
         elif not self.parser.framesetOK:
             pass
         else:
-            print self.tree.openElements[1].parent
             if self.tree.openElements[1].parent:
                 self.tree.openElements[1].parent.removeChild(self.tree.openElements[1])
             while self.tree.openElements[-1].name != "html":
@@ -1093,8 +1091,9 @@ class InBodyPhase(Phase):
         self.parser.framesetOK = False
 
     def startTagTable(self, token):
-        if self.tree.elementInScope("p"):
-            self.processEndTag(impliedTagToken("p"))
+        if self.parser.compatMode != "quirks":
+            if self.tree.elementInScope("p"):
+                self.processEndTag(impliedTagToken("p"))
         self.tree.insertElement(token)
         self.parser.framesetOK = False
         self.parser.phase = self.parser.phases["inTable"]
