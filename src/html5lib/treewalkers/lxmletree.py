@@ -1,4 +1,5 @@
 from lxml import etree
+from html5lib.treebuilders.etree import tag_regexp
 
 from gettext import gettext
 _ = gettext

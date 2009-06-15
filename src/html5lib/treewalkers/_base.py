@@ -21,8 +21,9 @@ class TreeWalker(object):
             attrs = attrs.items()
         return [(unicode(name),unicode(value)) for name,value in attrs]
 
-    def emptyTag(self, name, attrs, hasChildren=False):
+    def emptyTag(self, namespace, name, attrs, hasChildren=False):
         yield {"type": "EmptyTag", "name": unicode(name), 
+               "namespace":unicode(namespace),
                "data": self.normalizeAttrs(attrs)}
         if hasChildren:
             yield self.error(_("Void element has children"))
@@ -36,7 +37,7 @@ class TreeWalker(object):
     def endTag(self, namespace, name):
         return {"type": "EndTag", 
                 "name": unicode(name),
-                "namespace":unicode(namespace)
+                "namespace":unicode(namespace),
                 "data": []}
 
     def text(self, data):
@@ -150,7 +151,7 @@ class NonRecursiveTreeWalker(TreeWalker):
                     if type == ELEMENT:
                         namespace, name, attributes, hasChildren = details
                         if name not in voidElements:
-                            yield self.endTag(name)
+                            yield self.endTag(namespace, name)
                     nextSibling = self.getNextSibling(currentNode)
                     if nextSibling is not None:
                         currentNode = nextSibling
