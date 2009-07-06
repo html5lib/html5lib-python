@@ -13,7 +13,7 @@ from constants import contentModelFlags, spaceCharacters
 from constants import entitiesWindows1252, entities
 from constants import asciiLowercase, asciiLetters, asciiUpper2Lower
 from constants import digits, hexDigits, EOF
-from constants import tokenTypes
+from constants import tokenTypes, tagTokenTypes
 
 from inputstream import HTMLInputStream
 
@@ -276,8 +276,7 @@ class HTMLTokenizer:
         """
         token = self.currentToken
         # Add token to the queue to be yielded
-        if (token["type"] in (tokenTypes["StartTag"], tokenTypes["EndTag"], 
-                              tokenTypes["EmptyTag"])):
+        if (token["type"] in tagTokenTypes):
             if self.lowercaseElementName:
                 token["name"] = token["name"].translate(asciiUpper2Lower)
             if token["type"] == tokenTypes["EndTag"]:
@@ -294,7 +293,7 @@ class HTMLTokenizer:
     # Below are the various tokenizer states worked out.
 
     def dataState(self):
-        
+        #XXX - consider splitting this state based on the content model flag
         data = self.stream.char()
 
         # Keep a charbuffer to handle the escapeFlag

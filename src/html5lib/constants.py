@@ -1116,6 +1116,8 @@ tokenTypes = {
     "ParseError":7
 }
 
+tagTokenTypes = frozenset((tokenTypes["StartTag"], tokenTypes["EndTag"], 
+                           tokenTypes["EmptyTag"]))
 
 
 prefixes = dict([(v,k) for k,v in namespaces.iteritems()])
