@@ -2,19 +2,36 @@ import os
 import unittest
 from support import simplejson, html5lib_test_files
 
-from html5lib import html5parser, serializer
+from html5lib import html5parser, serializer, constants
 from html5lib.treewalkers._base import TreeWalker
+
+default_namespace = constants.namespaces["html"]
 
 class JsonWalker(TreeWalker):
     def __iter__(self):
         for token in self.tree:
             type = token[0]
             if type == "StartTag":
-                yield self.startTag(token[1], token[2])
+                if len(token) == 4:
+                    namespace, name, attrib = token[1:]
+                else:
+                    namespace = default_namespace
+                    name, attrib = token[1:]
+                yield self.startTag(namespace, name, attrib)
             elif type == "EndTag":
-                yield self.endTag(token[1])
+                if len(token) == 3:
+                    namespace, name = token[1:]
+                else:
+                    namespace = default_namespace
+                    name= token[1]
+                yield self.endTag(namespace, name)
             elif type == "EmptyTag":
-                for token in self.emptyTag(token[1], token[2]):
+                if len(token) == 4:
+                    namespace, name, attrib = token[1:]
+                else:
+                    namespace = default_namespace
+                    name, attrib = token[1:]
+                for token in self.emptyTag(namespace, name, attrib):
                     yield token
             elif type == "Comment":
                 yield self.comment(token[1])
