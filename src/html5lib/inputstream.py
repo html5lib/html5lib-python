@@ -7,9 +7,10 @@ from constants import EOF, spaceCharacters, asciiLetters, asciiUppercase
 from constants import encodings, ReparseException
 
 #Non-unicode versions of constants for use in the pre-parser
-spaceCharactersBytes = [str(item) for item in spaceCharacters]
-asciiLettersBytes = [str(item) for item in asciiLetters]
-asciiUppercaseBytes = [str(item) for item in asciiUppercase]
+spaceCharactersBytes = frozenset([str(item) for item in spaceCharacters])
+asciiLettersBytes = frozenset([str(item) for item in asciiLetters])
+asciiUppercaseBytes = frozenset([str(item) for item in asciiUppercase])
+spacesAngleBrackets = spaceCharactersBytes | frozenset([">", "<"])
 
 invalid_unicode_re = re.compile(u"[\u0001-\u0008\u000B\u000E-\u001F\u007F-\u009F\uD800-\uDFFF\uFDD0-\uFDEF\uFFFE\uFFFF\U0001FFFE\U0001FFFF\U0002FFFE\U0002FFFF\U0003FFFE\U0003FFFF\U0004FFFE\U0004FFFF\U0005FFFE\U0005FFFF\U0006FFFE\U0006FFFF\U0007FFFE\U0007FFFF\U0008FFFE\U0008FFFF\U0009FFFE\U0009FFFF\U000AFFFE\U000AFFFF\U000BFFFE\U000BFFFF\U000CFFFE\U000CFFFF\U000DFFFE\U000DFFFF\U000EFFFE\U000EFFFF\U000FFFFE\U000FFFFF\U0010FFFE\U0010FFFF]")
 
@@ -169,13 +170,10 @@ class HTMLInputStream:
         self.chunkOffset = 0
         self.errors = []
 
-        # Remember the current position in the document
-        self.positionLine = 1
-        self.positionCol = 0
-        # Remember the length of the last line, so unget("\n") can restore
-        # positionCol. (Only one character can be ungot at once, so we only
-        # need to remember the single last line.)
-        self.lastLineLength = None
+        # number of (complete) lines in previous chunks
+        self.prevNumLines = 0
+        # number of columns in the last line of the previous chunk
+        self.prevNumCols = 0
         
         #Flag to indicate we may have a CR LF broken across a data chunk
         self._lastChunkEndsWithCR = False
@@ -252,11 +250,11 @@ class HTMLInputStream:
         if newEncoding is None:
             return
         elif newEncoding == self.charEncoding[0]:
-            self.charEncoding = (self.charEncoding[0], "certian")
+            self.charEncoding = (self.charEncoding[0], "certain")
         else:
             self.rawStream.seek(0)
             self.reset()
-            self.charEncoding = (newEncoding, "certian")
+            self.charEncoding = (newEncoding, "certain")
             raise ReparseException, "Encoding changed from %s to %s"%(self.charEncoding[0], newEncoding)
             
     def detectBOM(self):
@@ -302,33 +300,21 @@ class HTMLInputStream:
 
         return encoding
 
-    def updatePosition(self, chars):
-        # Update the position attributes to correspond to some sequence of
-        # read characters
-
-        # Find the last newline character
-        idx = chars.rfind(u"\n")
-        if idx == -1:
-            # No newlines in chars
-            self.positionCol += len(chars)
+    def _position(self, offset):
+        chunk = self.chunk
+        nLines = chunk.count(u'\n', 0, offset)
+        positionLine = self.prevNumLines + nLines
+        lastLinePos = chunk.rfind(u'\n', 0, offset)
+        if lastLinePos == -1:
+            positionColumn = self.prevNumCols + offset
         else:
-            # Find the last-but-one newline character
-            idx2 = chars.rfind(u"\n", 0, idx)
-            if idx2 == -1:
-                # Only one newline in chars
-                self.positionLine += 1
-                self.lastLineLength = self.positionCol + idx
-                self.positionCol = len(chars) - (idx + 1)
-            else:
-                # At least two newlines in chars
-                newlines = chars.count(u"\n")
-                self.positionLine += newlines
-                self.lastLineLength = idx - (idx2 + 1)
-                self.positionCol = len(chars) - (idx + 1)
+            positionColumn = offset - (lastLinePos + 1)
+        return (positionLine, positionColumn)
 
     def position(self):
         """Returns (line, col) of the current position in the stream."""
-        return (self.positionLine, self.positionCol)
+        line, col = self._position(self.chunkOffset)
+        return (line+1, col)
 
     def char(self):
         """ Read one character from the stream or queue if available. Return
@@ -339,20 +325,18 @@ class HTMLInputStream:
             if not self.readChunk():
                 return EOF
 
-        char = self.chunk[self.chunkOffset]
-        self.chunkOffset += 1
-
-        # Update the position attributes
-        if char == u"\n":
-            self.lastLineLength = self.positionCol
-            self.positionCol = 0
-            self.positionLine += 1
-        elif char is not EOF:
-            self.positionCol += 1
+        chunkOffset = self.chunkOffset
+        char = self.chunk[chunkOffset]
+        self.chunkOffset = chunkOffset + 1
 
         return char
 
-    def readChunk(self, chunkSize=_defaultChunkSize):
+    def readChunk(self, chunkSize=None):
+        if chunkSize is None:
+            chunkSize = self._defaultChunkSize
+
+        self.prevNumLines, self.prevNumCols = self._position(self.chunkSize)
+
         self.chunk = u""
         self.chunkSize = 0
         self.chunkOffset = 0
@@ -430,7 +414,9 @@ class HTMLInputStream:
         try:
             chars = charsUntilRegEx[(characters, opposite)]
         except KeyError:
-            for c in characters: assert(ord(c) < 128)
+            if __debug__:
+                for c in characters: 
+                    assert(ord(c) < 128)
             regex = u"".join([u"\\x%02x" % ord(c) for c in characters])
             if not opposite:
                 regex = u"^%s" % regex
@@ -462,7 +448,6 @@ class HTMLInputStream:
                 break
 
         r = u"".join(rv)
-        self.updatePosition(r)
         return r
 
     def unget(self, char):
@@ -482,18 +467,8 @@ class HTMLInputStream:
                 self.chunkOffset -= 1
                 assert self.chunk[self.chunkOffset] == char
 
-            # Update the position attributes
-            if char == u"\n":
-                assert self.positionLine >= 1
-                assert self.lastLineLength is not None
-                self.positionLine -= 1
-                self.positionCol = self.lastLineLength
-                self.lastLineLength = None
-            else:
-                self.positionCol -= 1
-
 class EncodingBytes(str):
-    """String-like object with an assosiated position and various extra methods
+    """String-like object with an associated position and various extra methods
     If the position is ever greater than the string length then an exception is
     raised"""
     def __new__(self, value):
@@ -506,9 +481,21 @@ class EncodingBytes(str):
         return self
     
     def next(self):
-        self._position += 1
-        rv = self[self.position]
-        return rv
+        p = self._position = self._position + 1
+        if p >= len(self):
+            raise StopIteration
+        elif p < 0:
+            raise TypeError
+        return self[p]
+
+    def previous(self):
+        p = self._position
+        if p >= len(self):
+            raise StopIteration
+        elif p < 0:
+            raise TypeError
+        self._position = p = p - 1
+        return self[p]
     
     def setPosition(self, position):
         if self._position >= len(self):
@@ -532,18 +519,37 @@ class EncodingBytes(str):
 
     def skip(self, chars=spaceCharactersBytes):
         """Skip past a list of characters"""
-        while self.currentByte in chars:
-            self.position += 1
+        p = self.position               # use property for the error-checking
+        while p < len(self):
+            c = self[p]
+            if c not in chars:
+                self._position = p
+                return c
+            p += 1
+        self._position = p
+        return None
+
+    def skipUntil(self, chars):
+        p = self.position
+        while p < len(self):
+            c = self[p]
+            if c in chars:
+                self._position = p
+                return c
+            p += 1
+        self._position = p
+        return None
 
     def matchBytes(self, bytes, lower=False):
         """Look for a sequence of bytes at the start of a string. If the bytes 
         are found return True and advance the position to the byte after the 
         match. Otherwise return False and leave the position alone"""
-        data = self[self.position:self.position+len(bytes)]
+        p = self.position
+        data = self[p:p+len(bytes)]
         if lower:
             data = data.lower()
         rv = data.startswith(bytes)
-        if rv == True:
+        if rv:
             self.position += len(bytes)
         return rv
     
@@ -556,12 +562,6 @@ class EncodingBytes(str):
             return True
         else:
             raise StopIteration
-    
-    def findNext(self, byteList):
-        """Move the pointer so it points to the next byte in a set of possible
-        bytes"""
-        while (self.currentByte not in byteList):
-            self.position += 1
 
 class EncodingParser(object):
     """Mini parser for detecting character encoding from meta elements"""
@@ -627,24 +627,25 @@ class EncodingParser(object):
         return self.handlePossibleTag(False)
 
     def handlePossibleEndTag(self):
-        self.data.position+=1
+        self.data.next()
         return self.handlePossibleTag(True)
 
     def handlePossibleTag(self, endTag):
-        if self.data.currentByte not in asciiLettersBytes:
+        data = self.data
+        if data.currentByte not in asciiLettersBytes:
             #If the next byte is not an ascii letter either ignore this
             #fragment (possible start tag case) or treat it according to 
             #handleOther
             if endTag:
-                self.data.position -= 1
+                data.previous()
                 self.handleOther()
             return True
         
-        self.data.findNext(list(spaceCharactersBytes) + ["<", ">"])
-        if self.data.currentByte == "<":
+        c = data.skipUntil(spacesAngleBrackets)
+        if c == "<":
             #return to the first step in the overall "two step" algorithm
             #reprocessing the < byte
-            self.data.position -= 1    
+            data.previous()
         else:
             #Read all attributes
             attr = self.getAttribute()
@@ -658,73 +659,75 @@ class EncodingParser(object):
     def getAttribute(self):
         """Return a name,value pair for the next attribute in the stream, 
         if one is found, or None"""
-        self.data.skip(list(spaceCharactersBytes)+["/"])
-        if self.data.currentByte == "<":
-            self.data.position -= 1
+        data = self.data
+        c = data.skip(spaceCharactersBytes | frozenset("/"))
+        if c == "<":
+            data.previous()
             return None
-        elif self.data.currentByte == ">":
+        elif c == ">" or c is None:
             return None
         attrName = []
         attrValue = []
         spaceFound = False
         #Step 5 attribute name
         while True:
-            if self.data.currentByte == "=" and attrName:   
+            if c == "=" and attrName:   
                 break
-            elif self.data.currentByte in spaceCharactersBytes:
+            elif c in spaceCharactersBytes:
                 spaceFound=True
                 break
-            elif self.data.currentByte in ("/", "<", ">"):
+            elif c in ("/", "<", ">"):
                 return "".join(attrName), ""
-            elif self.data.currentByte in asciiUppercaseBytes:
-                attrName.extend(self.data.currentByte.lower())
+            elif c in asciiUppercaseBytes:
+                attrName.append(c.lower())
             else:
-                attrName.extend(self.data.currentByte)
+                attrName.append(c)
             #Step 6
-            self.data.position += 1
+            c = data.next()
         #Step 7
         if spaceFound:
-            self.data.skip()
+            c = data.skip()
             #Step 8
-            if self.data.currentByte != "=":
-                self.data.position -= 1
+            if c != "=":
+                data.previous()
                 return "".join(attrName), ""
         #XXX need to advance position in both spaces and value case
         #Step 9
-        self.data.position += 1
+        data.next()
         #Step 10
-        self.data.skip()
+        c = data.skip()
         #Step 11
-        if self.data.currentByte in ("'", '"'):
+        if c in ("'", '"'):
             #11.1
-            quoteChar = self.data.currentByte
+            quoteChar = c
             while True:
-                self.data.position+=1
                 #11.3
-                if self.data.currentByte == quoteChar:
-                    self.data.position += 1
+                c = data.next()
+                if c == quoteChar:
+                    data.next()
                     return "".join(attrName), "".join(attrValue)
                 #11.4
-                elif self.data.currentByte in asciiUppercaseBytes:
-                    attrValue.extend(self.data.currentByte.lower())
+                elif c in asciiUppercaseBytes:
+                    attrValue.append(c.lower())
                 #11.5
                 else:
-                    attrValue.extend(self.data.currentByte)
-        elif self.data.currentByte in (">", "<"):
-                return "".join(attrName), ""
-        elif self.data.currentByte in asciiUppercaseBytes:
-            attrValue.extend(self.data.currentByte.lower())
+                    attrValue.append(c)
+        elif c in (">", "<"):
+            return "".join(attrName), ""
+        elif c in asciiUppercaseBytes:
+            attrValue.append(c.lower())
+        elif c is None:
+            return None
         else:
-            attrValue.extend(self.data.currentByte)
+            attrValue.append(c)
         while True:
-            self.data.position +=1
-            if self.data.currentByte in (
-                list(spaceCharactersBytes) + [">", "<"]):
+            c = data.next()
+            if c in spacesAngleBrackets:
                 return "".join(attrName), "".join(attrValue)
-            elif self.data.currentByte in asciiUppercaseBytes:
-                attrValue.extend(self.data.currentByte.lower())
+            elif c in asciiUppercaseBytes:
+                attrValue.append(c.lower())
             else:
-                attrValue.extend(self.data.currentByte)
+                attrValue.append(c)
 
 
 class ContentAttrParser(object):
@@ -757,7 +760,7 @@ class ContentAttrParser(object):
                 #Unquoted value
                 oldPosition = self.data.position
                 try:
-                    self.data.findNext(spaceCharactersBytes)
+                    self.data.skipUntil(spaceCharactersBytes)
                     return self.data[oldPosition:self.data.position]
                 except StopIteration:
                     #Return the whole remaining value

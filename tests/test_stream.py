@@ -3,6 +3,9 @@ import unittest, codecs
 
 from html5lib.inputstream import HTMLInputStream
 
+class HTMLInputStreamShortChunk(HTMLInputStream):
+    _defaultChunkSize = 2
+
 class HTMLInputStreamTest(unittest.TestCase):
 
     def test_char_ascii(self):
@@ -37,7 +40,7 @@ class HTMLInputStreamTest(unittest.TestCase):
         self.assertEquals(len(stream.charsUntil(' ', True)), 1025)
 
     def test_newlines(self):
-        stream = HTMLInputStream(codecs.BOM_UTF8 + "a\nbb\r\nccc\rddddxe")
+        stream = HTMLInputStreamShortChunk(codecs.BOM_UTF8 + "a\nbb\r\nccc\rddddxe")
         self.assertEquals(stream.position(), (1, 0))
         self.assertEquals(stream.charsUntil('c'), u"a\nbb\n")
         self.assertEquals(stream.position(), (3, 0))
@@ -52,7 +55,7 @@ class HTMLInputStreamTest(unittest.TestCase):
         self.assertEquals(stream.charsUntil('x'), "\n" * size)
 
     def test_position(self):
-        stream = HTMLInputStream(codecs.BOM_UTF8 + "a\nbb\nccc\nddde\nf\ngh")
+        stream = HTMLInputStreamShortChunk(codecs.BOM_UTF8 + "a\nbb\nccc\nddde\nf\ngh")
         self.assertEquals(stream.position(), (1, 0))
         self.assertEquals(stream.charsUntil('c'), u"a\nbb\n")
         self.assertEquals(stream.position(), (3, 0))
@@ -70,7 +73,7 @@ class HTMLInputStreamTest(unittest.TestCase):
         self.assertEquals(stream.position(), (6, 1))
 
     def test_position2(self):
-        stream = HTMLInputStream("abc\nd")
+        stream = HTMLInputStreamShortChunk("abc\nd")
         self.assertEquals(stream.position(), (1, 0))
         self.assertEquals(stream.char(), u"a")
         self.assertEquals(stream.position(), (1, 1))
