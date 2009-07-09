@@ -30,16 +30,18 @@ class TreeWalker(_base.TreeWalker):
         if type == START_ELEMENT:
             name = node.nodeName
             if name in voidElements:
-                for token in self.emptyTag(name, \
-                  node.attributes.items(), not next or next[1] is not node):
+                for token in self.emptyTag(node.namespace,
+                                           name,
+                                           node.attributes.items(), 
+                                           not next or next[1] is not node):
                     yield token
             else:
-                yield self.startTag(name, node.attributes.items())
+                yield self.startTag(node.namespace, name, node.attributes.items())
 
         elif type == END_ELEMENT:
             name = node.nodeName
             if name not in voidElements:
-                yield self.endTag(name)
+                yield self.endTag(node.namespace, name)
 
         elif type == COMMENT:
             yield self.comment(node.nodeValue)
