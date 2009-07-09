@@ -21,7 +21,7 @@ classifiers=[
     'Programming Language :: Python',
     'Topic :: Software Development :: Libraries :: Python Modules',
     'Topic :: Text Processing :: Markup :: HTML'
-    ],
+    ]
 
 setup(name='html5lib',
       version='0.11',
