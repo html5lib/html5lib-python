@@ -29,19 +29,21 @@ class TreeWalker(_base.TreeWalker):
         type, node = event
         if type == START_ELEMENT:
             name = node.nodeName
+            namespace = node.namespaceURI
             if name in voidElements:
-                for token in self.emptyTag(node.namespace,
+                for token in self.emptyTag(namespace,
                                            name,
                                            node.attributes.items(), 
                                            not next or next[1] is not node):
                     yield token
             else:
-                yield self.startTag(node.namespace, name, node.attributes.items())
+                yield self.startTag(namespace, name, node.attributes.items())
 
         elif type == END_ELEMENT:
             name = node.nodeName
+            namespace = node.namespaceURI
             if name not in voidElements:
-                yield self.endTag(node.namespace, name)
+                yield self.endTag(namespace, name)
 
         elif type == COMMENT:
             yield self.comment(node.nodeValue)
