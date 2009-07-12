@@ -287,6 +287,7 @@ class HTMLTokenizer:
         elif data is EOF:
             # Tokenization ends.
             return False
+
         elif data in spaceCharacters:
             # Directly after emitting a token you switch back to the "data
             # state". At that point spaceCharacters are important so they are

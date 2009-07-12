@@ -61,6 +61,7 @@ class HTMLParser(object):
             "inBody": InBodyPhase(self, self.tree),
             "inCDataRCData": InCDataRCDataPhase(self, self.tree),
             "inTable": InTablePhase(self, self.tree),
+            "inTableText": InTableTextPhase(self, self.tree),
             "inCaption": InCaptionPhase(self, self.tree),
             "inColumnGroup": InColumnGroupPhase(self, self.tree),
             "inTableBody": InTableBodyPhase(self, self.tree),
@@ -1568,22 +1569,16 @@ class InTablePhase(Phase):
         #Stop parsing
 
     def processSpaceCharacters(self, token):
-        if "tainted" not in self.getCurrentTable()._flags:
-            self.tree.insertText(token["data"])
-        else:
-            self.processCharacters(token)
+        self.parser.phase = self.parser.phases["inTableText"]
+        self.parser.phase.originalPhase = self
+        self.parser.phase.characterTokens.append(token)
 
     def processCharacters(self, token):
-        if self.tree.openElements[-1].name in ("style", "script"):
-           self.tree.insertText(token)
-        else:
-            if "tainted" not in self.getCurrentTable()._flags:
-                self.parser.parseError("unexpected-char-implies-table-voodoo")
-                self.getCurrentTable()._flags.append("tainted")
-            # Do the table magic!
-            self.tree.insertFromTable = True
-            self.parser.phases["inBody"].processCharacters(token)
-            self.tree.insertFromTable = False
+        #If we get here there must be at least one non-whitespace character
+        # Do the table magic!
+        self.tree.insertFromTable = True
+        self.parser.phases["inBody"].processCharacters(token)
+        self.tree.insertFromTable = False
 
     def startTagCaption(self, token):
         self.clearStackToTableContext()
@@ -1669,6 +1664,48 @@ class InTablePhase(Phase):
         self.parser.phases["inBody"].processEndTag(token)
         self.tree.insertFromTable = False
 
+class InTableTextPhase(Phase):
+    def __init__(self, parser, tree):
+        Phase.__init__(self, parser, tree)
+        self.originalPhase = None
+        self.characterTokens = []
+
+    def flushCharacters(self):
+        data = "".join([item["data"] for item in self.characterTokens])
+        if any([item not in spaceCharacters for item in data]):
+            token = {"type":tokenTypes["Characters"], "data":data}
+            self.originalPhase.processCharacters(token)
+        elif data:
+            self.tree.insertText(data)
+        self.characterTokens = []
+
+    def processComment(self, token):
+        self.flushCharacters()
+        self.phase = self.originalPhase
+        self.phase.processComment(token)
+
+    def processEOF(self, token):
+        self.flushCharacters()
+        self.phase = self.originalPhase
+        self.phase.processEOF(token)
+
+    def processCharacters(self, token):
+        self.characterTokens.append(token)
+
+    def processSpaceCharacters(self, token):
+        #pretty sure we should never reach here
+        assert False
+
+    def processStartTag(self, token):        
+        self.flushCharacters()
+        self.phase = self.originalPhase
+        self.phase.processStartTag(token)
+
+    def processEndTag(self, token):
+        self.flushCharacters()
+        self.phase = self.originalPhase
+        self.phase.processEndTag(token)
+    
 
 class InCaptionPhase(Phase):
     # http://www.whatwg.org/specs/web-apps/current-work/#in-caption

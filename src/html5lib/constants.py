@@ -58,6 +58,8 @@ E = {
        _(u"Unexpected end of file. Expected attribute name instead."),
     "eof-in-attribute-name":
        _(u"Unexpected end of file in attribute name."),
+    "invalid-character-in-attribute-name":
+        _(u"Invalid chracter in attribute name"),
     "duplicate-attribute":
        _(u"Dropped duplicate attribute on tag."),
     "expected-end-of-tag-name-but-got-eof":
