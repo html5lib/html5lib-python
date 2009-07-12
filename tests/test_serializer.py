@@ -13,17 +13,17 @@ class JsonWalker(TreeWalker):
             type = token[0]
             if type == "StartTag":
                 if len(token) == 4:
-                    namespace, name, attrib = token[1:]
+                    namespace, name, attrib = token[1:4]
                 else:
                     namespace = default_namespace
-                    name, attrib = token[1:]
+                    name, attrib = token[1:3]
                 yield self.startTag(namespace, name, attrib)
             elif type == "EndTag":
                 if len(token) == 3:
-                    namespace, name = token[1:]
+                    namespace, name = token[1:3]
                 else:
                     namespace = default_namespace
-                    name= token[1]
+                    name = token[1]
                 yield self.endTag(namespace, name)
             elif type == "EmptyTag":
                 if len(token) == 4:
@@ -53,7 +53,7 @@ class TestCase(unittest.TestCase):
     def mockTest(self, input, options, expected, xhtml):
         result = self.serialize_html(input, options)
         if len(expected) == 1:
-            self.assertEquals(expected[0], result)
+            self.assertEquals(expected[0], result, "Expected:\n%s\nActual:\n%s\nOptions\nxhtml:False\n%s"%(expected[0], result, str(options)))
         elif result not in expected:
             self.fail("Expected: %s, Received: %s" % (expected, result))
 
@@ -61,7 +61,7 @@ class TestCase(unittest.TestCase):
 
         result = self.serialize_xhtml(input, options)
         if len(xhtml) == 1:
-            self.assertEquals(xhtml[0], result)
+            self.assertEquals(xhtml[0], result, "Expected:\n%s\nActual:\n%s\nOptions\nxhtml:True\n%s"%(xhtml[0], result, str(options)))
         elif result not in xhtml:
             self.fail("Expected: %s, Received: %s" % (xhtml, result))
 
