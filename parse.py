@@ -12,7 +12,7 @@ from optparse import OptionParser
 #RELEASE remove
 sys.path.insert(0,os.path.abspath(os.path.join(__file__,'../src')))
 #END RELEASE
-from html5lib import html5parser, liberalxmlparser, sanitizer
+from html5lib import html5parser, sanitizer
 from html5lib.tokenizer import HTMLTokenizer
 from html5lib import treebuilders, serializer, treewalkers
 from html5lib import constants
@@ -52,10 +52,8 @@ def parse():
     else:
         tokenizer = HTMLTokenizer
 
-    if opts.liberalxml:
-        p = liberalxmlparser.XHTMLParser(tree=treebuilder, tokenizer=tokenizer)
-    else:
-        p = html5parser.HTMLParser(tree=treebuilder, tokenizer=tokenizer)
+
+    p = html5parser.HTMLParser(tree=treebuilder, tokenizer=tokenizer)
 
     if opts.fragment:
         parseMethod = p.parseFragment
@@ -195,9 +193,6 @@ def getOptParser():
 
     parser.add_option("", "--sanitize", action="store_true", default=False,
                       dest="sanitize", help="sanitize")
-
-    parser.add_option("", "--liberal-xml-parser", action="store_true", default=False,
-                      dest="liberalxml", help="parse with liberal xml parser")
 
     return parser
 
