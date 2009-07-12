@@ -190,7 +190,8 @@ class HTMLParser(object):
         regardless of any BOM or later declaration (such as in a meta
         element)
         """
-        self._parse(stream, innerHTML=False, encoding=encoding)
+        self._parse(stream, innerHTML=False, encoding=encoding, 
+                    parseMeta=parseMeta, useChardet=useChardet)
         return self.tree.getDocument()
     
     def parseFragment(self, stream, container="div", encoding=None,

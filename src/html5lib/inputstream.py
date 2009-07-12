@@ -202,7 +202,6 @@ class HTMLInputStream:
         return stream
 
     def detectEncoding(self, parseMeta=True, chardet=True):
-
         #First look for a BOM
         #This will also read past the BOM if present
         encoding = self.detectBOM()
