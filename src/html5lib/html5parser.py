@@ -1126,22 +1126,31 @@ class InBodyPhase(Phase):
         self.parser.parseError("deprecated-tag", {"name": "isindex"})
         if self.tree.formPointer:
             return
-        self.processStartTag(impliedTagToken("form", "StartTag"))
+        form_attrs = {}
+        if "action" in token["data"]:
+            form_attrs["action"] = token["data"]["action"]
+        self.processStartTag(impliedTagToken("form", "StartTag",
+                                             attributes=form_attrs))
         self.processStartTag(impliedTagToken("hr", "StartTag"))
-        self.processStartTag(impliedTagToken("p", "StartTag"))
         self.processStartTag(impliedTagToken("label", "StartTag"))
         # XXX Localization ...
+        if "prompt" in token["data"]:
+            prompt = token["data"]["prompt"]
+        else:
+            prompt = "This is a searchable index. Insert your search keywords here: "
         self.processCharacters(
-            {"type":tokenTypes["Characters"], 
-             "data":"This is a searchable index. Insert your search keywords here: "})
-        attributes = token["data"].copy() #don't really need a copy here I think
+            {"type":tokenTypes["Characters"], "data":prompt})
+        attributes = token["data"].copy()
+        if "action" in attributes:
+            del attributes["action"]
+        if "prompt" in attributes:
+            del attributes["prompt"]
         attributes["name"] = "isindex"
         self.processStartTag(impliedTagToken("input", "StartTag", 
                                              attributes = attributes,
                                              selfClosing = 
                                              token["selfClosing"]))
         self.processEndTag(impliedTagToken("label"))
-        self.processEndTag(impliedTagToken("p"))
         self.processStartTag(impliedTagToken("hr", "StartTag"))
         self.processEndTag(impliedTagToken("form"))
 
@@ -1612,10 +1621,7 @@ class InTablePhase(Phase):
             self.parser.phase.processStartTag(token)
 
     def startTagStyleScript(self, token):
-        if "tainted" not in self.getCurrentTable()._flags:
-            self.parser.phases["inHead"].processStartTag(token)
-        else:
-            self.startTagOther(token)
+        self.parser.phases["inHead"].processStartTag(token)
 
     def startTagInput(self, token):
         if ("type" in token["data"] and 
