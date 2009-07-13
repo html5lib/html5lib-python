@@ -1,5 +1,6 @@
 import support
 from html5lib import html5parser
+from html5lib.constants import namespaces
 from html5lib.treebuilders import dom
 
 import unittest
@@ -16,6 +17,16 @@ class MoreParserTests(unittest.TestCase):
     # http://groups.google.com/group/html5lib-discuss/browse_frm/thread/f4f00e4a2f26d5c0
     parser = html5parser.HTMLParser(tree=dom.TreeBuilder)
     parser.parse("<pre>\nx\n&gt;\n</pre>")
+
+  def test_namespace_html_elements_0(self): 
+    parser = html5parser.HTMLParser(namespaceHTMLElements=True)
+    doc = parser.parse("<html></html>")
+    self.assert_(doc.childNodes[0].namespace == namespaces["html"])
+
+  def test_namespace_html_elements_1(self): 
+    parser = html5parser.HTMLParser(namespaceHTMLElements=False)
+    doc = parser.parse("<html></html>")
+    self.assert_(doc.childNodes[0].namespace == None)
 
 def buildTestSuite():
   return unittest.defaultTestLoader.loadTestsFromName(__name__)
