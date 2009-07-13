@@ -11,9 +11,6 @@ except NameError:
 # from "leaking" into tables, buttons, object elements, and marquees.
 Marker = None
 
-#XXX - TODO; make the default interface more ElementTree-like
-#            rather than DOM-like
-
 class Node(object):
     def __init__(self, name):
         """Node representing an item in the tree.
@@ -144,7 +141,7 @@ class TreeBuilder(object):
                 return True
             elif node.name == "table":
                 return False
-            elif (not tableVariant and ((node.namespace, node.name) in
+            elif (not tableVariant and (node.nameTuple in
                                         scopingElements)):
                 return False
             elif node.name == "html":

@@ -4,6 +4,7 @@ import re
 import _base
 from html5lib import ihatexml
 from html5lib import constants
+from html5lib.constants import namespaces
 
 tag_regexp = re.compile("{([^}]*)}(.*)")
 
@@ -28,6 +29,10 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             self._namespace = namespace
             self._element = ElementTree.Element(self._getETreeTag(name,
                                                                   namespace))
+            if namespace is None:
+                self.nameTuple = namespaces["html"], self._name
+            else:
+                self.nameTuple = self._namespace, self._name
             self.parent = None
             self._childNodes = []
             self._flags = []

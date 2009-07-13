@@ -1011,7 +1011,7 @@ class InBodyPhase(Phase):
 
             # Phrasing elements are all non special, non scoping, non
             # formatting elements
-            if ((node.namespace, node.name) in
+            if (node.nameTuple in
                 (specialElements | scopingElements)
                 and node.name not in ("address", "div")):
                 break
@@ -1373,7 +1373,7 @@ class InBodyPhase(Phase):
             afeIndex = self.tree.openElements.index(afeElement)
             furthestBlock = None
             for element in self.tree.openElements[afeIndex:]:
-                if ((element.namespace, element.name) in
+                if (element.nameTuple in
                     specialElements | scopingElements):
                     furthestBlock = element
                     break
@@ -1492,7 +1492,7 @@ class InBodyPhase(Phase):
                     pass
                 break
             else:
-                if ((node.namespace, node.name) in
+                if (node.nameTuple in
                     specialElements | scopingElements):
                     self.parser.parseError("unexpected-end-tag", {"name": token["name"]})
                     break
@@ -2281,7 +2281,7 @@ class InForeignContentPhase(Phase):
         for item in self.tree.openElements[::-1]:
             if item.namespace == self.tree.defaultNamespace:
                 return True
-            elif (item.namespace, item.name) in scopingElements:
+            elif item.nameTuple in scopingElements:
                 return False
         return False
 

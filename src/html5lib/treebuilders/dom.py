@@ -5,6 +5,7 @@ import re
 
 import _base
 from html5lib import constants, ihatexml
+from html5lib.constants import namespaces
 
 moduleCache = {}
 
@@ -108,7 +109,15 @@ def getDomBuilder(DomImplementation):
     
         def hasContent(self):
             return self.element.hasChildNodes()
-    
+
+        def getNameTuple(self):
+            if self.namespace == None:
+                return namespaces["html"], self.name
+            else:
+                return self.namespace, self.name
+
+        nameTuple = property(getNameTuple)
+
     class TreeBuilder(_base.TreeBuilder):
         def documentClass(self):
             self.dom = Dom.getDOMImplementation().createDocument(None,None,None)

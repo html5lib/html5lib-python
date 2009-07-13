@@ -75,6 +75,14 @@ class Node(_base.Node):
         """Return true if the node has children or text"""
         return bool(self.childNodes)
 
+    def getNameTuple(self):
+        if self.namespace == None:
+            return namespaces["html"], self.name
+        else:
+            return self.namespace, self.name
+
+    nameTuple = property(getNameTuple)
+
 class Document(Node):
     type = 1
     def __init__(self):
