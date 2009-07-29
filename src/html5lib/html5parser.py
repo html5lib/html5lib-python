@@ -960,7 +960,7 @@ class InBodyPhase(Phase):
 
     def startTagFrameset(self, token):
         self.parser.parseError("unexpected-start-tag", {"name": "frameset"})
-        if (self.tree.openElements[1].name != "body" or len(self.tree.openElements) == 1):
+        if (len(self.tree.openElements) == 1 or self.tree.openElements[1].name != "body"):
             assert self.parser.innerHTML
         elif not self.parser.framesetOK:
             pass
@@ -1566,9 +1566,12 @@ class InTablePhase(Phase):
 
     def getCurrentTable(self):
         i = -1
-        while self.tree.openElements[i].name != "table":
+        while -i <= len(self.tree.openElements) and self.tree.openElements[i].name != "table":
              i -= 1
-        return self.tree.openElements[i]
+        if -i > len(self.tree.openElements):
+            return self.tree.openElements[0]
+        else:
+            return self.tree.openElements[i]
 
     # processing methods
     def processEOF(self):
@@ -2149,7 +2152,7 @@ class InSelectPhase(Phase):
         if self.tree.openElements[-1].name != "html":
             self.parser.parseError("eof-in-select")
         else:
-            assert self.parser.innerHtml
+            assert self.parser.innerHTML
 
     def processCharacters(self, token):
         self.tree.insertText(token["data"])
