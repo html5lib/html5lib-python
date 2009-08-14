@@ -2176,8 +2176,9 @@ class InSelectPhase(Phase):
 
     def startTagInput(self, token):
         self.parser.parseError("unexpected-input-in-select")
-        self.endTagSelect("select")
-        self.parser.phase.processStartTag(token)
+        if self.tree.elementInScope("select", True):
+            self.endTagSelect("select")
+            self.parser.phase.processStartTag(token)
 
     def startTagOther(self, token):
         self.parser.parseError("unexpected-start-tag-in-select",
