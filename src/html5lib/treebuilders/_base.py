@@ -1,3 +1,4 @@
+import warnings
 from html5lib.constants import scopingElements, tableInsertModeElements
 try:
     frozenset
@@ -114,6 +115,7 @@ class TreeBuilder(object):
             self.defaultNamespace = "http://www.w3.org/1999/xhtml"
         else:
             self.defaultNamespace = None
+            warnings.warn(u"namespaceHTMLElements=False is currently rather broken, you probably don't want to use it")
         self.reset()
     
     def reset(self):

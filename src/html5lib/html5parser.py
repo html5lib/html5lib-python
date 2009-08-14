@@ -21,7 +21,7 @@ from constants import cdataElements, rcdataElements, voidElements
 from constants import tokenTypes, ReparseException, namespaces
 
 def parse(doc, treebuilder="simpletree", encoding=None, 
-          namespaceHTMLElements=False):
+          namespaceHTMLElements=True):
     tb = treebuilders.getTreeBuilder(treebuilder)
     p = HTMLParser(tb, namespaceHTMLElements=namespaceHTMLElements)
     return p.parse(doc, encoding=encoding)
@@ -32,7 +32,7 @@ class HTMLParser(object):
 
     def __init__(self, tree = simpletree.TreeBuilder,
                  tokenizer = tokenizer.HTMLTokenizer, strict = False,
-                 namespaceHTMLElements = False):
+                 namespaceHTMLElements = True):
         """
         strict - raise an exception when a parse error is encountered
 
