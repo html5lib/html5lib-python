@@ -162,8 +162,8 @@ class HTMLSanitizerMixin(object):
                                                  ' ',
                                                  unescape(attrs[attr]))
                     if (token["name"] in self.svg_allow_local_href and
-                        'xlink:href' in attrs and re.find('^\s*[^#\s].*',
-                                                          attrs['xlink:href'])):
+                        'xlink:href' in attrs and re.search('^\s*[^#\s].*',
+                                                            attrs['xlink:href'])):
                         del attrs['xlink:href']
                     if attrs.has_key('style'):
                         attrs['style'] = self.sanitize_css(attrs['style'])
