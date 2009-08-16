@@ -1,6 +1,9 @@
+import warnings
+
 from BeautifulSoup import BeautifulSoup, Tag, NavigableString, Comment, Declaration
 
 import _base
+from html5lib.constants import namespaces, DataLossWarning
 
 class AttrList(object):
     def __init__(self, element):
@@ -22,10 +25,11 @@ class AttrList(object):
 
 
 class Element(_base.Node):
-    def __init__(self, element, soup):
+    def __init__(self, element, soup, namespace):
         _base.Node.__init__(self, element.name)
         self.element = element
         self.soup = soup
+        self.namespace = namespace
 
     def _nodeIndex(self, node, refNode):
         # Finds a node by identity rather than equality
@@ -99,18 +103,26 @@ class Element(_base.Node):
             child = self.element.contents[0]
             child.extract()
             if isinstance(child, Tag):
-                newParent.appendChild(Element(child, self.soup))
+                newParent.appendChild(Element(child, self.soup, namespaces["html"]))
             else:
                 newParent.appendChild(TextNode(child, self.soup))
 
     def cloneNode(self):
-        node = Element(Tag(self.soup, self.element.name), self.soup)
+        node = Element(Tag(self.soup, self.element.name), self.soup, self.namespace)
         for key,value in self.attributes:
             node.attributes[key] = value
         return node
 
     def hasContent(self):
         return self.element.contents
+
+    def getNameTuple(self):
+        if self.namespace == None:
+            return namespaces["html"], self.name
+        else:
+            return self.namespace, self.name
+
+    nameTuple = property(getNameTuple)
 
 class TextNode(Element):
     def __init__(self, element, soup):
@@ -124,19 +136,25 @@ class TextNode(Element):
 class TreeBuilder(_base.TreeBuilder):
     def documentClass(self):
         self.soup = BeautifulSoup("")
-        return Element(self.soup, self.soup)
+        return Element(self.soup, self.soup, None)
     
-    def insertDoctype(self, name, publicId, systemId):
+    def insertDoctype(self, token):
+        name = token["name"]
+        publicId = token["publicId"]
+        systemId = token["systemId"]
+
         if publicId:
-            self.soup.insert(0, Declaration("%s PUBLIC \"%s\" \"%s\""%(name, publicId, systemId)))
+            self.soup.insert(0, Declaration("%s PUBLIC \"%s\" \"%s\""%(name, publicId, systemId or "")))
         elif systemId:
             self.soup.insert(0, Declaration("%s SYSTEM \"%s\""%
                                             (name, systemId)))
         else:
             self.soup.insert(0, Declaration(name))
     
-    def elementClass(self, name):
-        return Element(Tag(self.soup, name), self.soup)
+    def elementClass(self, name, namespace):
+        if namespace not in (None, namespaces["html"]):
+            warnings.warn("BeautifulSoup cannot represent elemens in nn-html namespace", DataLossWarning)
+        return Element(Tag(self.soup, name), self.soup, namespace)
         
     def commentClass(self, data):
         return TextNode(Comment(data), self.soup)
@@ -144,7 +162,7 @@ class TreeBuilder(_base.TreeBuilder):
     def fragmentClass(self):
         self.soup = BeautifulSoup("")
         self.soup.name = "[document_fragment]"
-        return Element(self.soup, self.soup) 
+        return Element(self.soup, self.soup, None) 
 
     def appendChild(self, node):
         self.soup.insert(len(self.soup.contents), node.element)
@@ -169,7 +187,7 @@ def testSerializer(element):
             name = m.group('name')
             publicId = m.group('publicId')
             if publicId is not None:
-                systemId = m.group('systemId1')
+                systemId = m.group('systemId1') or ""
             else:
                 systemId = m.group('systemId2')
 

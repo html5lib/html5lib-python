@@ -47,7 +47,7 @@ except ImportError:
 
 try:
     import BeautifulSoup
-    #treeTypes["beautifulsoup"] = treebuilders.getTreeBuilder("beautifulsoup", fullTree=True)
+    treeTypes["beautifulsoup"] = treebuilders.getTreeBuilder("beautifulsoup", fullTree=True)
 except ImportError:
     pass
 
