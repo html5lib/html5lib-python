@@ -26,6 +26,12 @@ def parse(doc, treebuilder="simpletree", encoding=None,
     p = HTMLParser(tb, namespaceHTMLElements=namespaceHTMLElements)
     return p.parse(doc, encoding=encoding)
 
+def parseFragment(doc, container="div", treebuilder="simpletree", encoding=None, 
+                  namespaceHTMLElements=True):
+    tb = treebuilders.getTreeBuilder(treebuilder)
+    p = HTMLParser(tb, namespaceHTMLElements=namespaceHTMLElements)
+    return p.parseFragment(doc, container=container, encoding=encoding)
+
 class HTMLParser(object):
     """HTML parser. Generates a tree structure from a stream of (possibly
         malformed) HTML"""
