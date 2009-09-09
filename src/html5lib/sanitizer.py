@@ -177,7 +177,7 @@ class HTMLSanitizerMixin(object):
                     token["data"] = "<%s%s>" % (token["name"],attrs)
                 else:
                     token["data"] = "<%s>" % token["name"]
-                if token["type"] == tokenTypes["EmptyTag"]:
+                if token["selfClosing"]:
                     token["data"]=token["data"][:-1] + "/>"
                 token["type"] = tokenTypes["Characters"]
                 del token["name"]
