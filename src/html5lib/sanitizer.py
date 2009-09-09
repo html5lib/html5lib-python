@@ -152,6 +152,8 @@ class HTMLSanitizerMixin(object):
                             continue
                         val_unescaped = re.sub("[`\000-\040\177-\240\s]+", '',
                                                unescape(attrs[attr])).lower()
+                        #remove replacement characters from unescaped characters
+                        val_unescaped = val_unescaped.replace(u"\ufffd", "")
                         if (re.match("^[a-z0-9][-+.a-z0-9]*:",val_unescaped) and
                             (val_unescaped.split(':')[0] not in 
                              self.allowed_protocols)):
