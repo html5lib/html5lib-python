@@ -3,7 +3,7 @@ import gettext
 _ = gettext.gettext
 
 from BeautifulSoup import BeautifulSoup, Declaration, Comment, Tag
-
+from html5lib.constants import namespaces
 import _base
 
 class TreeWalker(_base.NonRecursiveTreeWalker):
@@ -44,8 +44,8 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             return _base.TEXT, node
 
         elif isinstance(node, Tag): # Element
-            return _base.ELEMENT, node.name, \
-                dict(node.attrs).items(), node.contents
+            return (_base.ELEMENT, namespaces["html"], node.name,
+                    dict(node.attrs).items(), node.contents)
         else:
             return _base.UNKNOWN, node.__class__.__name__
 
