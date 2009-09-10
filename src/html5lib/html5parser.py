@@ -4,6 +4,17 @@ except NameError:
     # Import from the sets module for python 2.3
     from sets import Set as set
     from sets import ImmutableSet as frozenset
+
+try:
+    any
+except:
+    # Implement 'any' for python 2.4 and previous
+    def any(iterable):
+        for element in iterable:
+            if element:
+                return True
+        return False
+
 import sys
 
 import inputstream
