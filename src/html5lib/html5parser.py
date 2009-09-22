@@ -1094,9 +1094,11 @@ class InBodyPhase(Phase):
         self.parser.framesetOK = False
 
     def startTagXmp(self, token):
+        if self.tree.elementInScope("p"):
+            self.endTagP(impliedTagToken("p"))
         self.tree.reconstructActiveFormattingElements()
-        self.parser.parseRCDataCData(token, "CDATA")
         self.parser.framesetOK = False
+        self.parser.parseRCDataCData(token, "CDATA")
 
     def startTagTable(self, token):
         if self.parser.compatMode != "quirks":
