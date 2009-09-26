@@ -1,5 +1,5 @@
-from genshi.core import START, END, XML_NAMESPACE, DOCTYPE, TEXT, \
-    START_NS, END_NS, START_CDATA, END_CDATA, PI, COMMENT
+from genshi.core import START, END, XML_NAMESPACE, DOCTYPE, TEXT
+from genshi.core  import  START_NS, END_NS, START_CDATA, END_CDATA, PI, COMMENT
 from genshi.output import NamespaceFlattener
 
 import _base
@@ -49,7 +49,7 @@ class TreeWalker(_base.TreeWalker):
         elif kind == END:
             name = data.localname
             namespace = data.namespace
-            if (namespace, name) not in voidElements:
+            if name not in voidElements:
                 yield self.endTag(namespace, name)
 
         elif kind == COMMENT:
