@@ -155,8 +155,8 @@ class HTMLTokenizer:
         output = u"&"
 
         charStack = [self.stream.char()]
-        if charStack[0] in spaceCharacters or charStack[0] in (EOF, u"<", u"&") \
-         or (allowedChar is not None and allowedChar == charStack[0]):
+        if (charStack[0] in spaceCharacters or charStack[0] in (EOF, u"<", u"&") 
+            or (allowedChar is not None and allowedChar == charStack[0])):
             self.stream.unget(charStack[0])
 
         elif charStack[0] == u"#":
@@ -620,10 +620,10 @@ class HTMLTokenizer:
         if data in spaceCharacters:
             self.state = self.beforeAttributeNameState
         elif data == u"&":
-            self.processEntityInAttribute(None)
+            self.processEntityInAttribute(">")
         elif data == u">":
             self.emitCurrentToken()
-        elif data in (u'"', u"'", u"=", u"<"):
+        elif data in (u'"', u"'", u"=", u"<":
             self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
               "unexpected-character-in-unquoted-attribute-value"})
             self.currentToken["data"][-1][1] += data
