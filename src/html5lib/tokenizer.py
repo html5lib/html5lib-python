@@ -623,7 +623,7 @@ class HTMLTokenizer:
             self.processEntityInAttribute(">")
         elif data == u">":
             self.emitCurrentToken()
-        elif data in (u'"', u"'", u"=", u"<":
+        elif data in (u'"', u"'", u"=", u"<"):
             self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
               "unexpected-character-in-unquoted-attribute-value"})
             self.currentToken["data"][-1][1] += data
