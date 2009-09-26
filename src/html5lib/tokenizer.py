@@ -14,6 +14,7 @@ from constants import entitiesWindows1252, entities
 from constants import asciiLowercase, asciiLetters, asciiUpper2Lower
 from constants import digits, hexDigits, EOF
 from constants import tokenTypes, tagTokenTypes
+from constants import replacementCharacters
 
 from inputstream import HTMLInputStream
 
@@ -96,29 +97,37 @@ class HTMLTokenizer:
         # Convert the set of characters consumed to an int.
         charAsInt = int("".join(charStack), radix)
 
-        if charAsInt == 13:
+        # Certain characters get replaced with others
+        if charAsInt in replacementCharacters:
+            char = replacementCharacters[charAsInt]
             self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
-              "incorrect-cr-newline-entity"})
-            charAsInt = 10
-        elif 127 < charAsInt < 160:
-            # If the integer is between 127 and 160 (so 128 and bigger and 159
-            # and smaller) we need to do the "windows trick".
-            self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
-              "illegal-windows-1252-entity"})
-
-            charAsInt = entitiesWindows1252[charAsInt - 128]
-
-        # Certain characters get replaced with U+FFFD
-        if ((charAsInt <= 0x0008) or (charAsInt == 0x000B) or (0x000E <= charAsInt <= 0x001F)
-         or (0x007F <= charAsInt <= 0x009F)
-         or (0xD800 <= charAsInt <= 0xDFFF) or (0xFDD0 <= charAsInt <= 0xFDEF)
-         or (charAsInt & 0xFFFE == 0xFFFE) # catch all U+?FFFE and U+?FFFF, where ? is 0..10
-         or (0x10FFFF < charAsInt)):
+              "illegal-codepoint-for-numeric-entity",
+              "datavars": {"charAsInt": charAsInt}})
+        elif ((0xD800 <= charAsInt <= 0xDFFF) or 
+              (charAsInt > 0x10FFFF)):
             char = u"\uFFFD"
             self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
               "illegal-codepoint-for-numeric-entity",
               "datavars": {"charAsInt": charAsInt}})
         else:
+            #Should speed up this check somehow (e.g. move the set to a constant)
+            if ((0x0001 <= charAsInt <= 0x0008) or 
+                (0x000E <= charAsInt <= 0x001F) or 
+                (0x007F  <= charAsInt <= 0x009F) or
+                (0xFDD0  <= charAsInt <= 0xFDEF) or 
+                charAsInt in frozenset([0x000B, 0xFFFE, 0xFFFF, 0x1FFFE, 
+                                        0x1FFFF, 0x2FFFE, 0x2FFFF, 0x3FFFE,
+                                        0x3FFFF, 0x4FFFE, 0x4FFFF, 0x5FFFE, 
+                                        0x5FFFF, 0x6FFFE, 0x6FFFF, 0x7FFFE,
+                                        0x7FFFF, 0x8FFFE, 0x8FFFF, 0x9FFFE,
+                                        0x9FFFF, 0xAFFFE, 0xAFFFF, 0xBFFFE, 
+                                        0xBFFFF, 0xCFFFE, 0xCFFFF, 0xDFFFE, 
+                                        0xDFFFF, 0xEFFFE, 0xEFFFF, 0xFFFFE, 
+                                        0xFFFFF, 0x10FFFE, 0x10FFFF])):
+                self.tokenQueue.append({"type": tokenTypes["ParseError"], 
+                                        "data":
+                                            "illegal-codepoint-for-numeric-entity",
+                                        "datavars": {"charAsInt": charAsInt}})
             try:
                 # XXX We should have a separate function that does "int" to
                 # "unicodestring" conversion since this doesn't always work
