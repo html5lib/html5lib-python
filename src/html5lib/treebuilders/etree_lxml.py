@@ -281,8 +281,9 @@ class TreeBuilder(_base.TreeBuilder):
         publicId = token["publicId"]
         systemId = token["systemId"]
 
-        if not name or ihatexml.nonXmlBMPRegexp.search(name):
+        if not name or ihatexml.nonXmlBMPRegexp.search(name) or name[0] == '"':
             warnings.warn("lxml cannot represent null or non-xml doctype", DataLossWarning)
+
         doctype = self.doctypeClass(name, publicId, systemId)
         self.doctype = doctype
     
@@ -296,7 +297,7 @@ class TreeBuilder(_base.TreeBuilder):
         #Therefore we need to use the built-in parser to create our iniial 
         #tree, after which we can add elements like normal
         docStr = ""
-        if self.doctype and self.doctype.name:
+        if self.doctype and self.doctype.name and not self.doctype.name.startswith('"'):
             docStr += "<!DOCTYPE %s"%self.doctype.name
             if (self.doctype.publicId is not None or 
                 self.doctype.systemId is not None):
