@@ -1262,16 +1262,18 @@ class InBodyPhase(Phase):
         self.tree.insertElement(token)
 
     def endTagP(self, token):
-        if self.tree.elementInScope("p"):
-            self.tree.generateImpliedEndTags("p")
-        if self.tree.openElements[-1].name != "p":
-            self.parser.parseError("unexpected-end-tag", {"name": "p"})
-        if self.tree.elementInScope("p"):
-            while self.tree.elementInScope("p"):
-                self.tree.openElements.pop()
-        else:
+
+        if not self.tree.elementInScope("p"):
             self.startTagCloseP(impliedTagToken("p", "StartTag"))
-            self.endTagP(impliedTagToken("p"))
+            self.parser.parseError("unexpected-end-tag", {"name": "p"})
+            self.endTagP(impliedTagToken("p", "EndTag"))
+        else:
+            self.tree.generateImpliedEndTags("p")
+            if self.tree.openElements[-1].name != "p":
+                self.parser.parseError("unexpected-end-tag", {"name": "p"})
+            node = self.tree.openElements.pop()
+            while node.name != "p":
+                node = self.tree.openElements.pop()
 
     def endTagBody(self, token):
         # XXX Need to take open <p> tags into account here. We shouldn't imply
