@@ -196,10 +196,14 @@ def convertTokens(tokens):
             output.append("%s<!-- %s -->" % (" "*indent, token["data"]))
         elif type == "Doctype":
             if token["name"]:
-                if token["publicId"] or token["systemId"]:
+                if token["publicId"]:
                     output.append("""%s<!DOCTYPE %s "%s" "%s">"""% 
                                   (" "*indent, token["name"], 
                                    token["publicId"],
+                                   token["systemId"] and token["systemId"] or ""))
+                elif token["systemId"]:
+                    output.append("""%s<!DOCTYPE %s SYSTEM "%s">"""% 
+                                  (" "*indent, token["name"], 
                                    token["systemId"]))
                 else:
                     output.append("%s<!DOCTYPE %s>"%(" "*indent,

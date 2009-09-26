@@ -60,7 +60,8 @@ class TreeWalker(object):
     def doctype(self, name, publicId=None, systemId=None, correct=True):
         return {"type": "Doctype",
                 "name": name is not None and unicode(name) or u"",
-                "publicId": publicId, "systemId": systemId,
+                "publicId": publicId,
+                "systemId": systemId,
                 "correct": correct}
 
     def unknown(self, nodeType):
