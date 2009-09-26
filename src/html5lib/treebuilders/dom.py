@@ -22,34 +22,30 @@ def getDomModule(DomImplementation):
 
 def getDomBuilder(DomImplementation):
     Dom = DomImplementation
-    infoset_filter = ihatexml.InfosetFilter()
     class AttrList:
         def __init__(self, element):
             self.element = element
         def __iter__(self):
             return self.element.attributes.items().__iter__()
         def __setitem__(self, name, value):
-            self.element.setAttribute(infoset_filter.coerceAttribute(name),
-                                      infoset_filter.coerceCharacters(value))
+            self.element.setAttribute(name, value)
         def items(self):
-            return [(infoset_filter.fromXmlName(item[0]), item[1]) for item in
+            return [(item[0], item[1]) for item in
                      self.element.attributes.items()]
         def keys(self):
-            return [infoset_filter.fromXmlName(item) for item in
-                    self.element.attributes.keys()]
+            return self.element.attributes.keys()
         def __getitem__(self, name):
-            name = infoset_filter.toXmlName(name)
             return self.element.getAttribute(name)
 
         def __contains__(self, name):
             if isinstance(name, tuple):
                 raise NotImplementedError
             else:
-                return self.element.hasAttribute(infoset_filter.toXmlName(name))
+                return self.element.hasAttribute(name)
     
     class NodeBuilder(_base.Node):
         def __init__(self, element):
-            _base.Node.__init__(self, element.localName)
+            _base.Node.__init__(self, element.nodeName)
             self.element = element
 
         namespace = property(lambda self:hasattr(self.element, "namespaceURI")
@@ -60,7 +56,6 @@ def getDomBuilder(DomImplementation):
             self.element.appendChild(node.element)
     
         def insertText(self, data, insertBefore=None):
-            data=infoset_filter.coerceCharacters(data)
             text = self.element.ownerDocument.createTextNode(data)
             if insertBefore:
                 self.element.insertBefore(text, insertBefore.element)
@@ -91,17 +86,14 @@ def getDomBuilder(DomImplementation):
                 for name, value in attributes.items():
                     if isinstance(name, tuple):
                         if name[0] is not None:
-                            qualifiedName = (name[0] + ":" +
-                                             infoset_filter.coerceAttribute(
-                                name[1]))
+                            qualifiedName = (name[0] + ":" + name[1])
                         else:
-                            qualifiedName = infoset_filter.coerceAttribute(
-                                name[1])
+                            qualifiedName = name[1]
                         self.element.setAttributeNS(name[2], qualifiedName, 
                                                     value)
                     else:
                         self.element.setAttribute(
-                            infoset_filter.coerceAttribute(name), value)
+                            name, value)
         attributes = property(getAttributes, setAttributes)
     
         def cloneNode(self):
@@ -161,7 +153,7 @@ def getDomBuilder(DomImplementation):
             return _base.TreeBuilder.getFragment(self).element
     
         def insertText(self, data, parent=None):
-            data=infoset_filter.coerceCharacters(data)
+            data=data
             if parent <> self:
                 _base.TreeBuilder.insertText(self, data, parent)
             else:
@@ -210,11 +202,13 @@ def getDomBuilder(DomImplementation):
                     i = 0
                     attr = element.attributes.item(i)
                     while attr:
-                        name = infoset_filter.fromXmlName(attr.localName)
+                        name = attr.nodeName
                         value = attr.value
                         ns = attr.namespaceURI
                         if ns:
-                            name = "%s %s"%(constants.prefixes[ns], name)
+                            name = "%s %s"%(constants.prefixes[ns], attr.localName)
+                        else:
+                            name = attr.nodeName
                         i += 1
                         attr = element.attributes.item(i)
 
@@ -241,12 +235,12 @@ def getDomBuilder(DomImplementation):
             attr = node.getAttributeNode(attrname)
             if (attr.namespaceURI == XMLNS_NAMESPACE or
                (attr.namespaceURI == None and attr.nodeName.startswith('xmlns'))):
-              prefix = (attr.localName != 'xmlns' and attr.localName or None)
+              prefix = (attr.nodeName != 'xmlns' and attr.nodeName or None)
               handler.startPrefixMapping(prefix, attr.nodeValue)
               prefixes.append(prefix)
               nsmap = nsmap.copy()
               nsmap[prefix] = attr.nodeValue
-              del attributes[(attr.namespaceURI, attr.localName)]
+              del attributes[(attr.namespaceURI, attr.nodeName)]
     
           # apply namespace declarations
           for attrname in node.attributes.keys():
@@ -254,8 +248,8 @@ def getDomBuilder(DomImplementation):
             if attr.namespaceURI == None and ':' in attr.nodeName:
               prefix = attr.nodeName.split(':')[0]
               if nsmap.has_key(prefix):
-                del attributes[(attr.namespaceURI, attr.localName)]
-                attributes[(nsmap[prefix],attr.localName)]=attr.nodeValue
+                del attributes[(attr.namespaceURI, attr.nodeName)]
+                attributes[(nsmap[prefix],attr.nodeName)]=attr.nodeValue
     
           # SAX events
           ns = node.namespaceURI or nsmap.get(None,None)

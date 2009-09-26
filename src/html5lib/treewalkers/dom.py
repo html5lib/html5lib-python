@@ -4,7 +4,6 @@ import gettext
 _ = gettext.gettext
 
 import _base
-
 from html5lib.constants import voidElements
 
 class TreeWalker(_base.NonRecursiveTreeWalker):
