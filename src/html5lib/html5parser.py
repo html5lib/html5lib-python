@@ -158,8 +158,6 @@ class HTMLParser(object):
         
         
         for token in self.normalizedTokens():
-            #print self.phase.__class__.__name__
-            #print token
             type = token["type"]
             if type == CharactersToken:
                 self.phase.processCharacters(token)
@@ -1360,26 +1358,28 @@ class InBodyPhase(Phase):
         name = token["name"]
         while True:
             # Step 1 paragraph 1
-            afeElement = self.tree.elementInActiveFormattingElements(
+            formattingElement = self.tree.elementInActiveFormattingElements(
                 token["name"])
-            if not afeElement or (afeElement in self.tree.openElements and
-              not self.tree.elementInScope(afeElement.name)):
+            if not formattingElement or (formattingElement in 
+                                        self.tree.openElements and
+                                        not self.tree.elementInScope(
+                    formattingElement.name)):
                 self.parser.parseError("adoption-agency-1.1", {"name": token["name"]})
                 return
 
             # Step 1 paragraph 2
-            elif afeElement not in self.tree.openElements:
+            elif formattingElement not in self.tree.openElements:
                 self.parser.parseError("adoption-agency-1.2", {"name": token["name"]})
-                self.tree.activeFormattingElements.remove(afeElement)
+                self.tree.activeFormattingElements.remove(formattingElement)
                 return
 
             # Step 1 paragraph 3
-            if afeElement != self.tree.openElements[-1]:
+            if formattingElement != self.tree.openElements[-1]:
                 self.parser.parseError("adoption-agency-1.3", {"name": token["name"]})
 
             # Step 2
             # Start of the adoption agency algorithm proper
-            afeIndex = self.tree.openElements.index(afeElement)
+            afeIndex = self.tree.openElements.index(formattingElement)
             furthestBlock = None
             for element in self.tree.openElements[afeIndex:]:
                 if (element.nameTuple in
@@ -1390,7 +1390,7 @@ class InBodyPhase(Phase):
             # Step 3
             if furthestBlock is None:
                 element = self.tree.openElements.pop()
-                while element != afeElement:
+                while element != formattingElement:
                     element = self.tree.openElements.pop()
                 self.tree.activeFormattingElements.remove(element)
                 return
@@ -1405,7 +1405,7 @@ class InBodyPhase(Phase):
             # nodes in step 12. We have to ensure that we reinsert nodes after
             # the node before the active formatting element. Note the bookmark
             # can move in step 7.4
-            bookmark = self.tree.activeFormattingElements.index(afeElement)
+            bookmark = self.tree.activeFormattingElements.index(formattingElement)
 
             # Step 6
             lastNode = node = furthestBlock
@@ -1420,7 +1420,7 @@ class InBodyPhase(Phase):
                         self.tree.openElements.index(node)-1]
                     self.tree.openElements.remove(tmpNode)
                 # Step 6.3
-                if node == afeElement:
+                if node == formattingElement:
                     break
                 # Step 6.4
                 if lastNode == furthestBlock:
@@ -1437,7 +1437,7 @@ class InBodyPhase(Phase):
                     self.tree.openElements.index(node)] = clone
                 node = clone
                 
-                # Step 7.6
+                # Step 6.6
                 # Remove lastNode from its parents, if any
                 if lastNode.parent:
                     lastNode.parent.removeChild(lastNode)
@@ -1455,7 +1455,7 @@ class InBodyPhase(Phase):
             commonAncestor.appendChild(lastNode)
 
             # Step 8
-            clone = afeElement.cloneNode()
+            clone = formattingElement.cloneNode()
 
             # Step 9
             furthestBlock.reparentChildren(clone)
@@ -1464,11 +1464,11 @@ class InBodyPhase(Phase):
             furthestBlock.appendChild(clone)
 
             # Step 11
-            self.tree.activeFormattingElements.remove(afeElement)
+            self.tree.activeFormattingElements.remove(formattingElement)
             self.tree.activeFormattingElements.insert(bookmark, clone)
 
             # Step 12
-            self.tree.openElements.remove(afeElement)
+            self.tree.openElements.remove(formattingElement)
             self.tree.openElements.insert(
               self.tree.openElements.index(furthestBlock) + 1, clone)
 
