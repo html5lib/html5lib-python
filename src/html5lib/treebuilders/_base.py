@@ -1,5 +1,5 @@
 import warnings
-from html5lib.constants import scopingElements, tableInsertModeElements
+from html5lib.constants import scopingElements, tableInsertModeElements, namespaces
 try:
     frozenset
 except NameError:
@@ -130,24 +130,23 @@ class TreeBuilder(object):
 
         self.document = self.documentClass()
 
-    def elementInScope(self, target, tableVariant=False):
+    def elementInScope(self, target, variant=None):
         # Exit early when possible.
-        if self.openElements[-1].name == target:
-            return True
+        listElementsMap = {
+            None:scopingElements,
+            "list":scopingElements | set([(namespaces["html"], "ol"),
+                                          (namespaces["html"], "ul")]),
+            "table":set([(namespaces["html"], "html"),
+                         (namespaces["html"], "table")])
+            }
+        listElements = listElementsMap[variant]
 
-        # AT Use reverse instead of [::-1] when we can rely on Python 2.4
-        # AT How about while True and simply set node to [-1] and set it to
-        # [-2] at the end...
-        for node in self.openElements[::-1]:
+        for node in reversed(self.openElements):
             if node.name == target:
                 return True
-            elif node.name == "table":
+            elif node.nameTuple in listElements:
                 return False
-            elif (not tableVariant and (node.nameTuple in
-                                        scopingElements)):
-                return False
-            elif node.name == "html":
-                return False
+
         assert False # We should never reach this point
 
     def reconstructActiveFormattingElements(self):

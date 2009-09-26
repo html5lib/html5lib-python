@@ -1006,32 +1006,24 @@ class InBodyPhase(Phase):
 
     def startTagListItem(self, token):
         self.parser.framesetOK = False
-        if self.tree.elementInScope("p"):
-            self.endTagP(impliedTagToken("p"))
-        stopNames = {"li":("li"), "dd":("dd", "dt"), "dt":("dd", "dt")}
-        stopName = stopNames[token["name"]]
-        # AT Use reversed in Python 2.4...
-        for i, node in enumerate(self.tree.openElements[::-1]):
-            if node.name in stopName:
-                poppedNodes = []
-                for j in range(i+1):
-                    poppedNodes.append(self.tree.openElements.pop())
-                if i >= 1:
-                    self.parser.parseError(
-                        i == 1 and "missing-end-tag" or "missing-end-tags",
-                        {"name": u", ".join([item.name
-                                             for item
-                                             in poppedNodes[:-1]])})
-                break
-        
 
-            # Phrasing elements are all non special, non scoping, non
-            # formatting elements
-            if (node.nameTuple in
-                (specialElements | scopingElements)
-                and node.name not in ("address", "div")):
+        stopNamesMap = {"li":["li"],
+                        "dt":["dt", "dd"],
+                        "dd":["dt", "dd"]}
+        stopNames = stopNamesMap[token["name"]]
+        for node in reversed(self.tree.openElements):
+            if node.name in stopNames:
+                self.parser.phase.processEndTag(
+                    impliedTagToken(node.name, "EndTag"))
                 break
-        # Always insert an <li> element.
+            if (node.nameTuple in (scopingElements | specialElements) and
+                node.name not in ("address", "div", "p")):
+                break
+            
+        if self.tree.elementInScope("p"):
+            self.parser.phase.processEndTag(
+                impliedTagToken("p", "EndTag"))
+
         self.tree.insertElement(token)
 
     def startTagPlaintext(self, token):
@@ -1335,14 +1327,18 @@ class InBodyPhase(Phase):
                 self.tree.openElements.remove(node)
 
     def endTagListItem(self, token):
-        # AT Could merge this with the Block case
-        if self.tree.elementInScope(token["name"]):
-            self.tree.generateImpliedEndTags(token["name"])
-        
-        if self.tree.openElements[-1].name != token["name"]:
-            self.parser.parseError("end-tag-too-early", {"name": token["name"]})
-
-        if self.tree.elementInScope(token["name"]):
+        if token["name"] == "li":
+            variant = "list"
+        else:
+            variant = None
+        if not self.tree.elementInScope(token["name"], variant=variant):
+            self.parser.parseError("unexpected-end-tag", {"name": token["name"]})
+        else:
+            self.tree.generateImpliedEndTags(exclude = token["name"])
+            if self.tree.openElements[-1].name != token["name"]:
+                self.parser.parseError(
+                    "end-tag-too-early",
+                    {"name": token["name"]})
             node = self.tree.openElements.pop()
             while node.name != token["name"]:
                 node = self.tree.openElements.pop()
@@ -1667,7 +1663,7 @@ class InTablePhase(Phase):
         self.tree.insertFromTable = False
 
     def endTagTable(self, token):
-        if self.tree.elementInScope("table", True):
+        if self.tree.elementInScope("table", variant="table"):
             self.tree.generateImpliedEndTags()
             if self.tree.openElements[-1].name != "table":
                 self.parser.parseError("end-tag-too-early-named",
@@ -1759,7 +1755,7 @@ class InCaptionPhase(Phase):
         self.endTagHandler.default = self.endTagOther
 
     def ignoreEndTagCaption(self):
-        return not self.tree.elementInScope("caption", True)
+        return not self.tree.elementInScope("caption", variant="table")
 
     def processEOF(self):
         self.parser.phases["inBody"].processEOF()
@@ -1930,9 +1926,9 @@ class InTableBodyPhase(Phase):
 
     def startTagTableOther(self, token):
         # XXX AT Any ideas on how to share this with endTagTable?
-        if (self.tree.elementInScope("tbody", True) or
-            self.tree.elementInScope("thead", True) or
-            self.tree.elementInScope("tfoot", True)):
+        if (self.tree.elementInScope("tbody", variant="table") or
+            self.tree.elementInScope("thead", variant="table") or
+            self.tree.elementInScope("tfoot", variant="table")):
             self.clearStackToTableBodyContext()
             self.endTagTableRowGroup(
                 impliedTagToken(self.tree.openElements[-1].name))
@@ -1945,7 +1941,7 @@ class InTableBodyPhase(Phase):
         self.parser.phases["inTable"].processStartTag(token)
 
     def endTagTableRowGroup(self, token):
-        if self.tree.elementInScope(token["name"], True):
+        if self.tree.elementInScope(token["name"], variant="table"):
             self.clearStackToTableBodyContext()
             self.tree.openElements.pop()
             self.parser.phase = self.parser.phases["inTable"]
@@ -1954,9 +1950,9 @@ class InTableBodyPhase(Phase):
               {"name": token["name"]})
 
     def endTagTable(self, token):
-        if (self.tree.elementInScope("tbody", True) or
-            self.tree.elementInScope("thead", True) or
-            self.tree.elementInScope("tfoot", True)):
+        if (self.tree.elementInScope("tbody", variant="table") or
+            self.tree.elementInScope("thead", variant="table") or
+            self.tree.elementInScope("tfoot", variant="table")):
             self.clearStackToTableBodyContext()
             self.endTagTableRowGroup(
                 impliedTagToken(self.tree.openElements[-1].name))
@@ -2002,7 +1998,7 @@ class InRowPhase(Phase):
             self.tree.openElements.pop()
 
     def ignoreEndTagTr(self):
-        return not self.tree.elementInScope("tr", tableVariant=True)
+        return not self.tree.elementInScope("tr", variant="table")
 
     # the rest
     def processEOF(self):
@@ -2049,7 +2045,7 @@ class InRowPhase(Phase):
             self.parser.phase.processEndTag(token)
 
     def endTagTableRowGroup(self, token):
-        if self.tree.elementInScope(token["name"], True):
+        if self.tree.elementInScope(token["name"], variant="table"):
             self.endTagTr("tr")
             self.parser.phase.processEndTag(token)
         else:
@@ -2083,9 +2079,9 @@ class InCellPhase(Phase):
 
     # helper
     def closeCell(self):
-        if self.tree.elementInScope("td", True):
+        if self.tree.elementInScope("td", variant="table"):
             self.endTagTableCell(impliedTagToken("td"))
-        elif self.tree.elementInScope("th", True):
+        elif self.tree.elementInScope("th", variant="table"):
             self.endTagTableCell(impliedTagToken("th"))
 
     # the rest
@@ -2096,8 +2092,8 @@ class InCellPhase(Phase):
         self.parser.phases["inBody"].processCharacters(token)
 
     def startTagTableOther(self, token):
-        if (self.tree.elementInScope("td", True) or
-            self.tree.elementInScope("th", True)):
+        if (self.tree.elementInScope("td", variant="table") or
+            self.tree.elementInScope("th", variant="table")):
             self.closeCell()
             self.parser.phase.processStartTag(token)
         else:
@@ -2112,7 +2108,7 @@ class InCellPhase(Phase):
           self.parser.phases["inBody"].processStartTag
 
     def endTagTableCell(self, token):
-        if self.tree.elementInScope(token["name"], True):
+        if self.tree.elementInScope(token["name"], variant="table"):
             self.tree.generateImpliedEndTags(token["name"])
             if self.tree.openElements[-1].name != token["name"]:
                 self.parser.parseError("unexpected-cell-end-tag",
@@ -2132,7 +2128,7 @@ class InCellPhase(Phase):
         self.parser.parseError("unexpected-end-tag", {"name": token["name"]})
 
     def endTagImply(self, token):
-        if self.tree.elementInScope(token["name"], True):
+        if self.tree.elementInScope(token["name"], variant="table"):
             self.closeCell()
             self.parser.phase.processEndTag(token)
         else:
@@ -2197,7 +2193,7 @@ class InSelectPhase(Phase):
 
     def startTagInput(self, token):
         self.parser.parseError("unexpected-input-in-select")
-        if self.tree.elementInScope("select", True):
+        if self.tree.elementInScope("select", variant="table"):
             self.endTagSelect("select")
             self.parser.phase.processStartTag(token)
 
@@ -2226,7 +2222,7 @@ class InSelectPhase(Phase):
               {"name": "optgroup"})
 
     def endTagSelect(self, token):
-        if self.tree.elementInScope("select", True):
+        if self.tree.elementInScope("select", variant="table"):
             node = self.tree.openElements.pop()
             while node.name != "select":
                 node = self.tree.openElements.pop()
@@ -2238,7 +2234,7 @@ class InSelectPhase(Phase):
     def endTagTableElements(self, token):
         self.parser.parseError("unexpected-end-tag-in-select",
           {"name": token["name"]})
-        if self.tree.elementInScope(token["name"], True):
+        if self.tree.elementInScope(token["name"], variant="table"):
             self.endTagSelect("select")
             self.parser.phase.processEndTag(token)
 
@@ -2279,7 +2275,7 @@ class InSelectInTablePhase(Phase):
 
     def endTagTable(self, token):
         self.parser.parseError("unexpected-table-element-end-tag-in-select-in-table", {"name": token["name"]})
-        if self.tree.elementInScope(token["name"], tableVariant=True):
+        if self.tree.elementInScope(token["name"], variant="table"):
             self.endTagOther(impliedTagToken("select"))
             self.parser.phase.processEndTag(token)
 
