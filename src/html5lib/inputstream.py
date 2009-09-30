@@ -729,7 +729,7 @@ def codecName(encoding):
     string doesn't correspond to a valid encoding."""
     if type(encoding) == bytes:
         encoding = str(encoding, "ascii")
-    if (encoding is not None and type(encoding) in str):
+    if (encoding is not None) and (type(encoding) == str):
         canonicalName = ascii_punctuation_re.sub("", encoding).lower()
         return encodings.get(canonicalName, None)
     else:
