@@ -335,8 +335,7 @@ class InitialPhase(Phase):
         if publicId != "":
             publicId = publicId.translate(asciiUpper2Lower)
 
-
-        if ((not correct) or nameLower != "html"
+        if ((not correct) or token["name"] != "html"
             or publicId in
             ("+//silmaril//dtd html pro v0r11 19970101//en",
              "-//advasoft ltd//dtd html 3.0 aswedit + extensions//en",
