@@ -67,10 +67,10 @@ def getTreeBuilder(treeType, implementation=None, **kwargs):
             from . import simpletree
             treeBuilderCache[treeType] = simpletree.TreeBuilder
         elif treeType == "beautifulsoup":
-            import soup
+            from . import soup
             treeBuilderCache[treeType] = soup.TreeBuilder
         elif treeType == "lxml":
-            import etree_lxml
+            from . import etree_lxml
             treeBuilderCache[treeType] = etree_lxml.TreeBuilder
         elif treeType == "etree":
             if implementation is None:

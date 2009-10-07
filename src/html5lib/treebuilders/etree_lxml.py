@@ -1,9 +1,8 @@
-import _base
-import new
+from . import _base
 import warnings
-from html5lib.constants import DataLossWarning
-import etree as etree_builders
-from html5lib import ihatexml
+from ..constants import DataLossWarning
+from . import etree as etree_builders
+from .. import ihatexml
 
 try:
     import lxml.etree as etree
@@ -158,7 +157,7 @@ class TreeBuilder(_base.TreeBuilder):
             def __init__(self, element, value={}):
                 self._element = element
                 dict.__init__(self, value)
-                for k, v in self.iteritems():
+                for k, v in self.items():
                     self._element._element.attrib[filter.coerceAttribute(k)] = v
 
             def __setitem__(self, key, value):
@@ -263,7 +262,7 @@ class TreeBuilder(_base.TreeBuilder):
         """Create the document root"""
         #Because of the way libxml2 works, it doesn't seem to be possible to
         #alter information like the doctype after the tree has been parsed. 
-        #Therefore we need to use the built-in parser to create our iniial 
+        #Therefore we need to use the built-in parser to create our initial 
         #tree, after which we can add elements like normal
         docStr = ""
         if self.doctype and self.doctype.name:
@@ -278,7 +277,7 @@ class TreeBuilder(_base.TreeBuilder):
         try:
             root = etree.fromstring(docStr)
         except etree.XMLSyntaxError:
-            print docStr
+            print(docStr)
             raise
         
         #Append the initial comments:
