@@ -166,20 +166,22 @@ class TreeBuilder(object):
 
         # Step 6
         while entry != Marker and entry not in self.openElements:
-            # Step 5: let entry be one earlier in the list.
             i -= 1
-            try:
-                entry = self.activeFormattingElements[i]
-            except:
-                # Step 4: at this point we need to jump to step 8. By not doing
-                # i += 1 which is also done in step 7 we achieve that.
+            if i < 0:
+                # Step 4: at this point we need to jump to step 8.
+                # So we reset the index to 0 and break
+                i += 1
                 break
+            # Step 5: let entry be one earlier in the list.
+            entry = self.activeFormattingElements[i]
+
         while True:
             # Step 7
             i += 1
 
             # Step 8
-            clone = self.activeFormattingElements[i].cloneNode()
+            entry = self.activeFormattingElements[i]
+            clone = entry.cloneNode() #Mainly to get a new copy of the attributes
 
             # Step 9
             element = self.insertElement({"type":"StartTag", 
