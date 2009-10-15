@@ -154,11 +154,12 @@ class NonRecursiveTreeWalker(TreeWalker):
                         namespace, name, attributes, hasChildren = details
                         if name not in voidElements:
                             yield self.endTag(namespace, name)
+                    if self.tree is currentNode:
+                        currentNode = None
+                        break
                     nextSibling = self.getNextSibling(currentNode)
                     if nextSibling is not None:
                         currentNode = nextSibling
                         break
-                    if self.tree is currentNode:
-                        currentNode = None
                     else:
                         currentNode = self.getParentNode(currentNode)
