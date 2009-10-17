@@ -304,8 +304,7 @@ class TreeBuilder(_base.TreeBuilder):
                 docStr += ' PUBLIC "%s" "%s"'%(self.doctype.publicId or "",
                                                self.doctype.systemId or "")
             docStr += ">"
-        #TODO - this needs to work when elements are not put into the default ns
-        docStr += "<html xmlns='http://www.w3.org/1999/xhtml'></html>"
+        docStr += "<THIS_SHOULD_NEVER_APPEAR_PUBLICLY/>"
         
         try:
             root = etree.fromstring(docStr)
@@ -321,9 +320,17 @@ class TreeBuilder(_base.TreeBuilder):
         self.document = self.documentClass()
         self.document._elementTree = root.getroottree()
         
-        #Add the root element to the internal child/open data structures
+        # Give the root element the right name
+        name = token["name"]
         namespace = token.get("namespace", None)
-        root_element = self.elementClass(token["name"], namespace)
+        if namespace is None:
+            etree_tag = name
+        else:
+            etree_tag = "{%s}%s"%(namespace, name)
+        root.tag = etree_tag
+        
+        #Add the root element to the internal child/open data structures
+        root_element = self.elementClass(name, namespace)
         root_element._element = root
         self.document._childNodes.append(root_element)
         self.openElements.append(root_element)
