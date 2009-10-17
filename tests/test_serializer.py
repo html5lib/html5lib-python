@@ -39,7 +39,12 @@ class JsonWalker(TreeWalker):
                 for token in self.text(token[1]):
                     yield token
             elif type == "Doctype":
-                yield self.doctype(token[1])
+                if len(token) == 4:
+                    yield self.doctype(token[1], token[2], token[3])
+                elif len(token) == 3:
+                    yield self.doctype(token[1], token[2])
+                else:
+                    yield self.doctype(token[1])
             else:
                 raise ValueError("Unknown token type: " + type)
 

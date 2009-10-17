@@ -103,7 +103,23 @@ class HTMLSerializer(object):
         for token in treewalker:
             type = token["type"]
             if type == "Doctype":
-                doctype = u"<!DOCTYPE %s>" % token["name"]
+                doctype = u"<!DOCTYPE %s" % token["name"]
+                
+                if token["publicId"]:
+                    doctype += u' PUBLIC "%s"' % token["publicId"]
+                elif token["systemId"]:
+                    doctype += u" SYSTEM"
+                if token["systemId"]:                
+                    if token["systemId"].find(u'"') >= 0:
+                        if token["systemId"].find(u"'") >= 0:
+                            self.serializeError(_("System identifer contains both single and double quote characters"))
+                        quote_char = u"'"
+                    else:
+                        quote_char = u'"'
+                    doctype += u" %s%s%s" % (quote_char, token["systemId"], quote_char)
+                
+                doctype += u">"
+                
                 if encoding:
                     yield doctype.encode(encoding)
                 else:
