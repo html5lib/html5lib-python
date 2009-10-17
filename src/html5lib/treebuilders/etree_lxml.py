@@ -322,7 +322,7 @@ class TreeBuilder(_base.TreeBuilder):
         
         # Give the root element the right name
         name = token["name"]
-        namespace = token.get("namespace", None)
+        namespace = token.get("namespace", self.defaultNamespace)
         if namespace is None:
             etree_tag = name
         else:
