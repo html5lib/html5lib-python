@@ -2,6 +2,7 @@
 from xml.dom import minidom, Node, XML_NAMESPACE, XMLNS_NAMESPACE
 import new
 import re
+import weakref
 
 import _base
 from html5lib import constants, ihatexml
@@ -113,7 +114,7 @@ def getDomBuilder(DomImplementation):
     class TreeBuilder(_base.TreeBuilder):
         def documentClass(self):
             self.dom = Dom.getDOMImplementation().createDocument(None,None,None)
-            return self
+            return weakref.proxy(self)
     
         def insertDoctype(self, token):
             name = token["name"]
