@@ -880,7 +880,8 @@ class InBodyPhase(Phase):
             ("xmp", self.startTagXmp),
             ("table", self.startTagTable),
             (("area", "basefont", "bgsound", "br", "embed", "img", "input",
-              "keygen", "param", "spacer", "wbr"), self.startTagVoidFormatting),
+              "keygen", "spacer", "wbr"), self.startTagVoidFormatting),
+            (("param", "source"), self.startTagParamSource),
             ("hr", self.startTagHr),
             ("image", self.startTagImage),
             ("isindex", self.startTagIsIndex),
@@ -1115,6 +1116,11 @@ class InBodyPhase(Phase):
         self.tree.openElements.pop()
         token["selfClosingAcknowledged"] = True
         self.parser.framesetOK = False
+
+    def startTagParamSource(self, token):
+        self.tree.insertElement(token)
+        self.tree.openElements.pop()
+        token["selfClosingAcknowledged"] = True
 
     def startTagHr(self, token):
         if self.tree.elementInScope("p"):
