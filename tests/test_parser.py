@@ -73,7 +73,7 @@ def sortattrs(x):
   lines = x.group(0).split("\n")
   lines.sort()
   return "\n".join(lines)
-namespaceExpected = re.compile(r"^(\s*)<(\w+)>", re.M).sub
+namespaceExpected = re.compile(r"^(\s*)<(\S+)>", re.M).sub
 
 class TestCase(unittest.TestCase):
     def runParserTest(self, innerHTML, input, expected, errors, treeClass,
