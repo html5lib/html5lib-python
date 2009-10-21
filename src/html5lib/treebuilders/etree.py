@@ -131,7 +131,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                     self._element.text += data
     
         def cloneNode(self):
-            element = Element(self.name)
+            element = Element(self.name, self.namespace)
             for name, value in self.attributes.iteritems():
                 element.attributes[name] = value
             return element
