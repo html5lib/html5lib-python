@@ -227,8 +227,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                 else:
                     ns, name = nsmatch.groups()
                     prefix = constants.prefixes[ns]
-                    if prefix != "html":
-                        name = "%s %s"%(prefix, name)
+                    name = "%s %s"%(prefix, name)
                 rv.append("|%s<%s>"%(' '*indent, name))
 
                 if hasattr(element, "attrib"):

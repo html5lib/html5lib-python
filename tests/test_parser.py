@@ -73,12 +73,15 @@ def sortattrs(x):
   lines = x.group(0).split("\n")
   lines.sort()
   return "\n".join(lines)
+namespaceExpected = re.compile(r"^(\s*)<(\w+)>", re.M).sub
 
 class TestCase(unittest.TestCase):
-    def runParserTest(self, innerHTML, input, expected, errors, treeClass):
+    def runParserTest(self, innerHTML, input, expected, errors, treeClass,
+        namespaceHTMLElements):
         #XXX - move this out into the setup function
         #concatenate all consecutive character tokens into a single token
-        p = html5parser.HTMLParser(tree = treeClass)
+        p = html5parser.HTMLParser(tree = treeClass,
+                                   namespaceHTMLElements=namespaceHTMLElements)
 
         errors = [item.decode("utf-8") for item in errors]
         
@@ -101,6 +104,9 @@ class TestCase(unittest.TestCase):
         
         expected = convertExpected(expected)
         expected = attrlist.sub(sortattrs, expected)
+        if namespaceHTMLElements:
+            expected = namespaceExpected(r"\1<html \2>", expected)
+        
         errorMsg = "\n".join(["\n\nInput:", input, "\nExpected:", expected,
                               "\nReceived:", output])
         self.assertEquals(expected, output, errorMsg.encode("utf-8"))
@@ -133,12 +139,17 @@ def buildTestSuite():
                                                       'document']
                 if errors:
                     errors = errors.split("\n")
-                def testFunc(self, innerHTML=innerHTML, input=input,
-                    expected=expected, errors=errors, treeCls=treeCls): 
-                    return self.runParserTest(innerHTML, input, expected, errors, treeCls)
-                testFunc.__name__ = "test_%s_%d_%s" % (testName,index+1,treeName)
-                setattr(TestCase, testFunc.__name__,
-                     testFunc)
+                
+                for namespaceHTMLElements in (True, False):
+                    def testFunc(self, innerHTML=innerHTML, input=input,
+                        expected=expected, errors=errors, treeCls=treeCls,
+                        namespaceHTMLElements=namespaceHTMLElements): 
+                        return self.runParserTest(innerHTML, input, expected,
+                                                  errors, treeCls,
+                                                  namespaceHTMLElements)
+                    testFunc.__name__ = "test_%s_%d_%s_%s" % (testName,index+1,treeName, namespaceHTMLElements and "namespaced" or "no_html_namespace")
+                    setattr(TestCase, testFunc.__name__,
+                         testFunc)
 
     return unittest.TestLoader().loadTestsFromTestCase(TestCase)
 

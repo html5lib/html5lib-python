@@ -192,8 +192,7 @@ def getDomBuilder(DomImplementation):
                 rv.append("|%s\"%s\"" %(' '*indent, element.nodeValue))
             else:
                 if (hasattr(element, "namespaceURI") and
-                    element.namespaceURI not in (None,
-                                              constants.namespaces["html"])):
+                    element.namespaceURI != None):
                     name = "%s %s"%(constants.prefixes[element.namespaceURI],
                                     element.nodeName)
                 else:

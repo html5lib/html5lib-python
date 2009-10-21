@@ -86,12 +86,8 @@ def testSerializer(element):
                 ns = nsmatch.group(1)
                 tag = nsmatch.group(2)
                 prefix = constants.prefixes[ns]
-                if prefix != "html":
-                    rv.append("|%s<%s %s>"%(' '*indent, prefix,
-                                            filter.fromXmlName(tag)))
-                else:
-                    rv.append("|%s<%s>"%(' '*indent,
-                                         filter.fromXmlName(tag)))
+                rv.append("|%s<%s %s>"%(' '*indent, prefix,
+                                        filter.fromXmlName(tag)))
             else:
                 rv.append("|%s<%s>"%(' '*indent,
                                      filter.fromXmlName(element.tag)))

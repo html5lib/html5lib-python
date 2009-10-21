@@ -162,7 +162,7 @@ class Element(Node):
         self.attributes = {}
 
     def __unicode__(self):
-        if self.namespace in (None, namespaces["html"]):
+        if self.namespace == None:
             return u"<%s>" % self.name
         else:
             return u"<%s %s>"%(prefixes[self.namespace], self.name)
