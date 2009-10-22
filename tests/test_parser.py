@@ -80,8 +80,11 @@ class TestCase(unittest.TestCase):
         namespaceHTMLElements):
         #XXX - move this out into the setup function
         #concatenate all consecutive character tokens into a single token
-        p = html5parser.HTMLParser(tree = treeClass,
-                                   namespaceHTMLElements=namespaceHTMLElements)
+        try:
+            p = html5parser.HTMLParser(tree = treeClass,
+                                       namespaceHTMLElements=namespaceHTMLElements)
+        except constants.DataLossWarning:
+            return 
 
         errors = [item.decode("utf-8") for item in errors]
         
@@ -92,7 +95,6 @@ class TestCase(unittest.TestCase):
                 try:
                     document = p.parse(StringIO.StringIO(input))
                 except constants.DataLossWarning:
-                    sys.stderr.write("Test input causes known dataloss, skipping")
                     return 
         except:
             errorMsg = "\n".join(["\n\nInput:", input, "\nExpected:", expected,

@@ -225,8 +225,8 @@ def sortattrs(x):
 
 class TestCase(unittest.TestCase):
     def runTest(self, innerHTML, input, expected, errors, treeClass):
-        p = html5parser.HTMLParser(tree = treeClass["builder"])
         try:
+            p = html5parser.HTMLParser(tree = treeClass["builder"])
             if innerHTML:
                 document = p.parseFragment(StringIO.StringIO(input), innerHTML)
             else:

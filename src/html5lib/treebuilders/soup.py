@@ -134,6 +134,11 @@ class TextNode(Element):
         raise NotImplementedError
 
 class TreeBuilder(_base.TreeBuilder):
+    def __init__(self, namespaceHTMLElements):
+        if namespaceHTMLElements:
+            warnings.warn("BeautifulSoup cannot represent elements in any namespace", DataLossWarning)
+        _base.TreeBuilder.__init__(self, namespaceHTMLElements)
+        
     def documentClass(self):
         self.soup = BeautifulSoup("")
         return Element(self.soup, self.soup, None)
@@ -152,8 +157,8 @@ class TreeBuilder(_base.TreeBuilder):
             self.soup.insert(0, Declaration(name))
     
     def elementClass(self, name, namespace):
-        if namespace not in (None, namespaces["html"]):
-            warnings.warn("BeautifulSoup cannot represent elemens in nn-html namespace", DataLossWarning)
+        if namespace is not None:
+            warnings.warn("BeautifulSoup cannot represent elements in any namespace", DataLossWarning)
         return Element(Tag(self.soup, name), self.soup, namespace)
         
     def commentClass(self, data):
