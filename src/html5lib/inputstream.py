@@ -471,7 +471,7 @@ class EncodingBytes(str):
     If the position is ever greater than the string length then an exception is
     raised"""
     def __new__(self, value):
-        return str.__new__(self, value)
+        return str.__new__(self, value.lower())
 
     def __init__(self, value):
         self._position=-1
@@ -539,14 +539,12 @@ class EncodingBytes(str):
         self._position = p
         return None
 
-    def matchBytes(self, bytes, lower=False):
+    def matchBytes(self, bytes):
         """Look for a sequence of bytes at the start of a string. If the bytes 
         are found return True and advance the position to the byte after the 
         match. Otherwise return False and leave the position alone"""
         p = self.position
         data = self[p:p+len(bytes)]
-        if lower:
-            data = data.lower()
         rv = data.startswith(bytes)
         if rv:
             self.position += len(bytes)
@@ -557,6 +555,9 @@ class EncodingBytes(str):
         a match is found advance the position to the last byte of the match"""
         newPosition = self[self.position:].find(bytes)
         if newPosition > -1:
+            # XXX: This is ugly, but I can't see a nicer way to fix this.
+            if self._position == -1:
+                self._position = 0
             self._position += (newPosition + len(bytes)-1)
             return True
         else:
@@ -581,7 +582,7 @@ class EncodingParser(object):
         for byte in self.data:
             keepParsing = True
             for key, method in methodDispatch:
-                if self.data.matchBytes(key, lower=True):
+                if self.data.matchBytes(key):
                     try:
                         keepParsing = method()    
                         break
@@ -659,59 +660,59 @@ class EncodingParser(object):
         """Return a name,value pair for the next attribute in the stream, 
         if one is found, or None"""
         data = self.data
+        # Step 1 (skip chars)
         c = data.skip(spaceCharactersBytes | frozenset("/"))
-        if c == "<":
-            data.previous()
+        # Step 2
+        if c in (">", None):
             return None
-        elif c == ">" or c is None:
-            return None
+        # Step 3
         attrName = []
         attrValue = []
-        spaceFound = False
-        #Step 5 attribute name
+        #Step 4 attribute name
         while True:
             if c == "=" and attrName:   
                 break
             elif c in spaceCharactersBytes:
-                spaceFound=True
+                #Step 6!
+                c = data.skip()
+                c = data.next()
                 break
-            elif c in ("/", "<", ">"):
+            elif c in ("/", ">"):
                 return "".join(attrName), ""
             elif c in asciiUppercaseBytes:
                 attrName.append(c.lower())
+            elif c == None:
+                return None
             else:
                 attrName.append(c)
-            #Step 6
+            #Step 5
             c = data.next()
         #Step 7
-        if spaceFound:
-            c = data.skip()
-            #Step 8
-            if c != "=":
-                data.previous()
-                return "".join(attrName), ""
-        #XXX need to advance position in both spaces and value case
-        #Step 9
+        if c != "=":
+            data.previous()
+            return "".join(attrName), ""
+        #Step 8
         data.next()
-        #Step 10
+        #Step 9
         c = data.skip()
-        #Step 11
+        #Step 10
         if c in ("'", '"'):
-            #11.1
+            #10.1
             quoteChar = c
             while True:
-                #11.3
+                #10.2
                 c = data.next()
+                #10.3
                 if c == quoteChar:
                     data.next()
                     return "".join(attrName), "".join(attrValue)
-                #11.4
+                #10.4
                 elif c in asciiUppercaseBytes:
                     attrValue.append(c.lower())
-                #11.5
+                #10.5
                 else:
                     attrValue.append(c)
-        elif c in (">", "<"):
+        elif c == ">":
             return "".join(attrName), ""
         elif c in asciiUppercaseBytes:
             attrValue.append(c.lower())
@@ -719,12 +720,15 @@ class EncodingParser(object):
             return None
         else:
             attrValue.append(c)
+        # Step 11
         while True:
             c = data.next()
             if c in spacesAngleBrackets:
                 return "".join(attrName), "".join(attrValue)
             elif c in asciiUppercaseBytes:
                 attrValue.append(c.lower())
+            elif c is None:
+                return None
             else:
                 attrValue.append(c)
 
@@ -734,10 +738,6 @@ class ContentAttrParser(object):
         self.data = data
     def parse(self):
         try:
-            #Skip to the first ";"
-            self.data.jumpTo(";")
-            self.data.position += 1
-            self.data.skip()
             #Check if the attr name is charset 
             #otherwise return
             self.data.jumpTo("charset")
@@ -753,8 +753,10 @@ class ContentAttrParser(object):
                 quoteMark = self.data.currentByte
                 self.data.position += 1
                 oldPosition = self.data.position
-                self.data.jumpTo(quoteMark)
-                return self.data[oldPosition:self.data.position]
+                if self.data.jumpTo(quoteMark):
+                    return self.data[oldPosition:self.data.position]
+                else:
+                    return None
             else:
                 #Unquoted value
                 oldPosition = self.data.position
