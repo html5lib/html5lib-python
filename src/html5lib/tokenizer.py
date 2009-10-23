@@ -955,7 +955,7 @@ class HTMLTokenizer:
                         matched = False
                         break
                 if matched:
-                    self.state = self.beforeDoctypePublicIdentifierState
+                    self.state = self.afterDoctypePublicKeywordState
                     return True
             elif data in (u"s", u"S"):
                 matched = True
@@ -966,7 +966,7 @@ class HTMLTokenizer:
                         matched = False
                         break
                 if matched:
-                    self.state = self.beforeDoctypeSystemIdentifierState
+                    self.state = self.afterDoctypeSystemKeywordState
                     return True
 
             # All the characters read before the current 'data' will be
@@ -980,6 +980,26 @@ class HTMLTokenizer:
             self.currentToken["correct"] = False
             self.state = self.bogusDoctypeState
 
+        return True
+    
+    def afterDoctypePublicKeywordState(self):
+        data = self.stream.char()
+        if data in spaceCharacters:
+            self.state = self.beforeDoctypePublicIdentifierState
+        elif data in ("'", '"'):
+            self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
+              "unexpected-char-in-doctype"})
+            self.stream.unget(data)
+            self.state = self.beforeDoctypePublicIdentifierState
+        elif data is EOF:
+            self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
+              "eof-in-doctype"})
+            self.currentToken["correct"] = False
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.dataState
+        else:
+            self.stream.unget(data)
+            self.state = self.beforeDoctypePublicIdentifierState
         return True
 
     def beforeDoctypePublicIdentifierState(self):
@@ -1054,16 +1074,20 @@ class HTMLTokenizer:
     def afterDoctypePublicIdentifierState(self):
         data = self.stream.char()
         if data in spaceCharacters:
-            pass
-        elif data == "\"":
-            self.currentToken["systemId"] = u""
-            self.state = self.doctypeSystemIdentifierDoubleQuotedState
-        elif data == "'":
-            self.currentToken["systemId"] = u""
-            self.state = self.doctypeSystemIdentifierSingleQuotedState
+            self.state = self.betweenDoctypePublicAndSystemIdentifiersState
         elif data == ">":
             self.tokenQueue.append(self.currentToken)
             self.state = self.dataState
+        elif data == '"':
+            self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
+              "unexpected-char-in-doctype"})
+            self.currentToken["systemId"] = u""
+            self.state = self.doctypeSystemIdentifierDoubleQuotedState
+        elif data == "'":
+            self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
+              "unexpected-char-in-doctype"})
+            self.currentToken["systemId"] = u""
+            self.state = self.doctypeSystemIdentifierSingleQuotedState
         elif data is EOF:
             self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
               "eof-in-doctype"})
@@ -1075,6 +1099,52 @@ class HTMLTokenizer:
               "unexpected-char-in-doctype"})
             self.currentToken["correct"] = False
             self.state = self.bogusDoctypeState
+        return True
+    
+    def betweenDoctypePublicAndSystemIdentifiersState(self):
+        data = self.stream.char()
+        if data in spaceCharacters:
+            pass
+        elif data == ">":
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.dataState
+        elif data == '"':
+            self.currentToken["systemId"] = u""
+            self.state = self.doctypeSystemIdentifierDoubleQuotedState
+        elif data == "'":
+            self.currentToken["systemId"] = u""
+            self.state = self.doctypeSystemIdentifierSingleQuotedState
+        elif data == EOF:
+            self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
+              "eof-in-doctype"})
+            self.currentToken["correct"] = False
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.dataState
+        else:
+            self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
+              "unexpected-char-in-doctype"})
+            self.currentToken["correct"] = False
+            self.state = self.bogusDoctypeState
+        return True
+    
+    def afterDoctypeSystemKeywordState(self):
+        data = self.stream.char()
+        if data in spaceCharacters:
+            self.state = self.beforeDoctypeSystemIdentifierState
+        elif data in ("'", '"'):
+            self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
+              "unexpected-char-in-doctype"})
+            self.stream.unget(data)
+            self.state = self.beforeDoctypeSystemIdentifierState
+        elif data is EOF:
+            self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
+              "eof-in-doctype"})
+            self.currentToken["correct"] = False
+            self.tokenQueue.append(self.currentToken)
+            self.state = self.dataState
+        else:
+            self.stream.unget(data)
+            self.state = self.beforeDoctypeSystemIdentifierState
         return True
     
     def beforeDoctypeSystemIdentifierState(self):
