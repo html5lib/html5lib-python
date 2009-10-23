@@ -267,7 +267,7 @@ E = {
 contentModelFlags = {
     "PCDATA":0,
     "RCDATA":1,
-    "CDATA":2,
+    "RAWTEXT":2,
     "PLAINTEXT":3
 }
 

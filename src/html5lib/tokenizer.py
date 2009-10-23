@@ -265,7 +265,7 @@ class HTMLTokenizer:
 
         # Keep a charbuffer to handle the escapeFlag
         if (self.contentModelFlag in
-            (contentModelFlags["CDATA"], contentModelFlags["RCDATA"])):
+            (contentModelFlags["RAWTEXT"], contentModelFlags["RCDATA"])):
             if len(self.lastFourChars) == 4:
                 self.lastFourChars.pop(0)
             self.lastFourChars.append(data)
@@ -276,7 +276,7 @@ class HTMLTokenizer:
             not self.escapeFlag):
             self.state = self.entityDataState
         elif (data == "-" and self.contentModelFlag in
-              (contentModelFlags["CDATA"], contentModelFlags["RCDATA"]) and 
+              (contentModelFlags["RAWTEXT"], contentModelFlags["RCDATA"]) and 
               not self.escapeFlag and "".join(self.lastFourChars) == "<!--"):
             self.escapeFlag = True
             self.tokenQueue.append({"type": tokenTypes["Characters"], 
@@ -284,12 +284,12 @@ class HTMLTokenizer:
         elif (data == "<" and (self.contentModelFlag == 
                                contentModelFlags["PCDATA"]
                                or (self.contentModelFlag in
-                                   (contentModelFlags["CDATA"],
+                                   (contentModelFlags["RAWTEXT"],
                                     contentModelFlags["RCDATA"]) and
                                    self.escapeFlag == False))):
             self.state = self.tagOpenState
         elif (data == ">" and self.contentModelFlag in
-              (contentModelFlags["CDATA"], contentModelFlags["RCDATA"]) and
+              (contentModelFlags["RAWTEXT"], contentModelFlags["RCDATA"]) and
               self.escapeFlag and "".join(self.lastFourChars)[1:] == "-->"):
             self.escapeFlag = False
             self.tokenQueue.append({"type": tokenTypes["Characters"], "data":data})
@@ -308,7 +308,7 @@ class HTMLTokenizer:
             # any <!-- or --> sequences
         else:
             if (self.contentModelFlag in
-                (contentModelFlags["CDATA"], contentModelFlags["RCDATA"])):
+                (contentModelFlags["RAWTEXT"], contentModelFlags["RCDATA"])):
                 chars = self.stream.charsUntil((u"&", u"<", u">", u"-"))
                 self.lastFourChars += chars[-4:]
                 self.lastFourChars = self.lastFourChars[-4:]
@@ -358,7 +358,7 @@ class HTMLTokenizer:
                 self.stream.unget(data)
                 self.state = self.dataState
         else:
-            # We know the content model flag is set to either RCDATA or CDATA
+            # We know the content model flag is set to either RCDATA or RAWTEXT
             # now because this state can never be entered with the PLAINTEXT
             # flag.
             if data == u"/":
@@ -371,7 +371,7 @@ class HTMLTokenizer:
 
     def closeTagOpenState(self):
         if (self.contentModelFlag in (contentModelFlags["RCDATA"],
-            contentModelFlags["CDATA"])):
+            contentModelFlags["RAWTEXT"])):
 
             charStack = []
             if self.currentToken:

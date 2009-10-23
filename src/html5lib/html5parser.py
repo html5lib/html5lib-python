@@ -77,7 +77,7 @@ class HTMLParser(object):
             # XXX "inHeadNoscript": InHeadNoScriptPhase(self, self.tree),
             "afterHead": AfterHeadPhase(self, self.tree),
             "inBody": InBodyPhase(self, self.tree),
-            "inCDataRCData": InCDataRCDataPhase(self, self.tree),
+            "inRCDataRawtext": InRCDataRawtextPhase(self, self.tree),
             "inTable": InTablePhase(self, self.tree),
             "inTableText": InTableTextPhase(self, self.tree),
             "inCaption": InCaptionPhase(self, self.tree),
@@ -126,7 +126,7 @@ class HTMLParser(object):
             if self.innerHTML in cdataElements:
                 self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["RCDATA"]
             elif self.innerHTML in rcdataElements:
-                self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["CDATA"]
+                self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["RAWTEXT"]
             elif self.innerHTML == 'plaintext':
                 self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["PLAINTEXT"]
             else:
@@ -391,18 +391,18 @@ class HTMLParser(object):
                 self.phase = self.phases["inBody"]
                 break
 
-    def parseRCDataCData(self, token, contentType):
-        """Generic (R)CDATA Parsing algorithm
-        contentType - RCDATA or CDATA
+    def parseRCDataRawtext(self, token, contentType):
+        """Generic RCDATA/RAWTEXT Parsing algorithm
+        contentType - RCDATA or RAWTEXT
         """
-        assert contentType in ("CDATA", "RCDATA")
+        assert contentType in ("RAWTEXT", "RCDATA")
         
         element = self.tree.insertElement(token)
         self.tokenizer.contentModelFlag = contentModelFlags[contentType]
 
         self.originalPhase = self.phase
 
-        self.phase = self.phases["inCDataRCData"]
+        self.phase = self.phases["inRCDataRawtext"]
 
 class Phase(object):
     """Base class for helper object that implements each phase of processing
@@ -746,16 +746,16 @@ class InHeadPhase(Phase):
                 self.parser.tokenizer.stream.changeEncoding(codec)
 
     def startTagTitle(self, token):
-        self.parser.parseRCDataCData(token, "RCDATA")
+        self.parser.parseRCDataRawtext(token, "RCDATA")
 
     def startTagNoScriptNoFramesStyle(self, token):
         #Need to decide whether to implement the scripting-disabled case
-        self.parser.parseRCDataCData(token, "CDATA")
+        self.parser.parseRCDataRawtext(token, "RAWTEXT")
 
     def startTagScript(self, token):
-        #I think this is equivalent to the CDATA stuff since we don't execute script
+        #I think this is equivalent to the RAWTEXT stuff since we don't execute script
         #self.tree.insertElement(token)
-        self.parser.parseRCDataCData(token, "CDATA")
+        self.parser.parseRCDataRawtext(token, "RAWTEXT")
 
     def startTagOther(self, token):
         self.anythingElse()
@@ -887,7 +887,7 @@ class InBodyPhase(Phase):
             ("isindex", self.startTagIsIndex),
             ("textarea", self.startTagTextarea),
             ("iframe", self.startTagIFrame),
-            (("noembed", "noframes", "noscript"), self.startTagCdata),
+            (("noembed", "noframes", "noscript"), self.startTagRawtext),
             ("select", self.startTagSelect),
             (("rp", "rt"), self.startTagRpRt),
             (("option", "optgroup"), self.startTagOpt),
@@ -1100,7 +1100,7 @@ class InBodyPhase(Phase):
             self.endTagP(impliedTagToken("p"))
         self.tree.reconstructActiveFormattingElements()
         self.parser.framesetOK = False
-        self.parser.parseRCDataCData(token, "CDATA")
+        self.parser.parseRCDataRawtext(token, "RAWTEXT")
 
     def startTagTable(self, token):
         if self.parser.compatMode != "quirks":
@@ -1179,11 +1179,11 @@ class InBodyPhase(Phase):
 
     def startTagIFrame(self, token):
         self.parser.framesetOK = False
-        self.startTagCdata(token)
+        self.startTagRawtext(token)
 
-    def startTagCdata(self, token):
+    def startTagRawtext(self, token):
         """iframe, noembed noframes, noscript(if scripting enabled)"""
-        self.parser.parseRCDataCData(token, "CDATA")
+        self.parser.parseRCDataRawtext(token, "RAWTEXT")
 
     def startTagOpt(self, token):
         if self.tree.elementInScope("option"):
@@ -1520,7 +1520,7 @@ class InBodyPhase(Phase):
                     self.parser.parseError("unexpected-end-tag", {"name": token["name"]})
                     break
 
-class InCDataRCDataPhase(Phase):
+class InRCDataRawtextPhase(Phase):
     def __init__(self, parser, tree):
         Phase.__init__(self, parser, tree)
         self.startTagHandler = utils.MethodDispatcher([])
@@ -1540,7 +1540,7 @@ class InCDataRCDataPhase(Phase):
         self.parser.phase.processEOF()
 
     def startTagOther(self, token):
-        assert False, "Tried to process start tag %s in (R)CDATA mode"%name
+        assert False, "Tried to process start tag %s in RCDATA/RAWTEXT mode"%name
 
     def endTagScript(self, token):
         node = self.tree.openElements.pop()
