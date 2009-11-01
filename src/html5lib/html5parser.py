@@ -398,7 +398,11 @@ class HTMLParser(object):
         assert contentType in ("RAWTEXT", "RCDATA")
         
         element = self.tree.insertElement(token)
-        self.tokenizer.contentModelFlag = contentModelFlags[contentType]
+        
+        if contentType == "RAWTEXT":
+            self.tokenizer.state = self.tokenizer.rawtextState
+        else:
+            self.tokenizer.state = self.tokenizer.rcdataState
 
         self.originalPhase = self.phase
 
