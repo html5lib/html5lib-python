@@ -9,7 +9,7 @@ try:
 except ImportError:
     from utils import deque
     
-from constants import contentModelFlags, spaceCharacters
+from constants import spaceCharacters
 from constants import entitiesWindows1252, entities
 from constants import asciiLowercase, asciiLetters, asciiUpper2Lower
 from constants import digits, hexDigits, EOF
@@ -48,7 +48,6 @@ class HTMLTokenizer:
         self.lowercaseAttrName = lowercaseAttrName
         
         # Setup the initial tokenizer state
-        self.contentModelFlag = contentModelFlags["PCDATA"]
         self.escapeFlag = False
         self.lastFourChars = []
         self.state = self.dataState
@@ -297,6 +296,15 @@ class HTMLTokenizer:
         elif data == EOF:
             # Tokenization ends.
             return False
+        elif data in spaceCharacters:
+            # Directly after emitting a token you switch back to the "data
+            # state". At that point spaceCharacters are important so they are
+            # emitted separately.
+            self.tokenQueue.append({"type": tokenTypes["SpaceCharacters"], "data":
+              data + self.stream.charsUntil(spaceCharacters, True)})
+            # No need to update lastFourChars here, since the first space will
+            # have already been appended to lastFourChars and will have broken
+            # any <!-- or --> sequences
         else:
             chars = self.stream.charsUntil((u"&", u"<"))
             self.tokenQueue.append({"type": tokenTypes["Characters"], "data": 
@@ -444,7 +452,7 @@ class HTMLTokenizer:
         return True
     
     def rcdataEndTagNameState(self):
-        appropriate = self.currentToken["name"].lower() == self.temporaryBuffer.lower()
+        appropriate = self.currentToken and self.currentToken["name"].lower() == self.temporaryBuffer.lower()
         data = self.stream.char()
         if data in spaceCharacters and appropriate:
             self.currentToken = {"type": tokenTypes["EndTag"],
@@ -494,7 +502,7 @@ class HTMLTokenizer:
         return True
     
     def rawtextEndTagNameState(self):
-        appropriate = self.currentToken["name"].lower() == self.temporaryBuffer.lower()
+        appropriate = self.currentToken and self.currentToken["name"].lower() == self.temporaryBuffer.lower()
         data = self.stream.char()
         if data in spaceCharacters and appropriate:
             self.currentToken = {"type": tokenTypes["EndTag"],
@@ -531,6 +539,7 @@ class HTMLTokenizer:
             self.state = self.scriptDataEscapeStartState
         else:
             self.tokenQueue.append({"type": tokenTypes["Characters"], "data": u"<"})
+            self.stream.unget(data)
             self.state = self.scriptDataState
         return True
     
@@ -538,15 +547,15 @@ class HTMLTokenizer:
         data = self.stream.char()
         if data in asciiLetters:
             self.temporaryBuffer += data
-            self.state = scriptDataEndTagNameState
+            self.state = self.scriptDataEndTagNameState
         else:
             self.tokenQueue.append({"type": tokenTypes["Characters"], "data": u"</"})
             self.stream.unget(data)
-            self.state = scriptDataState
+            self.state = self.scriptDataState
         return True
     
     def scriptDataEndTagNameState(self):
-        appropriate = self.currentToken["name"].lower() == self.temporaryBuffer.lower()
+        appropriate = self.currentToken and self.currentToken["name"].lower() == self.temporaryBuffer.lower()
         data = self.stream.char()
         if data in spaceCharacters and appropriate:
             self.currentToken = {"type": tokenTypes["EndTag"],
@@ -558,13 +567,19 @@ class HTMLTokenizer:
                                  "name": self.temporaryBuffer,
                                  "data": [], "selfClosing":False}
             self.state = self.selfClosingStartTagState
+        elif data == ">" and appropriate:
+            self.currentToken = {"type": tokenTypes["EndTag"],
+                                 "name": self.temporaryBuffer,
+                                 "data": [], "selfClosing":False}
+            self.emitCurrentToken()
+            self.state = self.dataState
         elif data in asciiLetters:
             self.temporaryBuffer += data
         else:
             self.tokenQueue.append({"type": tokenTypes["Characters"],
                                     "data": u"</" + self.temporaryBuffer})
             self.stream.unget(data)
-            self.state = scriptDataState
+            self.state = self.scriptDataState
         return True
     
     def scriptDataEscapeStartState(self):
@@ -575,6 +590,7 @@ class HTMLTokenizer:
         else:
             self.stream.unget(data)
             self.state = self.scriptDataState
+        return True
     
     def scriptDataEscapeStartDashState(self):
         data = self.stream.char()
@@ -584,6 +600,7 @@ class HTMLTokenizer:
         else:
             self.stream.unget(data)
             self.state = self.scriptDataState
+        return True
     
     def scriptDataEscapedState(self):
         data = self.stream.char()
@@ -638,7 +655,7 @@ class HTMLTokenizer:
         elif data in asciiLetters:
             self.tokenQueue.append({"type": tokenTypes["Characters"], "data": u"<" + data})
             self.temporaryBuffer = data
-            self.state = self.scriptDataDobuleEscapeStartState
+            self.state = self.scriptDataDoubleEscapeStartState
         else:
             self.tokenQueue.append({"type": tokenTypes["Characters"], "data": u"<"})
             self.stream.unget(data)
@@ -649,7 +666,7 @@ class HTMLTokenizer:
         data = self.stream.char()
         if data in asciiLetters:
             self.temporaryBuffer = data
-            self.scriptDataEscapedEndTagNameState
+            self.state = self.scriptDataEscapedEndTagNameState
         else:
             self.tokenQueue.append({"type": tokenTypes["Characters"], "data": u"</"})
             self.stream.unget(data)
@@ -657,7 +674,7 @@ class HTMLTokenizer:
         return True
     
     def scriptDataEscapedEndTagNameState(self):
-        appropriate = self.currentToken["name"].lower() == self.temporaryBuffer.lower()
+        appropriate = self.currentToken and self.currentToken["name"].lower() == self.temporaryBuffer.lower()
         data = self.stream.char()
         if data in spaceCharacters and appropriate:
             self.currentToken = {"type": tokenTypes["EndTag"],
@@ -686,7 +703,7 @@ class HTMLTokenizer:
     
     def scriptDataDoubleEscapeStartState(self):
         data = self.stream.char()
-        if data in (spaceCharacters + ("/", ">")):
+        if data in (spaceCharacters | frozenset(("/", ">"))):
             self.tokenQueue.append({"type": tokenTypes["Characters"], "data": data})
             if self.temporaryBuffer.lower() == "script":
                 self.state = self.scriptDataDoubleEscapedState
@@ -705,10 +722,10 @@ class HTMLTokenizer:
         if data == "-":
             self.tokenQueue.append({"type": tokenTypes["Characters"], "data": u"-"})
             self.state = self.scriptDataDoubleEscapedDashState
-        elif state == "<":
+        elif data == "<":
             self.tokenQueue.append({"type": tokenTypes["Characters"], "data": u"<"})
             self.state = self.scriptDataDoubleEscapedLessThanSignState
-        elif state == EOF:
+        elif data == EOF:
             self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
               "eof-in-script-in-script"})
             self.state = self.dataState
@@ -724,7 +741,7 @@ class HTMLTokenizer:
         elif data == "<":
             self.tokenQueue.append({"type": tokenTypes["Characters"], "data": u"<"})
             self.state = self.scriptDataDoubleEscapedLessThanSignState
-        elif state == EOF:
+        elif data == EOF:
             self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
               "eof-in-script-in-script"})
             self.state = self.dataState
@@ -743,7 +760,7 @@ class HTMLTokenizer:
         elif data == ">":
             self.tokenQueue.append({"type": tokenTypes["Characters"], "data": u">"})
             self.state = self.scriptDataState
-        elif state == EOF:
+        elif data == EOF:
             self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
               "eof-in-script-in-script"})
             self.state = self.dataState
@@ -759,13 +776,13 @@ class HTMLTokenizer:
             self.temporaryBuffer = ""
             self.state = self.scriptDataDoubleEscapeEndState
         else:
-            self.state.unget(data)
+            self.stream.unget(data)
             self.state = self.scriptDataDoubleEscapedState
         return True
     
     def scriptDataDoubleEscapeEndState(self):
         data = self.stream.char()
-        if data in spaceCharacters + ("/", ">"):
+        if data in (spaceCharacters | frozenset(("/", ">"))):
             self.tokenQueue.append({"type": tokenTypes["Characters"], "data": data})
             if self.temporaryBuffer.lower() == "script":
                 self.state = self.scriptDataEscapedState

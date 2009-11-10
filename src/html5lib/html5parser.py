@@ -25,7 +25,7 @@ from treebuilders._base import Marker
 from treebuilders import simpletree
 
 import utils
-from constants import contentModelFlags, spaceCharacters, asciiUpper2Lower
+from constants import spaceCharacters, asciiUpper2Lower
 from constants import scopingElements, formattingElements, specialElements
 from constants import headingElements, tableInsertModeElements
 from constants import cdataElements, rcdataElements, voidElements
@@ -77,7 +77,7 @@ class HTMLParser(object):
             # XXX "inHeadNoscript": InHeadNoScriptPhase(self, self.tree),
             "afterHead": AfterHeadPhase(self, self.tree),
             "inBody": InBodyPhase(self, self.tree),
-            "inRCDataRawtext": InRCDataRawtextPhase(self, self.tree),
+            "text": TextPhase(self, self.tree),
             "inTable": InTablePhase(self, self.tree),
             "inTableText": InTableTextPhase(self, self.tree),
             "inCaption": InCaptionPhase(self, self.tree),
@@ -124,14 +124,14 @@ class HTMLParser(object):
             self.innerHTML = self.container.lower()
 
             if self.innerHTML in cdataElements:
-                self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["RCDATA"]
+                self.tokenizer.state = self.tokenizer.rcdataState
             elif self.innerHTML in rcdataElements:
-                self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["RAWTEXT"]
+                self.tokenizer.state = self.tokenizer.rawtextState
             elif self.innerHTML == 'plaintext':
-                self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["PLAINTEXT"]
+                self.tokenizer.state = self.tokenizer.plaintextState
             else:
-                # contentModelFlag already is PCDATA
-                #self.tokenizer.contentModelFlag = tokenizer.contentModelFlags["PCDATA"]
+                # state already is data state
+                # self.tokenizer.state = self.tokenizer.dataState
                 pass
             self.phase = self.phases["beforeHtml"]
             self.phase.insertHtmlElement()
@@ -406,7 +406,7 @@ class HTMLParser(object):
 
         self.originalPhase = self.phase
 
-        self.phase = self.phases["inRCDataRawtext"]
+        self.phase = self.phases["text"]
 
 class Phase(object):
     """Base class for helper object that implements each phase of processing
@@ -636,8 +636,12 @@ class BeforeHtmlPhase(Phase):
         self.parser.phase.processStartTag(token)
 
     def processEndTag(self, token):
-        self.insertHtmlElement()
-        self.parser.phase.processEndTag(token)
+        if token["name"] not in ("head", "body", "html", "br"):
+            self.parser.parseError("unexpected-end-tag-before-html",
+              {"name": token["name"]})
+        else:
+            self.insertHtmlElement()
+            self.parser.phase.processEndTag(token)
 
 
 class BeforeHeadPhase(Phase):
@@ -651,7 +655,7 @@ class BeforeHeadPhase(Phase):
         self.startTagHandler.default = self.startTagOther
 
         self.endTagHandler = utils.MethodDispatcher([
-            (("head", "br"), self.endTagImplyHead)
+            (("head", "body", "html", "br"), self.endTagImplyHead)
         ])
         self.endTagHandler.default = self.endTagOther
 
@@ -665,6 +669,9 @@ class BeforeHeadPhase(Phase):
     def processCharacters(self, token):
         self.startTagHead(impliedTagToken("head", "StartTag"))
         self.parser.phase.processCharacters(token)
+
+    def startTagHtml(self, token):
+        self.parser.phases["inBody"].processStartTag(token)
 
     def startTagHead(self, token):
         self.tree.insertElement(token)
@@ -692,8 +699,8 @@ class InHeadPhase(Phase):
             ("title", self.startTagTitle),
             (("noscript", "noframes", "style"), self.startTagNoScriptNoFramesStyle),
             ("script", self.startTagScript),
-            (("base", "link", "command", "eventsource"), 
-             self.startTagBaseLinkCommandEventsource),
+            (("base", "link", "command"), 
+             self.startTagBaseLinkCommand),
             ("meta", self.startTagMeta),
             ("head", self.startTagHead)
         ])
@@ -728,7 +735,7 @@ class InHeadPhase(Phase):
     def startTagHead(self, token):
         self.parser.parseError("two-heads-are-not-better-than-one")
 
-    def startTagBaseLinkCommandEventsource(self, token):
+    def startTagBaseLinkCommand(self, token):
         self.tree.insertElement(token)
         self.tree.openElements.pop()
         token["selfClosingAcknowledged"] = True
@@ -757,9 +764,10 @@ class InHeadPhase(Phase):
         self.parser.parseRCDataRawtext(token, "RAWTEXT")
 
     def startTagScript(self, token):
-        #I think this is equivalent to the RAWTEXT stuff since we don't execute script
-        #self.tree.insertElement(token)
-        self.parser.parseRCDataRawtext(token, "RAWTEXT")
+        self.tree.insertElement(token)
+        self.parser.tokenizer.state = self.parser.tokenizer.scriptDataState
+        self.parser.originalPhase = self.parser.phase
+        self.parser.phase = self.parser.phases["text"]
 
     def startTagOther(self, token):
         self.anythingElse()
@@ -838,7 +846,6 @@ class AfterHeadPhase(Phase):
         self.parser.phase.processStartTag(token)
 
     def endTagHtmlBodyBr(self, token):
-        #This is not currently in the spec
         self.anythingElse()
         self.parser.phase.processEndTag(token)
 
@@ -852,8 +859,8 @@ class AfterHeadPhase(Phase):
 
 
 class InBodyPhase(Phase):
-    # http://www.whatwg.org/specs/web-apps/current-work/#in-body
-    # the crazy mode
+    # http://www.whatwg.org/specs/web-apps/current-work/#parsing-main-inbody
+    # the really-really-really-very crazy mode
     def __init__(self, parser, tree):
         Phase.__init__(self, parser, tree)
 
@@ -862,15 +869,16 @@ class InBodyPhase(Phase):
 
         self.startTagHandler = utils.MethodDispatcher([
             ("html", self.startTagHtml),
-            (("base", "link", "meta", "script", "style", "title"),
-              self.startTagProcessInHead),
+            (("base", "command", "link", "meta", "noframes", "script", "style", 
+              "title"), self.startTagProcessInHead),
             ("body", self.startTagBody),
             ("frameset", self.startTagFrameset),
             (("address", "article", "aside", "blockquote", "center", "datagrid",
-              "details", "dialog", "dir", "div", "dl", "fieldset", "figure",
-              "footer", "h1", "h2", "h3", "h4", "h5", "h6", "header", "listing",
-              "menu", "nav", "ol", "p", "pre", "section", "ul"),
+              "details", "dir", "div", "dl", "fieldset", "figure",
+              "footer", "header", "hgroup", "menu", "nav", "ol", "p",
+              "section", "ul"),
               self.startTagCloseP),
+            (("pre", "listing"), self.startTagPreListing),
             ("form", self.startTagForm),
             (("li", "dd", "dt"), self.startTagListItem),
             ("plaintext",self.startTagPlaintext),
@@ -899,8 +907,7 @@ class InBodyPhase(Phase):
             (("svg"), self.startTagSvg),
             (("caption", "col", "colgroup", "frame", "head",
               "tbody", "td", "tfoot", "th", "thead",
-              "tr"), self.startTagMisplaced),
-            (("event-source", "command"), self.startTagNew)
+              "tr"), self.startTagMisplaced)
         ])
         self.startTagHandler.default = self.startTagOther
 
@@ -908,9 +915,9 @@ class InBodyPhase(Phase):
             ("body",self.endTagBody),
             ("html",self.endTagHtml),
             (("address", "article", "aside", "blockquote", "center", "datagrid",
-              "details", "dialog", "dir", "div", "dl", "fieldset", "figure",
-              "footer", "header", "listing", "menu", "nav", "ol", "pre", "section",
-              "ul"), self.endTagBlock),
+              "details", "dir", "div", "dl", "fieldset", "figure",
+              "footer", "header", "hgroup", "listing", "menu", "nav", "ol", "pre", 
+              "section", "ul"), self.endTagBlock),
             ("form", self.endTagForm),
             ("p",self.endTagP),
             (("dd", "dt", "li"), self.endTagListItem),
@@ -953,14 +960,10 @@ class InBodyPhase(Phase):
             self.tree.insertText(data)
 
     def processCharacters(self, token):
-        # XXX The specification says to do this for every character at the
-        # moment, but apparently that doesn't match the real world so we don't
-        # do it for space characters.
         self.tree.reconstructActiveFormattingElements()
         self.tree.insertText(token["data"])
         self.parser.framesetOK = False
 
-    #This matches the current spec but may not match the real world
     def processSpaceCharacters(self, token):
         self.tree.reconstructActiveFormattingElements()
         self.tree.insertText(token["data"])
@@ -996,9 +999,13 @@ class InBodyPhase(Phase):
         if self.tree.elementInScope("p"):
             self.endTagP(impliedTagToken("p"))
         self.tree.insertElement(token)
-        if token["name"] in ("pre", "listing"):
-            self.parser.framesetOK = False
-            self.processSpaceCharacters = self.processSpaceCharactersDropNewline
+    
+    def startTagPreListing(self, token):
+        if self.tree.elementInScope("p"):
+            self.endTagP(impliedTagToken("p"))
+        self.tree.insertElement(token)
+        self.parser.framesetOK = False
+        self.processSpaceCharacters = self.processSpaceCharactersDropNewline
 
     def startTagForm(self, token):
         if self.tree.formPointer:
@@ -1035,7 +1042,7 @@ class InBodyPhase(Phase):
         if self.tree.elementInScope("p"):
             self.endTagP(impliedTagToken("p"))
         self.tree.insertElement(token)
-        self.parser.tokenizer.contentModelFlag = contentModelFlags["PLAINTEXT"]
+        self.parser.tokenizer.state = self.parser.tokenizer.plaintextState
 
     def startTagHeading(self, token):
         if self.tree.elementInScope("p"):
@@ -1043,15 +1050,6 @@ class InBodyPhase(Phase):
         if self.tree.openElements[-1].name in headingElements:
             self.parser.parseError("unexpected-start-tag", {"name": token["name"]})
             self.tree.openElements.pop()
-        # Uncomment the following for IE7 behavior:
-        #
-        #for item in headingElements:
-        #    if self.tree.elementInScope(item):
-        #        self.parser.parseError("unexpected-start-tag", {"name": token["name"]})
-        #        item = self.tree.openElements.pop()
-        #        while item.name not in headingElements:
-        #            item = self.tree.openElements.pop()
-        #        break
         self.tree.insertElement(token)
 
     def startTagA(self, token):
@@ -1175,9 +1173,8 @@ class InBodyPhase(Phase):
         self.processEndTag(impliedTagToken("form"))
 
     def startTagTextarea(self, token):
-        # XXX Form element pointer checking here as well...
         self.tree.insertElement(token)
-        self.parser.tokenizer.contentModelFlag = contentModelFlags["RCDATA"]
+        self.parser.tokenizer.state = self.parser.tokenizer.rcdataState
         self.processSpaceCharacters = self.processSpaceCharactersDropNewline
         self.parser.framesetOK = False
 
@@ -1257,16 +1254,6 @@ class InBodyPhase(Phase):
         """
         self.parser.parseError("unexpected-start-tag-ignored", {"name": token["name"]})
 
-    def startTagNew(self, token):
-        """New HTML5 elements, "event-source", "section", "nav",
-        "article", "aside", "header", "footer", "datagrid", "command"
-        """
-        #2007-08-30 - MAP - commenting out this write to sys.stderr because
-        #  it's really annoying me when I run the validator tests
-        #sys.stderr.write("Warning: Undefined behaviour for start tag %s"%name)
-        self.startTagOther(token)
-        #raise NotImplementedError
-
     def startTagOther(self, token):
         self.tree.reconstructActiveFormattingElements()
         self.tree.insertElement(token)
@@ -1285,19 +1272,16 @@ class InBodyPhase(Phase):
                 node = self.tree.openElements.pop()
 
     def endTagBody(self, token):
-        # XXX Need to take open <p> tags into account here. We shouldn't imply
-        # </p> but we should not throw a parse error either. Specification is
-        # likely to be updated.
-        if (len(self.tree.openElements) == 1 or
-            self.tree.openElements[1].name != "body"):
-            # innerHTML case
+        if not self.tree.elementInScope("body"):
             self.parser.parseError()
             return
         elif self.tree.openElements[-1].name != "body":
             for node in self.tree.openElements[2:]:
-                if node.name not in frozenset(("dd", "dt", "li", "p",
+                if node.name not in frozenset(("dd", "dt", "li", "optgroup",
+                                               "option", "p", "rp", "rt",
                                                "tbody", "td", "tfoot",
-                                               "th", "thead", "tr")):
+                                               "th", "thead", "tr", "body",
+                                               "html")):
                     #Not sure this is the correct name for the parse error
                     self.parser.parseError(
                         "expected-one-end-tag-but-got-another",
@@ -1524,7 +1508,7 @@ class InBodyPhase(Phase):
                     self.parser.parseError("unexpected-end-tag", {"name": token["name"]})
                     break
 
-class InRCDataRawtextPhase(Phase):
+class TextPhase(Phase):
     def __init__(self, parser, tree):
         Phase.__init__(self, parser, tree)
         self.startTagHandler = utils.MethodDispatcher([])

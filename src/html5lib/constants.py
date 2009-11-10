@@ -256,19 +256,16 @@ E = {
        _(u"Unexpected end of file. Expected select content."),
     "eof-in-frameset":
        _(u"Unexpected end of file. Expected frameset content."),
+    "eof-in-script-in-script":
+       _(u"Unexpected end of file. Expected script content."),
     "non-void-element-with-trailing-solidus":
        _(u"Trailing solidus not allowed on element %(name)s"),
     "unexpected-html-element-in-foreign-content":
        _(u"Element %(name)s not allowed in a non-html context"),
+    "unexpected-end-tag-before-html":
+        _(u"Unexpected end tag (%(name)s) before html."),
     "XXX-undefined-error":
         (u"Undefined error (this sucks and should be fixed)"),
-}
-
-contentModelFlags = {
-    "PCDATA":0,
-    "RCDATA":1,
-    "RAWTEXT":2,
-    "PLAINTEXT":3
 }
 
 namespaces = {
