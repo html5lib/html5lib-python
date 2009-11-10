@@ -460,34 +460,24 @@ class Phase(object):
         self.endTagHandler[token["name"]](token)
 
 class InitialPhase(Phase):
-    # This phase deals with error handling as well which is currently not
-    # covered in the specification. The error handling is typically known as
-    # "quirks mode". It is expected that a future version of HTML5 will defin
-    # this.
-    def processEOF(self):
-        self.parser.parseError("expected-doctype-but-got-eof")
-        self.parser.compatMode = "quirks"
-        self.parser.phase = self.parser.phases["beforeHtml"]
-        self.parser.phase.processEOF()
-
+    def processSpaceCharacters(self, token):
+        pass
+    
     def processComment(self, token):
         self.tree.insertComment(token, self.tree.document)
 
     def processDoctype(self, token):
-
         name = token["name"]
         publicId = token["publicId"]
         systemId = token["systemId"]
         correct = token["correct"]
 
         if (name != "html" or publicId != None or
-            systemId != None):
+            systemId != None and systemId != "about:legacy-compat"):
             self.parser.parseError("unknown-doctype")
         
         if publicId is None:
             publicId = ""
-        if systemId is None:
-            systemId = ""
             
         self.tree.insertDoctype(token)
 
@@ -495,117 +485,108 @@ class InitialPhase(Phase):
             publicId = publicId.translate(asciiUpper2Lower)
 
         if (not correct or token["name"] != "html"
-            or publicId in 
-            ("+//silmaril//dtd html pro v0r11 19970101//en",
-             "-//advasoft ltd//dtd html 3.0 aswedit + extensions//en",
-             "-//as//dtd html 3.0 aswedit + extensions//en",
-             "-//ietf//dtd html 2.0 level 1//en",
-             "-//ietf//dtd html 2.0 level 2//en",
-             "-//ietf//dtd html 2.0 strict level 1//en",
-             "-//ietf//dtd html 2.0 strict level 2//en",
-             "-//ietf//dtd html 2.0 strict//en",
-             "-//ietf//dtd html 2.0//en",
-             "-//ietf//dtd html 2.1e//en",
-             "-//ietf//dtd html 3.0//en",
-             "-//ietf//dtd html 3.0//en//",
-             "-//ietf//dtd html 3.2 final//en",
-             "-//ietf//dtd html 3.2//en",
-             "-//ietf//dtd html 3//en",
-             "-//ietf//dtd html level 0//en",
-             "-//ietf//dtd html level 0//en//2.0",
-             "-//ietf//dtd html level 1//en",
-             "-//ietf//dtd html level 1//en//2.0",
-             "-//ietf//dtd html level 2//en",
-             "-//ietf//dtd html level 2//en//2.0",
-             "-//ietf//dtd html level 3//en",
-             "-//ietf//dtd html level 3//en//3.0",
-             "-//ietf//dtd html strict level 0//en",
-             "-//ietf//dtd html strict level 0//en//2.0",
-             "-//ietf//dtd html strict level 1//en",
-             "-//ietf//dtd html strict level 1//en//2.0",
-             "-//ietf//dtd html strict level 2//en",
-             "-//ietf//dtd html strict level 2//en//2.0",
-             "-//ietf//dtd html strict level 3//en",
-             "-//ietf//dtd html strict level 3//en//3.0",
-             "-//ietf//dtd html strict//en",
-             "-//ietf//dtd html strict//en//2.0",
-             "-//ietf//dtd html strict//en//3.0",
-             "-//ietf//dtd html//en",
-             "-//ietf//dtd html//en//2.0",
-             "-//ietf//dtd html//en//3.0",
-             "-//metrius//dtd metrius presentational//en",
-             "-//microsoft//dtd internet explorer 2.0 html strict//en",
-             "-//microsoft//dtd internet explorer 2.0 html//en",
-             "-//microsoft//dtd internet explorer 2.0 tables//en",
-             "-//microsoft//dtd internet explorer 3.0 html strict//en",
-             "-//microsoft//dtd internet explorer 3.0 html//en",
-             "-//microsoft//dtd internet explorer 3.0 tables//en",
-             "-//netscape comm. corp.//dtd html//en",
-             "-//netscape comm. corp.//dtd strict html//en",
-             "-//o'reilly and associates//dtd html 2.0//en",
-             "-//o'reilly and associates//dtd html extended 1.0//en",
-             "-//o'reilly and associates//dtd html extended relaxed 1.0//en",
-             "-//spyglass//dtd html 2.0 extended//en",
-             "-//sq//dtd html 2.0 hotmetal + extensions//en",
-             "-//sun microsystems corp.//dtd hotjava html//en",
-             "-//sun microsystems corp.//dtd hotjava strict html//en",
-             "-//w3c//dtd html 3 1995-03-24//en",
-             "-//w3c//dtd html 3.2 draft//en",
-             "-//w3c//dtd html 3.2 final//en",
-             "-//w3c//dtd html 3.2//en",
-             "-//w3c//dtd html 3.2s draft//en",
-             "-//w3c//dtd html 4.0 frameset//en",
-             "-//w3c//dtd html 4.0 transitional//en",
-             "-//w3c//dtd html experimental 19960712//en",
-             "-//w3c//dtd html experimental 970421//en",
-             "-//w3c//dtd w3 html//en",
-             "-//w3o//dtd w3 html 3.0//en",
-             "-//w3o//dtd w3 html 3.0//en//",
-             "-//w3o//dtd w3 html strict 3.0//en//",
-             "-//webtechs//dtd mozilla html 2.0//en",
-             "-//webtechs//dtd mozilla html//en",
-             "-/w3c/dtd html 4.0 transitional/en",
-             "html")
-            or (publicId in
-                ("-//w3c//dtd html 4.01 frameset//EN",
-                 "-//w3c//dtd html 4.01 transitional//EN") and 
-                systemId == None)
-            or (systemId != None and
-                systemId == "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd")):
+            or publicId.startswith( 
+            ("+//silmaril//dtd html pro v0r11 19970101//",
+             "-//advasoft ltd//dtd html 3.0 aswedit + extensions//",
+             "-//as//dtd html 3.0 aswedit + extensions//",
+             "-//ietf//dtd html 2.0 level 1//",
+             "-//ietf//dtd html 2.0 level 2//",
+             "-//ietf//dtd html 2.0 strict level 1//",
+             "-//ietf//dtd html 2.0 strict level 2//",
+             "-//ietf//dtd html 2.0 strict//",
+             "-//ietf//dtd html 2.0//",
+             "-//ietf//dtd html 2.1e//",
+             "-//ietf//dtd html 3.0//",
+             "-//ietf//dtd html 3.2 final//",
+             "-//ietf//dtd html 3.2//",
+             "-//ietf//dtd html 3//",
+             "-//ietf//dtd html level 0//",
+             "-//ietf//dtd html level 1//",
+             "-//ietf//dtd html level 2//",
+             "-//ietf//dtd html level 3//",
+             "-//ietf//dtd html strict level 0//",
+             "-//ietf//dtd html strict level 1//",
+             "-//ietf//dtd html strict level 2//",
+             "-//ietf//dtd html strict level 3//",
+             "-//ietf//dtd html strict//",
+             "-//ietf//dtd html//",
+             "-//metrius//dtd metrius presentational//",
+             "-//microsoft//dtd internet explorer 2.0 html strict//",
+             "-//microsoft//dtd internet explorer 2.0 html//",
+             "-//microsoft//dtd internet explorer 2.0 tables//",
+             "-//microsoft//dtd internet explorer 3.0 html strict//",
+             "-//microsoft//dtd internet explorer 3.0 html//",
+             "-//microsoft//dtd internet explorer 3.0 tables//",
+             "-//netscape comm. corp.//dtd html//",
+             "-//netscape comm. corp.//dtd strict html//",
+             "-//o'reilly and associates//dtd html 2.0//",
+             "-//o'reilly and associates//dtd html extended 1.0//",
+             "-//o'reilly and associates//dtd html extended relaxed 1.0//",
+             "-//softquad software//dtd hotmetal pro 6.0::19990601::extensions to html 4.0//",
+             "-//softquad//dtd hotmetal pro 4.0::19971010::extensions to html 4.0//",
+             "-//spyglass//dtd html 2.0 extended//",
+             "-//sq//dtd html 2.0 hotmetal + extensions//",
+             "-//sun microsystems corp.//dtd hotjava html//",
+             "-//sun microsystems corp.//dtd hotjava strict html//",
+             "-//w3c//dtd html 3 1995-03-24//",
+             "-//w3c//dtd html 3.2 draft//",
+             "-//w3c//dtd html 3.2 final//",
+             "-//w3c//dtd html 3.2//",
+             "-//w3c//dtd html 3.2s draft//",
+             "-//w3c//dtd html 4.0 frameset//",
+             "-//w3c//dtd html 4.0 transitional//",
+             "-//w3c//dtd html experimental 19960712//",
+             "-//w3c//dtd html experimental 970421//",
+             "-//w3c//dtd w3 html//",
+             "-//w3o//dtd w3 html 3.0//",
+             "-//webtechs//dtd mozilla html 2.0//",
+             "-//webtechs//dtd mozilla html//"))
+            or publicId in
+                ("-//w3o//dtd w3 html strict 3.0//en//",
+                 "-/w3c/dtd html 4.0 transitional/en",
+                 "html")
+            or publicId.startswith(
+                ("-//w3c//dtd html 4.01 frameset//",
+                 "-//w3c//dtd html 4.01 transitional//")) and 
+                systemId == None
+            or systemId and systemId.lower() == "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd"):
             self.parser.compatMode = "quirks"
-        elif (publicId in
-                ("-//w3c//dtd xhtml 1.0 frameset//EN",
-                 "-//w3c//dtd xhtml 1.0 transitional//EN")
-              or (publicId in
-                  ("-//w3c//dtd html 4.01 frameset//EN",
-                   "-//w3c//dtd html 4.01 transitional//EN") and 
-                  systemId == None)):
+        elif (publicId.startswith(
+                ("-//w3c//dtd xhtml 1.0 frameset//",
+                 "-//w3c//dtd xhtml 1.0 transitional//"))
+              or publicId.startswith(
+                  ("-//w3c//dtd html 4.01 frameset//",
+                   "-//w3c//dtd html 4.01 transitional//")) and 
+                  systemId != None):
             self.parser.compatMode = "limited quirks"
 
         self.parser.phase = self.parser.phases["beforeHtml"]
-
-    def processSpaceCharacters(self, token):
-        pass
+    
+    def anythingElse(self):
+        self.parser.compatMode = "quirks"
+        self.parser.phase = self.parser.phases["beforeHtml"]
 
     def processCharacters(self, token):
         self.parser.parseError("expected-doctype-but-got-chars")
-        self.parser.compatMode = "quirks"
-        self.parser.phase = self.parser.phases["beforeHtml"]
+        self.anythingElse()
         self.parser.phase.processCharacters(token)
 
     def processStartTag(self, token):
         self.parser.parseError("expected-doctype-but-got-start-tag",
           {"name": token["name"]})
-        self.parser.compatMode = "quirks"
-        self.parser.phase = self.parser.phases["beforeHtml"]
+        self.anythingElse()
         self.parser.phase.processStartTag(token)
 
     def processEndTag(self, token):
         self.parser.parseError("expected-doctype-but-got-end-tag",
           {"name": token["name"]})
-        self.parser.compatMode = "quirks"
-        self.parser.phase = self.parser.phases["beforeHtml"]
+        self.anythingElse()
         self.parser.phase.processEndTag(token)
+        
+    def processEOF(self):
+        self.parser.parseError("expected-doctype-but-got-eof")
+        self.anythingElse()
+        self.parser.phase.processEOF()
 
 
 class BeforeHtmlPhase(Phase):
