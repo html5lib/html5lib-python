@@ -3,6 +3,7 @@ import os
 import unittest
 import cStringIO
 import warnings
+import re
 
 from support import simplejson, html5lib_test_files
 
@@ -10,16 +11,16 @@ from html5lib.tokenizer import HTMLTokenizer
 from html5lib import constants
 
 class TokenizerTestParser(object):
-    def __init__(self, contentModelFlag, lastStartTag=None):
+    def __init__(self, initialState, lastStartTag=None):
         self.tokenizer = HTMLTokenizer
-        self._contentModelFlag = constants.contentModelFlags[contentModelFlag]
+        self._state = initialState
         self._lastStartTag = lastStartTag
 
     def parse(self, stream, encoding=None, innerHTML=False):
         tokenizer = self.tokenizer(stream, encoding)
         self.outputTokens = []
 
-        tokenizer.contentModelFlag = self._contentModelFlag
+        tokenizer.state = getattr(tokenizer, self._state)
         if self._lastStartTag is not None:
             tokenizer.currentToken = {"type": "startTag", 
                                       "name":self._lastStartTag}
@@ -127,13 +128,13 @@ class TestCase(unittest.TestCase):
         outBuffer = cStringIO.StringIO()
         stdout = sys.stdout
         sys.stdout = outBuffer
-        parser = TokenizerTestParser(test['contentModelFlag'], 
+        parser = TokenizerTestParser(test['initialState'], 
                                      test['lastStartTag'])
         tokens = parser.parse(test['input'])
         tokens = concatenateCharacterTokens(tokens)
         received = normalizeTokens(tokens)
-        errorMsg = u"\n".join(["\n\nContent Model Flag:",
-                              test['contentModelFlag'] ,
+        errorMsg = u"\n".join(["\n\nInitial state:",
+                              test['initialState'] ,
                               "\nInput:", unicode(test['input']),
                               "\nExpected:", unicode(expected),
                               "\nreceived:", unicode(tokens)])
@@ -141,6 +142,18 @@ class TestCase(unittest.TestCase):
         ignoreErrorOrder = test.get('ignoreErrorOrder', False)
         self.assertEquals(tokensMatch(expected, received, ignoreErrorOrder), 
                           True, errorMsg)
+
+
+def _doCapitalize(match):
+    return match.group(1).upper()
+
+_capitalizeRe = re.compile(r"\W+(\w)").sub
+
+def capitalize(s):
+    s = s.lower()
+    s = _capitalizeRe(_doCapitalize, s)
+    return s
+
 
 def buildTestSuite():
     for filename in html5lib_test_files('tokenizer', '*.test'):
@@ -151,15 +164,15 @@ def buildTestSuite():
             for index,test in enumerate(tests['tests']):
                 #Skip tests with a self closing flag
                 skip = False
-                if 'contentModelFlags' not in test:
-                    test["contentModelFlags"] = ["PCDATA"]
-                for contentModelFlag in test["contentModelFlags"]:
-                    test["contentModelFlag"] = contentModelFlag
+                if 'initialStates' not in test:
+                    test["initialStates"] = ["Data state"]
+                for initialState in test["initialStates"]:
+                    test["initialState"] = capitalize(initialState)
                     def testFunc(self, test=test):
                         self.runTokenizerTest(test)
                     testFunc.__doc__ = "\t".join([testName, 
                                                   test['description']])
-                    setattr(TestCase, 'test_%s_%d' % (testName, index), testFunc)
+                    setattr(TestCase, 'test_%s_%d_%s' % (testName, index, test["initialState"]), testFunc)
     return unittest.TestLoader().loadTestsFromTestCase(TestCase)
 
 def main():

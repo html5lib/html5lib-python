@@ -449,6 +449,20 @@ class HTMLInputStream:
         r = u"".join(rv)
         return r
 
+    def charsUntilEOF(self):
+        """ Returns a string of characters from the stream up to EOF."""
+
+        rv = []
+
+        while True:
+            rv.append(self.chunk[self.chunkOffset:])
+            if not self.readChunk():
+                # Reached EOF
+                break
+
+        r = u"".join(rv)
+        return r
+
     def unget(self, char):
         # Only one character is allowed to be ungotten at once - it must
         # be consumed again before any further call to unget
