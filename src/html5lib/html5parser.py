@@ -192,6 +192,7 @@ class HTMLParser(object):
 
         # When the loop finishes it's EOF
         self.phase.processEOF()
+        self.tree.finalize()
 
     def normalizedTokens(self):
         for token in self.tokenizer:
@@ -1686,10 +1687,10 @@ class InTableTextPhase(Phase):
         self.phase = self.originalPhase
         self.phase.processComment(token)
 
-    def processEOF(self, token):
+    def processEOF(self):
         self.flushCharacters()
         self.phase = self.originalPhase
-        self.phase.processEOF(token)
+        self.phase.processEOF()
 
     def processCharacters(self, token):
         self.characterTokens.append(token)
