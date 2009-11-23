@@ -192,7 +192,6 @@ class HTMLParser(object):
 
         # When the loop finishes it's EOF
         self.phase.processEOF()
-        self.tree.finalize()
 
     def normalizedTokens(self):
         for token in self.tokenizer:
