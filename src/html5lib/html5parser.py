@@ -1292,7 +1292,7 @@ class InBodyPhase(Phase):
     def endTagForm(self, token):
         node = self.tree.formPointer
         self.tree.formPointer = None
-        if node is None or not self.tree.elementInScope(token["name"]):
+        if node is None or not self.tree.elementInScope(node):
             self.parser.parseError("unexpected-end-tag",
                                    {"name":"form"})
         else:
