@@ -60,7 +60,7 @@ except ImportError:
     pass
 
 #Run the parse error checks
-checkParseErrors = False
+checkParseErrors = True
 
 #XXX - There should just be one function here but for some reason the testcase
 #format differs from the treedump format by a single space character
@@ -112,8 +112,8 @@ class TestCase(unittest.TestCase):
         errorMsg = "\n".join(["\n\nInput:", input, "\nExpected:", expected,
                               "\nReceived:", output])
         self.assertEquals(expected, output, errorMsg.encode("utf-8"))
-        errStr = [u"Line: %i Col: %i %s %s"%(line, col, 
-                                         constants.E[errorcode], datavars) for
+        errStr = [u"Line: %i Col: %i %s"%(line, col, 
+                                          constants.E[errorcode] % datavars if isinstance(datavars, dict) else (datavars,)) for
                   ((line,col), errorcode, datavars) in p.errors]
         
         errorMsg2 = u"\n".join([u"\n\nInput:", input,
