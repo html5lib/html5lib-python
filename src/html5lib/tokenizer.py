@@ -128,17 +128,11 @@ class HTMLTokenizer:
                                             "illegal-codepoint-for-numeric-entity",
                                         "datavars": {"charAsInt": charAsInt}})
             try:
-                # XXX We should have a separate function that does "int" to
-                # "unicodestring" conversion since this doesn't always work
-                # according to hsivonen. Also, unichr has a limitation of 65535
+                # Try/except needed as UCS-2 Python builds' unichar only works
+                # within the BMP.
                 char = unichr(charAsInt)
-            except:
-                try:
-                    char = eval("u'\\U%08x'" % charAsInt)
-                except:
-                    self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
-                      "cant-convert-numeric-entity",
-                      "datavars": {"charAsInt": charAsInt}})
+            except ValueError:
+                char = eval("u'\\U%08x'" % charAsInt)
 
         # Discard the ; if present. Otherwise, put it back on the queue and
         # invoke parseError on parser.
