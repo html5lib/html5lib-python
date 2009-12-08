@@ -1292,7 +1292,7 @@ class InBodyPhase(Phase):
     def endTagForm(self, token):
         node = self.tree.formPointer
         self.tree.formPointer = None
-        if node is None or not self.tree.elementInScope(token["name"]):
+        if node is None or not self.tree.elementInScope(node):
             self.parser.parseError("unexpected-end-tag",
                                    {"name":"form"})
         else:
@@ -1686,10 +1686,10 @@ class InTableTextPhase(Phase):
         self.phase = self.originalPhase
         self.phase.processComment(token)
 
-    def processEOF(self, token):
+    def processEOF(self):
         self.flushCharacters()
         self.phase = self.originalPhase
-        self.phase.processEOF(token)
+        self.phase.processEOF()
 
     def processCharacters(self, token):
         self.characterTokens.append(token)

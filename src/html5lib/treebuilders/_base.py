@@ -157,19 +157,18 @@ class TreeBuilder(object):
             return
 
         # Step 2 and step 3: we start with the last element. So i is -1.
-        i = -1
+        i = len(self.activeFormattingElements) - 1
         entry = self.activeFormattingElements[i]
         if entry == Marker or entry in self.openElements:
             return
 
         # Step 6
         while entry != Marker and entry not in self.openElements:
-            i -= 1
-            if i < 0:
-                # Step 4: at this point we need to jump to step 8.
-                # So we reset the index to 0 and break
-                i += 1
+            if i == 0:
+                #This will be reset to 0 below
+                i = -1
                 break
+            i -= 1
             # Step 5: let entry be one earlier in the list.
             entry = self.activeFormattingElements[i]
 

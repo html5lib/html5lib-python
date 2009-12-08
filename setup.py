@@ -24,7 +24,7 @@ classifiers=[
     ]
 
 setup(name='html5lib',
-      version='0.11',
+      version='1.0',
       url='http://code.google.com/p/html5lib/',
       license="MIT License",
       description='HTML parser based on the WHAT-WG Web Applications 1.0' 
