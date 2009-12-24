@@ -62,14 +62,7 @@ class Node(_base.Node):
         node.parent = None
 
     def cloneNode(self):
-        newNode = type(self)(self.name)
-        if hasattr(self, 'namespace'):
-            newNode.namespace = self.namespace
-        if hasattr(self, 'attributes'):
-            for attr, value in self.attributes.iteritems():
-                newNode.attributes[attr] = value
-        newNode.value = self.value
-        return newNode
+        raise NotImplementedError
 
     def hasContent(self):
         """Return true if the node has children or text"""
@@ -112,10 +105,16 @@ class Document(Node):
             tree += child.printTree(2)
         return tree
 
+    def cloneNode(self):
+        return Document()
+
 class DocumentFragment(Document):
     type = 2
     def __unicode__(self):
         return "#document-fragment"
+
+    def cloneNode(self):
+        return DocumentFragment()
 
 class DocumentType(Node):
     type = 3
@@ -140,6 +139,9 @@ class DocumentType(Node):
     def hilite(self):
         return '<code class="markup doctype">&lt;!DOCTYPE %s></code>' % self.name
 
+    def cloneNode(self):
+        return DocumentType(self.name, self.publicId, self.systemId)
+
 class TextNode(Node):
     type = 4
     def __init__(self, value):
@@ -153,6 +155,9 @@ class TextNode(Node):
         return escape(self.value)
     
     hilite = toxml
+
+    def cloneNode(self):
+        return TextNode(self.value)
 
 class Element(Node):
     type = 5
@@ -206,6 +211,12 @@ class Element(Node):
             tree += child.printTree(indent)
         return tree
 
+    def cloneNode(self):
+        newNode = Element(self.name)
+        for attr, value in self.attributes.iteritems():
+            newNode.attributes[attr] = value
+        return newNode
+
 class CommentNode(Node):
     type = 6
     def __init__(self, data):
@@ -220,6 +231,9 @@ class CommentNode(Node):
 
     def hilite(self):
         return '<code class="markup comment">&lt;!--%s--></code>' % escape(self.data)
+
+    def cloneNode(self):
+        return CommentNode(self.data)
 
 class TreeBuilder(_base.TreeBuilder):
     documentClass = Document
