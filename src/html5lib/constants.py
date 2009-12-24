@@ -180,6 +180,8 @@ E = {
          u"table context caused voodoo mode."),
     "unexpected-hidden-input-in-table":
        _(u"Unexpected input with type hidden in table context."),
+    "unexpected-form-in-table":
+       _(u"Unexpected form in table context."),
     "unexpected-start-tag-implies-table-voodoo":
        _(u"Unexpected start tag (%(name)s) in "
          u"table context caused voodoo mode."),

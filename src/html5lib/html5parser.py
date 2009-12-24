@@ -1535,7 +1535,8 @@ class InTablePhase(Phase):
             (("td", "th", "tr"), self.startTagImplyTbody),
             ("table", self.startTagTable),
             (("style", "script"), self.startTagStyleScript),
-            ("input", self.startTagInput)
+            ("input", self.startTagInput),
+            ("form", self.startTagForm)
         ])
         self.startTagHandler.default = self.startTagOther
 
@@ -1628,6 +1629,11 @@ class InTablePhase(Phase):
             self.tree.openElements.pop()
         else:
             self.startTagOther(token)
+
+    def startTagForm(self, token):
+        self.parser.parseError("unexpected-form-in-table")
+        self.tree.insertElement(token)
+        self.tree.openElements.pop()
 
     def startTagOther(self, token):
         self.parser.parseError("unexpected-start-tag-implies-table-voodoo", {"name": token["name"]})

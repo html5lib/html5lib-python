@@ -60,7 +60,7 @@ except ImportError:
     pass
 
 #Run the parse error checks
-checkParseErrors = True
+checkParseErrors = False
 
 #XXX - There should just be one function here but for some reason the testcase
 #format differs from the treedump format by a single space character
