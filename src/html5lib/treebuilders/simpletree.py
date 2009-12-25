@@ -213,6 +213,8 @@ class Element(Node):
 
     def cloneNode(self):
         newNode = Element(self.name)
+        if hasattr(self, 'namespace'):
+            newNode.namespace = self.namespace
         for attr, value in self.attributes.iteritems():
             newNode.attributes[attr] = value
         return newNode
