@@ -731,8 +731,11 @@ class InHeadPhase(Phase):
             if "charset" in attributes:
                 self.parser.tokenizer.stream.changeEncoding(attributes["charset"])
             elif "content" in attributes:
-                data = inputstream.EncodingBytes(
-                    attributes["content"].encode(self.parser.tokenizer.stream.charEncoding[0]))
+                # Encoding it as UTF-8 here is a hack, as really we should pass
+                # the abstract Unicode string, and just use the
+                # ContentAttrParser on that, but using UTF-8 allows all chars
+                # to be encoded and as a ASCII-superset works.
+                data = inputstream.EncodingBytes(attributes["content"].encode("utf-8"))
                 parser = inputstream.ContentAttrParser(data)
                 codec = parser.parse()
                 self.parser.tokenizer.stream.changeEncoding(codec)
