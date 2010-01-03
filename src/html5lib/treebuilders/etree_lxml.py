@@ -203,12 +203,12 @@ class TreeBuilder(_base.TreeBuilder):
                 self._attributes = Attributes(self)
 
             def _setName(self, name):
-                self._name = filter.coerceElement(name)                
+                self._name = filter.coerceElement(name)
                 self._element.tag = self._getETreeTag(
                     self._name, self._namespace)
         
             def _getName(self):
-                return self._name
+                return filter.fromXmlName(self._name)
         
             name = property(_getName, _setName)
 

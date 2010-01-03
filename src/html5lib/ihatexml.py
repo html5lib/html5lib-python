@@ -72,17 +72,13 @@ def listToRegexpStr(charList):
     rv = []
     for item in charList:
         if item[0] == item[1]:
-           rv.append(intToUnicodeStr(item[0]))
+           rv.append(unichar(item[0]))
         else:
-            rv.append(intToUnicodeStr(item[0]) + "-" + intToUnicodeStr(item[1]))
-    return "[%s]"%"|".join(rv)
+            rv.append(unichar(item[0]) + "-" + unichar(item[1]))
+    return "[%s]"%"".join(rv)
 
 def hexToInt(hex_str):
     return int(hex_str, 16)
-
-def intToUnicodeStr(intValue):
-    #There must be a better (non-evil) way to do this
-    return escapeRegexp(eval(r"u'\u%s'"%hex(intValue)[2:].rjust(4, "0")))
 
 def escapeRegexp(string):
     specialCharacters = (".", "^", "$", "*", "+", "?", "{", "}",
