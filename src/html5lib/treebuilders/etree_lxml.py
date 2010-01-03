@@ -277,7 +277,7 @@ class TreeBuilder(_base.TreeBuilder):
         publicId = token["publicId"]
         systemId = token["systemId"]
 
-        if not name or ihatexml.nonXmlBMPRegexp.search(name) or name[0] == '"':
+        if not name or ihatexml.nonXmlNameBMPRegexp.search(name) or name[0] == '"':
             warnings.warn("lxml cannot represent null or non-xml doctype", DataLossWarning)
 
         doctype = self.doctypeClass(name, publicId, systemId)
