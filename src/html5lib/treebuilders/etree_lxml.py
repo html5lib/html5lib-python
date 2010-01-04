@@ -203,12 +203,12 @@ class TreeBuilder(_base.TreeBuilder):
                 self._attributes = Attributes(self)
 
             def _setName(self, name):
-                self._name = filter.coerceElement(name)                
+                self._name = filter.coerceElement(name)
                 self._element.tag = self._getETreeTag(
                     self._name, self._namespace)
         
             def _getName(self):
-                return self._name
+                return filter.fromXmlName(self._name)
         
             name = property(_getName, _setName)
 
@@ -277,7 +277,7 @@ class TreeBuilder(_base.TreeBuilder):
         publicId = token["publicId"]
         systemId = token["systemId"]
 
-        if not name or ihatexml.nonXmlBMPRegexp.search(name) or name[0] == '"':
+        if not name or ihatexml.nonXmlNameBMPRegexp.search(name) or name[0] == '"':
             warnings.warn("lxml cannot represent null or non-xml doctype", DataLossWarning)
 
         doctype = self.doctypeClass(name, publicId, systemId)
