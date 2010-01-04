@@ -907,7 +907,7 @@ class HTMLTokenizer:
             self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
               "expected-attribute-value-but-got-right-bracket"})
             self.emitCurrentToken()
-        elif data in (u"=", u"<"):
+        elif data in (u"=", u"<", u"`"):
             self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
               "equals-in-unquoted-attribute-value"})
             self.currentToken["data"][-1][1] += data
@@ -968,8 +968,8 @@ class HTMLTokenizer:
               "eof-in-attribute-value-no-quotes"})
             self.emitCurrentToken()
         else:
-            self.currentToken["data"][-1][1] += data + self.stream.charsUntil( \
-              frozenset(("&", ">", "<", "=", "'", '"')) | spaceCharacters)
+            self.currentToken["data"][-1][1] += data + self.stream.charsUntil(
+              frozenset((u"&", u">", u'"', u"'", u"=", u"<", u"`")) | spaceCharacters)
         return True
 
     def afterAttributeValueState(self):
