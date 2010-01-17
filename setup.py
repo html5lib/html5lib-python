@@ -14,7 +14,7 @@ DOM, ElementTree and lxml tree formats as well as a
 simple custom format"""
 
 classifiers=[
-    'Development Status :: 5 - Stable',
+    'Development Status :: %(status)s',
     'Intended Audience :: Developers',
     'License :: OSI Approved :: MIT License',
     'Operating System :: OS Independent',
@@ -24,7 +24,7 @@ classifiers=[
     ]
 
 setup(name='html5lib',
-      version='1.0',
+      version='%(version)s',
       url='http://code.google.com/p/html5lib/',
       license="MIT License",
       description='HTML parser based on the HTML5 specifcation',
@@ -36,7 +36,5 @@ setup(name='html5lib',
           for name in os.listdir(os.path.join('src','html5lib'))
           if os.path.isdir(os.path.join('src','html5lib',name)) and
               not name.startswith('.')],
-      package_dir = {'html5lib': 'src/html5lib'},
-      test_suite = "tests.buildTestSuite",
-      tests_require = ['simplejson']
+      package_dir = {'html5lib': os.path.join('src', 'html5lib')},
       )

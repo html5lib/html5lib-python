@@ -9,9 +9,8 @@ import zipfile
 
 exclude = [".svn", "*.pyc", "*~", "*.orig", "*.patch", "__basedir__/utils",
            "__basedir__/setup_base.py", "*.prof", "#*", "__basedir__/build",
-           '__basedir__/tests/performance', '*.out',
-           '__basedir__/tests/testdata/*.html',
-           '__basedir__/tests/testdata/sites', '__basedir__/print-stats.py']
+           '__basedir__/tests', '*.out', '__basedir__/dist', 
+           '__basedir__/html5lib.egg-info', '__basedir__/print-stats.py']
 
 class Package(object):
 
@@ -23,20 +22,19 @@ class Package(object):
         self.inDir = os.path.abspath(inDir)
         self.outDir = os.path.abspath(outDir)
         self.exclude = self.getExcludeList()
-        print self.exclude
         self.fileList = self.getFileList()
         self.installDir = installDir
         self.outFiles = []
 
     def runall(self):
         self.copyTestData()
-        self.getFileList()
         self.copy()
+        self.makeInitFile()
         self.makeSetupFile()
         self.preprocess()
         #if self.test():
         self.makeZipFile()
-        #self.cleanup()
+        self.cleanup()
         
 
     def getExcludeList(self):
@@ -55,7 +53,7 @@ class Package(object):
             if not os.path.exists(outDir):
                 raise
             
-        inBaseDir = os.path.abspath(os.path.join(self.inDir, "../testdata"))
+        inBaseDir = os.path.abspath(os.path.join(self.inDir, "..", "testdata"))
         dirWalker = os.walk(inBaseDir)
         for (curDir, dirs, files) in dirWalker:
             outDir = os.path.join(self.inDir, "tests", "testdata", curDir[len(inBaseDir)+1:])
@@ -111,12 +109,20 @@ class Package(object):
                         "5":"5 - Production/Stable",
                         "6":"6 - Mature",
                         "7":"7 - Inactive"}
-        inFile = open(os.path.join(self.inDir, "setup_base.py"))
-        outFile = open(os.path.join(self.outDir, "setup.py"), "w")
+        inFile = open(os.path.join(self.outDir, "setup.py"))
         text = "".join(inFile.readlines())
+        inFile.close()
+        outFile = open(os.path.join(self.outDir, "setup.py"), "w")
         outFile.write(text%{"status":statusStrings[self.status],
                             "version":self.version})
-        
+
+    def makeInitFile(self):
+        inFile = open(os.path.join(self.outDir, "src", "html5lib", "__init__.py"))
+        text = "".join(inFile.readlines())
+        outFile = open(os.path.join(self.outDir, "src", "html5lib", "__init__.py"), 
+                       "w")
+        outFile.write(text%{"version":self.version})
+
     def copy(self):
         if not os.path.exists(self.outDir):
             os.mkdir(self.outDir)
