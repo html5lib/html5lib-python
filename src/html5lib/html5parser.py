@@ -1274,8 +1274,9 @@ class InBodyPhase(Phase):
         self.parser.phase = self.parser.phases["afterBody"]
 
     def endTagHtml(self, token):
-        self.endTagBody(impliedTagToken("body"))
-        if not self.parser.innerHTML:
+        #We repeat the test for the body end tag token being ignored here
+        if self.tree.elementInScope("body"):
+            self.endTagBody(impliedTagToken("body"))
             self.parser.phase.processEndTag(token)
 
     def endTagBlock(self, token):
