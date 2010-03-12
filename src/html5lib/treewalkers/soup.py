@@ -8,7 +8,7 @@ import _base
 
 class TreeWalker(_base.NonRecursiveTreeWalker):
     doctype_regexp = re.compile(
-        r'(?P<name>[^\s]*)(\s*PUBLIC\s*"(?P<publicId>.*)"\s*"(?P<systemId1>.*)"|\s*SYSTEM\s*"(?P<systemId2>.*)")?')
+        r'DOCTYPE\s+(?P<name>[^\s]*)(\s*PUBLIC\s*"(?P<publicId>.*)"\s*"(?P<systemId1>.*)"|\s*SYSTEM\s*"(?P<systemId2>.*)")?')
     def getNodeDetails(self, node):
         if isinstance(node, BeautifulSoup): # Document or DocumentFragment
             return (_base.DOCUMENT,)
@@ -26,6 +26,7 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             #been modified at all
             #We could just feed to it a html5lib tokenizer, I guess...
             assert m is not None, "DOCTYPE did not match expected format"
+
             name = m.group('name')
             publicId = m.group('publicId')
             if publicId is not None:

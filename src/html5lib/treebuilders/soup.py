@@ -151,12 +151,12 @@ class TreeBuilder(_base.TreeBuilder):
         systemId = token["systemId"]
 
         if publicId:
-            self.soup.insert(0, Declaration("%s PUBLIC \"%s\" \"%s\""%(name, publicId, systemId or "")))
+            self.soup.insert(0, Declaration("DOCTYPE %s PUBLIC \"%s\" \"%s\""%(name, publicId, systemId or "")))
         elif systemId:
-            self.soup.insert(0, Declaration("%s SYSTEM \"%s\""%
+            self.soup.insert(0, Declaration("DOCTYPE %s SYSTEM \"%s\""%
                                             (name, systemId)))
         else:
-            self.soup.insert(0, Declaration(name))
+            self.soup.insert(0, Declaration("DOCTYPE %s"%name))
     
     def elementClass(self, name, namespace):
         if namespace is not None:
@@ -188,7 +188,7 @@ def testSerializer(element):
     rv = []
     def serializeElement(element, indent=0):
         if isinstance(element, Declaration):
-            doctype_regexp = r'(?P<name>[^\s]*)( PUBLIC "(?P<publicId>.*)" "(?P<systemId1>.*)"| SYSTEM "(?P<systemId2>.*)")?'
+            doctype_regexp = r'DOCTYPE\s+(?P<name>[^\s]*)( PUBLIC "(?P<publicId>.*)" "(?P<systemId1>.*)"| SYSTEM "(?P<systemId2>.*)")?'
             m = re.compile(doctype_regexp).match(element.string)
             assert m is not None, "DOCTYPE did not match expected format"
             name = m.group('name')
