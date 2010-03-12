@@ -321,7 +321,11 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             if fullTree:
                 return self.document._element
             else:
-                return self.document._element.find("html")
+                if self.defaultNamespace is not None:
+                    return self.document._element.find(
+                        "{%s}html"%self.defaultNamespace)
+                else:
+                    return self.document._element.find("html")
         
         def getFragment(self):
             return _base.TreeBuilder.getFragment(self)._element

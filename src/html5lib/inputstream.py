@@ -158,7 +158,6 @@ class HTMLInputStream:
         if (self.charEncoding[0] is None):
             self.charEncoding = self.detectEncoding(parseMeta, chardet)
 
-
         self.reset()
 
     def reset(self):
