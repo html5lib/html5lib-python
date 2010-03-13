@@ -96,6 +96,9 @@ class FragmentWrapper(object):
     def __str__(self):
         return str(self.obj)
 
+    def __unicode__(self):
+        return unicode(self.obj)
+
     def __len__(self):
         return len(self.obj)
 
