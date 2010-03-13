@@ -2,8 +2,17 @@ import os
 import unittest
 from support import simplejson, html5lib_test_files
 
+import html5lib
 from html5lib import html5parser, serializer, constants
 from html5lib.treewalkers._base import TreeWalker
+
+optionals_loaded = []
+
+try:
+    from lxml import etree
+    optionals_loaded.append("lxml")
+except ImportError:
+    pass
 
 default_namespace = constants.namespaces["html"]
 
@@ -80,7 +89,32 @@ class TestCase(unittest.TestCase):
         return u''.join(serializer.XHTMLSerializer(**options).
                 serialize(JsonWalker(input),options.get("encoding",None)))
 
-def buildTestSuite():
+class LxmlTestCase(unittest.TestCase):
+    def setUp(self):
+        self.parser = etree.XMLParser(resolve_entities=False)
+        self.treewalker = html5lib.getTreeWalker("lxml")
+        self.serializer = serializer.HTMLSerializer()
+
+    def testEntityReplacement(self):
+        doc = """<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&beta;</html>"""
+        tree = etree.fromstring(doc, parser = self.parser).getroottree()
+        result = serializer.serialize(tree, tree="lxml", omit_optional_tags=False)
+        self.assertEquals(u"""<!DOCTYPE html SYSTEM "about:legacy-compat"><html>\u03B2</html>""", result)
+
+    def testEntityXML(self):
+        doc = """<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&gt;</html>"""
+        tree = etree.fromstring(doc, parser = self.parser).getroottree()
+        result = serializer.serialize(tree, tree="lxml", omit_optional_tags=False)
+        self.assertEquals(u"""<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&gt;</html>""", result)
+
+    def testEntityNoResolve(self):
+        doc = """<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&beta;</html>"""
+        tree = etree.fromstring(doc, parser = self.parser).getroottree()
+        result = serializer.serialize(tree, tree="lxml", omit_optional_tags=False,
+                                      resolve_entities=False)
+        self.assertEquals(u"""<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&beta;</html>""", result)
+
+def buildBasicTestSuite():
     for filename in html5lib_test_files('serializer', '*.test'):
         test_name = os.path.basename(filename).replace('.test','')
         tests = simplejson.load(file(filename))
@@ -91,6 +125,14 @@ def buildTestSuite():
                 test["description"], test["input"], test["expected"], xhtml,
                 test.get("options", {}))
     return unittest.TestLoader().loadTestsFromTestCase(TestCase)
+
+def buildTestSuite():
+    allTests = [buildBasicTestSuite()]
+    if "lxml" in optionals_loaded:
+        allTests.append(unittest.TestLoader().loadTestsFromTestCase(LxmlTestCase))
+
+    return unittest.TestSuite(allTests)
+                        
 
 def main():
     buildTestSuite()

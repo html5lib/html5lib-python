@@ -126,6 +126,9 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
         elif node.tag == etree.Comment:
             return _base.COMMENT, node.text
 
+        elif node.tag == etree.Entity:
+            return _base.ENTITY, node.text[1:-1] # strip &;
+
         else:
             #This is assumed to be an ordinary element
             match = tag_regexp.match(node.tag)

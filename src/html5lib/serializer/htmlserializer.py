@@ -8,7 +8,7 @@ import gettext
 _ = gettext.gettext
 
 from html5lib.constants import voidElements, booleanAttributes, spaceCharacters
-from html5lib.constants import rcdataElements
+from html5lib.constants import rcdataElements, entities, xmlEntities
 
 from xml.sax.saxutils import escape
 
@@ -54,26 +54,32 @@ def encode(text, encoding):
 
 class HTMLSerializer(object):
 
+    # attribute quoting options
     quote_attr_values = False
     quote_char = '"'
     use_best_quote_char = True
-    minimize_boolean_attributes = True
 
+    # tag syntax options
+    omit_optional_tags = True
+    minimize_boolean_attributes = True
     use_trailing_solidus = False
     space_before_trailing_solidus = True
+
+    # escaping options
     escape_lt_in_attrs = False
     escape_rcdata = False
+    resolve_entities = True
 
+    # miscellaneous options
     inject_meta_charset = True
     strip_whitespace = False
     sanitize = False
-    omit_optional_tags = True
 
     options = ("quote_attr_values", "quote_char", "use_best_quote_char",
           "minimize_boolean_attributes", "use_trailing_solidus",
           "space_before_trailing_solidus", "omit_optional_tags",
           "strip_whitespace", "inject_meta_charset", "escape_lt_in_attrs",
-          "escape_rcdata", 'use_trailing_solidus', "sanitize")
+          "escape_rcdata", "resolve_entities", "sanitize")
 
     def __init__(self, **kwargs):
         if kwargs.has_key('quote_char'):
@@ -213,6 +219,19 @@ class HTMLSerializer(object):
                 if encoding:
                     comment = comment.encode(encoding, unicode_encode_errors)
                 yield comment
+
+            elif type == "Entity":
+                name = token["name"]
+                key = name + ";"
+                if not key in entities:
+                    self.serializeError(_("Entity %s not recognized" % name))
+                if self.resolve_entities and key not in xmlEntities:
+                    data = entities[key]
+                else:
+                    data = u"&%s;" % name
+                if encoding:
+                    data = data.encode(encoding, unicode_encode_errors)
+                yield data
 
             else:
                 self.serializeError(token["data"])

@@ -64,6 +64,9 @@ class TreeWalker(object):
                 "systemId": systemId,
                 "correct": correct}
 
+    def entity(self, name):
+        return {"type": "Entity", "name": unicode(name)}
+
     def unknown(self, nodeType):
         return self.error(_("Unknown node type: ") + nodeType)
 
@@ -89,6 +92,7 @@ DOCTYPE = Node.DOCUMENT_TYPE_NODE
 TEXT = Node.TEXT_NODE
 ELEMENT = Node.ELEMENT_NODE
 COMMENT = Node.COMMENT_NODE
+ENTITY = Node.ENTITY_NODE
 UNKNOWN = "<#UNKNOWN#>"
 
 class NonRecursiveTreeWalker(TreeWalker):
@@ -132,6 +136,9 @@ class NonRecursiveTreeWalker(TreeWalker):
 
             elif type == COMMENT:
                 yield self.comment(details[0])
+
+            elif type == ENTITY:
+                yield self.entity(details[0])
 
             elif type == DOCUMENT:
                 hasChildren = True

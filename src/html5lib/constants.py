@@ -508,6 +508,8 @@ entitiesWindows1252 = (
     376    # 0x9F  0x0178  LATIN CAPITAL LETTER Y WITH DIAERESIS
 )
 
+xmlEntities = frozenset(('lt;', 'gt;', 'amp;', 'apos;', 'quot;'))
+
 entities = {
     "AElig;": u"\u00C6",
     "AElig": u"\u00C6",
