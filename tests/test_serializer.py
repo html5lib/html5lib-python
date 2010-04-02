@@ -132,7 +132,7 @@ def buildTestSuite():
         allTests.append(unittest.TestLoader().loadTestsFromTestCase(LxmlTestCase))
 
     return unittest.TestSuite(allTests)
-                        
+
 
 def main():
     buildTestSuite()

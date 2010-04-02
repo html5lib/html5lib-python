@@ -154,3 +154,22 @@ class deque(object):
         memo[id(self)] = result
         result.__init__(deepcopy(tuple(self), memo))
         return result
+
+#Some utility functions to dal with weirdness around UCS2 vs UCS4
+#python builds
+
+def encodingType():
+    if len() == 2:
+        return "UCS2"
+    else:
+        return "UCS4"
+
+def isSurrogatePair(data):   
+    return (len(data) == 2 and
+            ord(data[0]) >= 0xD800 and ord(data[0]) <= 0xDBFF and
+            ord(data[1]) >= 0xDC00 and ord(data[1]) <= 0xDFFF)
+
+def surrogatePairToCodepoint(data):
+    char_val = (0x10000 + (ord(data[0]) - 0xD800) * 0x400 + 
+                (ord(data[1]) - 0xDC00))
+    return char_val

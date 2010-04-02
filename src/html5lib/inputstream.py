@@ -5,6 +5,7 @@ import sys
 
 from constants import EOF, spaceCharacters, asciiLetters, asciiUppercase
 from constants import encodings, ReparseException
+import utils
 
 #Non-unicode versions of constants for use in the pre-parser
 spaceCharactersBytes = frozenset([str(item) for item in spaceCharacters])
@@ -381,14 +382,9 @@ class HTMLInputStream:
             codepoint = ord(match.group())
             pos = match.start()
             #Pretty sure there should be endianness issues here
-            if (codepoint >= 0xD800 and codepoint <= 0xDBFF and
-                pos < len(data) - 1 and
-                ord(data[pos + 1]) >= 0xDC00 and
-                ord(data[pos + 1]) <= 0xDFFF):
+            if utils.isSurrogatePair(data[pos:pos+2]):
                 #We have a surrogate pair!
-                #From a perl manpage
-                char_val = (0x10000 + (codepoint - 0xD800) * 0x400 + 
-                            (ord(data[pos + 1]) - 0xDC00))
+                char_val = utils.surrogatePairToCodepoint(data[pos:pos+2])
                 if char_val in non_bmp_invalid_codepoints:
                     self.errors.append("invalid-codepoint")
                 skip = True

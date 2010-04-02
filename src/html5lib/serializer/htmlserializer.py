@@ -9,7 +9,7 @@ _ = gettext.gettext
 
 from html5lib.constants import voidElements, booleanAttributes, spaceCharacters
 from html5lib.constants import rcdataElements, entities, xmlEntities
-
+from html5lib import utils
 from xml.sax.saxutils import escape
 
 spaceCharacters = u"".join(spaceCharacters)
@@ -27,20 +27,33 @@ else:
     for k, v in entities.items():
         if v != "&" and encode_entity_map.get(v) != k.lower():
             # prefer &lt; over &LT; and similarly for &amp;, &gt;, etc.
-            encode_entity_map[v] = k
+            encode_entity_map[ord(v)] = k
 
     def htmlentityreplace_errors(exc):
         if isinstance(exc, (UnicodeEncodeError, UnicodeTranslateError)):
             res = []
-            for c in exc.object[exc.start:exc.end]:
-                e = encode_entity_map.get(c)
+            codepoints = []
+            skip = False
+            for i, c in enumerate(exc.object[exc.start:exc.end]):
+                if skip:
+                    skip = False
+                    continue
+                index = i + exc.start
+                if utils.isSurrogatePair(exc.object[index:min([exc.end, index+2])]):
+                    codepoint = utils.surrogatePairToCodepoint(exc.object[index:index+2])
+                    skip = True
+                else:
+                    codepoint = ord(c)
+                codepoints.append(codepoint)
+            for cp in codepoints:
+                e = encode_entity_map.get(cp)
                 if e:
                     res.append("&")
                     res.append(e)
                     if not e.endswith(";"):
                         res.append(";")
                 else:
-                    res.append(c.encode(exc.encoding, "xmlcharrefreplace"))
+                    res.append("&#x%s;"%(hex(cp)[2:]))
             return (u"".join(res), exc.end)
         else:
             return xmlcharrefreplace_errors(exc)
