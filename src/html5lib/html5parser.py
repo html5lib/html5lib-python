@@ -1296,7 +1296,7 @@ class InBodyPhase(Phase):
     def endTagForm(self, token):
         node = self.tree.formPointer
         self.tree.formPointer = None
-        if node is None or not self.tree.elementInScope(node):
+        if node is None or not self.tree.elementInScope(node.name):
             self.parser.parseError("unexpected-end-tag",
                                    {"name":"form"})
         else:
@@ -1304,7 +1304,7 @@ class InBodyPhase(Phase):
             if self.tree.openElements[-1].name != node:
                 self.parser.parseError("end-tag-too-early-ignored",
                                        {"name": "form"})
-                self.tree.openElements.remove(node)
+            self.tree.openElements.remove(node)
 
     def endTagListItem(self, token):
         if token["name"] == "li":
