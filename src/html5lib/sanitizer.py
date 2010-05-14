@@ -7,15 +7,19 @@ from constants import tokenTypes
 class HTMLSanitizerMixin(object):
     """ sanitization of XHTML+MathML+SVG and of inline style attributes."""
 
-    acceptable_elements = ['a', 'abbr', 'acronym', 'address', 'area', 'b',
-        'big', 'blockquote', 'br', 'button', 'caption', 'center', 'cite',
-        'code', 'col', 'colgroup', 'dd', 'del', 'dfn', 'dir', 'div', 'dl', 'dt',
-        'em', 'fieldset', 'font', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-        'hr', 'i', 'img', 'input', 'ins', 'kbd', 'label', 'legend', 'li', 'map',
-        'menu', 'ol', 'optgroup', 'option', 'p', 'pre', 'q', 's', 'samp',
-        'select', 'small', 'span', 'strike', 'strong', 'sub', 'sup', 'table',
-        'tbody', 'td', 'textarea', 'tfoot', 'th', 'thead', 'tr', 'tt', 'u',
-        'ul', 'var']
+    acceptable_elements = ['a', 'abbr', 'acronym', 'address', 'area',
+        'article', 'aside', 'audio', 'b', 'big', 'blockquote', 'br', 'button',
+        'canvas', 'caption', 'center', 'cite', 'code', 'col', 'colgroup',
+        'command', 'datagrid', 'datalist', 'dd', 'del', 'details', 'dfn',
+        'dialog', 'dir', 'div', 'dl', 'dt', 'em', 'event-source', 'fieldset',
+        'figure', 'footer', 'font', 'form', 'header', 'h1', 'h2', 'h3', 'h4',
+        'h5', 'h6', 'hr', 'i', 'img', 'input', 'ins', 'keygen', 'kbd',
+        'label', 'legend', 'li', 'm', 'map', 'menu', 'meter', 'multicol',
+        'nav', 'nextid', 'ol', 'output', 'optgroup', 'option', 'p', 'pre',
+        'progress', 'q', 's', 'samp', 'section', 'select', 'small', 'sound',
+        'source', 'spacer', 'span', 'strike', 'strong', 'sub', 'sup', 'table',
+        'tbody', 'td', 'textarea', 'time', 'tfoot', 'th', 'thead', 'tr', 'tt',
+        'u', 'ul', 'var', 'video']
       
     mathml_elements = ['maction', 'math', 'merror', 'mfrac', 'mi',
         'mmultiscripts', 'mn', 'mo', 'mover', 'mpadded', 'mphantom',
@@ -24,24 +28,35 @@ class HTMLSanitizerMixin(object):
         'munderover', 'none']
       
     svg_elements = ['a', 'animate', 'animateColor', 'animateMotion',
-        'animateTransform', 'circle', 'defs', 'desc', 'ellipse', 'font-face',
-        'font-face-name', 'font-face-src', 'g', 'glyph', 'hkern', 
+        'animateTransform', 'clipPath', 'circle', 'defs', 'desc', 'ellipse',
+        'font-face', 'font-face-name', 'font-face-src', 'g', 'glyph', 'hkern',
         'linearGradient', 'line', 'marker', 'metadata', 'missing-glyph',
         'mpath', 'path', 'polygon', 'polyline', 'radialGradient', 'rect',
         'set', 'stop', 'svg', 'switch', 'text', 'title', 'tspan', 'use']
         
     acceptable_attributes = ['abbr', 'accept', 'accept-charset', 'accesskey',
-        'action', 'align', 'alt', 'axis', 'border', 'cellpadding',
-        'cellspacing', 'char', 'charoff', 'charset', 'checked', 'cite', 'class',
-        'clear', 'cols', 'colspan', 'color', 'compact', 'coords', 'datetime',
-        'dir', 'disabled', 'enctype', 'for', 'frame', 'headers', 'height',
-        'href', 'hreflang', 'hspace', 'id', 'ismap', 'label', 'lang',
-        'longdesc', 'maxlength', 'media', 'method', 'multiple', 'name',
-        'nohref', 'noshade', 'nowrap', 'prompt', 'readonly', 'rel', 'rev',
-        'rows', 'rowspan', 'rules', 'scope', 'selected', 'shape', 'size',
-        'span', 'src', 'start', 'style', 'summary', 'tabindex', 'target',
-        'title', 'type', 'usemap', 'valign', 'value', 'vspace', 'width',
-        'xml:lang']
+        'action', 'align', 'alt', 'autocomplete', 'autofocus', 'axis',
+        'background', 'balance', 'bgcolor', 'bgproperties', 'border',
+        'bordercolor', 'bordercolordark', 'bordercolorlight', 'bottompadding',
+        'cellpadding', 'cellspacing', 'ch', 'challenge', 'char', 'charoff',
+        'choff', 'charset', 'checked', 'cite', 'class', 'clear', 'color',
+        'cols', 'colspan', 'compact', 'contenteditable', 'controls', 'coords',
+        'data', 'datafld', 'datapagesize', 'datasrc', 'datetime', 'default',
+        'delay', 'dir', 'disabled', 'draggable', 'dynsrc', 'enctype', 'end',
+        'face', 'for', 'form', 'frame', 'galleryimg', 'gutter', 'headers',
+        'height', 'hidefocus', 'hidden', 'high', 'href', 'hreflang', 'hspace',
+        'icon', 'id', 'inputmode', 'ismap', 'keytype', 'label', 'leftspacing',
+        'lang', 'list', 'longdesc', 'loop', 'loopcount', 'loopend',
+        'loopstart', 'low', 'lowsrc', 'max', 'maxlength', 'media', 'method',
+        'min', 'multiple', 'name', 'nohref', 'noshade', 'nowrap', 'open',
+        'optimum', 'pattern', 'ping', 'point-size', 'prompt', 'pqg',
+        'radiogroup', 'readonly', 'rel', 'repeat-max', 'repeat-min',
+        'replace', 'required', 'rev', 'rightspacing', 'rows', 'rowspan',
+        'rules', 'scope', 'selected', 'shape', 'size', 'span', 'src', 'start',
+        'step', 'style', 'summary', 'suppress', 'tabindex', 'target',
+        'template', 'title', 'toppadding', 'type', 'unselectable', 'usemap',
+        'urn', 'valign', 'value', 'variable', 'volume', 'vspace', 'vrml',
+        'width', 'wrap', 'xml:lang']
 
     mathml_attributes = ['actiontype', 'align', 'columnalign', 'columnalign',
         'columnalign', 'columnlines', 'columnspacing', 'columnspan', 'depth',
@@ -54,43 +69,45 @@ class HTMLSanitizerMixin(object):
         'xlink:type', 'xmlns', 'xmlns:xlink']
   
     svg_attributes = ['accent-height', 'accumulate', 'additive', 'alphabetic',
-         'arabic-form', 'ascent', 'attributeName', 'attributeType',
-         'baseProfile', 'bbox', 'begin', 'by', 'calcMode', 'cap-height',
-         'class', 'color', 'color-rendering', 'content', 'cx', 'cy', 'd', 'dx',
-         'dy', 'descent', 'display', 'dur', 'end', 'fill', 'fill-opacity',
-         'fill-rule', 'font-family', 'font-size', 'font-stretch', 'font-style',
-         'font-variant', 'font-weight', 'from', 'fx', 'fy', 'g1', 'g2',
-         'glyph-name', 'gradientUnits', 'hanging', 'height', 'horiz-adv-x',
-         'horiz-origin-x', 'id', 'ideographic', 'k', 'keyPoints',
-         'keySplines', 'keyTimes', 'lang', 'marker-end', 'marker-mid',
-         'marker-start', 'markerHeight', 'markerUnits', 'markerWidth',
-         'mathematical', 'max', 'min', 'name', 'offset', 'opacity', 'orient',
-         'origin', 'overline-position', 'overline-thickness', 'panose-1',
-         'path', 'pathLength', 'points', 'preserveAspectRatio', 'r', 'refX',
-         'refY', 'repeatCount', 'repeatDur', 'requiredExtensions',
-         'requiredFeatures', 'restart', 'rotate', 'rx', 'ry', 'slope',
-         'stemh', 'stemv', 'stop-color', 'stop-opacity',
-         'strikethrough-position', 'strikethrough-thickness', 'stroke',
-         'stroke-dasharray', 'stroke-dashoffset', 'stroke-linecap',
-         'stroke-linejoin', 'stroke-miterlimit', 'stroke-opacity',
-         'stroke-width', 'systemLanguage', 'target', 'text-anchor', 'to',
-         'transform', 'type', 'u1', 'u2', 'underline-position',
-         'underline-thickness', 'unicode', 'unicode-range', 'units-per-em',
-         'values', 'version', 'viewBox', 'visibility', 'width', 'widths', 'x',
-         'x-height', 'x1', 'x2', 'xlink:actuate', 'xlink:arcrole',
-         'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title',
-         'xlink:type', 'xml:base', 'xml:lang', 'xml:space', 'xmlns',
-         'xmlns:xlink', 'y', 'y1', 'y2', 'zoomAndPan']
+        'arabic-form', 'ascent', 'attributeName', 'attributeType',
+        'baseProfile', 'bbox', 'begin', 'by', 'calcMode', 'cap-height',
+        'class', 'clip-path', 'color', 'color-rendering', 'content', 'cx',
+        'cy', 'd', 'dx', 'dy', 'descent', 'display', 'dur', 'end', 'fill',
+        'fill-opacity', 'fill-rule', 'font-family', 'font-size',
+        'font-stretch', 'font-style', 'font-variant', 'font-weight', 'from',
+        'fx', 'fy', 'g1', 'g2', 'glyph-name', 'gradientUnits', 'hanging',
+        'height', 'horiz-adv-x', 'horiz-origin-x', 'id', 'ideographic', 'k',
+        'keyPoints', 'keySplines', 'keyTimes', 'lang', 'marker-end',
+        'marker-mid', 'marker-start', 'markerHeight', 'markerUnits',
+        'markerWidth', 'mathematical', 'max', 'min', 'name', 'offset',
+        'opacity', 'orient', 'origin', 'overline-position',
+        'overline-thickness', 'panose-1', 'path', 'pathLength', 'points',
+        'preserveAspectRatio', 'r', 'refX', 'refY', 'repeatCount',
+        'repeatDur', 'requiredExtensions', 'requiredFeatures', 'restart',
+        'rotate', 'rx', 'ry', 'slope', 'stemh', 'stemv', 'stop-color',
+        'stop-opacity', 'strikethrough-position', 'strikethrough-thickness',
+        'stroke', 'stroke-dasharray', 'stroke-dashoffset', 'stroke-linecap',
+        'stroke-linejoin', 'stroke-miterlimit', 'stroke-opacity',
+        'stroke-width', 'systemLanguage', 'target', 'text-anchor', 'to',
+        'transform', 'type', 'u1', 'u2', 'underline-position',
+        'underline-thickness', 'unicode', 'unicode-range', 'units-per-em',
+        'values', 'version', 'viewBox', 'visibility', 'width', 'widths', 'x',
+        'x-height', 'x1', 'x2', 'xlink:actuate', 'xlink:arcrole',
+        'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type',
+        'xml:base', 'xml:lang', 'xml:space', 'xmlns', 'xmlns:xlink', 'y',
+        'y1', 'y2', 'zoomAndPan']
 
     attr_val_is_uri = ['href', 'src', 'cite', 'action', 'longdesc',
-         'xlink:href', 'xml:base']
+        'xlink:href', 'xml:base']
 
     svg_attr_val_allows_ref = ['clip-path', 'color-profile', 'cursor', 'fill',
-      'filter', 'marker', 'marker-start', 'marker-mid', 'marker-end', 'mask', 'stroke']
+        'filter', 'marker', 'marker-start', 'marker-mid', 'marker-end',
+        'mask', 'stroke']
 
-    svg_allow_local_href = ['altGlyph', 'animate', 'animateColor', 'animateMotion',
-      'animateTransform', 'cursor', 'feImage', 'filter', 'linearGradient', 'pattern',
-      'radialGradient', 'textpath', 'tref', 'set', 'use']
+    svg_allow_local_href = ['altGlyph', 'animate', 'animateColor',
+        'animateMotion', 'animateTransform', 'cursor', 'feImage', 'filter',
+        'linearGradient', 'pattern', 'radialGradient', 'textpath', 'tref',
+        'set', 'use']
   
     acceptable_css_properties = ['azimuth', 'background-color',
         'border-bottom-color', 'border-collapse', 'border-color',
@@ -140,7 +157,13 @@ class HTMLSanitizerMixin(object):
     #   sanitize_html('<a href="javascript: sucker();">Click here for $100</a>')
     #    => <a>Click here for $100</a>
     def sanitize_token(self, token):
-        if token["type"] in (tokenTypes["StartTag"], tokenTypes["EndTag"], 
+
+        # accommodate filters which use token_type differently
+        token_type = token["type"]
+        if token_type in tokenTypes.keys():
+          token_type = tokenTypes[token_type]
+
+        if token_type in (tokenTypes["StartTag"], tokenTypes["EndTag"], 
                              tokenTypes["EmptyTag"]):
             if token["name"] in self.allowed_elements:
                 if token.has_key("data"):
@@ -172,19 +195,24 @@ class HTMLSanitizerMixin(object):
                     token["data"] = [[name,val] for name,val in attrs.items()]
                 return token
             else:
-                if token["type"] == tokenTypes["EndTag"]:
+                if token_type == tokenTypes["EndTag"]:
                     token["data"] = "</%s>" % token["name"]
                 elif token["data"]:
                     attrs = ''.join([' %s="%s"' % (k,escape(v)) for k,v in token["data"]])
                     token["data"] = "<%s%s>" % (token["name"],attrs)
                 else:
                     token["data"] = "<%s>" % token["name"]
-                if token["selfClosing"]:
+                if token.get("selfClosing"):
                     token["data"]=token["data"][:-1] + "/>"
-                token["type"] = tokenTypes["Characters"]
+
+                if token["type"] in tokenTypes.keys():
+                    token["type"] = "Characters"
+                else:
+                    token["type"] = tokenTypes["Characters"]
+
                 del token["name"]
                 return token
-        elif token["type"] == tokenTypes["Comment"]:
+        elif token_type == tokenTypes["Comment"]:
             pass
         else:
             return token
