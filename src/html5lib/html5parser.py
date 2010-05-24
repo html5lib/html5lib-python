@@ -14,6 +14,18 @@ except:
             if element:
                 return True
         return False
+        
+try:
+    "abc".startswith(("a", "b"))
+    def startswithany(str, prefixes):
+        return str.startswith(prefixes)
+except:
+    # Python 2.4 doesn't accept a tuple as argument to string startswith
+    def startswithany(str, prefixes):
+        for prefix in prefixes:
+            if str.startswith(prefix):
+                return True
+        return False
 
 import sys
 
@@ -485,7 +497,7 @@ class InitialPhase(Phase):
             publicId = publicId.translate(asciiUpper2Lower)
 
         if (not correct or token["name"] != "html"
-            or publicId.startswith( 
+            or startswithany(publicId,
             ("+//silmaril//dtd html pro v0r11 19970101//",
              "-//advasoft ltd//dtd html 3.0 aswedit + extensions//",
              "-//as//dtd html 3.0 aswedit + extensions//",
@@ -545,16 +557,16 @@ class InitialPhase(Phase):
                 ("-//w3o//dtd w3 html strict 3.0//en//",
                  "-/w3c/dtd html 4.0 transitional/en",
                  "html")
-            or publicId.startswith(
+            or startswithany(publicId,
                 ("-//w3c//dtd html 4.01 frameset//",
                  "-//w3c//dtd html 4.01 transitional//")) and 
                 systemId == None
             or systemId and systemId.lower() == "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd"):
             self.parser.compatMode = "quirks"
-        elif (publicId.startswith(
+        elif (startswithany(publicId,
                 ("-//w3c//dtd xhtml 1.0 frameset//",
                  "-//w3c//dtd xhtml 1.0 transitional//"))
-              or publicId.startswith(
+              or startswithany(publicId,
                   ("-//w3c//dtd html 4.01 frameset//",
                    "-//w3c//dtd html 4.01 transitional//")) and 
                   systemId != None):
