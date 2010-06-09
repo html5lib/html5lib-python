@@ -10,7 +10,7 @@ import html5lib
 f = open("my_document.html")
 tree = html5lib.parse(f) 
 """
-__version__ = "%(version)s"
+__version__ = "0.95-dev"
 from html5parser import HTMLParser, parse, parseFragment
 from treebuilders import getTreeBuilder
 from treewalkers import getTreeWalker

@@ -32,6 +32,8 @@ the various methods.
 
 treeBuilderCache = {}
 
+import sys
+
 def getTreeBuilder(treeType, implementation=None, **kwargs):
     """Get a TreeBuilder class for various types of tree with built-in support
     
