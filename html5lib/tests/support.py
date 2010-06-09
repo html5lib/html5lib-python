@@ -2,20 +2,23 @@ import os
 import sys
 import glob
 
-#Allow us to import the parent module
-os.chdir(os.path.split(os.path.abspath(__file__))[0])
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
-
 import html5lib
 from html5lib import html5parser, treebuilders
 
-#Define the location of the tests as this changes in release versions
-#RELEASE remove
-test_dir = os.path.join(os.path.pardir,os.path.pardir,'testdata')
-#END RELEASE
-#RELEASE add
-#test_dir = './testdata'
-#END RELEASE
+base_path = os.path.split(__file__)[0]
+if os.path.exists(os.path.join(base_path, 'testdata')):
+    #release
+    test_dir = os.path.join(base_path, 'testdata')
+else:
+    #development
+    test_dir = os.path.abspath(
+        os.path.join(base_path,
+                     os.path.pardir, os.path.pardir,
+                     os.path.pardir, 'testdata'))
+    assert os.path.exists(test_dir), "Test data not found"
+
+del base_path
+
 import simplejson
 
 #Build a dict of avaliable trees
