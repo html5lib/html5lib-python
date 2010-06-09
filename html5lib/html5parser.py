@@ -28,6 +28,7 @@ except:
         return False
 
 import sys
+import types
 
 import inputstream
 import tokenizer
@@ -37,14 +38,18 @@ from treebuilders._base import Marker
 from treebuilders import simpletree
 
 import utils
+import constants
 from constants import spaceCharacters, asciiUpper2Lower
 from constants import scopingElements, formattingElements, specialElements
 from constants import headingElements, tableInsertModeElements
 from constants import cdataElements, rcdataElements, voidElements
 from constants import tokenTypes, ReparseException, namespaces
 
+debug_log = True
+
 def parse(doc, treebuilder="simpletree", encoding=None, 
           namespaceHTMLElements=True):
+    """Parse a string or file-like object into a tree"""
     tb = treebuilders.getTreeBuilder(treebuilder)
     p = HTMLParser(tb, namespaceHTMLElements=namespaceHTMLElements)
     return p.parse(doc, encoding=encoding)
@@ -54,6 +59,17 @@ def parseFragment(doc, container="div", treebuilder="simpletree", encoding=None,
     tb = treebuilders.getTreeBuilder(treebuilder)
     p = HTMLParser(tb, namespaceHTMLElements=namespaceHTMLElements)
     return p.parseFragment(doc, container=container, encoding=encoding)
+
+def method_decorator_metaclass(function):
+    class Decorated(type):
+        def __new__(meta, classname, bases, classDict):
+            for attributeName, attribute in classDict.iteritems():
+                if type(attribute) == types.FunctionType:
+                    attribute = function(attribute)
+
+                classDict[attributeName] = attribute
+            return  type.__new__(meta, classname, bases, classDict)
+    return Decorated
 
 class HTMLParser(object):
     """HTML parser. Generates a tree structure from a stream of (possibly
@@ -129,6 +145,7 @@ class HTMLParser(object):
         self.tree.reset()
         self.firstStartTag = False
         self.errors = []
+        self.log = [] #only used with debug mode
         # "quirks" / "limited quirks" / "no quirks"
         self.compatMode = "no quirks"
 
@@ -420,6 +437,31 @@ class HTMLParser(object):
 
         self.phase = self.phases["text"]
 
+def log(function):
+    """Logger that records which phase processes each token"""
+    type_names = dict((value, key) for key, value in 
+                      constants.tokenTypes.iteritems())
+    def wrapped(self, *args, **kwargs):
+        if function.__name__ != "__init__" and len(args) > 0:
+            token = args[0]
+            try:
+                info = {"type":type_names[token['type']]}
+            except:
+                print token
+                raise
+            if token['type'] in constants.tagTokenTypes:
+                info["name"] = token['name']
+
+            self.parser.log.append((self.parser.tokenizer.state.__name__,
+                                    self.parser.phase.__class__.__name__, 
+                                    self.__class__.__name__, 
+                                    function.__name__, 
+                                    info))
+            return function(self, *args, **kwargs)
+        else:
+            return function(self, *args, **kwargs)
+    return wrapped
+
 class Phase(object):
     """Base class for helper object that implements each phase of processing
     """
@@ -433,6 +475,9 @@ class Phase(object):
     #   - startTag* methods
     # * EndTag
     #   - endTag* methods
+
+    if debug_log:
+        __metaclass__ = method_decorator_metaclass(log)
 
     def __init__(self, parser, tree):
         self.parser = parser
@@ -1008,7 +1053,7 @@ class InBodyPhase(Phase):
             self.parser.parseError(u"unexpected-start-tag", {"name": "form"})
         else:
             if self.tree.elementInScope("p"):
-                self.endTagP("p")
+                self.endTagP(impliedTagToken("p"))
             self.tree.insertElement(token)
             self.tree.formPointer = self.tree.openElements[-1]
 
@@ -1831,7 +1876,7 @@ class InColumnGroupPhase(Phase):
             return
         else:
             ignoreEndTag = self.ignoreEndTagColgroup()
-            self.endTagColgroup("colgroup")
+            self.endTagColgroup(impliedTagToken("colgroup"))
             if not ignoreEndTag:
                 self.parser.phase.processEOF()
 
@@ -1847,7 +1892,7 @@ class InColumnGroupPhase(Phase):
 
     def startTagOther(self, token):
         ignoreEndTag = self.ignoreEndTagColgroup()
-        self.endTagColgroup("colgroup")
+        self.endTagColgroup(impliedTagToken("colgroup"))
         if not ignoreEndTag:
             self.parser.phase.processStartTag(token)
 
@@ -1865,7 +1910,7 @@ class InColumnGroupPhase(Phase):
 
     def endTagOther(self, token):
         ignoreEndTag = self.ignoreEndTagColgroup()
-        self.endTagColgroup("colgroup")
+        self.endTagColgroup(impliedTagToken("colgroup"))
         if not ignoreEndTag:
             self.parser.phase.processEndTag(token)
 
@@ -2016,7 +2061,7 @@ class InRowPhase(Phase):
 
     def startTagTableOther(self, token):
         ignoreEndTag = self.ignoreEndTagTr()
-        self.endTagTr("tr")
+        self.endTagTr(impliedTagToken("tr"))
         # XXX how are we sure it's always ignored in the innerHTML case?
         if not ignoreEndTag:
             self.parser.phase.processStartTag(token)
@@ -2036,7 +2081,7 @@ class InRowPhase(Phase):
 
     def endTagTable(self, token):
         ignoreEndTag = self.ignoreEndTagTr()
-        self.endTagTr("tr")
+        self.endTagTr(impliedTagToken("tr"))
         # Reprocess the current tag if the tr end tag was not ignored
         # XXX how are we sure it's always ignored in the innerHTML case?
         if not ignoreEndTag:
@@ -2044,7 +2089,7 @@ class InRowPhase(Phase):
 
     def endTagTableRowGroup(self, token):
         if self.tree.elementInScope(token["name"], variant="table"):
-            self.endTagTr("tr")
+            self.endTagTr(impliedTagToken("tr"))
             self.parser.phase.processEndTag(token)
         else:
             # innerHTML case
@@ -2187,12 +2232,12 @@ class InSelectPhase(Phase):
 
     def startTagSelect(self, token):
         self.parser.parseError("unexpected-select-in-select")
-        self.endTagSelect("select")
+        self.endTagSelect(impliedTagToken("select"))
 
     def startTagInput(self, token):
         self.parser.parseError("unexpected-input-in-select")
         if self.tree.elementInScope("select", variant="table"):
-            self.endTagSelect("select")
+            self.endTagSelect(impliedTagToken("select"))
             self.parser.phase.processStartTag(token)
 
     def startTagOther(self, token):

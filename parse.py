@@ -1,17 +1,13 @@
 #!/usr/bin/env python
 """usage: %prog [options] filename
 
-Parse a document to a simpletree tree, with optional profiling
+Parse a document to a tree, with optional profiling
 """
-#RELEASE move ./examples/
 
 import sys
 import os
 from optparse import OptionParser
 
-#RELEASE remove
-sys.path.insert(0,os.path.abspath(os.path.join(__file__,'../src')))
-#END RELEASE
 from html5lib import html5parser, sanitizer
 from html5lib.tokenizer import HTMLTokenizer
 from html5lib import treebuilders, serializer, treewalkers
@@ -52,6 +48,8 @@ def parse():
     else:
         tokenizer = HTMLTokenizer
 
+    if opts.log:
+        html5parser.debug_log = True
 
     p = html5parser.HTMLParser(tree=treebuilder, tokenizer=tokenizer)
 
@@ -87,10 +85,16 @@ def parse():
 def printOutput(parser, document, opts):
     if opts.encoding:
         print "Encoding:", parser.tokenizer.stream.charEncoding
+
+    if opts.log:
+        for item in parser.log:
+            print item
+
     if opts.xml:
         sys.stdout.write(document.toxml("utf-8"))
     elif opts.tree:
-        if not hasattr(document,'__getitem__'): document = [document]
+        if not hasattr(document,'__getitem__'): 
+            document = [document]
         for fragment in document:
             print parser.tree.testSerializer(fragment).encode("utf-8")
     elif opts.hilite:
@@ -198,6 +202,9 @@ def getOptParser():
 
     parser.add_option("", "--sanitize", action="store_true", default=False,
                       dest="sanitize", help="sanitize")
+
+    parser.add_option("-l", "--log", action="store_true", default=False,
+                      dest="log", help="log state transitions")
 
     return parser
 
