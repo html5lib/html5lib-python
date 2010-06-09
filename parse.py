@@ -98,8 +98,13 @@ def printOutput(parser, document, opts):
     elif opts.html:
         kwargs = {}
         for opt in serializer.HTMLSerializer.options:
-            kwargs[opt] = getattr(opts,opt)
-        if not kwargs['quote_char']: del kwargs['quote_char']
+            try:
+                kwargs[opt] = getattr(opts,opt)
+            except:
+                pass
+        if not kwargs['quote_char']: 
+            del kwargs['quote_char']
+
         tokens = treewalkers.getTreeWalker(opts.treebuilder)(document)
         for text in serializer.HTMLSerializer(**kwargs).serialize(tokens, encoding='utf-8'):
             sys.stdout.write(text)
