@@ -5,8 +5,12 @@ import cStringIO
 import warnings
 import re
 
-from support import simplejson, html5lib_test_files
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
+from support import html5lib_test_files
 from html5lib.tokenizer import HTMLTokenizer
 from html5lib import constants
 
@@ -82,7 +86,7 @@ def normalizeTokens(tokens):
     for i, token in enumerate(tokens):
         if token[0] == u'ParseError':
             tokens[i] = token[0]
-    return simplejson.loads(simplejson.dumps(tokens))
+    return json.loads(json.dumps(tokens))
 
 def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder):
     """Test whether the test has passed or failed
@@ -158,7 +162,7 @@ def capitalize(s):
 def buildTestSuite():
     for filename in html5lib_test_files('tokenizer', '*.test'):
         print filename
-        tests = simplejson.load(file(filename))
+        tests = json.load(file(filename))
         testName = os.path.basename(filename).replace(".test","")
         if 'tests' in tests:
             for index,test in enumerate(tests['tests']):

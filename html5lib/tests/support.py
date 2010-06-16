@@ -19,8 +19,6 @@ else:
 
 del base_path
 
-import simplejson
-
 #Build a dict of avaliable trees
 treeTypes = {"simpletree":treebuilders.getTreeBuilder("simpletree"),
              "DOM":treebuilders.getTreeBuilder("dom")}
