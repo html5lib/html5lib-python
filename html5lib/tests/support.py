@@ -3,17 +3,6 @@ import sys
 import glob
 
 base_path = os.path.split(__file__)[0]
-try:
-    import html5lib
-except ImportError:
-    #development
-    sys.path.insert(0, os.path.abspath(os.path.join(base_path, 
-                                                    os.path.pardir,
-                                                    os.path.pardir)))
-    import html5lib
-
-from html5lib import html5parser, treebuilders
-
 
 if os.path.exists(os.path.join(base_path, 'testdata')):
     #release
@@ -25,7 +14,13 @@ else:
                      os.path.pardir, os.path.pardir,
                      os.path.pardir, 'testdata'))
     assert os.path.exists(test_dir), "Test data not found"
+    #import the development html5lib
+    sys.path.insert(0, os.path.abspath(os.path.join(base_path, 
+                                                    os.path.pardir,
+                                                    os.path.pardir)))
 
+import html5lib
+from html5lib import html5parser, treebuilders
 del base_path
 
 import simplejson
