@@ -1196,7 +1196,7 @@ class InBodyPhase(Phase):
         if "prompt" in token["data"]:
             prompt = token["data"]["prompt"]
         else:
-            prompt = "This is a searchable index. Insert your search keywords here: "
+            prompt = "This is a searchable index. Enter search keywords: "
         self.processCharacters(
             {"type":tokenTypes["Characters"], "data":prompt})
         attributes = token["data"].copy()
