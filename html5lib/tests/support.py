@@ -23,8 +23,6 @@ import html5lib
 from html5lib import html5parser, treebuilders
 del base_path
 
-import simplejson
-
 #Build a dict of avaliable trees
 treeTypes = {"simpletree":treebuilders.getTreeBuilder("simpletree"),
              "DOM":treebuilders.getTreeBuilder("dom")}

@@ -1538,9 +1538,10 @@ class InBodyPhase(Phase):
     def endTagOther(self, token):
         for node in self.tree.openElements[::-1]:
             if node.name == token["name"]:
-                self.tree.generateImpliedEndTags()
+                self.tree.generateImpliedEndTags(exclude=token["name"])
                 if self.tree.openElements[-1].name != token["name"]:
                     self.parser.parseError("unexpected-end-tag", {"name": token["name"]})
+                print self.tree.openElements
                 while self.tree.openElements.pop() != node:
                     pass
                 break
