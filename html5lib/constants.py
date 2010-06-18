@@ -281,7 +281,6 @@ namespaces = {
 
 scopingElements = frozenset((
     (namespaces["html"], "applet"),
-    (namespaces["html"], "button"),
     (namespaces["html"], "caption"),
     (namespaces["html"], "html"),
     (namespaces["html"], "marquee"),
@@ -320,20 +319,18 @@ specialElements = frozenset((
     (namespaces["html"], "blockquote"),
     (namespaces["html"], "body"),
     (namespaces["html"], "br"),
+    (namespaces["html"], "button"),
     (namespaces["html"], "center"),
     (namespaces["html"], "col"),
     (namespaces["html"], "colgroup"),
     (namespaces["html"], "command"),
-    (namespaces["html"], "datagrid"),
     (namespaces["html"], "dd"),
     (namespaces["html"], "details"),
-    (namespaces["html"], "dialog"),
     (namespaces["html"], "dir"),
     (namespaces["html"], "div"),
     (namespaces["html"], "dl"),
     (namespaces["html"], "dt"),
     (namespaces["html"], "embed"),
-    (namespaces["html"], "event-source"),
     (namespaces["html"], "fieldset"),
     (namespaces["html"], "figure"),
     (namespaces["html"], "footer"),
@@ -366,8 +363,6 @@ specialElements = frozenset((
     (namespaces["html"], "noframes"),
     (namespaces["html"], "noscript"),
     (namespaces["html"], "ol"),
-    (namespaces["html"], "optgroup"),
-    (namespaces["html"], "option"),
     (namespaces["html"], "p"),
     (namespaces["html"], "param"),
     (namespaces["html"], "plaintext"),
@@ -375,7 +370,6 @@ specialElements = frozenset((
     (namespaces["html"], "script"),
     (namespaces["html"], "section"),
     (namespaces["html"], "select"),
-    (namespaces["html"], "spacer"),
     (namespaces["html"], "style"),
     (namespaces["html"], "tbody"),
     (namespaces["html"], "textarea"),
@@ -384,7 +378,8 @@ specialElements = frozenset((
     (namespaces["html"], "title"),
     (namespaces["html"], "tr"),
     (namespaces["html"], "ul"),
-    (namespaces["html"], "wbr")
+    (namespaces["html"], "wbr"),
+    (namespaces["html"], "xmp")
 ))
 
 spaceCharacters = frozenset((
