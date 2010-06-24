@@ -86,7 +86,7 @@ def normalizeTokens(tokens):
     for i, token in enumerate(tokens):
         if token[0] == u'ParseError':
             tokens[i] = token[0]
-    return json.loads(json.dumps(tokens))
+    return tokens
 
 def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder):
     """Test whether the test has passed or failed
@@ -121,12 +121,31 @@ def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder):
         
         return tokens["expected"] == tokens["received"]
 
+def unescape_test(test):
+    def decode(inp):
+        return inp.decode("unicode-escape")
+
+    test["input"] = decode(test["input"])
+    for token in test["output"]:
+        if token == "ParseError":
+            continue
+        else:
+            token[1] = decode(token[1])
+            if len(token) > 2:
+                for key, value in token[2]:
+                    del token[2][key]
+                    token[2][decode(key)] = decode(value)
+    sys.stderr.write(str(test))
+    return test
 
 class TestCase(unittest.TestCase):
     def runTokenizerTest(self, test):
         #XXX - move this out into the setup function
         #concatenate all consecutive character tokens into a single token
-        expected = concatenateCharacterTokens(test['output'])
+        if 'doubleEscaped' in test:
+            test = unescape_test(test)
+
+        expected = concatenateCharacterTokens(test['output'])            
         if 'lastStartTag' not in test:
             test['lastStartTag'] = None
         outBuffer = cStringIO.StringIO()
