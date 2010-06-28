@@ -375,6 +375,7 @@ class HTMLParser(object):
         # The name of this method is mostly historical. (It's also used in the
         # specification.)
         last = False
+        foreign = False
         newModes = {
             "select":"inSelect",
             "td":"inCell",
@@ -388,37 +389,35 @@ class HTMLParser(object):
             "table":"inTable",
             "head":"inBody",
             "body":"inBody",
-            "frameset":"inFrameset"
+            "frameset":"inFrameset",
+            "html":"beforeHead"
         }
         for node in self.tree.openElements[::-1]:
             nodeName = node.name
+            new_phase = None
             if node == self.tree.openElements[0]:
+                assert self.innerHTML
                 last = True
-                if nodeName not in ['td', 'th']:
-                    # XXX
-                    assert self.innerHTML
-                    nodeName = self.innerHTML
+                nodeName = self.innerHTML
             # Check for conditions that should only happen in the innerHTML
             # case
-            if nodeName in ("select", "colgroup", "head", "frameset"):
-                # XXX
+            if nodeName in ("select", "colgroup", "head", "frameset", "html"):
                 assert self.innerHTML
+
             if nodeName in newModes:
-                self.phase = self.phases[newModes[nodeName]]
+                new_phase = self.phases[newModes[nodeName]]
                 break
             elif node.namespace in (namespaces["mathml"], namespaces["svg"]):
-                self.phase = self.phases["inForeignContent"]
-                self.secondaryPhase = self.phases["inBody"]
-                break
-            elif nodeName == "html":
-                if self.tree.headPointer is None:
-                    self.phase = self.phases["beforeHead"]
-                else:
-                   self.phase = self.phases["afterHead"]
-                break
+                foreign = True
             elif last:
-                self.phase = self.phases["inBody"]
+                new_phase = self.phases["inBody"]
                 break
+
+        if foreign:
+            self.phase = self.phases["inForeignContent"]
+            self.secondaryPhase = new_phase
+        else:
+            self.phase = new_phase
 
     def parseRCDataRawtext(self, token, contentType):
         """Generic RCDATA/RAWTEXT Parsing algorithm
@@ -2195,7 +2194,8 @@ class InSelectPhase(Phase):
             ("option", self.startTagOption),
             ("optgroup", self.startTagOptgroup),
             ("select", self.startTagSelect),
-            (("input", "keygen", "textarea"), self.startTagInput)
+            (("input", "keygen", "textarea"), self.startTagInput),
+            ("script", self.startTagScript)
         ])
         self.startTagHandler.default = self.startTagOther
 
@@ -2240,6 +2240,9 @@ class InSelectPhase(Phase):
         if self.tree.elementInScope("select", variant="table"):
             self.endTagSelect(impliedTagToken("select"))
             self.parser.phase.processStartTag(token)
+
+    def startTagScript(self, token):
+        self.parser.phases["inHead"].processStartTag(token)
 
     def startTagOther(self, token):
         self.parser.parseError("unexpected-start-tag-in-select",
