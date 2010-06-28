@@ -749,14 +749,6 @@ class InHeadPhase(Phase):
         ])
         self.endTagHandler.default = self.endTagOther
 
-    # helper
-    def appendToHead(self, element):
-        if self.tree.headPointer is not None:
-            self.tree.headPointer.appendChild(element)
-        else:
-            assert self.parser.innerHTML
-            self.tree.openElementsw[-1].appendChild(element)
-
     # the real thing
     def processEOF (self):
         self.anythingElse()
