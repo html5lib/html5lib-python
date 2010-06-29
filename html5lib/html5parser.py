@@ -1609,15 +1609,6 @@ class InTablePhase(Phase):
             self.tree.openElements.pop()
         # When the current node is <html> it's an innerHTML case
 
-    def getCurrentTable(self):
-        i = -1
-        while -i <= len(self.tree.openElements) and self.tree.openElements[i].name != "table":
-             i -= 1
-        if -i > len(self.tree.openElements):
-            return self.tree.openElements[0]
-        else:
-            return self.tree.openElements[i]
-
     # processing methods
     def processEOF(self):
         if self.tree.openElements[-1].name != "html":
@@ -1690,8 +1681,6 @@ class InTablePhase(Phase):
 
     def startTagOther(self, token):
         self.parser.parseError("unexpected-start-tag-implies-table-voodoo", {"name": token["name"]})
-        if "tainted" not in self.getCurrentTable()._flags:
-            self.getCurrentTable()._flags.append("tainted")
         # Do the table magic!
         self.tree.insertFromTable = True
         self.parser.phases["inBody"].processStartTag(token)
@@ -1718,8 +1707,6 @@ class InTablePhase(Phase):
 
     def endTagOther(self, token):
         self.parser.parseError("unexpected-end-tag-implies-table-voodoo", {"name": token["name"]})
-        if "tainted" not in self.getCurrentTable()._flags:
-            self.getCurrentTable()._flags.append("tainted")
         # Do the table magic!
         self.tree.insertFromTable = True
         self.parser.phases["inBody"].processEndTag(token)
