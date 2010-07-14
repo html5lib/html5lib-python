@@ -6,9 +6,9 @@ except NameError:
     from sets import Set as set
     from sets import ImmutableSet as frozenset
 
-# The scope markers are inserted when entering buttons, object elements,
+# The scope markers are inserted when entering object elements,
 # marquees, table cells, and table captions, and are used to prevent formatting
-# from "leaking" into tables, buttons, object elements, and marquees.
+# from "leaking" into tables, object elements, and marquees.
 Marker = None
 
 class Node(object):
