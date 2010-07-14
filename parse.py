@@ -6,6 +6,7 @@ Parse a document to a tree, with optional profiling
 
 import sys
 import os
+import traceback
 from optparse import OptionParser
 
 from html5lib import html5parser, sanitizer
@@ -48,10 +49,7 @@ def parse():
     else:
         tokenizer = HTMLTokenizer
 
-    if opts.log:
-        html5parser.debug_log = True
-
-    p = html5parser.HTMLParser(tree=treebuilder, tokenizer=tokenizer)
+    p = html5parser.HTMLParser(tree=treebuilder, tokenizer=tokenizer, debug=opts.log)
 
     if opts.fragment:
         parseMethod = p.parseFragment
@@ -73,46 +71,54 @@ def parse():
     elif opts.time:
         import time
         t0 = time.time()
-        document = parseMethod(f, encoding=encoding)
+        document = run(parseMethod, f, encoding)
         t1 = time.time()
         printOutput(p, document, opts)
         t2 = time.time()
         sys.stderr.write("\n\nRun took: %fs (plus %fs to print the output)"%(t1-t0, t2-t1))
     else:
-        document = parseMethod(f, encoding=encoding)
+        document = run(parseMethod, f, encoding)
         printOutput(p, document, opts)
+
+def run(parseMethod, f, encoding):
+    try:
+        document = parseMethod(f, encoding=encoding)
+    except:
+        document = None
+        traceback.print_exc()    
+    return document
 
 def printOutput(parser, document, opts):
     if opts.encoding:
         print "Encoding:", parser.tokenizer.stream.charEncoding
 
-    if opts.log:
-        for item in parser.log:
-            print item
+    for item in parser.log:
+        print item
 
-    if opts.xml:
-        sys.stdout.write(document.toxml("utf-8"))
-    elif opts.tree:
-        if not hasattr(document,'__getitem__'): 
-            document = [document]
-        for fragment in document:
-            print parser.tree.testSerializer(fragment).encode("utf-8")
-    elif opts.hilite:
-        sys.stdout.write(document.hilite("utf-8"))
-    elif opts.html:
-        kwargs = {}
-        for opt in serializer.HTMLSerializer.options:
-            try:
-                kwargs[opt] = getattr(opts,opt)
-            except:
-                pass
-        if not kwargs['quote_char']: 
-            del kwargs['quote_char']
+    if document is not None:
+        if opts.xml:
+            sys.stdout.write(document.toxml("utf-8"))
+        elif opts.tree:
+            if not hasattr(document,'__getitem__'): 
+                document = [document]
+            for fragment in document:
+                print parser.tree.testSerializer(fragment).encode("utf-8")
+        elif opts.hilite:
+            sys.stdout.write(document.hilite("utf-8"))
+        elif opts.html:
+            kwargs = {}
+            for opt in serializer.HTMLSerializer.options:
+                try:
+                    kwargs[opt] = getattr(opts,opt)
+                except:
+                    pass
+            if not kwargs['quote_char']: 
+                del kwargs['quote_char']
 
-        tokens = treewalkers.getTreeWalker(opts.treebuilder)(document)
-        for text in serializer.HTMLSerializer(**kwargs).serialize(tokens, encoding='utf-8'):
-            sys.stdout.write(text)
-        if not text.endswith('\n'): sys.stdout.write('\n')
+            tokens = treewalkers.getTreeWalker(opts.treebuilder)(document)
+            for text in serializer.HTMLSerializer(**kwargs).serialize(tokens, encoding='utf-8'):
+                sys.stdout.write(text)
+            if not text.endswith('\n'): sys.stdout.write('\n')
     if opts.error:
         errList=[]
         for pos, errorcode, datavars in parser.errors:
