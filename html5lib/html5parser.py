@@ -40,7 +40,7 @@ from treebuilders import simpletree
 import utils
 import constants
 from constants import spaceCharacters, asciiUpper2Lower
-from constants import scopingElements, formattingElements, specialElements
+from constants import formattingElements, specialElements
 from constants import headingElements, tableInsertModeElements
 from constants import cdataElements, rcdataElements, voidElements
 from constants import tokenTypes, ReparseException, namespaces, spaceCharacters
@@ -1015,12 +1015,12 @@ def getPhases(debug):
                 self.parser.phase = self.parser.phases["inFrameset"]
 
         def startTagCloseP(self, token):
-            if self.tree.elementInScope("p"):
+            if self.tree.elementInScope("p", variant="button"):
                 self.endTagP(impliedTagToken("p"))
             self.tree.insertElement(token)
 
         def startTagPreListing(self, token):
-            if self.tree.elementInScope("p"):
+            if self.tree.elementInScope("p", variant="button"):
                 self.endTagP(impliedTagToken("p"))
             self.tree.insertElement(token)
             self.parser.framesetOK = False
@@ -1030,7 +1030,7 @@ def getPhases(debug):
             if self.tree.formPointer:
                 self.parser.parseError(u"unexpected-start-tag", {"name": "form"})
             else:
-                if self.tree.elementInScope("p"):
+                if self.tree.elementInScope("p", variant="button"):
                     self.endTagP(impliedTagToken("p"))
                 self.tree.insertElement(token)
                 self.tree.formPointer = self.tree.openElements[-1]
@@ -1047,24 +1047,24 @@ def getPhases(debug):
                     self.parser.phase.processEndTag(
                         impliedTagToken(node.name, "EndTag"))
                     break
-                if (node.nameTuple in (scopingElements | specialElements) and
+                if (node.nameTuple in specialElements and
                     node.name not in ("address", "div", "p")):
                     break
 
-            if self.tree.elementInScope("p"):
+            if self.tree.elementInScope("p", variant="button"):
                 self.parser.phase.processEndTag(
                     impliedTagToken("p", "EndTag"))
 
             self.tree.insertElement(token)
 
         def startTagPlaintext(self, token):
-            if self.tree.elementInScope("p"):
+            if self.tree.elementInScope("p", variant="button"):
                 self.endTagP(impliedTagToken("p"))
             self.tree.insertElement(token)
             self.parser.tokenizer.state = self.parser.tokenizer.plaintextState
 
         def startTagHeading(self, token):
-            if self.tree.elementInScope("p"):
+            if self.tree.elementInScope("p", variant="button"):
                 self.endTagP(impliedTagToken("p"))
             if self.tree.openElements[-1].name in headingElements:
                 self.parser.parseError("unexpected-start-tag", {"name": token["name"]})
@@ -1116,7 +1116,7 @@ def getPhases(debug):
             self.parser.framesetOK = False
 
         def startTagXmp(self, token):
-            if self.tree.elementInScope("p"):
+            if self.tree.elementInScope("p", variant="button"):
                 self.endTagP(impliedTagToken("p"))
             self.tree.reconstructActiveFormattingElements()
             self.parser.framesetOK = False
@@ -1124,7 +1124,7 @@ def getPhases(debug):
 
         def startTagTable(self, token):
             if self.parser.compatMode != "quirks":
-                if self.tree.elementInScope("p"):
+                if self.tree.elementInScope("p", variant="button"):
                     self.processEndTag(impliedTagToken("p"))
             self.tree.insertElement(token)
             self.parser.framesetOK = False
@@ -1143,7 +1143,7 @@ def getPhases(debug):
             token["selfClosingAcknowledged"] = True
 
         def startTagHr(self, token):
-            if self.tree.elementInScope("p"):
+            if self.tree.elementInScope("p", variant="button"):
                 self.endTagP(impliedTagToken("p"))
             self.tree.insertElement(token)
             self.tree.openElements.pop()
@@ -1402,8 +1402,7 @@ def getPhases(debug):
                 afeIndex = self.tree.openElements.index(formattingElement)
                 furthestBlock = None
                 for element in self.tree.openElements[afeIndex:]:
-                    if (element.nameTuple in
-                        specialElements | scopingElements):
+                    if element.nameTuple in specialElements:
                         furthestBlock = element
                         break
                 # Step 3
@@ -1525,8 +1524,7 @@ def getPhases(debug):
                         pass
                     break
                 else:
-                    if (node.nameTuple in
-                        specialElements | scopingElements):
+                    if node.nameTuple in specialElements:
                         self.parser.parseError("unexpected-end-tag", {"name": token["name"]})
                         break
 

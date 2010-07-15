@@ -310,6 +310,7 @@ formattingElements = frozenset((
 
 specialElements = frozenset((
     (namespaces["html"], "address"),
+    (namespaces["html"], "applet"),
     (namespaces["html"], "area"),
     (namespaces["html"], "article"),
     (namespaces["html"], "aside"),
@@ -320,6 +321,7 @@ specialElements = frozenset((
     (namespaces["html"], "body"),
     (namespaces["html"], "br"),
     (namespaces["html"], "button"),
+    (namespaces["html"], "caption"),
     (namespaces["html"], "center"),
     (namespaces["html"], "col"),
     (namespaces["html"], "colgroup"),
@@ -346,6 +348,7 @@ specialElements = frozenset((
     (namespaces["html"], "head"),
     (namespaces["html"], "header"),
     (namespaces["html"], "hr"),
+    (namespaces["html"], "html"),
     (namespaces["html"], "iframe"),
     # Note that image is commented out in the spec as "this isn't an
     # element that can end up on the stack, so it doesn't matter,"
@@ -356,12 +359,14 @@ specialElements = frozenset((
     (namespaces["html"], "li"),
     (namespaces["html"], "link"),
     (namespaces["html"], "listing"),
+    (namespaces["html"], "marquee"),
     (namespaces["html"], "menu"),
     (namespaces["html"], "meta"),
     (namespaces["html"], "nav"),
     (namespaces["html"], "noembed"),
     (namespaces["html"], "noframes"),
     (namespaces["html"], "noscript"),
+    (namespaces["html"], "object"),
     (namespaces["html"], "ol"),
     (namespaces["html"], "p"),
     (namespaces["html"], "param"),
@@ -371,15 +376,19 @@ specialElements = frozenset((
     (namespaces["html"], "section"),
     (namespaces["html"], "select"),
     (namespaces["html"], "style"),
+    (namespaces["html"], "table"),
     (namespaces["html"], "tbody"),
+    (namespaces["html"], "td"),
     (namespaces["html"], "textarea"),
     (namespaces["html"], "tfoot"),
+    (namespaces["html"], "th"),
     (namespaces["html"], "thead"),
     (namespaces["html"], "title"),
     (namespaces["html"], "tr"),
     (namespaces["html"], "ul"),
     (namespaces["html"], "wbr"),
-    (namespaces["html"], "xmp")
+    (namespaces["html"], "xmp"),
+    (namespaces["svg"], "foreignObject")
 ))
 
 spaceCharacters = frozenset((

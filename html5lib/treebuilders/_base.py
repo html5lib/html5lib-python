@@ -132,6 +132,7 @@ class TreeBuilder(object):
         # Exit early when possible.
         listElementsMap = {
             None:scopingElements,
+            "button":scopingElements | set([(namespaces["html"], "button")]),
             "list":scopingElements | set([(namespaces["html"], "ol"),
                                           (namespaces["html"], "ul")]),
             "table":set([(namespaces["html"], "html"),
