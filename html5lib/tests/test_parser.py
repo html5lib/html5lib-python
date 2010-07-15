@@ -84,22 +84,20 @@ class TestCase(unittest.TestCase):
             p = html5parser.HTMLParser(tree = treeClass,
                                        namespaceHTMLElements=namespaceHTMLElements)
         except constants.DataLossWarning:
-            return 
+            return
 
-        errors = [item.decode("utf-8") for item in errors]
-        
         try:
             if innerHTML:
-                document = p.parseFragment(StringIO.StringIO(input), innerHTML)
+                document = p.parseFragment(input, innerHTML)
             else:
                 try:
-                    document = p.parse(StringIO.StringIO(input))
+                    document = p.parse(input)
                 except constants.DataLossWarning:
                     return 
         except:
-            errorMsg = "\n".join(["\n\nInput:", input, "\nExpected:", expected,
-                                  "\nTraceback:", traceback.format_exc()])
-            self.assertTrue(False, errorMsg)
+            errorMsg = u"\n".join([u"\n\nInput:", input, u"\nExpected:", expected,
+                                   u"\nTraceback:", traceback.format_exc()])
+            self.assertTrue(False, errorMsg.encode("utf8"))
         
         output = convertTreeDump(p.tree.testSerializer(document))
         output = attrlist.sub(sortattrs, output)
@@ -109,9 +107,9 @@ class TestCase(unittest.TestCase):
         if namespaceHTMLElements:
             expected = namespaceExpected(r"\1<html \2>", expected)
         
-        errorMsg = "\n".join(["\n\nInput:", input, "\nExpected:", expected,
-                              "\nReceived:", output])
-        self.assertEquals(expected, output, errorMsg.encode("utf-8"))
+        errorMsg = u"\n".join([u"\n\nInput:", input, u"\nExpected:", expected,
+                               u"\nReceived:", output])
+        self.assertEquals(expected, output, errorMsg.encode("utf8"))
         errStr = [u"Line: %i Col: %i %s"%(line, col, 
                                           constants.E[errorcode] % datavars if isinstance(datavars, dict) else (datavars,)) for
                   ((line,col), errorcode, datavars) in p.errors]
@@ -152,6 +150,8 @@ def buildTestSuite():
                     testFunc.__name__ = "test_%s_%d_%s_%s" % (testName,index+1,treeName, namespaceHTMLElements and "namespaced" or "no_html_namespace")
                     setattr(TestCase, testFunc.__name__,
                          testFunc)
+                    break
+        break
 
     return unittest.TestLoader().loadTestsFromTestCase(TestCase)
 

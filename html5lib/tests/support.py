@@ -1,5 +1,6 @@
 import os
 import sys
+import codecs
 import glob
 
 base_path = os.path.split(__file__)[0]
@@ -74,7 +75,7 @@ class DefaultDict(dict):
 
 class TestData(object):
     def __init__(self, filename, newTestHeading="data"):
-        self.f = open(filename)
+        self.f = codecs.open(filename, encoding="utf8")
         self.newTestHeading = newTestHeading
     
     def __iter__(self):
