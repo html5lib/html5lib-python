@@ -43,7 +43,7 @@ from constants import spaceCharacters, asciiUpper2Lower
 from constants import scopingElements, formattingElements, specialElements
 from constants import headingElements, tableInsertModeElements
 from constants import cdataElements, rcdataElements, voidElements
-from constants import tokenTypes, ReparseException, namespaces
+from constants import tokenTypes, ReparseException, namespaces, spaceCharacters
 
 def parse(doc, treebuilder="simpletree", encoding=None, 
           namespaceHTMLElements=True):
@@ -977,7 +977,11 @@ def getPhases(debug):
         def processCharacters(self, token):
             self.tree.reconstructActiveFormattingElements()
             self.tree.insertText(token["data"])
-            self.parser.framesetOK = False
+            #This must be bad for performance
+            if (self.parser.framesetOK and
+                any([char not in set(u"\ufffd") | spaceCharacters
+                                  for char in token["data"]])):
+                self.parser.framesetOK = False
 
         def processSpaceCharacters(self, token):
             self.tree.reconstructActiveFormattingElements()
