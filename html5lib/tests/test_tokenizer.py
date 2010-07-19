@@ -88,7 +88,8 @@ def normalizeTokens(tokens):
             tokens[i] = token[0]
     return tokens
 
-def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder):
+def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder,
+                ignoreErrors=True):
     """Test whether the test has passed or failed
 
     If the ignoreErrorOrder flag is set to true we don't test the relative
@@ -117,8 +118,8 @@ def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder):
                 if token != "ParseError":
                     tokens[tokenType][0].append(token)
                 else:
-                    tokens[tokenType][1].append(token)
-        
+                    if not ignoreErrors:
+                        tokens[tokenType][1].append(token)
         return tokens["expected"] == tokens["received"]
 
 def unescape_test(test):
@@ -135,7 +136,6 @@ def unescape_test(test):
                 for key, value in token[2]:
                     del token[2][key]
                     token[2][decode(key)] = decode(value)
-    sys.stderr.write(str(test))
     return test
 
 class TestCase(unittest.TestCase):
@@ -180,7 +180,6 @@ def capitalize(s):
 
 def buildTestSuite():
     for filename in html5lib_test_files('tokenizer', '*.test'):
-        print filename
         tests = json.load(file(filename))
         testName = os.path.basename(filename).replace(".test","")
         if 'tests' in tests:
