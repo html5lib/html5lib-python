@@ -89,7 +89,7 @@ def normalizeTokens(tokens):
     return tokens
 
 def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder,
-                ignoreErrors=True):
+                ignoreErrors=False):
     """Test whether the test has passed or failed
 
     If the ignoreErrorOrder flag is set to true we don't test the relative
