@@ -716,7 +716,7 @@ def getPhases(debug):
                 ("title", self.startTagTitle),
                 (("noscript", "noframes", "style"), self.startTagNoScriptNoFramesStyle),
                 ("script", self.startTagScript),
-                (("base", "link", "command"), 
+                (("base", "basefont", "bgsound", "command", "link"), 
                  self.startTagBaseLinkCommand),
                 ("meta", self.startTagMeta),
                 ("head", self.startTagHead)
@@ -814,7 +814,8 @@ def getPhases(debug):
                 ("html", self.startTagHtml),
                 ("body", self.startTagBody),
                 ("frameset", self.startTagFrameset),
-                (("base", "link", "meta", "noframes", "script", "style", "title"),
+                (("base", "basefont", "bgsound", "link", "meta", "noframes", "script", 
+                  "style", "title"),
                   self.startTagFromHead),
                 ("head", self.startTagHead)
             ])
@@ -884,20 +885,21 @@ def getPhases(debug):
 
             self.startTagHandler = utils.MethodDispatcher([
                 ("html", self.startTagHtml),
-                (("base", "command", "link", "meta", "noframes", "script", "style", 
-                  "title"), self.startTagProcessInHead),
+                (("base", "basefont", "bgsound", "command", "link", "meta", 
+                  "noframes", "script", "style", "title"), 
+                 self.startTagProcessInHead),
                 ("body", self.startTagBody),
                 ("frameset", self.startTagFrameset),
-                (("address", "article", "aside", "blockquote", "center", "datagrid",
-                  "details", "dir", "div", "dl", "fieldset", "figure",
+                (("address", "article", "aside", "blockquote", "center", "details",
+                  "details", "dir", "div", "dl", "fieldset", "figcaption", "figure",
                   "footer", "header", "hgroup", "menu", "nav", "ol", "p",
-                  "section", "ul"),
+                  "section", "summary", "ul"),
                   self.startTagCloseP),
+                (headingElements, self.startTagHeading),
                 (("pre", "listing"), self.startTagPreListing),
                 ("form", self.startTagForm),
                 (("li", "dd", "dt"), self.startTagListItem),
                 ("plaintext",self.startTagPlaintext),
-                (headingElements, self.startTagHeading),
                 ("a", self.startTagA),
                 (("b", "big", "code", "em", "font", "i", "s", "small", "strike", 
                   "strong", "tt", "u"),self.startTagFormatting),
@@ -906,8 +908,8 @@ def getPhases(debug):
                 (("applet", "marquee", "object"), self.startTagAppletMarqueeObject),
                 ("xmp", self.startTagXmp),
                 ("table", self.startTagTable),
-                (("area", "basefont", "bgsound", "br", "embed", "img", "input",
-                  "keygen", "spacer", "wbr"), self.startTagVoidFormatting),
+                (("area", "br", "embed", "img", "input", "keygen", "spacer", 
+                  "wbr"), self.startTagVoidFormatting),
                 (("param", "source"), self.startTagParamSource),
                 ("hr", self.startTagHr),
                 ("image", self.startTagImage),
@@ -929,10 +931,10 @@ def getPhases(debug):
             self.endTagHandler = utils.MethodDispatcher([
                 ("body",self.endTagBody),
                 ("html",self.endTagHtml),
-                (("address", "article", "aside", "blockquote", "center", "datagrid",
-                  "details", "dir", "div", "dl", "fieldset", "figure",
+                (("address", "article", "aside", "blockquote", "center",
+                  "details", "dir", "div", "dl", "fieldset", "figcaption", "figure",
                   "footer", "header", "hgroup", "listing", "menu", "nav", "ol", "pre", 
-                  "section", "ul"), self.endTagBlock),
+                  "section", "summary", "ul"), self.endTagBlock),
                 ("form", self.endTagForm),
                 ("p",self.endTagP),
                 (("dd", "dt", "li"), self.endTagListItem),
@@ -1277,7 +1279,7 @@ def getPhases(debug):
             self.tree.insertElement(token)
 
         def endTagP(self, token):
-            if not self.tree.elementInScope("p"):
+            if not self.tree.elementInScope("p", variant="button"):
                 self.startTagCloseP(impliedTagToken("p", "StartTag"))
                 self.parser.parseError("unexpected-end-tag", {"name": "p"})
                 self.endTagP(impliedTagToken("p", "EndTag"))
@@ -2358,7 +2360,11 @@ def getPhases(debug):
             Phase.processCharacters(self, token)
 
         def processEOF(self):
-            pass
+            self.parser.parseError("eof-in-foreign-lands")
+            #while self.tree.openElements.pop().name not in ("svg", "math"):
+            #    pass
+            self.parser.phase = self.parser.secondaryPhase
+            self.parser.phase.processEOF()
 
         def processStartTag(self, token):
             currentNode = self.tree.openElements[-1]
@@ -2410,9 +2416,7 @@ def getPhases(debug):
 
                 while True:
                     if node.name == token["name"]:
-                        popped = self.tree.openElements.pop()
-                        while popped != node:
-                            popped = self.tree.openElements.pop()
+                        while self.tree.openElements.pop() != node:
                             assert self.tree.openElements
                         break
                     nodeIndex -= 1
