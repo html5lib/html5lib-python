@@ -260,6 +260,8 @@ E = {
        _(u"Unexpected end of file. Expected frameset content."),
     "eof-in-script-in-script":
        _(u"Unexpected end of file. Expected script content."),
+    "eof-in-foreign-lands":
+       _(u"Unexpected end of file. Expected foreign content"),
     "non-void-element-with-trailing-solidus":
        _(u"Trailing solidus not allowed on element %(name)s"),
     "unexpected-html-element-in-foreign-content":
