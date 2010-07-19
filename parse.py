@@ -17,7 +17,7 @@ from html5lib import constants
 def parse():
     optParser = getOptParser()
     opts,args = optParser.parse_args()
-    encoding = None
+    encoding = "utf8"
 
     try:
         f = args[-1]
@@ -30,7 +30,8 @@ def parse():
                 if contentType:
                     (mediaType, params) = cgi.parse_header(contentType)
                     encoding = params.get('charset')
-            except: pass
+            except: 
+                pass
         elif f == '-':
             f = sys.stdin
         else:
