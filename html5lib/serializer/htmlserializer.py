@@ -88,6 +88,7 @@ class HTMLSerializer(object):
     # miscellaneous options
     emit_doctype = 'preserve'
     inject_meta_charset = True
+    lang_attr = 'preserve'
     strip_whitespace = False
     sanitize = False
 
@@ -95,7 +96,8 @@ class HTMLSerializer(object):
           "minimize_boolean_attributes", "use_trailing_solidus",
           "space_before_trailing_solidus", "omit_optional_tags",
           "strip_whitespace", "inject_meta_charset", "escape_lt_in_attrs",
-          "escape_rcdata", "resolve_entities", "emit_doctype", "sanitize")
+          "escape_rcdata", "resolve_entities", "emit_doctype", "lang_attr",
+          "sanitize")
 
     def __init__(self, **kwargs):
         """Initialize HTMLSerializer.
@@ -114,6 +116,11 @@ class HTMLSerializer(object):
             * emit_doctype='preserve' preserves the doctype, if any, unchanged
         inject_meta_charset=True|False
           ..?
+        lang_attr='preserve'|'xml'|'html'
+          Whether to translate 'lang' attributes.
+            * lang_attr='preserve' does no translation
+            * lang_attr='xml' translates 'lang' to 'xml:lang'
+            * lang_attr='html' translates 'xml:lang' to 'lang'
         quote_attr_values=True|False
           Whether to quote attribute values that don't require quoting
           per HTML5 parsing rules.
@@ -288,6 +295,18 @@ class HTMLSerializer(object):
                     attrs = attrs.items()
                 attributes = []
                 for k,v in attrs:
+
+                    # clean up xml:lang
+                    if k == '{http://www.w3.org/XML/1998/namespace}lang':
+                        k = 'xml:lang'
+                    if self.lang_attr == 'xml':
+                        if k == 'lang' and not ('xml:lang' in attrs or
+                           '{http://www.w3.org/XML/1998/namespace}lang' in attrs):
+                            k = 'xml:lang'
+                    elif self.lang_attr == 'html':
+                        if k == 'xml:lang' and not ('lang' in attrs):
+                            k = 'lang'
+
                     if encoding:
                         k = k.encode(encoding, "strict")
                     attributes.append(' ')
