@@ -286,7 +286,6 @@ class HTMLSerializer(object):
                 attrs = token["data"]
                 if hasattr(attrs, "items"):
                     attrs = attrs.items()
-                attrs.sort()
                 attributes = []
                 for k,v in attrs:
                     if encoding:
