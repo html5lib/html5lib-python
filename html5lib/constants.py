@@ -467,6 +467,7 @@ booleanAttributes = {
     "details": frozenset(("open",)),
     "datagrid": frozenset(("multiple", "disabled")),
     "command": frozenset(("hidden", "disabled", "checked", "default")),
+    "hr": frozenset(("noshade")),
     "menu": frozenset(("autosubmit",)),
     "fieldset": frozenset(("disabled", "readonly")),
     "option": frozenset(("disabled", "readonly", "selected")),
