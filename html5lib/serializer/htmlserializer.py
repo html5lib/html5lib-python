@@ -95,6 +95,44 @@ class HTMLSerializer(object):
           "escape_rcdata", "resolve_entities", "sanitize")
 
     def __init__(self, **kwargs):
+        """Initialize HTMLSerializer.
+
+        Keyword options (default given first unless specified) include:
+
+        inject_meta_charset=True|False
+          ..?
+        quote_attr_values=True|False
+          Whether to quote attribute values that don't require quoting
+          per HTML5 parsing rules.
+        quote_char=u'"'|u"'"
+          Use given quote character for attribute quoting. Default is to
+          use double quote unless attribute value contains a double quote,
+          in which case single quotes are used instead.
+        escape_lt_in_attrs=False|True
+          Whether to escape < in attribute values.
+        escape_rc_data=False|True
+          ..?
+        resolve_entities=True|False
+          Whether to resolve named character entities that appear in the
+          source tree. The XML predified entities &lt; &gt; &amp; &quot; &apos;
+          are unaffected by this setting.
+        strip_whitespace=False|True
+          ..?
+        minimize_boolean_attributes=True|false
+          Shortens boolean attributes to give just the attribute value,
+          for example <input disabled="disabled"> becomes <input disabled>.
+        use_trailing_solidus
+          Includes a close-tag slash at the end of the start tag of void
+          elements (empty elements whose end tag is forbidden). E.g. <hr/>.
+        space_before_trailing_solidus
+          Places a space immediately before the closing slash in a tag
+          using a trailing solidus. E.g. <hr />. Requires use_trailing_solidus.
+        sanitize
+          Strip all unsafe or unknown constructs from output.
+          See `html5lib user documentation`_
+
+        .. _html5lib user documentation: http://code.google.com/p/html5lib/wiki/UserDocumentation
+        """
         if kwargs.has_key('quote_char'):
             self.use_best_quote_char = False
         for attr in self.options:
