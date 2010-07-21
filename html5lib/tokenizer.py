@@ -184,8 +184,8 @@ class HTMLTokenizer:
             def entitiesStartingWith(name):
                 return [e for e in filteredEntityList if e.startswith(name)]
 
-            while charStack[-1] is not EOF and\
-              entitiesStartingWith("".join(charStack)):
+            while (charStack[-1] is not EOF and
+                   entitiesStartingWith("".join(charStack))):
                 charStack.append(self.stream.char())
 
             # At this point we have a string that starts with some characters
@@ -204,9 +204,10 @@ class HTMLTokenizer:
                 if entityName[-1] != ";":
                     self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
                       "named-entity-without-semicolon"})
-                if entityName[-1] != ";" and fromAttribute and \
-                  (charStack[entityLength] in asciiLetters
-                  or charStack[entityLength] in digits):
+                if (entityName[-1] != ";" and fromAttribute and
+                    (charStack[entityLength] in asciiLetters or
+                     charStack[entityLength] in digits or
+                    charStack[entityLength] == "=")):
                     self.stream.unget(charStack.pop())
                     output = u"&" + u"".join(charStack)
                 else:
