@@ -39,6 +39,8 @@ E = {
        _(u"Named entity expected. Got none."),
     "attributes-in-end-tag":
        _(u"End tag contains unexpected attributes."),
+    'self-closing-flag-on-end-tag':
+        _(u"End tag contains unexpected self-closing flag."),
     "expected-tag-name-but-got-right-bracket":
        _(u"Expected tag name. Got '>' instead."),
     "expected-tag-name-but-got-question-mark":
@@ -68,6 +70,10 @@ E = {
        _(u"Unexpected end of file. Expected attribute value."),
     "expected-attribute-value-but-got-right-bracket":
        _(u"Expected attribute value. Got '>' instead."),
+    'equals-in-unquoted-attribute-value':
+        _(u"Unexpected = in unquoted attribute"),
+    'unexpected-character-in-unquoted-attribute-value':
+        _(u"Unexpected character in unquoted attribute"),
     "eof-in-attribute-value-double-quote":
        _(u"Unexpected end of file in attribute value (\")."),
     "eof-in-attribute-value-single-quote":
@@ -80,6 +86,10 @@ E = {
         _(u"Unexpected character after / in tag. Expected >"),
     "expected-dashes-or-doctype":
        _(u"Expected '--' or 'DOCTYPE'. Not found."),
+    "unexpected-bang-after-double-dash-in-comment":
+        _(u"Unexpected ! after -- in comment"),
+    "unexpected-space-after-double-dash-in-comment":
+        _(u"Unexpected space after -- in comment"),
     "incorrect-comment":
        _(u"Incorrect comment."),
     "eof-in-comment":
