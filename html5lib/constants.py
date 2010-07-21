@@ -2670,7 +2670,7 @@ entities = {
 
 replacementCharacters = {
     0x0:u"\uFFFD",
-    0x0d:u"\u000A",
+    0x0d:u"\u000D",
     0x80:u"\u20AC",
     0x81:u"\u0081",
     0x81:u"\u0081",
