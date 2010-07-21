@@ -1612,8 +1612,14 @@ def getPhases(debug):
             self.parser.phase.characterTokens.append(token)
 
         def processCharacters(self, token):
+            originalPhase = self.parser.phase
+            self.parser.phase = self.parser.phases["inTableText"]
+            self.parser.phase.originalPhase = originalPhase
+            self.parser.phase.characterTokens.append(token)
+
+        def insertText(self, token):
             #If we get here there must be at least one non-whitespace character
-            # Do the table magic!
+             # Do the table magic!
             self.tree.insertFromTable = True
             self.parser.phases["inBody"].processCharacters(token)
             self.tree.insertFromTable = False
@@ -1710,7 +1716,7 @@ def getPhases(debug):
             data = "".join([item["data"] for item in self.characterTokens])
             if any([item not in spaceCharacters for item in data]):
                 token = {"type":tokenTypes["Characters"], "data":data}
-                self.originalPhase.processCharacters(token)
+                self.parser.phases["inTable"].insertText(token)
             elif data:
                 self.tree.insertText(data)
             self.characterTokens = []
