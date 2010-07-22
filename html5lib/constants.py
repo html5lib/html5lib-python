@@ -13,7 +13,7 @@ EOF = None
 E = {
     "null-character": 
        _(u"Null character in input stream, replaced with U+FFFD."),
-    "invalid-character": 
+    "invalid-codepoint": 
        _(u"Invalid codepoint in stream."),
     "incorrectly-placed-solidus":
        _(u"Solidus (/) incorrectly placed in tag."),
@@ -74,6 +74,10 @@ E = {
         _(u"Unexpected = in unquoted attribute"),
     'unexpected-character-in-unquoted-attribute-value':
         _(u"Unexpected character in unquoted attribute"),
+    "invalid-character-after-attribute-name":
+       _(u"Unexpected character after attribute name."),
+    "unexpected-character-after-attribute-value":
+       _(u"Unexpected character after attribute value."),
     "eof-in-attribute-value-double-quote":
        _(u"Unexpected end of file in attribute value (\")."),
     "eof-in-attribute-value-single-quote":
@@ -100,6 +104,10 @@ E = {
        _(u"Unexpected '-' after '--' found in comment."),
     "eof-in-comment-double-dash":
        _(u"Unexpected end of file in comment (--)."),
+    "eof-in-comment-end-space-state":
+       _(u"Unexpected end of file in comment."),
+    "eof-in-comment-end-bang-state":
+       _(u"Unexpected end of file in comment."),
     "unexpected-char-in-comment":
        _(u"Unexpected character in comment found."),
     "need-space-after-doctype":
