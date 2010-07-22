@@ -137,6 +137,8 @@ class HTMLInputStream:
         else:
             self.reportCharacterErrors = self.characterErrorsUCS2
 
+        self.replaceCharactersRegexp = re.compile(u"[\u0000\uD800-\uDFFF]")
+
         # List of where new lines occur
         self.newLines = [0]
 
@@ -158,6 +160,7 @@ class HTMLInputStream:
         #Detect encoding iff no explicit "transport level" encoding is supplied
         if (self.charEncoding[0] is None):
             self.charEncoding = self.detectEncoding(parseMeta, chardet)
+
 
         self.reset()
 
@@ -347,7 +350,7 @@ class HTMLInputStream:
         
         self.reportCharacterErrors(data)
 
-        data = data.replace(u"\u0000", u"\ufffd")
+        data = self.replaceCharactersRegexp.subn(u"\ufffd", data)[0]
         #Check for CR LF broken across chunks
         if (self._lastChunkEndsWithCR and data[0] == u"\n"):
             data = data[1:]
