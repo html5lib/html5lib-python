@@ -94,6 +94,7 @@ class HTMLSerializer(object):
     # escaping options
     escape_lt_in_attrs = False
     escape_rcdata = False
+    escape_invisible = False
     resolve_entities = True
 
     # miscellaneous options
@@ -105,7 +106,8 @@ class HTMLSerializer(object):
                "minimize_boolean_attributes", "use_trailing_solidus",
                "space_before_trailing_solidus", "omit_optional_tags",
                "strip_whitespace", "inject_meta_charset", "escape_lt_in_attrs",
-               "escape_rcdata", "resolve_entities", "sanitize")
+               "escape_rcdata", "escape_invisible", "resolve_entities",
+               "sanitize")
 
     def __init__(self, **kwargs):
         """Initialize HTMLSerializer.
@@ -127,6 +129,10 @@ class HTMLSerializer(object):
         escape_rcdata=False|True
           Whether to escape characters that need to be escaped within normal
           elements within rcdata elements such as style.
+        escape_invisible=False|True|'numeric'|'named'
+          Whether to escape invisible characters (such as nbsp, fixed-width
+          spaces, and control codes). Uses named HTML escapes if 'named'
+          is specified, otherwise uses numeric codes.
         resolve_entities=True|False
           Whether to resolve named character entities that appear in the
           source tree. The XML predefined entities &lt; &gt; &amp; &quot; &apos;
@@ -160,6 +166,8 @@ class HTMLSerializer(object):
 
     def encode(self, string):
         assert(isinstance(string, text_type))
+        if self.escape_invisible:
+            text = utils.escapeInvisible(text, self.escape_invisible == 'named')
         if self.encoding:
             return string.encode(self.encoding, unicode_encode_errors)
         else:

@@ -2,6 +2,8 @@ from __future__ import absolute_import, division, unicode_literals
 
 from types import ModuleType
 
+from .constants import invisibleChars
+
 
 class MethodDispatcher(dict):
     """Dict with 2 special properties:
@@ -71,3 +73,27 @@ def moduleFactoryFactory(factory):
             return mod
 
     return moduleFactory
+
+
+def escapeInvisible(text, useNamedEntities=False):
+    """Escape invisible characters other than Tab, LF, CR, and ASCII space
+    """
+    assert type(text) == text_type
+    # This algorithm is O(MN) for M len(text) and N num escapable
+    # But it doesn't modify the text when N is zero (common case) and
+    # N is expected to be small (usually 1 or 2) in most other cases.
+    escapable = set()
+    for c in text:
+        if ord(c) in invisibleChars:
+            escapable.add(c)
+    if useNamedEntities:
+        raise NotImplementedError("This doesn't work on Python 3")
+        for c in escapable:
+            name = codepoint2name.get(ord(c))
+            escape = "&%s;" % name if name else "&#x%X;" % ord(c)
+            text = text.replace(c, escape)
+    else:
+        for c in escapable:
+            text = text.replace(c, "&#x%X;" % ord(c))
+
+    return text
