@@ -12,6 +12,8 @@ from html5lib.constants import rcdataElements, entities, xmlEntities
 from html5lib import utils
 from xml.sax.saxutils import escape
 
+import re
+
 spaceCharacters = u"".join(spaceCharacters)
 
 try:
@@ -88,6 +90,7 @@ class HTMLSerializer(object):
     resolve_entities = True
 
     # miscellaneous options
+    emit_doctype = 'preserve'
     inject_meta_charset = True
     strip_whitespace = False
     sanitize = False
@@ -96,13 +99,23 @@ class HTMLSerializer(object):
           "minimize_boolean_attributes", "use_trailing_solidus",
           "space_before_trailing_solidus", "omit_optional_tags",
           "strip_whitespace", "inject_meta_charset", "escape_lt_in_attrs",
-          "escape_rcdata", "resolve_entities", "sanitize")
+          "escape_rcdata", "resolve_entities", "emit_doctype", "sanitize")
 
     def __init__(self, **kwargs):
         """Initialize HTMLSerializer.
 
         Keyword options (default given first unless specified) include:
 
+        emit_doctype='html'|'xhtml'|'html5'|'preserve'
+          Whether to output a doctype.
+            * emit_doctype='xhtml' preserves unknown doctypes and valid
+              XHTML doctypes, converts valid HTML doctypes to their XHTML
+              counterparts, and drops <!DOCTYPE html>
+            * emit_doctype='html' preserves unknown doctypes and valid
+              HTML doctypes, converts valid XHTML doctypes to their HTML
+              counterparts, and uses <!DOCTYPE html> for missing doctypes
+            * emit_doctype='html5' Uses <!DOCTYPE html> as the doctype
+            * emit_doctype='preserve' preserves the doctype, if any, unchanged
         inject_meta_charset=True|False
           Whether it insert a meta element to define the character set of the
           document.
@@ -149,6 +162,86 @@ class HTMLSerializer(object):
         self.errors = []
         self.strict = False
 
+    def calc_doctype(self, token=None):
+        if self.emit_doctype == 'html5' or \
+           not token and self.emit_doctype == 'html':
+            if token:
+                return u'<!DOCTYPE html>'
+            else:
+                return u'<!DOCTYPE html>\n'
+
+        rootElement = token["name"]
+        publicID    = token["publicId"]
+        systemID    = token["systemId"]
+
+        if re.match(u'html', rootElement, re.IGNORECASE):
+            if self.emit_doctype == u'html':
+                # XHTML 1.1
+                if publicID == u"-//W3C//DTD XHTML 1.1//EN" and (not systemID \
+                or systemID == u"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"):
+                    publicID = u"-//W3C//DTD HTML 4.01//EN"
+                    if systemID:
+                        systemID = u"http://www.w3.org/TR/html4/strict.dtd"
+                # XHTML 1.0 Strict
+                elif publicID == u"-//W3C//DTD XHTML 1.0 Strict//EN" and (not systemID \
+                or systemID == u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"):
+                    publicID = u"-//W3C//DTD HTML 4.01//EN"
+                    if systemID:
+                        systemID = u"http://www.w3.org/TR/html4/strict.dtd"
+                # XHTML 1.0 Transitional
+                elif publicID == u"-//W3C//DTD XHTML 1.0 Transitional//EN" and (not systemID \
+                or systemID == u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"):
+                    publicID = u"-//W3C//DTD HTML 4.01 Transitional//EN"
+                    if systemID:
+                        systemID = u"http://www.w3.org/TR/html4/loose.dtd"
+                # XHTML 1.0 Frameset
+                elif publicID == u"-//W3C//DTD XHTML 1.0 Frameset//EN" and (not systemID \
+                or systemID == u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd"):
+                    publicID = u"-//W3C//DTD HTML 4.01 Frameset//EN"
+                    if systemID:
+                        systemID = u"http://www.w3.org/TR/html4/frameset.dtd"
+            elif self.emit_doctype == u'xhtml':
+                # HTML 4.01 Strict
+                if re.match(u"-//W3C//DTD HTML 4.0(1)?//EN", publicID) and \
+                (not systemID or \
+                re.match(u"http://www.w3.org/TR/(html4|REC-html40)/strict.dtd", systemID)):
+                    publicID = u"-//W3C//DTD XHTML 1.0 Strict//EN"
+                    if systemID:
+                        systemID = u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
+                # HTML4.01 Transitional
+                elif re.match(u"-//W3C//DTD HTML 4.0(1)? Transitional//EN", publicID) and \
+                (not systemID or \
+                 re.match(u"http://www.w3.org/TR/(html4|REC-html40)/loose.dtd", systemID)):
+                    publicID = u"-//W3C//DTD XHTML 1.0 Transitional//EN"
+                    if systemID:
+                        systemID = u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"
+                # HTML 4.01 Frameset
+                elif re.match(u"-//W3C//DTD HTML 4.0(1)? Frameset//EN", publicID) and \
+                (not systemID or \
+                 re.match(u"http://www.w3.org/TR/(html4|REC-html40)/frameset.dtd", systemID)):
+                    publicID = u"-//W3C//DTD XHTML 1.0 Frameset//EN"
+                    if systemID:
+                        systemID = u"http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd"
+                # HTML 3.2
+                elif re.match(u"-//W3C//DTD HTML 3.2( Final)?//EN", publicID) and not systemID:
+                    publicID = u"-//W3C//DTD XHTML 1.0 Transitional//EN"
+
+        doctype = u"<!DOCTYPE %s" % rootElement
+        if token["publicId"]:
+            doctype += u' PUBLIC "%s"' % publicID
+        elif systemID:
+            doctype += u" SYSTEM"
+        if systemID:
+            if systemID.find(u'"') >= 0:
+                if systemID.find(u"'") >= 0:
+                    self.serializeError(_("System identifer contains both single and double quote characters"))
+                quote_char = u"'"
+            else:
+                quote_char = u'"'
+            doctype += u" %s%s%s" % (quote_char, systemID, quote_char)
+        doctype += u">"
+        return doctype
+
     def serialize(self, treewalker, encoding=None):
         in_cdata = False
         self.errors = []
@@ -166,26 +259,12 @@ class HTMLSerializer(object):
         if self.omit_optional_tags:
             from html5lib.filters.optionaltags import Filter
             treewalker = Filter(treewalker)
+        posted_doctype = False
         for token in treewalker:
             type = token["type"]
             if type == "Doctype":
-                doctype = u"<!DOCTYPE %s" % token["name"]
-                
-                if token["publicId"]:
-                    doctype += u' PUBLIC "%s"' % token["publicId"]
-                elif token["systemId"]:
-                    doctype += u" SYSTEM"
-                if token["systemId"]:                
-                    if token["systemId"].find(u'"') >= 0:
-                        if token["systemId"].find(u"'") >= 0:
-                            self.serializeError(_("System identifer contains both single and double quote characters"))
-                        quote_char = u"'"
-                    else:
-                        quote_char = u'"'
-                    doctype += u" %s%s%s" % (quote_char, token["systemId"], quote_char)
-                
-                doctype += u">"
-                
+                posted_doctype = True
+                doctype = self.calc_doctype(token)
                 if encoding:
                     yield doctype.encode(encoding)
                 else:
@@ -205,6 +284,9 @@ class HTMLSerializer(object):
                     yield escape(token["data"])
 
             elif type in ("StartTag", "EmptyTag"):
+                if not posted_doctype:
+                    posted_doctype = True
+                    yield self.calc_doctype()
                 name = token["name"]
                 if name in rcdataElements and not self.escape_rcdata:
                     in_cdata = True
