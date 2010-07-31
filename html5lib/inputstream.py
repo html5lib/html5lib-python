@@ -134,10 +134,10 @@ class HTMLInputStream:
         #Craziness
         if len(u"\U0010FFFF") == 1:
             self.reportCharacterErrors = self.characterErrorsUCS4
+            self.replaceCharactersRegexp = re.compile(u"[\uD800-\uDFFF]")
         else:
             self.reportCharacterErrors = self.characterErrorsUCS2
-
-        self.replaceCharactersRegexp = re.compile(u"[\u0000\uD800-\uDFFF]")
+            self.replaceCharactersRegexp = re.compile(u"([\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF])")
 
         # List of where new lines occur
         self.newLines = [0]
@@ -349,8 +349,11 @@ class HTMLInputStream:
             return False
         
         self.reportCharacterErrors(data)
-
-        data = self.replaceCharactersRegexp.subn(u"\ufffd", data)[0]
+        
+        # Replace invalid characters
+        data = data.replace(u"\u0000", u"\ufffd")
+        data = self.replaceCharactersRegexp.sub(u"\ufffd", data)
+        
         #Check for CR LF broken across chunks
         if (self._lastChunkEndsWithCR and data[0] == u"\n"):
             data = data[1:]
