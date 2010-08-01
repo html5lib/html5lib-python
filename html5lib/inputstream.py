@@ -347,10 +347,7 @@ class HTMLInputStream:
         
         #Deal with CR LF and surrogates broken across chunks
         if self._bufferedCharacter:
-            if data:
-                data = data + self._bufferedCharacter
-            else:
-                data = self._bufferedCharacter
+            data = self._bufferedCharacter + data
             self._bufferedCharacter = None
         elif not data:
             # We have no more data, bye-bye stream
