@@ -27,7 +27,11 @@ else:
     for k, v in entities.items():
         if v != "&" and encode_entity_map.get(v) != k.lower():
             # prefer &lt; over &LT; and similarly for &amp;, &gt;, etc.
-            encode_entity_map[ord(v)] = k
+            if len(v) == 2:
+                v = utils.surrogatePairToCodepoint(v)
+            else:
+                v = ord(v)
+            encode_entity_map[v] = k
 
     def htmlentityreplace_errors(exc):
         if isinstance(exc, (UnicodeEncodeError, UnicodeTranslateError)):

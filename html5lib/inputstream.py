@@ -134,8 +134,10 @@ class HTMLInputStream:
         #Craziness
         if len(u"\U0010FFFF") == 1:
             self.reportCharacterErrors = self.characterErrorsUCS4
+            self.replaceCharactersRegexp = re.compile(u"[\uD800-\uDFFF]")
         else:
             self.reportCharacterErrors = self.characterErrorsUCS2
+            self.replaceCharactersRegexp = re.compile(u"([\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF])")
 
         # List of where new lines occur
         self.newLines = [0]
@@ -159,6 +161,7 @@ class HTMLInputStream:
         if (self.charEncoding[0] is None):
             self.charEncoding = self.detectEncoding(parseMeta, chardet)
 
+
         self.reset()
 
     def reset(self):
@@ -175,8 +178,8 @@ class HTMLInputStream:
         # number of columns in the last line of the previous chunk
         self.prevNumCols = 0
         
-        #Flag to indicate we may have a CR LF broken across a data chunk
-        self._lastChunkEndsWithCR = False
+        #Deal with CR LF and surrogates split over chunk boundaries
+        self._bufferedCharacter = None
 
     def openStream(self, source):
         """Produces a file object from source.
@@ -341,20 +344,27 @@ class HTMLInputStream:
         self.chunkOffset = 0
 
         data = self.dataStream.read(chunkSize)
-
-        if not data:
+        
+        #Deal with CR LF and surrogates broken across chunks
+        if self._bufferedCharacter:
+            data = self._bufferedCharacter + data
+            self._bufferedCharacter = None
+        elif not data:
+            # We have no more data, bye-bye stream
             return False
         
+        if len(data) > 1:
+            lastv = ord(data[-1])
+            if lastv == 0x0D or 0xD800 <= lastv <= 0xDBFF:
+                self._bufferedCharacter = data[-1]
+                data = data[:-1]
+        
         self.reportCharacterErrors(data)
-
+        
+        # Replace invalid characters
         data = data.replace(u"\u0000", u"\ufffd")
-        #Check for CR LF broken across chunks
-        if (self._lastChunkEndsWithCR and data[0] == u"\n"):
-            data = data[1:]
-            # Stop if the chunk is now empty
-            if not data:
-                return False
-        self._lastChunkEndsWithCR = data[-1] == u"\r"
+        data = self.replaceCharactersRegexp.sub(u"\ufffd", data)
+                    
         data = data.replace(u"\r\n", u"\n")
         data = data.replace(u"\r", u"\n")
 
@@ -394,8 +404,6 @@ class HTMLInputStream:
             else:
                 skip = False
                 self.errors.append("invalid-codepoint")
-        #This is still wrong if it is possible for a surrogate pair to break a
-        #chunk boundary
 
     def charsUntil(self, characters, opposite = False):
         """ Returns a string of characters from the stream up to but not
