@@ -1332,7 +1332,7 @@ def getPhases(debug):
         def endTagForm(self, token):
             node = self.tree.formPointer
             self.tree.formPointer = None
-            if node is None or not self.tree.elementInScope(node.name):
+            if node is None or not self.tree.elementInScope(node):
                 self.parser.parseError("unexpected-end-tag",
                                        {"name":"form"})
             else:
@@ -1670,8 +1670,10 @@ def getPhases(debug):
 
         def startTagForm(self, token):
             self.parser.parseError("unexpected-form-in-table")
-            self.tree.insertElement(token)
-            self.tree.openElements.pop()
+            if self.tree.formPointer is None:
+                self.tree.insertElement(token)
+                self.tree.formPointer = self.tree.openElements[-1]
+                self.tree.openElements.pop()
 
         def startTagOther(self, token):
             self.parser.parseError("unexpected-start-tag-implies-table-voodoo", {"name": token["name"]})
@@ -2367,9 +2369,23 @@ def getPhases(debug):
 
         def processEOF(self):
             self.parser.parseError("eof-in-foreign-lands")
-            #while self.tree.openElements.pop().name not in ("svg", "math"):
-            #    pass
-            self.parser.phase = self.parser.secondaryPhase
+            
+            stopNodes = frozenset([(namespaces["mathml"], "mi"),
+                                   (namespaces["mathml"], "mo"),
+                                   (namespaces["mathml"], "mn"),
+                                   (namespaces["mathml"], "ms"),
+                                   (namespaces["mathml"], "mtext"),
+                                   (namespaces["svg"], "foreignObject"),
+                                   (namespaces["svg"], "desc"),
+                                   (namespaces["svg"], "title")])            
+            while True:
+                node = self.tree.openElements.pop()
+                if (node.nameTuple in stopNodes or 
+                    node.nameTuple[0] == namespaces["html"]):
+                    break
+                
+            if self.parser.phase == self and not self.nonHTMLElementInScope():
+                self.parser.phase = self.parser.secondaryPhase
             self.parser.phase.processEOF()
 
         def processStartTag(self, token):
@@ -2431,9 +2447,10 @@ def getPhases(debug):
                     if node.namespace == self.tree.defaultNamespace:
                         assert self.parser.secondaryPhase != self
                         self.parser.secondaryPhase.processEndTag(token)
-                        if self.parser.phase == self and not self.nonHTMLElementInScope():
-                            self.parser.phase = self.parser.secondaryPhase
                         break
+
+                if self.parser.phase == self and not self.nonHTMLElementInScope():
+                    self.parser.phase = self.parser.secondaryPhase
 
             else:
                 assert self.parser.secondaryPhase != self

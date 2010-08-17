@@ -129,7 +129,11 @@ class TreeBuilder(object):
         self.document = self.documentClass()
 
     def elementInScope(self, target, variant=None):
-        # Exit early when possible.
+
+        #If we pass a node in we match that. if we pass a string
+        #match any node with that name
+        exactNode = hasattr(target, "nameTuple")
+
         listElementsMap = {
             None:scopingElements,
             "button":scopingElements | set([(namespaces["html"], "button")]),
@@ -141,7 +145,8 @@ class TreeBuilder(object):
         listElements = listElementsMap[variant]
 
         for node in reversed(self.openElements):
-            if node.name == target:
+            if (node.name == target and not exactNode or
+                node == target and exactNode):
                 return True
             elif node.nameTuple in listElements:
                 return False
