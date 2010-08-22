@@ -202,7 +202,7 @@ def convertTokens(tokens):
                                    token["publicId"],
                                    token["systemId"] and token["systemId"] or ""))
                 elif token["systemId"]:
-                    output.append("""%s<!DOCTYPE %s SYSTEM "%s">"""% 
+                    output.append("""%s<!DOCTYPE %s "" "%s">"""% 
                                   (" "*indent, token["name"], 
                                    token["systemId"]))
                 else:
@@ -277,11 +277,8 @@ def buildTestSuite():
 
     for treeName, treeCls in treeTypes.iteritems():
         files = html5lib_test_files('tree-construction')
-        files = [f for f in files if 
-                 not f.split(".")[-2][-2:] in ("s9", "10", "11", "12")] #skip namespace tests for now
         for filename in files:
             testName = os.path.basename(filename).replace(".dat","")
-            if testName == "tests5": continue # TODO
 
             tests = TestData(filename, "data")
 

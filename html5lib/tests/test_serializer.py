@@ -1,6 +1,11 @@
 import os
 import unittest
-from support import simplejson, html5lib_test_files
+from support import html5lib_test_files
+
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 import html5lib
 from html5lib import html5parser, serializer, constants
@@ -117,7 +122,7 @@ class LxmlTestCase(unittest.TestCase):
 def buildBasicTestSuite():
     for filename in html5lib_test_files('serializer', '*.test'):
         test_name = os.path.basename(filename).replace('.test','')
-        tests = simplejson.load(file(filename))
+        tests = json.load(file(filename))
         for index, test in enumerate(tests['tests']):
             xhtml = test.get("xhtml", test["expected"])
             if test_name == 'optionaltags': xhtml = None
