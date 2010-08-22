@@ -99,6 +99,49 @@ class HTMLSerializer(object):
           "escape_rcdata", "resolve_entities", "sanitize")
 
     def __init__(self, **kwargs):
+        """Initialize HTMLSerializer.
+
+        Keyword options (default given first unless specified) include:
+
+        inject_meta_charset=True|False
+          Whether it insert a meta element to define the character set of the
+          document.
+        quote_attr_values=True|False
+          Whether to quote attribute values that don't require quoting
+          per HTML5 parsing rules.
+        quote_char=u'"'|u"'"
+          Use given quote character for attribute quoting. Default is to
+          use double quote unless attribute value contains a double quote,
+          in which case single quotes are used instead.
+        escape_lt_in_attrs=False|True
+          Whether to escape < in attribute values.
+        escape_rcdata=False|True
+          Whether to escape characters that need to be escaped within normal
+          elements within rcdata elements such as style.
+        resolve_entities=True|False
+          Whether to resolve named character entities that appear in the
+          source tree. The XML predefined entities &lt; &gt; &amp; &quot; &apos;
+          are unaffected by this setting.
+        strip_whitespace=False|True
+          Whether to remove semantically meaningless whitespace. (This
+          compresses all whitespace to a single space except within pre.)
+        minimize_boolean_attributes=True|False
+          Shortens boolean attributes to give just the attribute value,
+          for example <input disabled="disabled"> becomes <input disabled>.
+        use_trailing_solidus=False|True
+          Includes a close-tag slash at the end of the start tag of void
+          elements (empty elements whose end tag is forbidden). E.g. <hr/>.
+        space_before_trailing_solidus=True|False
+          Places a space immediately before the closing slash in a tag
+          using a trailing solidus. E.g. <hr />. Requires use_trailing_solidus.
+        sanitize=False|True
+          Strip all unsafe or unknown constructs from output.
+          See `html5lib user documentation`_
+        omit_optional_tags=True|False
+          Omit start/end tags that are optional.
+
+        .. _html5lib user documentation: http://code.google.com/p/html5lib/wiki/UserDocumentation
+        """
         if kwargs.has_key('quote_char'):
             self.use_best_quote_char = False
         for attr in self.options:
