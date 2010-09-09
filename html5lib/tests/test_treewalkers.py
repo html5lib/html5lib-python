@@ -126,8 +126,12 @@ try:
                 text = None
 
             if type in ("StartTag", "EmptyTag"):
+                if token["namespace"]:
+                    name = u"{%s}%s" % (token["namespace"], token["name"])
+                else:
+                    name = token["name"]
                 yield (START,
-                       (QName(token["name"]),
+                       (QName(name),
                         Attrs([(QName(attr),value) for attr,value in token["data"]])),
                        (None, -1, -1))
                 if type == "EmptyTag":
@@ -149,10 +153,10 @@ try:
         if text is not None:
             yield TEXT, text, (None, -1, -1)
 
-    treeTypes["genshi"] = \
-        {"builder": treebuilders.getTreeBuilder("simpletree"),
-         "adapter": GenshiAdapter,
-         "walker":  treewalkers.getTreeWalker("genshi")}
+    #treeTypes["genshi"] = \
+    #    {"builder": treebuilders.getTreeBuilder("simpletree"),
+    #     "adapter": GenshiAdapter,
+    #     "walker":  treewalkers.getTreeWalker("genshi")}
 except ImportError:
     pass
 
@@ -179,7 +183,16 @@ def convertTokens(tokens):
     for token in concatenateCharacterTokens(tokens):
         type = token["type"]
         if type in ("StartTag", "EmptyTag"):
-            output.append(u"%s<%s>" % (" "*indent, token["name"]))
+            if (token["namespace"] and
+                token["namespace"] != constants.namespaces["html"]):
+                if token["namespace"] in constants.prefixes:
+                    name = constants.prefixes[token["namespace"]]
+                else:
+                    name = token["namespace"]
+                name += u" " + token["name"]
+            else:
+                name = token["name"]
+            output.append(u"%s<%s>" % (" "*indent, name))
             indent += 2
             attrs = token["data"]
             if attrs:
