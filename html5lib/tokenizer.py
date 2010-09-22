@@ -223,7 +223,11 @@ class HTMLTokenizer:
         if fromAttribute:
             self.currentToken["data"][-1][1] += output
         else:
-            self.tokenQueue.append({"type": tokenTypes["Characters"], "data": output})
+            if output in spaceCharacters:
+                tokenType = "SpaceCharacters"
+            else:
+                tokenType = "Characters"
+            self.tokenQueue.append({"type": tokenTypes[tokenType], "data": output})
 
     def processEntityInAttribute(self, allowedChar):
         """This method replaces the need for "entityInAttributeValueState".
