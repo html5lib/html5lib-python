@@ -39,10 +39,11 @@ class HTMLTokenizer:
     # XXX need to fix documentation
 
     def __init__(self, stream, encoding=None, parseMeta=True, useChardet=True,
-                 lowercaseElementName=True, lowercaseAttrName=True):
+                 lowercaseElementName=True, lowercaseAttrName=True, parser=None):
 
         self.stream = HTMLInputStream(stream, encoding, parseMeta, useChardet)
-        
+        self.parser = parser
+
         #Perform case conversions?
         self.lowercaseElementName = lowercaseElementName
         self.lowercaseAttrName = lowercaseAttrName
@@ -1062,6 +1063,19 @@ class HTMLTokenizer:
                                      "correct": True}
                 self.state = self.doctypeState
                 return True
+        elif (charStack[-1] == "[" and 
+              self.parser is not None and 
+              self.parser.phase == self.parser.phases["inForeignContent"] and
+              self.parser.tree.openElements[-1].namespace != self.parser.tree.defaultNamespace):
+            matched = True
+            for expected in ["C", "D", "A", "T", "A", "["]:
+                charStack.append(self.stream.char())
+                if charStack[-1] != expected:
+                    matched = False
+                    break
+            if matched:
+                self.state = self.cdataSectionState
+                return True
 
         self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
           "expected-dashes-or-doctype"})
@@ -1562,4 +1576,30 @@ class HTMLTokenizer:
             self.state = self.dataState
         else:
             pass
+        return True
+
+    def cdataSectionState(self):
+        data = []
+        while True:
+            data.append(self.stream.charsUntil(u"]"))
+            charStack = []
+
+            for expected in ["]", "]", ">"]:
+                charStack.append(self.stream.char())
+                matched = True
+                if charStack[-1] == EOF:
+                    data.extend(charStack[:-1])
+                    break
+                elif charStack[-1] != expected:
+                    matched = False
+                    data.extend(charStack)
+                    break
+
+            if matched:
+                break
+        data = "".join(data)
+        if data:
+            self.tokenQueue.append({"type": tokenTypes["Characters"], "data": 
+                                    data})
+        self.state = self.dataState
         return True
