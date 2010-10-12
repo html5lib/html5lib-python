@@ -105,7 +105,8 @@ class HTMLParser(object):
         self.container = container
         self.tokenizer = self.tokenizer_class(stream, encoding=encoding,
                                               parseMeta=parseMeta,
-                                              useChardet=useChardet, **kwargs)
+                                              useChardet=useChardet, 
+                                              parser=self, **kwargs)
         self.reset()
 
         while True:
