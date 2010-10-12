@@ -231,12 +231,18 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                 rv.append("|%s<%s>"%(' '*indent, name))
 
                 if hasattr(element, "attrib"):
+                    attributes = []
                     for name, value in element.attrib.iteritems():
                         nsmatch = tag_regexp.match(name)
                         if nsmatch is not None:
                             ns, name = nsmatch.groups()
                             prefix = constants.prefixes[ns]
-                            name = "%s %s"%(prefix, name)
+                            attr_string = "%s %s"%(prefix, name)
+                        else:
+                            attr_string = name
+                        attributes.append((attr_string, value))
+
+                    for name, value in sorted(attributes):
                         rv.append('|%s%s="%s"' % (' '*(indent+2), name, value))
                 if element.text:
                     rv.append("|%s\"%s\"" %(' '*(indent+2), element.text))

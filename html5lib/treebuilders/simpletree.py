@@ -203,7 +203,7 @@ class Element(Node):
         tree = '\n|%s%s' % (' '*indent, unicode(self))
         indent += 2
         if self.attributes:
-            for name, value in self.attributes.iteritems():
+            for name, value in sorted(self.attributes.iteritems()):
                 if isinstance(name, tuple):
                     name = "%s %s"%(name[0], name[1])
                 tree += '\n|%s%s="%s"' % (' ' * indent, name, value)

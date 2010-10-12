@@ -217,7 +217,7 @@ def testSerializer(element):
         else:
             rv.append("|%s<%s>"%(' '*indent, element.name))
             if element.attrs:
-                for name, value in element.attrs:
+                for name, value in sorted(element.attrs):
                     rv.append('|%s%s="%s"' % (' '*(indent+2), name, value))
         indent += 2
         if hasattr(element, "contents"):

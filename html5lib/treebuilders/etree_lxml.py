@@ -14,6 +14,7 @@ except ImportError:
     pass
 
 fullTree = True
+tag_regexp = re.compile("{([^}]*)}(.*)")
 
 """Module for supporting the lxml.etree library. The idea here is to use as much
 of the native library as possible, without using fragile hacks like custom element
@@ -93,20 +94,21 @@ def testSerializer(element):
                                      filter.fromXmlName(element.tag)))
 
             if hasattr(element, "attrib"):
+                attributes = []
                 for name, value in element.attrib.iteritems():
-                    nsmatch = etree_builders.tag_regexp.match(name)
-                    if nsmatch:
-                        ns = nsmatch.group(1)
-                        name = nsmatch.group(2)
+                    nsmatch = tag_regexp.match(name)
+                    if nsmatch is not None:
+                        ns, name = nsmatch.groups()
+                        name = filter.fromXmlName(name)
                         prefix = constants.prefixes[ns]
-                        rv.append('|%s%s %s="%s"' % (' '*(indent+2), 
-                                                  prefix,
-                                                  filter.fromXmlName(name),
-                                                  value))
-                    else:        
-                        rv.append('|%s%s="%s"' % (' '*(indent+2), 
-                                                  filter.fromXmlName(name),
-                                                  value))
+                        attr_string = "%s %s"%(prefix, name)
+                    else:
+                        attr_string = filter.fromXmlName(name)
+                    attributes.append((attr_string, value))
+
+                for name, value in sorted(attributes):
+                    rv.append('|%s%s="%s"' % (' '*(indent+2), name, value))
+
             if element.text:
                 rv.append("|%s\"%s\"" %(' '*(indent+2), element.text))
             indent += 2

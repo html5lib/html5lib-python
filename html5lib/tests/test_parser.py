@@ -4,6 +4,7 @@ import traceback
 import StringIO
 import unittest
 import warnings
+import re
 
 warnings.simplefilter("error")
 
@@ -67,12 +68,6 @@ checkParseErrors = False
 def convertTreeDump(data):
     return "\n".join(convert(3)(data).split("\n")[1:])
 
-import re
-attrlist = re.compile(r"^(\s+)\w+(?:\s\w+)?=.*(?:\n\1\w+(?:\s\w+)?=.*)+",re.M)
-def sortattrs(x):
-  lines = x.group(0).split("\n")
-  lines.sort()
-  return "\n".join(lines)
 namespaceExpected = re.compile(r"^(\s*)<(\S+)>", re.M).sub
 
 class TestCase(unittest.TestCase):
@@ -100,10 +95,8 @@ class TestCase(unittest.TestCase):
             self.assertTrue(False, errorMsg.encode("utf8"))
         
         output = convertTreeDump(p.tree.testSerializer(document))
-        output = attrlist.sub(sortattrs, output)
         
         expected = convertExpected(expected)
-        expected = attrlist.sub(sortattrs, expected)
         if namespaceHTMLElements:
             expected = namespaceExpected(r"\1<html \2>", expected)
         
@@ -125,8 +118,6 @@ def buildTestSuite():
 
     for treeName, treeCls in treeTypes.iteritems():
         files = html5lib_test_files('tree-construction')
-        #files = [f for f in files if 
-        #         not f.split(".")[-2][-2:] in ("s9", "10", "11", "12")] #skip namespace tests for now
         for filename in files:
             testName = os.path.basename(filename).replace(".dat","")
 
@@ -151,7 +142,6 @@ def buildTestSuite():
                     setattr(TestCase, testFunc.__name__,
                          testFunc)
                     break
-        break
 
     return unittest.TestLoader().loadTestsFromTestCase(TestCase)
 
