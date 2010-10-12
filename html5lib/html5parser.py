@@ -909,7 +909,7 @@ def getPhases(debug):
                 (("applet", "marquee", "object"), self.startTagAppletMarqueeObject),
                 ("xmp", self.startTagXmp),
                 ("table", self.startTagTable),
-                (("area", "br", "embed", "img", "input", "keygen", "spacer", 
+                (("area", "br", "embed", "img", "input", "keygen", 
                   "wbr"), self.startTagVoidFormatting),
                 (("param", "source"), self.startTagParamSource),
                 ("hr", self.startTagHr),
