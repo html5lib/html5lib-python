@@ -411,6 +411,21 @@ specialElements = frozenset((
     (namespaces["svg"], "foreignObject")
 ))
 
+htmlIntegrationPointElements = frozenset((
+    (namespaces["mathml"], "annotaion-xml"),
+    (namespaces["svg"], "foreignObject"),
+    (namespaces["svg"], "desc"),
+    (namespaces["svg"], "title")
+))
+
+mathmlTextIntegrationPointElements = frozenset((
+    (namespaces["mathml"], "mi"),
+    (namespaces["mathml"], "mo"),
+    (namespaces["mathml"], "mn"),
+    (namespaces["mathml"], "ms"),
+    (namespaces["mathml"], "mtext")
+))
+
 spaceCharacters = frozenset((
     u"\t",
     u"\n",

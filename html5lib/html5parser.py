@@ -44,6 +44,7 @@ from constants import formattingElements, specialElements
 from constants import headingElements, tableInsertModeElements
 from constants import cdataElements, rcdataElements, voidElements
 from constants import tokenTypes, ReparseException, namespaces, spaceCharacters
+from constants import htmlIntegrationPointElements, mathmlTextIntegrationPointElements
 
 def parse(doc, treebuilder="simpletree", encoding=None, 
           namespaceHTMLElements=True):
