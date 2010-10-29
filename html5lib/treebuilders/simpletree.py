@@ -31,6 +31,7 @@ class Node(_base.Node):
         return tree
 
     def appendChild(self, node):
+        assert isinstance(node, Node)
         if (isinstance(node, TextNode) and self.childNodes and
           isinstance(self.childNodes[-1], TextNode)):
             self.childNodes[-1].value += node.value
@@ -39,6 +40,7 @@ class Node(_base.Node):
         node.parent = self
 
     def insertText(self, data, insertBefore=None):
+        assert isinstance(data, unicode), "data %s is of type %s expected unicode"%(repr(data), type(data))
         if insertBefore is None:
             self.appendChild(TextNode(data))
         else:

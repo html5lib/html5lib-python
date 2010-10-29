@@ -260,6 +260,7 @@ class TreeBuilder(object):
         
     def insertElementNormal(self, token):
         name = token["name"]
+        assert type(name) == unicode, "Element %s not unicode"%name
         namespace = token.get("namespace", self.defaultNamespace)
         element = self.elementClass(name, namespace)
         element.attributes = token["data"]
