@@ -388,7 +388,7 @@ class HTMLParser(object):
                 nodeName = self.innerHTML
             # Check for conditions that should only happen in the innerHTML
             # case
-            if nodeName in ("select", "colgroup", "head", "frameset", "html"):
+            if nodeName in ("select", "colgroup", "head", "html"):
                 assert self.innerHTML
 
             if nodeName in newModes:
@@ -1385,7 +1385,11 @@ def getPhases(debug):
             # http://www.whatwg.org/specs/web-apps/current-work/#adoptionAgency
             # XXX Better parseError messages appreciated.
             name = token["name"]
-            while True:
+
+            outerLoopCounter = 0
+            while outerLoopCounter < 8:
+                outerLoopCounter += 1
+
                 # Step 1 paragraph 1
                 formattingElement = self.tree.elementInActiveFormattingElements(
                     token["name"])
@@ -1435,16 +1439,17 @@ def getPhases(debug):
 
                 # Step 6
                 lastNode = node = furthestBlock
-                while True:
-                    # AT replace this with a function and recursion?
+                innerLoopCounter = 0
+                
+                index = self.tree.openElements.index(node)
+                while innerLoopCounter < 3:
+                    innerLoopCounter += 1
                     # Node is element before node in open elements
-                    node = self.tree.openElements[
-                        self.tree.openElements.index(node)-1]
-                    while node not in self.tree.activeFormattingElements:
-                        tmpNode = node
-                        node = self.tree.openElements[
-                            self.tree.openElements.index(node)-1]
-                        self.tree.openElements.remove(tmpNode)
+                    index -= 1
+                    node = self.tree.openElements[index]
+                    if node not in self.tree.activeFormattingElements:
+                        self.tree.openElements.remove(node)
+                        continue
                     # Step 6.3
                     if node == formattingElement:
                         break
@@ -1454,7 +1459,6 @@ def getPhases(debug):
                                     + 1)
                     # Step 6.5
                     #cite = node.parent
-                    #if node.hasContent():
                     clone = node.cloneNode()
                     # Replace node with clone
                     self.tree.activeFormattingElements[
