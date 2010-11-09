@@ -86,6 +86,29 @@ class Node(object):
         """
         raise NotImplementedError
 
+class ActiveFormattingElements(list):
+    def append(self, node):
+        equalCount = 0
+        if node != Marker:
+            for element in self[::-1]:
+                if element == Marker:
+                    break
+                if self.nodesEqual(element, node):
+                    equalCount += 1
+                if equalCount == 3:
+                    self.remove(element)
+                    break
+        list.append(self, node)
+
+    def nodesEqual(self, node1, node2):
+        if not node1.nameTuple == node2.nameTuple:
+            return False
+        
+        if not node1.attributes == node2.attributes:
+            return False
+        
+        return True
+
 class TreeBuilder(object):
     """Base treebuilder implementation
     documentClass - the class to use for the bottommost node of a document
@@ -118,7 +141,7 @@ class TreeBuilder(object):
     
     def reset(self):
         self.openElements = []
-        self.activeFormattingElements = []
+        self.activeFormattingElements = ActiveFormattingElements()
 
         #XXX - rename these to headElement, formElement
         self.headPointer = None

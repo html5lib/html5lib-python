@@ -24,7 +24,15 @@ class AttrList(object):
         return self.attrs[name]
     def __contains__(self, name):
         return name in self.attrs.keys()
-
+    def __eq__(self, other):
+        if len(self.keys()) != len(other.keys()):
+            return False
+        for item in self.keys():
+            if item not in other:
+                return False
+            if self[item] != other[item]:
+                return False
+        return True
 
 class Element(_base.Node):
     def __init__(self, element, soup, namespace):
