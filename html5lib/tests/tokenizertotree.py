@@ -51,10 +51,10 @@ def make_test(test_data):
     rv.append("#data")
     rv.append(test_data["input"].encode("utf8"))
     rv.append("#errors")
-    rv.append("#document")
     tree = p.parse(test_data["input"])
-    output = test_parser.convertTreeDump(p.tree.testSerializer(tree))
-    output = test_parser.attrlist.sub(test_parser.sortattrs, output)
+    output = p.tree.testSerializer(tree)
+    output  = "\n".join(("| "+ line[3:]) if line.startswith("|  ") else line
+                        for line in output.split("\n"))
     output = unnamespaceExpected(r"\1<\2>", output)
     rv.append(output.encode("utf8"))
     rv.append("")
