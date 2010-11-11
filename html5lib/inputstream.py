@@ -362,7 +362,7 @@ class HTMLInputStream:
         self.reportCharacterErrors(data)
         
         # Replace invalid characters
-        data = data.replace(u"\u0000", u"\ufffd")
+        # Note U+0000 is dealt with in the tokenizer
         data = self.replaceCharactersRegexp.sub(u"\ufffd", data)
                     
         data = data.replace(u"\r\n", u"\n")
@@ -374,16 +374,12 @@ class HTMLInputStream:
         return True
 
     def characterErrorsUCS4(self, data):
-        for i in xrange(data.count(u"\u0000")):
-            self.errors.append("null-character")
         for i in xrange(len(invalid_unicode_re.findall(data))):
             self.errors.append("invalid-codepoint")
 
     def characterErrorsUCS2(self, data):
         #Someone picked the wrong compile option
         #You lose
-        for i in xrange(data.count(u"\u0000")):
-            self.errors.append("null-character")
         skip = False
         import sys
         for match in invalid_unicode_re.finditer(data):
@@ -452,24 +448,9 @@ class HTMLInputStream:
         r = u"".join(rv)
         return r
 
-    def charsUntilEOF(self):
-        """ Returns a string of characters from the stream up to EOF."""
-
-        rv = []
-
-        while True:
-            rv.append(self.chunk[self.chunkOffset:])
-            if not self.readChunk():
-                # Reached EOF
-                break
-
-        r = u"".join(rv)
-        return r
-
     def unget(self, char):
         # Only one character is allowed to be ungotten at once - it must
         # be consumed again before any further call to unget
-
         if char is not None:
             if self.chunkOffset == 0:
                 # unget is called quite rarely, so it's a good idea to do
