@@ -268,7 +268,7 @@ class HTMLTokenizer:
             self.tokenQueue.append({"type": tokenTypes["ParseError"], 
                                     "data":"invalid-codepoint"})
             self.tokenQueue.append({"type": tokenTypes["Characters"], 
-                                    "data": u"\uFFFD"})
+                                    "data": u"\u0000"})
         elif data is EOF:
             # Tokenization ends.
             return False
@@ -282,7 +282,7 @@ class HTMLTokenizer:
             # have already been appended to lastFourChars and will have broken
             # any <!-- or --> sequences
         else:
-            chars = self.stream.charsUntil((u"&", u"<"))
+            chars = self.stream.charsUntil((u"&", u"<", u"\u0000"))
             self.tokenQueue.append({"type": tokenTypes["Characters"], "data": 
               data + chars})
         return True
@@ -646,7 +646,7 @@ class HTMLTokenizer:
         elif data == EOF:
             self.state = self.dataState
         else:
-            chars = self.stream.charsUntil((u"<-", u"\u0000"))
+            chars = self.stream.charsUntil((u"<", u"-", u"\u0000"))
             self.tokenQueue.append({"type": tokenTypes["Characters"], "data": 
               data + chars})
         return True
@@ -1150,7 +1150,7 @@ class HTMLTokenizer:
                 self.state = self.doctypeState
                 return True
         elif (charStack[-1] == "[" and 
-              self.parser is not None and 
+              self.parser is not None and
               self.parser.phase == self.parser.phases["inForeignContent"] and
               self.parser.tree.openElements[-1].namespace != self.parser.tree.defaultNamespace):
             matched = True
@@ -1731,8 +1731,15 @@ class HTMLTokenizer:
             if matched:
                 break
         data = "".join(data)
+        #Deal with null here rather than in the parser
+        nullCount = data.count(u"\u0000")
+        if nullCount > 0:
+            for i in xrange(nullCount):
+                self.tokenQueue.append({"type": tokenTypes["ParseError"], 
+                                        "data": "invalid-codepoint"})
+            data = data.replace(u"\u0000", u"\uFFFD")
         if data:
-            self.tokenQueue.append({"type": tokenTypes["Characters"], "data": 
-                                    data})
+            self.tokenQueue.append({"type": tokenTypes["Characters"], 
+                                    "data": data})
         self.state = self.dataState
         return True

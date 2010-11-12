@@ -987,12 +987,15 @@ def getPhases(debug):
                 self.tree.insertText(data)
 
         def processCharacters(self, token):
+            if token["data"] == u"\u0000":
+                #The tokenizer should always emit null on its own
+                return
             self.tree.reconstructActiveFormattingElements()
             self.tree.insertText(token["data"])
             #This must be bad for performance
             if (self.parser.framesetOK and
-                any([char not in set(u"\ufffd") | spaceCharacters
-                                  for char in token["data"]])):
+                any([char not in spaceCharacters
+                     for char in token["data"]])):
                 self.parser.framesetOK = False
 
         def processSpaceCharacters(self, token):
@@ -2195,6 +2198,8 @@ def getPhases(debug):
                 assert self.parser.innerHTML
 
         def processCharacters(self, token):
+            if token["data"] == u"\u0000":
+                return
             self.tree.insertText(token["data"])
 
         def startTagOption(self, token):
@@ -2375,8 +2380,11 @@ def getPhases(debug):
                 new_token = self.parser.phases["inBody"].processCharacters(token)
                 self.parser.resetInsertionMode()
                 return new_token
-
-            self.parser.framesetOK = False
+            elif token["data"] == u"\u0000":
+                token["data"] = u"\uFFFD"
+            elif (not self.parser.framesetOK and 
+                  any(char not in spaceCharacters for char in token["data"])):
+                self.parser.framesetOK = False
             Phase.processCharacters(self, token)
 
         def processEOF(self):

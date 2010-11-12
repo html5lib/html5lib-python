@@ -107,7 +107,7 @@ def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder,
             if token[0] == "StartTag" or token[0] == "EndTag":
                 token.pop()
 
-    if not ignoreErrorOrder:    
+    if not ignoreErrorOrder and not ignoreErrors:
         return expectedTokens == receivedTokens
     else:
         #Sort the tokens into two groups; non-parse errors and parse errors
