@@ -375,7 +375,7 @@ class HTMLTokenizer:
         else:
             self.tokenQueue.append({"type": tokenTypes["Characters"], "data": 
                                     data + self.stream.charsUntil(u"\u0000")})
-            return True
+        return True
 
     def tagOpenState(self):
         data = self.stream.char()

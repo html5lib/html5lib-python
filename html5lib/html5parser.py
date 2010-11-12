@@ -2382,7 +2382,7 @@ def getPhases(debug):
                 return new_token
             elif token["data"] == u"\u0000":
                 token["data"] = u"\uFFFD"
-            elif (not self.parser.framesetOK and 
+            elif (self.parser.framesetOK and 
                   any(char not in spaceCharacters for char in token["data"])):
                 self.parser.framesetOK = False
             Phase.processCharacters(self, token)
