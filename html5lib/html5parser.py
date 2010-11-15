@@ -1220,7 +1220,7 @@ def getPhases(debug):
             self.parser.parseRCDataRawtext(token, "RAWTEXT")
 
         def startTagOpt(self, token):
-            if self.tree.elementInScope("option"):
+            if self.tree.openElements[-1].name == "option":
                 self.parser.phase.processEndTag(impliedTagToken("option"))
             self.tree.reconstructActiveFormattingElements()
             self.parser.tree.insertElement(token)
