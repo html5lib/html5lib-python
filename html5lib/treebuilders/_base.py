@@ -159,19 +159,21 @@ class TreeBuilder(object):
 
         listElementsMap = {
             None:scopingElements,
-            "button":scopingElements | set([(namespaces["html"], "button")]),
-            "list":scopingElements | set([(namespaces["html"], "ol"),
-                                          (namespaces["html"], "ul")]),
-            "table":set([(namespaces["html"], "html"),
-                         (namespaces["html"], "table")])
+            "button":(scopingElements | set([(namespaces["html"], "button")]), False),
+            "list":(scopingElements | set([(namespaces["html"], "ol"),
+                                           (namespaces["html"], "ul")]), False),
+            "table":(set([(namespaces["html"], "html"),
+                          (namespaces["html"], "table")]), False),
+            "select":(set(["optgroup", "option"]), True)
             }
-        listElements = listElementsMap[variant]
+        listElements, invert = listElementsMap[variant]
 
         for node in reversed(self.openElements):
             if (node.name == target and not exactNode or
                 node == target and exactNode):
                 return True
-            elif node.nameTuple in listElements:
+            elif ((not invert and node.nameTuple in listElements) or
+                  (invert and node.nameTuple not in listElements)):
                 return False
 
         assert False # We should never reach this point

@@ -2221,7 +2221,8 @@ def getPhases(debug):
 
         def startTagInput(self, token):
             self.parser.parseError("unexpected-input-in-select")
-            if self.tree.elementInScope("select", variant="table"):
+            if self.tree.elementInScope("select", variant="select"):
+                assert self.parser.innerHTML
                 self.endTagSelect(impliedTagToken("select"))
                 return token
 
@@ -2253,7 +2254,7 @@ def getPhases(debug):
                   {"name": "optgroup"})
 
         def endTagSelect(self, token):
-            if self.tree.elementInScope("select", variant="table"):
+            if self.tree.elementInScope("select", variant="select"):
                 node = self.tree.openElements.pop()
                 while node.name != "select":
                     node = self.tree.openElements.pop()
