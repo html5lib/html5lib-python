@@ -10,7 +10,7 @@ import test_tokenizer
 
 p = html5lib.HTMLParser()
 
-unnamespaceExpected = re.compile(r"^(\s*)<html (\S+)>", re.M).sub
+unnamespaceExpected = re.compile(r"^(\|\s*)<html ([^>]+)>", re.M).sub
 
 def main(out_path):
     if not os.path.exists(out_path):
