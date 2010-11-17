@@ -1011,6 +1011,7 @@ def getPhases(debug):
                 or self.tree.openElements[1].name != "body"):
                 assert self.parser.innerHTML
             else:
+                self.parser.framesetOK = False
                 for attr, value in token["data"].iteritems():
                     if attr not in self.tree.openElements[1].attributes:
                         self.tree.openElements[1].attributes[attr] = value
@@ -2221,7 +2222,7 @@ def getPhases(debug):
 
         def startTagInput(self, token):
             self.parser.parseError("unexpected-input-in-select")
-            if self.tree.elementInScope("select", variant="select"):
+            if not self.tree.elementInScope("select", variant="select"):
                 assert self.parser.innerHTML
                 self.endTagSelect(impliedTagToken("select"))
                 return token

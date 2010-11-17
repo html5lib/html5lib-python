@@ -158,13 +158,14 @@ class TreeBuilder(object):
         exactNode = hasattr(target, "nameTuple")
 
         listElementsMap = {
-            None:scopingElements,
+            None:(scopingElements, False),
             "button":(scopingElements | set([(namespaces["html"], "button")]), False),
             "list":(scopingElements | set([(namespaces["html"], "ol"),
                                            (namespaces["html"], "ul")]), False),
             "table":(set([(namespaces["html"], "html"),
                           (namespaces["html"], "table")]), False),
-            "select":(set(["optgroup", "option"]), True)
+            "select":(set([(namespaces["html"], "optgroup"), 
+                           (namespaces["html"], "option")]), True)
             }
         listElements, invert = listElementsMap[variant]
 
@@ -172,8 +173,7 @@ class TreeBuilder(object):
             if (node.name == target and not exactNode or
                 node == target and exactNode):
                 return True
-            elif ((not invert and node.nameTuple in listElements) or
-                  (invert and node.nameTuple not in listElements)):
+            elif (invert ^ (node.nameTuple in listElements)):                
                 return False
 
         assert False # We should never reach this point
