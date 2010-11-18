@@ -24,13 +24,22 @@ else:
     from html5lib.constants import entities
 
     encode_entity_map = {}
+    is_ucs4 = len(u"\U0010FFFF") == 1
     for k, v in entities.items():
+        #skip multi-character entities
+        if ((is_ucs4 and len(v) > 1) or 
+            (not is_ucs4 and len(v) > 2)):
+            continue
         if v != "&" and encode_entity_map.get(v) != k.lower():
             # prefer &lt; over &LT; and similarly for &amp;, &gt;, etc.
             if len(v) == 2:
                 v = utils.surrogatePairToCodepoint(v)
             else:
-                v = ord(v)
+                try:
+                    v = ord(v)
+                except:
+                    print v
+                    raise
             encode_entity_map[v] = k
 
     def htmlentityreplace_errors(exc):
