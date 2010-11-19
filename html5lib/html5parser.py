@@ -2083,8 +2083,6 @@ def getPhases(debug):
                 self.endTagTr(impliedTagToken("tr"))
                 return token
             else:
-                # innerHTML case
-                assert self.parser.innerHTML
                 self.parser.parseError()
 
         def endTagIgnore(self, token):
