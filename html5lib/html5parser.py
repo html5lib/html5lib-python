@@ -2220,10 +2220,11 @@ def getPhases(debug):
 
         def startTagInput(self, token):
             self.parser.parseError("unexpected-input-in-select")
-            if not self.tree.elementInScope("select", variant="select"):
-                assert self.parser.innerHTML
+            if self.tree.elementInScope("select", variant="select"):
                 self.endTagSelect(impliedTagToken("select"))
                 return token
+            else:
+                assert self.parser.innerHTML
 
         def startTagScript(self, token):
             return self.parser.phases["inHead"].processStartTag(token)
