@@ -308,7 +308,15 @@ scopingElements = frozenset((
     (namespaces["html"], "table"),
     (namespaces["html"], "td"),
     (namespaces["html"], "th"),
-    (namespaces["svg"], "foreignObject")
+    (namespaces["mathml"], "mi"),
+    (namespaces["mathml"], "mo"),
+    (namespaces["mathml"], "mn"),
+    (namespaces["mathml"], "ms"),
+    (namespaces["mathml"], "mtext"),
+    (namespaces["mathml"], "annotation-xml"),
+    (namespaces["svg"], "foreignObject"),
+    (namespaces["svg"], "desc"),
+    (namespaces["svg"], "title"),
 ))
 
 formattingElements = frozenset((
