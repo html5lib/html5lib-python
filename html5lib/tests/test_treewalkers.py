@@ -196,11 +196,17 @@ def convertTokens(tokens):
             indent += 2
             attrs = token["data"]
             if attrs:
-                if hasattr(attrs, "items"):
-                    attrs = attrs.items()
-                attrs.sort()
-                for name, value in attrs:
-                    output.append(u"%s%s=\"%s\"" % (" "*indent, name, value))
+                attrs.sort(lambda a,b: cmp(a["name"], b["name"]))
+                for attr in attrs:
+                    if attr["namespace"]:
+                        if attr["namespace"] in constants.prefixes:
+                            name = constants.prefixes[attr["namespace"]]
+                        else:
+                            name = attr["namespace"]
+                        name += u" " + attr["name"]
+                    else:
+                        name = attr["name"]
+                    output.append(u"%s%s=\"%s\"" % (" "*indent, name, attr["value"]))
             if type == "EmptyTag":
                 indent -= 2
         elif type == "EndTag":

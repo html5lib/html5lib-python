@@ -32,8 +32,18 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             return _base.TEXT, node.value
 
         elif node.type == 5: # Element
+            attrs = []
+            for name, value in node.attributes.items():
+                if isinstance(name, tuple):
+                    attrs.append({"namespace": name[2],
+                                  "name": name[1],
+                                  "value": value})
+                else:
+                    attrs.append({"namespace": None,
+                                  "name": name,
+                                  "value": value})
             return (_base.ELEMENT, node.namespace, node.name, 
-                    node.attributes.items(), node.hasContent())
+                    attrs, node.hasContent())
 
         elif node.type == 6: # CommentNode
             return _base.COMMENT, node.data

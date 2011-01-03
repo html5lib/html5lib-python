@@ -15,8 +15,14 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             return _base.TEXT, node.nodeValue
 
         elif node.nodeType == Node.ELEMENT_NODE:
+            attrs = []
+            for attr in node.attributes.keys():
+                attr = node.getAttributeNode(attr)
+                attrs.append({"namespace": attr.namespaceURI,
+                              "name": attr.localName,
+                              "value": attr.value})
             return (_base.ELEMENT, node.namespaceURI, node.nodeName, 
-                    node.attributes.items(), node.hasChildNodes)
+                    attrs, node.hasChildNodes)
 
         elif node.nodeType == Node.COMMENT_NODE:
             return _base.COMMENT, node.nodeValue

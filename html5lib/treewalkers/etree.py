@@ -69,8 +69,19 @@ def getETreeBuilder(ElementTreeImplementation):
                 else:
                     namespace = None
                     tag = node.tag
+                attrs = []
+                for name, value in node.attrib.items():
+                    match = tag_regexp.match(name)
+                    if match:
+                        attrs.append({"namespace": match.group(1),
+                                      "name": match.group(2),
+                                      "value": value})
+                    else:
+                        attrs.append({"namespace": None,
+                                      "name": name,
+                                      "value": value})
                 return (_base.ELEMENT, namespace, tag, 
-                        node.attrib.items(), len(node) or node.text)
+                        attrs, len(node) or node.text)
     
         def getFirstChild(self, node):
             if isinstance(node, tuple):

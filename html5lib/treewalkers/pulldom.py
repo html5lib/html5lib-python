@@ -30,14 +30,20 @@ class TreeWalker(_base.TreeWalker):
         if type == START_ELEMENT:
             name = node.nodeName
             namespace = node.namespaceURI
+            attrs = []
+            for attr in node.attributes.keys():
+                attr = node.getAttributeNode(attr)
+                attrs.append({"namespace": attr.namespaceURI,
+                              "name": attr.localName,
+                              "value": attr.value})
             if name in voidElements:
                 for token in self.emptyTag(namespace,
                                            name,
-                                           node.attributes.items(), 
+                                           attrs,
                                            not next or next[1] is not node):
                     yield token
             else:
-                yield self.startTag(namespace, name, node.attributes.items())
+                yield self.startTag(namespace, name, attrs)
 
         elif type == END_ELEMENT:
             name = node.nodeName

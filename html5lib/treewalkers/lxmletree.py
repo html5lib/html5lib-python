@@ -140,10 +140,19 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             else:
                 namespace = None
                 tag = node.tag
+            attrs = []
+            for name, value in node.attrib.items():
+                match = tag_regexp.match(name)
+                if match:
+                    attrs.append({"namespace": match.group(1),
+                                  "name": match.group(2),
+                                  "value": value})
+                else:
+                    attrs.append({"namespace": None,
+                                  "name": name,
+                                  "value": value})
             return (_base.ELEMENT, namespace, self.filter.fromXmlName(tag), 
-                    [(self.filter.fromXmlName(name), value) for 
-                     name,value in node.attrib.iteritems()], 
-                     len(node) > 0 or node.text)
+                    attrs, len(node) > 0 or node.text)
 
     def getFirstChild(self, node):
         assert not isinstance(node, tuple), _("Text nodes have no children")

@@ -17,9 +17,11 @@ class TreeWalker(object):
     def normalizeAttrs(self, attrs):
         if not attrs:
             attrs = []
-        elif hasattr(attrs, 'items'):
-            attrs = attrs.items()
-        return [(unicode(name),unicode(value)) for name,value in attrs]
+        for attr in attrs:
+            attr["namespace"] = unicode(attr["namespace"]) if attr["namespace"] else None
+            attr["name"] = unicode(attr["name"])
+            attr["value"] = unicode(attr["value"])
+        return attrs
 
     def emptyTag(self, namespace, name, attrs, hasChildren=False):
         yield {"type": "EmptyTag", "name": unicode(name), 

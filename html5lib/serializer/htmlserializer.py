@@ -224,7 +224,10 @@ class HTMLSerializer(object):
                     attrs = attrs.items()
                 attrs.sort()
                 attributes = []
-                for k,v in attrs:
+                for attr in attrs:
+                    #TODO: Add namespace support here
+                    k = attr["name"]
+                    v = attr["value"]
                     if encoding:
                         k = k.encode(encoding, "strict")
                     attributes.append(' ')
