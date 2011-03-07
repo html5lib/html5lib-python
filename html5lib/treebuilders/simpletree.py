@@ -83,8 +83,11 @@ class Document(Node):
     def __init__(self):
         Node.__init__(self, None)
 
-    def __unicode__(self):
+    def __str__(self):
         return "#document"
+
+    def __unicode__(self):
+        return str(self)
 
     def appendChild(self, child):
         Node.appendChild(self, child)
@@ -112,8 +115,11 @@ class Document(Node):
 
 class DocumentFragment(Document):
     type = 2
-    def __unicode__(self):
+    def __str__(self):
         return "#document-fragment"
+
+    def __unicode__(self):
+        return str(self)
 
     def cloneNode(self):
         return DocumentFragment()
