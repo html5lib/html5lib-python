@@ -152,18 +152,6 @@ class HTMLParser(object):
         self.framesetOK = True
         
     def mainLoop(self):
-        (CharactersToken, 
-         SpaceCharactersToken, 
-         StartTagToken,
-         EndTagToken, 
-         CommentToken,
-         DoctypeToken) = (tokenTypes["Characters"],
-                          tokenTypes["SpaceCharacters"],
-                          tokenTypes["StartTag"],
-                          tokenTypes["EndTag"],
-                          tokenTypes["Comment"],
-                          tokenTypes["Doctype"])
-
         CharactersToken = tokenTypes["Characters"]
         SpaceCharactersToken = tokenTypes["SpaceCharacters"]
         StartTagToken = tokenTypes["StartTag"]
