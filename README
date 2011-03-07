@@ -11,7 +11,7 @@ html5lib is packaged with distutils. To install it use:
 
 You may wish to check that your installation has been a success by
 running the testsuite. All the tests can be run by invoking
-runtests.py in the tests/ directory
+runtests.py in the html5lib/tests/ directory
 
  = Usage =
 

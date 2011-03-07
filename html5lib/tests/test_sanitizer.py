@@ -1,6 +1,13 @@
-import os,sys,unittest
-from support import simplejson, html5lib_test_files
+import os
+import sys
+import unittest
 
+try:
+    import json
+except ImportError:
+    import simplejson as json
+
+from support import html5lib_test_files
 from html5lib import html5parser, sanitizer, constants
 
 class SanitizeTest(unittest.TestCase):
@@ -8,7 +15,7 @@ class SanitizeTest(unittest.TestCase):
     def test(self, expected=expected, input=input):
         expected = ''.join([token.toxml() for token in html5parser.HTMLParser().
           parseFragment(expected).childNodes])
-        expected = simplejson.loads(simplejson.dumps(expected))
+        expected = json.loads(json.dumps(expected))
         self.assertEqual(expected, self.sanitize_html(input))
     setattr(cls, name, test)
   addTest = classmethod(addTest)
@@ -73,7 +80,7 @@ for protocol in sanitizer.HTMLSanitizer.allowed_protocols:
 
 def buildTestSuite():
     for filename in html5lib_test_files("sanitizer"):
-        for test in simplejson.load(file(filename)):
+        for test in json.load(file(filename)):
           SanitizeTest.addTest('test_' + test['name'], test['output'], test['input'])
 
     return unittest.TestLoader().loadTestsFromTestCase(SanitizeTest)
