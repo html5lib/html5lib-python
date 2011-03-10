@@ -142,7 +142,6 @@ def buildTestSuite():
                     setattr(TestCase, testFunc.__name__,
                          testFunc)
                     break
-        break
 
     return unittest.TestLoader().loadTestsFromTestCase(TestCase)
 
