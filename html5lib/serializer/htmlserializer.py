@@ -27,11 +27,10 @@ else:
     is_ucs4 = len(u"\U0010FFFF") == 1
     for k, v in entities.items():
         #skip multi-character entities
-        if ((is_ucs4 and len(v) > 1) or 
+        if ((is_ucs4 and len(v) > 1) or
             (not is_ucs4 and len(v) > 2)):
             continue
-        if v != "&" and encode_entity_map.get(v) != k.lower():
-            # prefer &lt; over &LT; and similarly for &amp;, &gt;, etc.
+        if v != "&":
             if len(v) == 2:
                 v = utils.surrogatePairToCodepoint(v)
             else:
@@ -40,7 +39,9 @@ else:
                 except:
                     print v
                     raise
-            encode_entity_map[v] = k
+            if not v in encode_entity_map or k.islower():
+                # prefer &lt; over &LT; and similarly for &amp;, &gt;, etc.
+                encode_entity_map[v] = k
 
     def htmlentityreplace_errors(exc):
         if isinstance(exc, (UnicodeEncodeError, UnicodeTranslateError)):
