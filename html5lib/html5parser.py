@@ -1335,7 +1335,7 @@ def getPhases(debug):
                                        {"name":"form"})
             else:
                 self.tree.generateImpliedEndTags()
-                if self.tree.openElements[-1].name != node:
+                if self.tree.openElements[-1] != node:
                     self.parser.parseError("end-tag-too-early-ignored",
                                            {"name": "form"})
                 self.tree.openElements.remove(node)
