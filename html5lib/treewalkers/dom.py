@@ -22,7 +22,7 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
                               "name": attr.localName,
                               "value": attr.value})
             return (_base.ELEMENT, node.namespaceURI, node.nodeName, 
-                    attrs, node.hasChildNodes)
+                    attrs, node.hasChildNodes())
 
         elif node.nodeType == Node.COMMENT_NODE:
             return _base.COMMENT, node.nodeValue
