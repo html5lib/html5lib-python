@@ -1614,7 +1614,7 @@ def getPhases(debug):
             return True
 
         def startTagOther(self, token):
-            assert False, "Tried to process start tag %s in RCDATA/RAWTEXT mode"%name
+            assert False, "Tried to process start tag %s in RCDATA/RAWTEXT mode"%token['name']
 
         def endTagScript(self, token):
             node = self.tree.openElements.pop()
