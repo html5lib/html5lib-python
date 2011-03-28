@@ -15,13 +15,15 @@ class TreeWalker(object):
         return {"type": "SerializeError", "data": msg}
 
     def normalizeAttrs(self, attrs):
-        if not attrs:
-            attrs = []
-        for attr in attrs:
-            attr["namespace"] = unicode(attr["namespace"]) if attr["namespace"] else None
-            attr["name"] = unicode(attr["name"])
-            attr["value"] = unicode(attr["value"])
-        return attrs
+        newattrs = {}
+        if attrs:
+            #TODO: treewalkers should always have attrs
+            for (namespace,name),value in attrs.iteritems():
+                namespace = unicode(namespace) if namespace else None
+                name = unicode(name)
+                value = unicode(value)
+                newattrs[(namespace,name)] = value
+        return newattrs
 
     def emptyTag(self, namespace, name, attrs, hasChildren=False):
         yield {"type": "EmptyTag", "name": unicode(name), 
@@ -40,7 +42,7 @@ class TreeWalker(object):
         return {"type": "EndTag", 
                 "name": unicode(name),
                 "namespace":unicode(namespace),
-                "data": []}
+                "data": {}}
 
     def text(self, data):
         data = unicode(data)

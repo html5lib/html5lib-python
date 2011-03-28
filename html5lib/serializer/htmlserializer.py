@@ -220,15 +220,11 @@ class HTMLSerializer(object):
                     in_cdata = True
                 elif in_cdata:
                     self.serializeError(_("Unexpected child element of a CDATA element"))
-                attrs = token["data"]
-                if hasattr(attrs, "items"):
-                    attrs = attrs.items()
-                attrs.sort()
                 attributes = []
-                for attr in attrs:
+                for (attr_namespace,attr_name),attr_value in sorted(token["data"].items()):
                     #TODO: Add namespace support here
-                    k = attr["name"]
-                    v = attr["value"]
+                    k = attr_name
+                    v = attr_value
                     if encoding:
                         k = k.encode(encoding, "strict")
                     attributes.append(' ')

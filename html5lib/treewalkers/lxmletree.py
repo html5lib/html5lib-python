@@ -140,17 +140,13 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             else:
                 namespace = None
                 tag = node.tag
-            attrs = []
+            attrs = {}
             for name, value in node.attrib.items():
                 match = tag_regexp.match(name)
                 if match:
-                    attrs.append({"namespace": match.group(1),
-                                  "name": match.group(2),
-                                  "value": value})
+                    attrs[(match.group(1),match.group(2))] = value
                 else:
-                    attrs.append({"namespace": None,
-                                  "name": name,
-                                  "value": value})
+                    attrs[(None,name)] = value
             return (_base.ELEMENT, namespace, self.filter.fromXmlName(tag), 
                     attrs, len(node) > 0 or node.text)
 

@@ -196,17 +196,17 @@ def convertTokens(tokens):
             indent += 2
             attrs = token["data"]
             if attrs:
-                attrs.sort(lambda a,b: cmp(a["name"], b["name"]))
-                for attr in attrs:
-                    if attr["namespace"]:
-                        if attr["namespace"] in constants.prefixes:
-                            name = constants.prefixes[attr["namespace"]]
+                #TODO: Remove this if statement, attrs should always exist
+                for (namespace,name),value in sorted(attrs.items()):
+                    if namespace:
+                        if namespace in constants.prefixes:
+                            outputname = constants.prefixes[namespace]
                         else:
-                            name = attr["namespace"]
-                        name += u" " + attr["name"]
+                            outputname = namespace
+                        outputname += u" " + name
                     else:
-                        name = attr["name"]
-                    output.append(u"%s%s=\"%s\"" % (" "*indent, name, attr["value"]))
+                        outputname = name
+                    output.append(u"%s%s=\"%s\"" % (" "*indent, outputname, value))
             if type == "EmptyTag":
                 indent -= 2
         elif type == "EndTag":
@@ -270,17 +270,17 @@ class TestCase(unittest.TestCase):
 class TokenTestCase(unittest.TestCase):
     def test_all_tokens(self):
         expected = [
-            {'data': [], 'type': 'StartTag', 'name': u'html'},
-            {'data': [], 'type': 'StartTag', 'name': u'head'},
-            {'data': [], 'type': 'EndTag', 'name': u'head'},
-            {'data': [], 'type': 'StartTag', 'name': u'body'},
+            {'data': {}, 'type': 'StartTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'html'},
+            {'data': {}, 'type': 'StartTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'head'},
+            {'data': {}, 'type': 'EndTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'head'},
+            {'data': {}, 'type': 'StartTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'body'},
             {'data': u'a', 'type': 'Characters'},
-            {'data': [], 'type': 'StartTag', 'name': u'div'},
+            {'data': {}, 'type': 'StartTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'div'},
             {'data': u'b', 'type': 'Characters'},
-            {'data': [], 'type': 'EndTag', 'name': u'div'},
+            {'data': {}, 'type': 'EndTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'div'},
             {'data': u'c', 'type': 'Characters'},
-            {'data': [], 'type': 'EndTag', 'name': u'body'},
-            {'data': [], 'type': 'EndTag', 'name': u'html'}
+            {'data': {}, 'type': 'EndTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'body'},
+            {'data': {}, 'type': 'EndTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'html'}
             ]
         for treeName, treeCls in treeTypes.iteritems():
             p = html5parser.HTMLParser(tree = treeCls["builder"])

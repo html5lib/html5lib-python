@@ -32,16 +32,12 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             return _base.TEXT, node.value
 
         elif node.type == 5: # Element
-            attrs = []
+            attrs = {}
             for name, value in node.attributes.items():
                 if isinstance(name, tuple):
-                    attrs.append({"namespace": name[2],
-                                  "name": name[1],
-                                  "value": value})
+                    attrs[(name[2],name[1])] = value
                 else:
-                    attrs.append({"namespace": None,
-                                  "name": name,
-                                  "value": value})
+                    attrs[(None,name)] = value
             return (_base.ELEMENT, node.namespace, node.name, 
                     attrs, node.hasContent())
 

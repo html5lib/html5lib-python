@@ -31,7 +31,7 @@ class JsonWalker(TreeWalker):
                 else:
                     namespace = default_namespace
                     name, attrib = token[1:3]
-                yield self.startTag(namespace, name, attrib)
+                yield self.startTag(namespace, name, self._convertAttrib(attrib))
             elif type == "EndTag":
                 if len(token) == 3:
                     namespace, name = token[1:3]
@@ -45,7 +45,7 @@ class JsonWalker(TreeWalker):
                 else:
                     namespace = default_namespace
                     name, attrib = token[1:]
-                for token in self.emptyTag(namespace, name, attrib):
+                for token in self.emptyTag(namespace, name, self._convertAttrib(attrib)):
                     yield token
             elif type == "Comment":
                 yield self.comment(token[1])
@@ -61,6 +61,19 @@ class JsonWalker(TreeWalker):
                     yield self.doctype(token[1])
             else:
                 raise ValueError("Unknown token type: " + type)
+    
+    def _convertAttrib(self, attribs):
+        """html5lib tree-walkers use a dict of (namespace, name): value for
+        attributes, but JSON cannot represent this. Convert from the format
+        in the serializer tests (a list of dicts with "namespace", "name",
+        and "value" as keys) to html5lib's tree-walker format."""
+        attrs = {}
+        for attrib in attribs:
+            name = (attrib["namespace"], attrib["name"])
+            assert(name not in attrs)
+            attrs[name] = attrib["value"]
+        return attrs
+
 
 class TestCase(unittest.TestCase):
     def addTest(cls, name, description, input, expected, xhtml, options):

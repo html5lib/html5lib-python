@@ -20,24 +20,18 @@ class Filter(_base.Filter):
                 if token["name"].lower() == "meta":
                    # replace charset with actual encoding
                    has_http_equiv_content_type = False
-                   content_index = -1
-                   for i,attr in enumerate(token["data"]):
-                       namespace = attr["namespace"]
-                       name = attr["name"]
-                       value = attr["value"]
+                   for (namespace,name),value in token["data"].iteritems():
                        if namespace != None:
                            continue
                        elif name.lower() == 'charset':
-                          token["data"][i]["value"] = self.encoding
+                          token["data"][(namespace,name)] = self.encoding
                           meta_found = True
                           break
                        elif name == 'http-equiv' and value.lower() == 'content-type':
                            has_http_equiv_content_type = True
-                       elif name == 'content':
-                           content_index = i
                    else:
-                       if has_http_equiv_content_type and content_index >= 0:
-                           token["data"][content_index]["value"] = u'text/html; charset=%s' % self.encoding
+                       if has_http_equiv_content_type and (None, "content") in token["data"]:
+                           token["data"][(None, "content")] = u'text/html; charset=%s' % self.encoding
                            meta_found = True
 
                 elif token["name"].lower() == "head" and not meta_found:
@@ -45,7 +39,7 @@ class Filter(_base.Filter):
                     yield {"type": "StartTag", "name": "head",
                            "data": token["data"]}
                     yield {"type": "EmptyTag", "name": "meta",
-                           "data": [{"namespace": None, "name": "charset", "value": self.encoding}]}
+                           "data": {(None, "charset"): self.encoding}}
                     yield {"type": "EndTag", "name": "head"}
                     meta_found = True
                     continue
@@ -56,7 +50,7 @@ class Filter(_base.Filter):
                     yield pending.pop(0)
                     if not meta_found:
                         yield {"type": "EmptyTag", "name": "meta",
-                               "data": [{"namespace": None, "name": "charset", "value": self.encoding}]}
+                               "data": {(None, "charset"): self.encoding}}
                     while pending:
                         yield pending.pop(0)
                     meta_found = True
