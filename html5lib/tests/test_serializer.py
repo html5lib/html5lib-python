@@ -75,6 +75,15 @@ class JsonWalker(TreeWalker):
         return attrs
 
 
+def serialize_html(input, options):
+    options = dict([(str(k),v) for k,v in options.iteritems()])
+    return serializer.HTMLSerializer(**options).render(JsonWalker(input),options.get("encoding",None))
+
+def serialize_xhtml(input, options):
+    options = dict([(str(k),v) for k,v in options.iteritems()])
+    return serializer.XHTMLSerializer(**options).render(JsonWalker(input),options.get("encoding",None))
+
+
 class TestCase(unittest.TestCase):
     def addTest(cls, name, description, input, expected, xhtml, options):
         func = lambda self: self.mockTest(input, options, expected, xhtml)
@@ -83,7 +92,7 @@ class TestCase(unittest.TestCase):
     addTest = classmethod(addTest)
 
     def mockTest(self, input, options, expected, xhtml):
-        result = self.serialize_html(input, options)
+        result = serialize_html(input, options)
         if len(expected) == 1:
             self.assertEquals(expected[0], result, "Expected:\n%s\nActual:\n%s\nOptions\nxhtml:False\n%s"%(expected[0], result, str(options)))
         elif result not in expected:
@@ -91,21 +100,55 @@ class TestCase(unittest.TestCase):
 
         if not xhtml: return
 
-        result = self.serialize_xhtml(input, options)
+        result = serialize_xhtml(input, options)
         if len(xhtml) == 1:
             self.assertEquals(xhtml[0], result, "Expected:\n%s\nActual:\n%s\nOptions\nxhtml:True\n%s"%(xhtml[0], result, str(options)))
         elif result not in xhtml:
             self.fail("Expected: %s, Received: %s" % (xhtml, result))
 
-    def serialize_html(self, input, options):
-        options = dict([(str(k),v) for k,v in options.iteritems()])
-        return u''.join(serializer.HTMLSerializer(**options).
-                serialize(JsonWalker(input),options.get("encoding",None)))
 
-    def serialize_xhtml(self, input, options):
-        options = dict([(str(k),v) for k,v in options.iteritems()])
-        return u''.join(serializer.XHTMLSerializer(**options).
-                serialize(JsonWalker(input),options.get("encoding",None)))
+class EncodingTestCase(unittest.TestCase):
+    def throwsWithLatin1(self, input):
+        self.assertRaises(UnicodeEncodeError, serialize_html, input, {"encoding": "iso-8859-1"})
+
+    def testDoctypeName(self):
+        self.throwsWithLatin1([["Doctype", u"\u0101"]])
+
+    def testDoctypePublicId(self):
+        self.throwsWithLatin1([["Doctype", u"potato", u"\u0101"]])
+
+    def testDoctypeSystemId(self):
+        self.throwsWithLatin1([["Doctype", u"potato", u"potato", u"\u0101"]])
+
+    def testCdataCharacters(self):
+        self.assertEquals("<style>&amacr;", serialize_html([["StartTag", "http://www.w3.org/1999/xhtml", "style", {}],
+                                                            ["Characters", u"\u0101"]],
+                                                           {"encoding": "iso-8859-1"}))
+
+    def testCharacters(self):
+        self.assertEquals("&amacr;", serialize_html([["Characters", u"\u0101"]],
+                                                    {"encoding": "iso-8859-1"}))
+
+    def testStartTagName(self):
+        self.throwsWithLatin1([["StartTag", u"http://www.w3.org/1999/xhtml", u"\u0101", []]])
+
+    def testEmptyTagName(self):
+        self.throwsWithLatin1([["EmptyTag", u"http://www.w3.org/1999/xhtml", u"\u0101", []]])
+
+    def testAttributeName(self):
+        self.throwsWithLatin1([["StartTag", u"http://www.w3.org/1999/xhtml", u"span", [{"namespace": None, "name": u"\u0101", "value": u"potato"}]]])
+
+    def testAttributeValue(self):
+        self.assertEquals("<span potato=&amacr;>", serialize_html([["StartTag", u"http://www.w3.org/1999/xhtml", u"span",
+                                                                    [{"namespace": None, "name": u"potato", "value": u"\u0101"}]]],
+                                                                  {"encoding": "iso-8859-1"}))
+
+    def testEndTagName(self):
+        self.throwsWithLatin1([["EndTag", u"http://www.w3.org/1999/xhtml", u"\u0101"]])
+
+    def testComment(self):
+        self.throwsWithLatin1([["Comment", u"\u0101"]])
+
 
 class LxmlTestCase(unittest.TestCase):
     def setUp(self):
@@ -146,6 +189,7 @@ def buildBasicTestSuite():
 
 def buildTestSuite():
     allTests = [buildBasicTestSuite()]
+    allTests.append(unittest.TestLoader().loadTestsFromTestCase(EncodingTestCase))
     if "lxml" in optionals_loaded:
         allTests.append(unittest.TestLoader().loadTestsFromTestCase(LxmlTestCase))
 
