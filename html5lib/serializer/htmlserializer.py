@@ -76,14 +76,12 @@ else:
 
     del register_error
 
-def encode(text, encoding):
-    return text.encode(encoding, unicode_encode_errors)
 
 class HTMLSerializer(object):
 
     # attribute quoting options
     quote_attr_values = False
-    quote_char = '"'
+    quote_char = u'"'
     use_best_quote_char = True
 
     # tag syntax options
@@ -159,7 +157,22 @@ class HTMLSerializer(object):
         self.errors = []
         self.strict = False
 
+    def encode(self, string):
+        assert(isinstance(string, unicode))
+        if self.encoding:
+            return string.encode(self.encoding, unicode_encode_errors)
+        else:
+            return string
+
+    def encodeStrict(self, string):
+        assert(isinstance(string, unicode))
+        if self.encoding:
+            return string.encode(self.encoding, "strict")
+        else:
+            return string
+
     def serialize(self, treewalker, encoding=None):
+        self.encoding = encoding
         in_cdata = False
         self.errors = []
         if encoding and self.inject_meta_charset:
@@ -195,27 +208,19 @@ class HTMLSerializer(object):
                     doctype += u" %s%s%s" % (quote_char, token["systemId"], quote_char)
                 
                 doctype += u">"
-                
-                if encoding:
-                    yield doctype.encode(encoding)
-                else:
-                    yield doctype
+                yield self.encodeStrict(doctype)
 
             elif type in ("Characters", "SpaceCharacters"):
                 if type == "SpaceCharacters" or in_cdata:
                     if in_cdata and token["data"].find("</") >= 0:
                         self.serializeError(_("Unexpected </ in CDATA"))
-                    if encoding:
-                        yield token["data"].encode(encoding, "strict")
-                    else:
-                        yield token["data"]
-                elif encoding:
-                    yield encode(escape(token["data"]), encoding)
+                    yield self.encode(token["data"])
                 else:
-                    yield escape(token["data"])
+                    yield self.encode(escape(token["data"]))
 
             elif type in ("StartTag", "EmptyTag"):
                 name = token["name"]
+                yield self.encodeStrict(u"<%s" % name)
                 if name in rcdataElements and not self.escape_rcdata:
                     in_cdata = True
                 elif in_cdata:
@@ -225,49 +230,42 @@ class HTMLSerializer(object):
                     #TODO: Add namespace support here
                     k = attr_name
                     v = attr_value
-                    if encoding:
-                        k = k.encode(encoding, "strict")
-                    attributes.append(' ')
+                    yield self.encodeStrict(u' ')
 
-                    attributes.append(k)
+                    yield self.encodeStrict(k)
                     if not self.minimize_boolean_attributes or \
                       (k not in booleanAttributes.get(name, tuple()) \
                       and k not in booleanAttributes.get("", tuple())):
-                        attributes.append("=")
+                        yield self.encodeStrict(u"=")
                         if self.quote_attr_values or not v:
                             quote_attr = True
                         else:
                             quote_attr = reduce(lambda x,y: x or (y in v),
-                                spaceCharacters + ">\"'=", False)
-                        v = v.replace("&", "&amp;")
-                        if self.escape_lt_in_attrs: v = v.replace("<", "&lt;")
-                        if encoding:
-                            v = encode(v, encoding)
+                                spaceCharacters + u">\"'=", False)
+                        v = v.replace(u"&", u"&amp;")
+                        if self.escape_lt_in_attrs: v = v.replace(u"<", u"&lt;")
                         if quote_attr:
                             quote_char = self.quote_char
                             if self.use_best_quote_char:
-                                if "'" in v and '"' not in v:
-                                    quote_char = '"'
-                                elif '"' in v and "'" not in v:
-                                    quote_char = "'"
-                            if quote_char == "'":
-                                v = v.replace("'", "&#39;")
+                                if u"'" in v and u'"' not in v:
+                                    quote_char = u'"'
+                                elif u'"' in v and u"'" not in v:
+                                    quote_char = u"'"
+                            if quote_char == u"'":
+                                v = v.replace(u"'", u"&#39;")
                             else:
-                                v = v.replace('"', "&quot;")
-                            attributes.append(quote_char)
-                            attributes.append(v)
-                            attributes.append(quote_char)
+                                v = v.replace(u'"', u"&quot;")
+                            yield self.encodeStrict(quote_char)
+                            yield self.encode(v)
+                            yield self.encodeStrict(quote_char)
                         else:
-                            attributes.append(v)
+                            yield self.encode(v)
                 if name in voidElements and self.use_trailing_solidus:
                     if self.space_before_trailing_solidus:
-                        attributes.append(" /")
+                        yield self.encodeStrict(u" /")
                     else:
-                        attributes.append("/")
-                if encoding:
-                    yield "<%s%s>" % (name.encode(encoding, "strict"), "".join(attributes))
-                else:
-                    yield u"<%s%s>" % (name, u"".join(attributes))
+                        yield self.encodeStrict(u"/")
+                yield self.encode(u">")
 
             elif type == "EndTag":
                 name = token["name"]
@@ -275,19 +273,13 @@ class HTMLSerializer(object):
                     in_cdata = False
                 elif in_cdata:
                     self.serializeError(_("Unexpected child element of a CDATA element"))
-                end_tag = u"</%s>" % name
-                if encoding:
-                    end_tag = end_tag.encode(encoding, "strict")
-                yield end_tag
+                yield self.encodeStrict(u"</%s>" % name)
 
             elif type == "Comment":
                 data = token["data"]
                 if data.find("--") >= 0:
                     self.serializeError(_("Comment contains --"))
-                comment = u"<!--%s-->" % token["data"]
-                if encoding:
-                    comment = comment.encode(encoding, unicode_encode_errors)
-                yield comment
+                yield self.encodeStrict(u"<!--%s-->" % token["data"])
 
             elif type == "Entity":
                 name = token["name"]
@@ -298,9 +290,7 @@ class HTMLSerializer(object):
                     data = entities[key]
                 else:
                     data = u"&%s;" % name
-                if encoding:
-                    data = data.encode(encoding, unicode_encode_errors)
-                yield data
+                yield self.encodeStrict(data)
 
             else:
                 self.serializeError(token["data"])
