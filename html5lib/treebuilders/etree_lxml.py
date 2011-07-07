@@ -1,4 +1,3 @@
-import new
 import warnings
 import re
 

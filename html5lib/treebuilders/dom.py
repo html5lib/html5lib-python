@@ -1,6 +1,9 @@
 
 from xml.dom import minidom, Node, XML_NAMESPACE, XMLNS_NAMESPACE
-import new
+try:
+    from types import ModuleType
+except:
+    from new import module as ModuleType
 import re
 import weakref
 
@@ -15,7 +18,7 @@ def getDomModule(DomImplementation):
     if name in moduleCache:
         return moduleCache[name]
     else:
-        mod = new.module(name)
+        mod = ModuleType(name)
         objs = getDomBuilder(DomImplementation)
         mod.__dict__.update(objs)
         moduleCache[name] = mod    

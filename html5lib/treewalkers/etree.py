@@ -1,7 +1,10 @@
 import gettext
 _ = gettext.gettext
 
-import new
+try:
+    from types import ModuleType
+except:
+    from new import module as ModuleType
 import copy
 import re
 
@@ -17,7 +20,7 @@ def getETreeModule(ElementTreeImplementation):
     if name in moduleCache:
         return moduleCache[name]
     else:
-        mod = new.module("_" + ElementTreeImplementation.__name__+"builder")
+        mod = ModuleType("_" + ElementTreeImplementation.__name__+"builder")
         objs = getETreeBuilder(ElementTreeImplementation)
         mod.__dict__.update(objs)
         moduleCache[name] = mod
