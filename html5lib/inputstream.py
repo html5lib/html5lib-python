@@ -195,8 +195,12 @@ class HTMLInputStream:
             if isinstance(source, unicode):
                 source = source.encode('utf-8')
                 self.charEncoding = ("utf-8", "certain")
-            import cStringIO
-            stream = cStringIO.StringIO(str(source))
+            try:
+                from io import BytesIO
+            except:
+                # 2to3 converts this line to: from io import StringIO  
+                from cStringIO import StringIO as BytesIO
+            stream = BytesIO(source)
 
         if (not(hasattr(stream, "tell") and hasattr(stream, "seek")) or
             stream is sys.stdin):
