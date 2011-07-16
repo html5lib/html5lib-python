@@ -23,7 +23,7 @@ entitiesByFirstChar = {}
 for e in entities:
     entitiesByFirstChar.setdefault(e[0], []).append(e)
 
-class HTMLTokenizer:
+class HTMLTokenizer(object):
     """ This class takes care of tokenizing HTML.
 
     * self.currentToken
@@ -35,8 +35,6 @@ class HTMLTokenizer:
     * self.stream
       Points to HTMLInputStream object.
     """
-
-    # XXX need to fix documentation
 
     def __init__(self, stream, encoding=None, parseMeta=True, useChardet=True,
                  lowercaseElementName=True, lowercaseAttrName=True, parser=None):
@@ -56,6 +54,7 @@ class HTMLTokenizer:
 
         # The current token being created
         self.currentToken = None
+        super(HTMLTokenizer, self).__init__()
 
     def __iter__(self):
         """ This is where the magic happens.
