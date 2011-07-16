@@ -1,5 +1,6 @@
 import new
 import re
+import types
 
 import _base
 from html5lib import ihatexml
@@ -91,7 +92,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
     
         def hasContent(self):
             """Return true if the node has children or text"""
-            return bool(self._element.text or self._element.getchildren())
+            return bool(self._element.text or len(self._element))
     
         def appendChild(self, node):
             self._childNodes.append(node)
@@ -99,7 +100,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             node.parent = self
     
         def insertBefore(self, node, refNode):
-            index = self._element.getchildren().index(refNode._element)
+            index = list(self._element).index(refNode._element)
             self._element.insert(index, node._element)
             node.parent = self
     
@@ -119,7 +120,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                 self._element[-1].tail += data
             else:
                 #Insert the text before the specified node
-                children = self._element.getchildren()
+                children = list(self._element)
                 index = children.index(insertBefore._element)
                 if index > 0:
                     if not self._element[index-1].tail:
@@ -217,9 +218,10 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                     rv.append("|%s\"%s\""%(' '*(indent+2), element.text))
                 if element.tail:
                     finalText = element.tail
-            elif type(element.tag) == type(ElementTree.Comment):
+            elif element.tag == ElementTree.Comment:
                 rv.append("|%s<!-- %s -->"%(' '*indent, element.text))
             else:
+                assert type(element.tag) in types.StringTypes, "Expected unicode, got %s"%type(element.tag)
                 nsmatch = tag_regexp.match(element.tag)
 
                 if nsmatch is None:
@@ -247,7 +249,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                 if element.text:
                     rv.append("|%s\"%s\"" %(' '*(indent+2), element.text))
             indent += 2
-            for child in element.getchildren():
+            for child in element:
                 serializeElement(child, indent)
             if element.tail:
                 rv.append("|%s\"%s\"" %(' '*(indent-2), element.tail))
@@ -281,7 +283,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                 if element.tail:
                     finalText = element.tail
     
-                for child in element.getchildren():
+                for child in element:
                     serializeElement(child)
     
             elif type(element.tag) == type(ElementTree.Comment):
@@ -298,7 +300,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                 if element.text:
                     rv.append(element.text)
     
-                for child in element.getchildren():
+                for child in element:
                     serializeElement(child)
     
                 rv.append("</%s>"%(element.tag,))
