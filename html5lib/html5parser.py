@@ -939,9 +939,10 @@ def getPhases(debug):
                 (("applet", "marquee", "object"), self.startTagAppletMarqueeObject),
                 ("xmp", self.startTagXmp),
                 ("table", self.startTagTable),
-                (("area", "br", "embed", "img", "input", "keygen", 
-                  "wbr"), self.startTagVoidFormatting),
+                (("area", "br", "embed", "img", "keygen", "wbr"),
+                 self.startTagVoidFormatting),
                 (("param", "source", "track"), self.startTagParamSource),
+                ("input", self.startTagInput),
                 ("hr", self.startTagHr),
                 ("image", self.startTagImage),
                 ("isindex", self.startTagIsIndex),
@@ -1197,6 +1198,14 @@ def getPhases(debug):
             self.tree.openElements.pop()
             token["selfClosingAcknowledged"] = True
             self.parser.framesetOK = False
+
+        def startTagInput(self, token):
+            framesetOK = self.parser.framesetOK
+            self.startTagVoidFormatting(token)
+            if ("type" in token["data"] and
+                token["data"]["type"].translate(asciiUpper2Lower) == "hidden"):
+                #input type=hidden doesn't change framesetOK
+                self.parser.framesetOK = framesetOK
 
         def startTagParamSource(self, token):
             self.tree.insertElement(token)
