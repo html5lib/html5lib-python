@@ -1233,8 +1233,6 @@ def getPhases(debug):
                 self.tree.generateImpliedEndTags()
                 if self.tree.openElements[-1].name != "ruby":
                     self.parser.parseError()
-                    while self.tree.openElements[-1].name != "ruby":
-                        self.tree.openElements.pop()
             self.tree.insertElement(token)
 
         def startTagMath(self, token):
