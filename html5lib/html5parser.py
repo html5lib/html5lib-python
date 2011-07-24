@@ -1664,13 +1664,13 @@ def getPhases(debug):
             originalPhase = self.parser.phase
             self.parser.phase = self.parser.phases["inTableText"]
             self.parser.phase.originalPhase = originalPhase
-            self.parser.phase.characterTokens.append(token)
+            self.parser.phase.processSpaceCharacters(token)
 
         def processCharacters(self, token):
             originalPhase = self.parser.phase
             self.parser.phase = self.parser.phases["inTableText"]
             self.parser.phase.originalPhase = originalPhase
-            self.parser.phase.characterTokens.append(token)
+            self.parser.phase.processCharacters(token)
 
         def insertText(self, token):
             #If we get here there must be at least one non-whitespace character
@@ -1789,6 +1789,8 @@ def getPhases(debug):
             return True
 
         def processCharacters(self, token):
+            if token["data"] == u"\u0000":
+                return
             self.characterTokens.append(token)
 
         def processSpaceCharacters(self, token):
