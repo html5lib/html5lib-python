@@ -218,7 +218,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                     rv.append("|%s\"%s\""%(' '*(indent+2), element.text))
                 if element.tail:
                     finalText = element.tail
-            elif element.tag == ElementTree.Comment:
+            elif type(element.tag) == type(ElementTree.Comment):
                 rv.append("|%s<!-- %s -->"%(' '*indent, element.text))
             else:
                 assert type(element.tag) in types.StringTypes, "Expected unicode, got %s"%type(element.tag)
