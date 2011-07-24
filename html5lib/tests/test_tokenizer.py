@@ -1,6 +1,5 @@
 import sys
 import os
-import unittest
 import cStringIO
 import warnings
 import re
@@ -122,7 +121,7 @@ def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder,
                         tokens[tokenType][1].append(token)
         return tokens["expected"] == tokens["received"]
 
-def unescape_test(test):
+def unescape(test):
     def decode(inp):
         return inp.decode("unicode-escape")
 
@@ -137,7 +136,6 @@ def unescape_test(test):
                     del token[2][key]
                     token[2][decode(key)] = decode(value)
     return test
-
 
 def runTokenizerTest(test):
     #XXX - move this out into the setup function
@@ -163,8 +161,7 @@ def runTokenizerTest(test):
                           "\nreceived:", unicode(tokens)])
     errorMsg = errorMsg.encode("utf-8")
     ignoreErrorOrder = test.get('ignoreErrorOrder', False)
-    assert tokensMatch(expected, received, ignoreErrorOrder), errorMsg
-
+    assert tokensMatch(expected, received, ignoreErrorOrder, True), errorMsg
 
 def _doCapitalize(match):
     return match.group(1).upper()
@@ -176,8 +173,7 @@ def capitalize(s):
     s = _capitalizeRe(_doCapitalize, s)
     return s
 
-
-def test_tokenizer():
+def testTokenizer():
     for filename in html5lib_test_files('tokenizer', '*.test'):
         tests = json.load(file(filename))
         testName = os.path.basename(filename).replace(".test","")
@@ -190,4 +186,3 @@ def test_tokenizer():
                 for initialState in test["initialStates"]:
                     test["initialState"] = capitalize(initialState)
                     yield runTokenizerTest, test
-
