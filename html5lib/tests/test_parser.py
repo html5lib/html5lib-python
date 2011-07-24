@@ -7,7 +7,8 @@ import re
 
 warnings.simplefilter("error")
 
-from support import html5lib_test_files, TestData, convert, convertExpected
+from support import html5lib_test_files as data_files
+from support import TestData, convert, convertExpected
 import html5lib
 from html5lib import html5parser, treebuilders, constants
 
@@ -113,23 +114,23 @@ def runParserTest(innerHTML, input, expected, errors, treeClass,
             assert len(p.errors) == len(errors), errorMsg2.encode("utf-8")
 
 def test_parser():
-    sys.stdout.write('Testing tree builders '+ " ".join(treeTypes.keys()) + "\n")
+    sys.stderr.write('Testing tree builders '+ " ".join(treeTypes.keys()) + "\n")
+    files = data_files('tree-construction')
+    
+    for filename in files:
+        testName = os.path.basename(filename).replace(".dat","")
 
-    for treeName, treeCls in treeTypes.iteritems():
-        files = html5lib_test_files('tree-construction')
-        for filename in files:
-            testName = os.path.basename(filename).replace(".dat","")
-
-            tests = TestData(filename, "data")
-
-            for index, test in enumerate(tests):
-                input, errors, innerHTML, expected = [test[key] for key in
+        tests = TestData(filename, "data")
+        
+        for index, test in enumerate(tests):
+            input, errors, innerHTML, expected = [test[key] for key in
                                                       'data', 'errors',
                                                       'document-fragment',
                                                       'document']
-                if errors:
-                    errors = errors.split("\n")
-                
+            if errors:
+                errors = errors.split("\n")
+
+            for treeName, treeCls in treeTypes.iteritems():
                 for namespaceHTMLElements in (True, False):
                     print input
                     yield (runParserTest, innerHTML, input, expected, errors, treeCls,
