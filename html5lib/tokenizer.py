@@ -1151,7 +1151,7 @@ class HTMLTokenizer:
                 return True
         elif (charStack[-1] == "[" and 
               self.parser is not None and
-              self.parser.phase == self.parser.phases["inForeignContent"] and
+              self.parser.tree.openElements and
               self.parser.tree.openElements[-1].namespace != self.parser.tree.defaultNamespace):
             matched = True
             for expected in ["C", "D", "A", "T", "A", "["]:
