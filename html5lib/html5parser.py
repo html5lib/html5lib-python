@@ -977,11 +977,35 @@ def getPhases(debug):
                 ])
             self.endTagHandler.default = self.endTagOther
 
+        def isMatchingFormattingElement(self, node1, node2):
+            if node1.name != node2.name or node1.namespace != node2.namespace:
+                return False
+            elif len(node1.attributes) != len(node2.attributes):
+                return False
+            else:
+                attributes1 = sorted(node1.attributes.items())
+                attributes2 = sorted(node2.attributes.items())
+                for attr1, attr2 in zip(attributes1, attributes2):
+                    if attr1 != attr2:
+                        return False
+            return True
+
         # helper
         def addFormattingElement(self, token):
             self.tree.insertElement(token)
-            self.tree.activeFormattingElements.append(
-                self.tree.openElements[-1])
+            element = self.tree.openElements[-1]
+            
+            matchingElements = []
+            for node in self.tree.activeFormattingElements[::-1]:
+                if node is Marker:
+                    break
+                elif self.isMatchingFormattingElement(node, element):
+                    matchingElements.append(node)
+                    
+            assert len(matchingElements) <= 3
+            if len(matchingElements) == 3:
+                self.tree.activeFormattingElements.remove(matchingElements[-1])
+            self.tree.activeFormattingElements.append(element)
 
         # the real deal
         def processEOF(self):
@@ -2422,6 +2446,7 @@ def getPhases(debug):
 
             while True:
                 if node.name.translate(asciiUpper2Lower) == token["name"]:
+                    #XXX this isn't in the spec but it seems necessary
                     if self.parser.phase == self.parser.phases["inTableText"]:
                         self.parser.phase.flushCharacters()
                         self.parser.phase = self.parser.phase.originalPhase
