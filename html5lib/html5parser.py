@@ -46,7 +46,7 @@ from constants import cdataElements, rcdataElements, voidElements
 from constants import tokenTypes, ReparseException, namespaces, spaceCharacters
 from constants import htmlIntegrationPointElements, mathmlTextIntegrationPointElements
 
-def parse(doc, treebuilder="simpletree", encoding=None, 
+def parse(doc, treebuilder="simpletree", encoding=None,
           namespaceHTMLElements=True):
     """Parse a string or file-like object into a tree"""
     tb = treebuilders.getTreeBuilder(treebuilder)
@@ -941,7 +941,7 @@ def getPhases(debug):
                 ("table", self.startTagTable),
                 (("area", "br", "embed", "img", "input", "keygen", 
                   "wbr"), self.startTagVoidFormatting),
-                (("param", "source"), self.startTagParamSource),
+                (("param", "source", "track"), self.startTagParamSource),
                 ("hr", self.startTagHr),
                 ("image", self.startTagImage),
                 ("isindex", self.startTagIsIndex),
