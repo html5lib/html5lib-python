@@ -58,14 +58,16 @@ def parse():
         parseMethod = p.parse
 
     if opts.profile:
-        #XXX should import cProfile instead and use that
-        import hotshot
-        import hotshot.stats
-        prof = hotshot.Profile('stats.prof')
-        prof.runcall(parseMethod, f, encoding=encoding)
-        prof.close()
+        import cProfile
+        import pstats
+        cProfile.runctx("run(parseMethod, f, encoding)", None,
+                        {"run": run,
+                         "parseMethod": parseMethod,
+                         "f": f,
+                         "encoding": encoding},
+                        "stats.prof")
         # XXX - We should use a temp file here
-        stats = hotshot.stats.load('stats.prof')
+        stats = pstats.Stats('stats.prof')
         stats.strip_dirs()
         stats.sort_stats('time')
         stats.print_stats()
