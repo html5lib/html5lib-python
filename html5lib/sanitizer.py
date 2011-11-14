@@ -245,11 +245,11 @@ class HTMLSanitizerMixin(object):
 
 class HTMLSanitizer(HTMLTokenizer, HTMLSanitizerMixin):
     def __init__(self, stream, encoding=None, parseMeta=True, useChardet=True,
-                 lowercaseElementName=False, lowercaseAttrName=False):
+                 lowercaseElementName=False, lowercaseAttrName=False, parser=None):
         #Change case matching defaults as we only output lowercase html anyway
         #This solution doesn't seem ideal...
         HTMLTokenizer.__init__(self, stream, encoding, parseMeta, useChardet,
-                               lowercaseElementName, lowercaseAttrName)
+                               lowercaseElementName, lowercaseAttrName, parser=parser)
 
     def __iter__(self):
         for token in HTMLTokenizer.__iter__(self):
