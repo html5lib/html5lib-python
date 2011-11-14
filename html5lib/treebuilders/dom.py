@@ -26,13 +26,15 @@ def getDomModule(DomImplementation):
 
 def getDomBuilder(DomImplementation):
     Dom = DomImplementation
-    class AttrList:
+    class AttrList(object):
         def __init__(self, element):
             self.element = element
         def __iter__(self):
             return self.element.attributes.items().__iter__()
         def __setitem__(self, name, value):
             self.element.setAttribute(name, value)
+        def __len__(self):
+            return len(self.element.attributes.items())
         def items(self):
             return [(item[0], item[1]) for item in
                      self.element.attributes.items()]

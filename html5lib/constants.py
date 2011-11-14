@@ -483,7 +483,8 @@ voidElements = frozenset((
     "area",
     "col",
     "input",
-    "source"
+    "source",
+    "track"
 ))
 
 cdataElements = frozenset(('title', 'textarea'))
