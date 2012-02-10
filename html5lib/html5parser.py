@@ -2426,7 +2426,7 @@ def getPhases(debug):
             currentNode = self.tree.openElements[-1]
             if (token["name"] in self.breakoutElements or
                 (token["name"] == "font" and
-                 set(token["data"].keys()) | set(["color", "face", "size"]))):
+                 set(token["data"].keys()) & set(["color", "face", "size"]))):
                 self.parser.parseError("unexpected-html-element-in-foreign-content",
                                        token["name"])
                 while (self.tree.openElements[-1].namespace !=
