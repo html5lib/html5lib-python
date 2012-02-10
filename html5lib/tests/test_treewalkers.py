@@ -242,30 +242,6 @@ def sortattrs(x):
   lines.sort()
   return "\n".join(lines)
 
-class TestCase(unittest.TestCase):
-    def runTest(self, innerHTML, input, expected, errors, treeClass):
-        try:
-            p = html5parser.HTMLParser(tree = treeClass["builder"])
-            if innerHTML:
-                document = p.parseFragment(StringIO.StringIO(input), innerHTML)
-            else:
-                document = p.parse(StringIO.StringIO(input))
-        except constants.DataLossWarning:
-            #Ignore testcases we know we don't pass
-            return
-
-        document = treeClass.get("adapter", lambda x: x)(document)
-        try:
-            output = convertTokens(treeClass["walker"](document))
-            output = attrlist.sub(sortattrs, output)
-            expected = attrlist.sub(sortattrs, convertExpected(expected))
-            self.assertEquals(expected, output, "\n".join([
-                "", "Input:", input,
-                "", "Expected:", expected,
-                "", "Received:", output
-            ]))
-        except NotImplementedError:
-            pass # Amnesty for those that confess...
 
 class TokenTestCase(unittest.TestCase):
     def test_all_tokens(self):
@@ -290,8 +266,31 @@ class TokenTestCase(unittest.TestCase):
             for expectedToken, outputToken in zip(expected, output):
                 self.assertEquals(expectedToken, outputToken)
 
+def run_test(innerHTML, input, expected, errors, treeClass):
+    try:
+        p = html5parser.HTMLParser(tree = treeClass["builder"])
+        if innerHTML:
+            document = p.parseFragment(StringIO.StringIO(input), innerHTML)
+        else:
+            document = p.parse(StringIO.StringIO(input))
+    except constants.DataLossWarning:
+        #Ignore testcases we know we don't pass
+        return
+
+    document = treeClass.get("adapter", lambda x: x)(document)
+    try:
+        output = convertTokens(treeClass["walker"](document))
+        output = attrlist.sub(sortattrs, output)
+        expected = attrlist.sub(sortattrs, convertExpected(expected))
+        assert expected == output, "\n".join([
+                "", "Input:", input,
+                "", "Expected:", expected,
+                "", "Received:", output
+                ])
+    except NotImplementedError:
+        pass # Amnesty for those that confess...
             
-def buildTestSuite():
+def test_treewalker():
     sys.stdout.write('Testing tree walkers '+ " ".join(treeTypes.keys()) + "\n")
 
     for treeName, treeCls in treeTypes.iteritems():
@@ -307,17 +306,6 @@ def buildTestSuite():
                                                                "document-fragment",
                                                                "document")]
                 errors = errors.split("\n")
-                def testFunc(self, innerHTML=innerHTML, input=input,
-                    expected=expected, errors=errors, treeCls=treeCls):
-                    self.runTest(innerHTML, input, expected, errors, treeCls)
-                setattr(TestCase, "test_%s_%d_%s" % (testName,index+1,treeName),
-                     testFunc)
+                yield run_test, innerHTML, input, expected, errors, treeCls
 
-    return unittest.TestLoader().loadTestsFromTestCase(TestCase)
 
-def main():
-    buildTestSuite()
-    unittest.main()
-
-if __name__ == "__main__":
-    main()

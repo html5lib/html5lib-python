@@ -61,10 +61,11 @@ def getETreeBuilder(ElementTreeImplementation):
                 return (_base.DOCTYPE, node.text, 
                         node.get("publicId"), node.get("systemId"))
 
-            elif type(node.tag) == type(ElementTree.Comment):
+            elif node.tag == ElementTree.Comment:
                 return _base.COMMENT, node.text
 
             else:
+                assert type(node.tag) in (str, unicode), type(node.tag)
                 #This is assumed to be an ordinary element
                 match = tag_regexp.match(node.tag)
                 if match:

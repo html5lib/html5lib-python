@@ -138,33 +138,32 @@ def unescape_test(test):
                     token[2][decode(key)] = decode(value)
     return test
 
-class TestCase(unittest.TestCase):
-    def runTokenizerTest(self, test):
-        #XXX - move this out into the setup function
-        #concatenate all consecutive character tokens into a single token
-        if 'doubleEscaped' in test:
-            test = unescape_test(test)
 
-        expected = concatenateCharacterTokens(test['output'])            
-        if 'lastStartTag' not in test:
-            test['lastStartTag'] = None
-        outBuffer = cStringIO.StringIO()
-        stdout = sys.stdout
-        sys.stdout = outBuffer
-        parser = TokenizerTestParser(test['initialState'], 
-                                     test['lastStartTag'])
-        tokens = parser.parse(test['input'])
-        tokens = concatenateCharacterTokens(tokens)
-        received = normalizeTokens(tokens)
-        errorMsg = u"\n".join(["\n\nInitial state:",
-                              test['initialState'] ,
-                              "\nInput:", unicode(test['input']),
-                              "\nExpected:", unicode(expected),
-                              "\nreceived:", unicode(tokens)])
-        errorMsg = errorMsg.encode("utf-8")
-        ignoreErrorOrder = test.get('ignoreErrorOrder', False)
-        self.assertEquals(tokensMatch(expected, received, ignoreErrorOrder), 
-                          True, errorMsg)
+def runTokenizerTest(test):
+    #XXX - move this out into the setup function
+    #concatenate all consecutive character tokens into a single token
+    if 'doubleEscaped' in test:
+        test = unescape_test(test)
+
+    expected = concatenateCharacterTokens(test['output'])            
+    if 'lastStartTag' not in test:
+        test['lastStartTag'] = None
+    outBuffer = cStringIO.StringIO()
+    stdout = sys.stdout
+    sys.stdout = outBuffer
+    parser = TokenizerTestParser(test['initialState'], 
+                                 test['lastStartTag'])
+    tokens = parser.parse(test['input'])
+    tokens = concatenateCharacterTokens(tokens)
+    received = normalizeTokens(tokens)
+    errorMsg = u"\n".join(["\n\nInitial state:",
+                          test['initialState'] ,
+                          "\nInput:", unicode(test['input']),
+                          "\nExpected:", unicode(expected),
+                          "\nreceived:", unicode(tokens)])
+    errorMsg = errorMsg.encode("utf-8")
+    ignoreErrorOrder = test.get('ignoreErrorOrder', False)
+    assert tokensMatch(expected, received, ignoreErrorOrder), errorMsg
 
 
 def _doCapitalize(match):
@@ -178,7 +177,7 @@ def capitalize(s):
     return s
 
 
-def buildTestSuite():
+def test_tokenizer():
     for filename in html5lib_test_files('tokenizer', '*.test'):
         tests = json.load(file(filename))
         testName = os.path.basename(filename).replace(".test","")
@@ -190,16 +189,5 @@ def buildTestSuite():
                     test["initialStates"] = ["Data state"]
                 for initialState in test["initialStates"]:
                     test["initialState"] = capitalize(initialState)
-                    def testFunc(self, test=test):
-                        self.runTokenizerTest(test)
-                    testFunc.__doc__ = "\t".join([testName, 
-                                                  test['description']])
-                    setattr(TestCase, 'test_%s_%d_%s' % (testName, index, test["initialState"]), testFunc)
-    return unittest.TestLoader().loadTestsFromTestCase(TestCase)
+                    yield runTokenizerTest, test
 
-def main():
-    buildTestSuite()
-    unittest.main()
-
-if __name__ == "__main__":
-    main()

@@ -21,7 +21,7 @@ classifiers=[
     ]
 
 setup(name='html5lib',
-      version='0.95-dev',
+      version='0.95',
       url='http://code.google.com/p/html5lib/',
       license="MIT License",
       description='HTML parser based on the WHAT-WG Web Applications 1.0' 
@@ -34,6 +34,5 @@ setup(name='html5lib',
           for name in os.listdir(os.path.join('html5lib'))
           if os.path.isdir(os.path.join('html5lib',name)) and
               not name.startswith('.')],
-      test_suite = "html5lib.tests.buildTestSuite",
-      tests_require = ['simplejson']
+      test_suite = "html5lib.tests.buildTestSuite"
       )

@@ -83,28 +83,21 @@ def serialize_xhtml(input, options):
     options = dict([(str(k),v) for k,v in options.iteritems()])
     return serializer.XHTMLSerializer(**options).render(JsonWalker(input),options.get("encoding",None))
 
+def make_test(input, expected, xhtml, options):
+    result = serialize_html(input, options)
+    if len(expected) == 1:
+        assert expected[0] == result, "Expected:\n%s\nActual:\n%s\nOptions\nxhtml:False\n%s"%(expected[0], result, str(options))
+    elif result not in expected:
+        assert False, "Expected: %s, Received: %s" % (expected, result)
 
-class TestCase(unittest.TestCase):
-    def addTest(cls, name, description, input, expected, xhtml, options):
-        func = lambda self: self.mockTest(input, options, expected, xhtml)
-        func.__doc__ = "\t".join([name, description, str(input), str(options)])
-        setattr(cls, name, func)
-    addTest = classmethod(addTest)
+    if not xhtml:
+        return
 
-    def mockTest(self, input, options, expected, xhtml):
-        result = serialize_html(input, options)
-        if len(expected) == 1:
-            self.assertEquals(expected[0], result, "Expected:\n%s\nActual:\n%s\nOptions\nxhtml:False\n%s"%(expected[0], result, str(options)))
-        elif result not in expected:
-            self.fail("Expected: %s, Received: %s" % (expected, result))
-
-        if not xhtml: return
-
-        result = serialize_xhtml(input, options)
-        if len(xhtml) == 1:
-            self.assertEquals(xhtml[0], result, "Expected:\n%s\nActual:\n%s\nOptions\nxhtml:True\n%s"%(xhtml[0], result, str(options)))
-        elif result not in xhtml:
-            self.fail("Expected: %s, Received: %s" % (xhtml, result))
+    result = serialize_xhtml(input, options)
+    if len(xhtml) == 1:
+        assert xhtml[0] == result, "Expected:\n%s\nActual:\n%s\nOptions\nxhtml:True\n%s"%(xhtml[0], result, str(options))
+    elif result not in xhtml:
+        assert False, "Expected: %s, Received: %s" % (xhtml, result)
 
 
 class EncodingTestCase(unittest.TestCase):
@@ -150,55 +143,38 @@ class EncodingTestCase(unittest.TestCase):
         self.throwsWithLatin1([["Comment", u"\u0101"]])
 
 
-class LxmlTestCase(unittest.TestCase):
-    def setUp(self):
-        self.parser = etree.XMLParser(resolve_entities=False)
-        self.treewalker = html5lib.getTreeWalker("lxml")
-        self.serializer = serializer.HTMLSerializer()
+if "lxml" in optionals_loaded:
+    class LxmlTestCase(unittest.TestCase):
+        def setUp(self):
+            self.parser = etree.XMLParser(resolve_entities=False)
+            self.treewalker = html5lib.getTreeWalker("lxml")
+            self.serializer = serializer.HTMLSerializer()
 
-    def testEntityReplacement(self):
-        doc = """<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&beta;</html>"""
-        tree = etree.fromstring(doc, parser = self.parser).getroottree()
-        result = serializer.serialize(tree, tree="lxml", omit_optional_tags=False)
-        self.assertEquals(u"""<!DOCTYPE html SYSTEM "about:legacy-compat"><html>\u03B2</html>""", result)
+        def testEntityReplacement(self):
+            doc = """<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&beta;</html>"""
+            tree = etree.fromstring(doc, parser = self.parser).getroottree()
+            result = serializer.serialize(tree, tree="lxml", omit_optional_tags=False)
+            self.assertEquals(u"""<!DOCTYPE html SYSTEM "about:legacy-compat"><html>\u03B2</html>""", result)
 
-    def testEntityXML(self):
-        doc = """<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&gt;</html>"""
-        tree = etree.fromstring(doc, parser = self.parser).getroottree()
-        result = serializer.serialize(tree, tree="lxml", omit_optional_tags=False)
-        self.assertEquals(u"""<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&gt;</html>""", result)
+        def testEntityXML(self):
+            doc = """<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&gt;</html>"""
+            tree = etree.fromstring(doc, parser = self.parser).getroottree()
+            result = serializer.serialize(tree, tree="lxml", omit_optional_tags=False)
+            self.assertEquals(u"""<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&gt;</html>""", result)
 
-    def testEntityNoResolve(self):
-        doc = """<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&beta;</html>"""
-        tree = etree.fromstring(doc, parser = self.parser).getroottree()
-        result = serializer.serialize(tree, tree="lxml", omit_optional_tags=False,
-                                      resolve_entities=False)
-        self.assertEquals(u"""<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&beta;</html>""", result)
+        def testEntityNoResolve(self):
+            doc = """<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&beta;</html>"""
+            tree = etree.fromstring(doc, parser = self.parser).getroottree()
+            result = serializer.serialize(tree, tree="lxml", omit_optional_tags=False,
+                                          resolve_entities=False)
+            self.assertEquals(u"""<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&beta;</html>""", result)
 
-def buildBasicTestSuite():
+def test_serializer():
     for filename in html5lib_test_files('serializer', '*.test'):
-        test_name = os.path.basename(filename).replace('.test','')
         tests = json.load(file(filename))
+        test_name = os.path.basename(filename).replace('.test','')
         for index, test in enumerate(tests['tests']):
             xhtml = test.get("xhtml", test["expected"])
-            if test_name == 'optionaltags': xhtml = None
-            TestCase.addTest('test_%s_%d' % (test_name, index+1),
-                test["description"], test["input"], test["expected"], xhtml,
-                test.get("options", {}))
-    return unittest.TestLoader().loadTestsFromTestCase(TestCase)
-
-def buildTestSuite():
-    allTests = [buildBasicTestSuite()]
-    allTests.append(unittest.TestLoader().loadTestsFromTestCase(EncodingTestCase))
-    if "lxml" in optionals_loaded:
-        allTests.append(unittest.TestLoader().loadTestsFromTestCase(LxmlTestCase))
-
-    return unittest.TestSuite(allTests)
-
-
-def main():
-    buildTestSuite()
-    unittest.main()
-
-if __name__ == "__main__":
-    main()
+            if test_name == 'optionaltags': 
+                xhtml = None
+            yield make_test, test["input"], test["expected"], xhtml, test.get("options", {})
