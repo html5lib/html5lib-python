@@ -184,8 +184,10 @@ class HTMLTokenizer(object):
             def entitiesStartingWith(name):
                 return [e for e in filteredEntityList if e.startswith(name)]
 
-            while (charStack[-1] is not EOF and
-                   entitiesStartingWith("".join(charStack))):
+            while (charStack[-1] is not EOF):
+                filteredEntityList = entitiesStartingWith(u"".join(charStack))
+                if not filteredEntityList:
+                    break
                 charStack.append(self.stream.char())
 
             # At this point we have a string that starts with some characters
