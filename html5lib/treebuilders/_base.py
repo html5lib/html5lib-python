@@ -11,6 +11,18 @@ except NameError:
 # from "leaking" into tables, object elements, and marquees.
 Marker = None
 
+listElementsMap = {
+    None:(frozenset(scopingElements), False),
+    "button":(frozenset(scopingElements | set([(namespaces["html"], "button")])), False),
+    "list":(frozenset(scopingElements | set([(namespaces["html"], "ol"),
+                                   (namespaces["html"], "ul")])), False),
+    "table":(frozenset([(namespaces["html"], "html"),
+                  (namespaces["html"], "table")]), False),
+    "select":(frozenset([(namespaces["html"], "optgroup"), 
+                   (namespaces["html"], "option")]), True)
+    }
+
+
 class Node(object):
     def __init__(self, name):
         """Node representing an item in the tree.
@@ -157,16 +169,6 @@ class TreeBuilder(object):
         #match any node with that name
         exactNode = hasattr(target, "nameTuple")
 
-        listElementsMap = {
-            None:(scopingElements, False),
-            "button":(scopingElements | set([(namespaces["html"], "button")]), False),
-            "list":(scopingElements | set([(namespaces["html"], "ol"),
-                                           (namespaces["html"], "ul")]), False),
-            "table":(set([(namespaces["html"], "html"),
-                          (namespaces["html"], "table")]), False),
-            "select":(set([(namespaces["html"], "optgroup"), 
-                           (namespaces["html"], "option")]), True)
-            }
         listElements, invert = listElementsMap[variant]
 
         for node in reversed(self.openElements):
