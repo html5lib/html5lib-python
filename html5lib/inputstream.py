@@ -198,8 +198,11 @@ class HTMLInputStream:
             try:
                 from io import BytesIO
             except:
-                # 2to3 converts this line to: from io import StringIO  
-                from cStringIO import StringIO as BytesIO
+                try:
+                    # 2to3 converts this line to: from io import StringIO  
+                    from cStringIO import StringIO as BytesIO
+                except:
+                    from StringIO import StringIO as BytesIO
             stream = BytesIO(source)
 
         if (not(hasattr(stream, "tell") and hasattr(stream, "seek")) or
@@ -227,6 +230,7 @@ class HTMLInputStream:
                 detector = UniversalDetector()
                 while not detector.done:
                     buffer = self.rawStream.read(self.numBytesChardet)
+                    assert isinstance(buffer, str)
                     if not buffer:
                         break
                     buffers.append(buffer)
@@ -275,6 +279,7 @@ class HTMLInputStream:
 
         # Go to beginning of file and read in 4 bytes
         string = self.rawStream.read(4)
+        assert isinstance(string, str)
 
         # Try detecting the BOM using bytes from the string
         encoding = bomDict.get(string[:3])         # UTF-8
@@ -297,6 +302,7 @@ class HTMLInputStream:
         """Report the encoding declared by the meta element
         """
         buffer = self.rawStream.read(self.numBytesMeta)
+        assert isinstance(buffer, str)
         parser = EncodingParser(buffer)
         self.rawStream.seek(0)
         encoding = parser.getEncoding()
