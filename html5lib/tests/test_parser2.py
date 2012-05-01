@@ -1,3 +1,5 @@
+import StringIO
+
 import support
 from html5lib import html5parser
 from html5lib.constants import namespaces
@@ -27,6 +29,10 @@ class MoreParserTests(unittest.TestCase):
     parser = html5parser.HTMLParser(namespaceHTMLElements=False)
     doc = parser.parse("<html></html>")
     self.assert_(doc.childNodes[0].namespace == None)
+
+  def test_unicode_file(self):
+    parser = html5parser.HTMLParser()
+    doc = parser.parse(StringIO.StringIO(u"a"))
 
 def buildTestSuite():
   return unittest.defaultTestLoader.loadTestsFromName(__name__)
