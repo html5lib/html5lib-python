@@ -8,57 +8,9 @@ import re
 warnings.simplefilter("error")
 
 from support import html5lib_test_files as data_files
-from support import TestData, convert, convertExpected
+from support import TestData, convert, convertExpected, treeTypes
 import html5lib
 from html5lib import html5parser, treebuilders, constants
-
-treeTypes = {"simpletree":treebuilders.getTreeBuilder("simpletree"),
-             "DOM":treebuilders.getTreeBuilder("dom")}
-
-#Try whatever etree implementations are avaliable from a list that are
-#"supposed" to work
-try:
-    import xml.etree.ElementTree as ElementTree
-    treeTypes['ElementTree'] = treebuilders.getTreeBuilder("etree", ElementTree, fullTree=True)
-except ImportError:
-    try:
-        import elementtree.ElementTree as ElementTree
-        treeTypes['ElementTree'] = treebuilders.getTreeBuilder("etree", ElementTree, fullTree=True)
-    except ImportError:
-        pass
-
-try:
-    import xml.etree.cElementTree as cElementTree
-    treeTypes['cElementTree'] = treebuilders.getTreeBuilder("etree", cElementTree, fullTree=True)
-except ImportError:
-    try:
-        import cElementTree
-        treeTypes['cElementTree'] = treebuilders.getTreeBuilder("etree", cElementTree, fullTree=True)
-    except ImportError:
-        pass
-    
-try:
-    try:
-        import lxml.html as lxml
-    except ImportError:
-        import lxml.etree as lxml
-    treeTypes['lxml'] = treebuilders.getTreeBuilder("lxml", lxml, fullTree=True)
-except ImportError:
-    pass
-
-try:
-    import BeautifulSoup
-    treeTypes["beautifulsoup"] = treebuilders.getTreeBuilder("beautifulsoup", fullTree=True)
-except ImportError:
-    pass
-
-#Try whatever dom implementations are avaliable from a list that are
-#"supposed" to work
-try:
-    import pxdom
-    treeTypes["pxdom"] = treebuilders.getTreeBuilder("dom", pxdom)
-except ImportError:
-    pass
 
 #Run the parse error checks
 checkParseErrors = False
@@ -91,7 +43,7 @@ def runParserTest(innerHTML, input, expected, errors, treeClass,
                 return 
     except:
         errorMsg = u"\n".join([u"\n\nInput:", input, u"\nExpected:", expected,
-                               u"\nTraceback:", traceback.format_exc()])
+                               u"\nTraceback:", traceback.format_exc().decode('utf8')])
         assert False, errorMsg.encode("utf8")
 
     output = convertTreeDump(p.tree.testSerializer(document))
@@ -108,8 +60,8 @@ def runParserTest(innerHTML, input, expected, errors, treeClass,
               ((line,col), errorcode, datavars) in p.errors]
 
     errorMsg2 = u"\n".join([u"\n\nInput:", input,
-                            u"\nExpected errors (" + str(len(errors)) + u"):\n" + u"\n".join(errors),
-                            u"\nActual errors (" + str(len(p.errors)) + u"):\n" + u"\n".join(errStr)])
+                            u"\nExpected errors (" + unicode(len(errors)) + u"):\n" + u"\n".join(errors),
+                            u"\nActual errors (" + unicode(len(p.errors)) + u"):\n" + u"\n".join(errStr)])
     if checkParseErrors:
             assert len(p.errors) == len(errors), errorMsg2.encode("utf-8")
 
@@ -120,15 +72,15 @@ def test_parser():
     for filename in files:
         testName = os.path.basename(filename).replace(".dat","")
 
-        tests = TestData(filename, "data")
+        tests = TestData(filename, u"data")
         
         for index, test in enumerate(tests):
             input, errors, innerHTML, expected = [test[key] for key in
-                                                      'data', 'errors',
-                                                      'document-fragment',
-                                                      'document']
+                                                      u'data', u'errors',
+                                                      u'document-fragment',
+                                                      u'document']
             if errors:
-                errors = errors.split("\n")
+                errors = errors.split(u"\n")
 
             for treeName, treeCls in treeTypes.iteritems():
                 for namespaceHTMLElements in (True, False):
