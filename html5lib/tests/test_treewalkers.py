@@ -1,6 +1,5 @@
 import os
 import sys
-import StringIO
 import unittest
 import warnings
 
@@ -270,9 +269,9 @@ def run_test(innerHTML, input, expected, errors, treeClass):
     try:
         p = html5parser.HTMLParser(tree = treeClass["builder"])
         if innerHTML:
-            document = p.parseFragment(StringIO.StringIO(input), innerHTML)
+            document = p.parseFragment(input, innerHTML)
         else:
-            document = p.parse(StringIO.StringIO(input))
+            document = p.parse(input)
     except constants.DataLossWarning:
         #Ignore testcases we know we don't pass
         return
