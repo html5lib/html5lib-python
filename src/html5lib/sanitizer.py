@@ -37,7 +37,7 @@ class HTMLSanitizerMixin(object):
         'dir', 'disabled', 'enctype', 'for', 'frame', 'headers', 'height',
         'href', 'hreflang', 'hspace', 'id', 'ismap', 'label', 'lang',
         'longdesc', 'maxlength', 'media', 'method', 'multiple', 'name',
-        'nohref', 'noshade', 'nowrap', 'poster', 'prompt', 'readonly',
+        'nohref', 'noshade', 'nowrap', 'poster', 'preload', 'prompt', 'readonly',
         'rel', 'rev', 'rows', 'rowspan', 'rules', 'scope', 'selected',
         'shape', 'size', 'span', 'src', 'start', 'style', 'summary',
         'tabindex', 'target', 'title', 'type', 'usemap', 'valign',
