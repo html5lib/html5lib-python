@@ -166,12 +166,12 @@ class HTMLSanitizerMixin(object):
         if token_type in (tokenTypes["StartTag"], tokenTypes["EndTag"], 
                              tokenTypes["EmptyTag"]):
             if token["name"] in self.allowed_elements:
-                if token.has_key("data"):
+                if "data" in token:
                     attrs = dict([(name,val) for name,val in
                                   token["data"][::-1] 
                                   if name in self.allowed_attributes])
                     for attr in self.attr_val_is_uri:
-                        if not attrs.has_key(attr):
+                        if attr not in attrs:
                             continue
                         val_unescaped = re.sub("[`\000-\040\177-\240\s]+", '',
                                                unescape(attrs[attr])).lower()
@@ -190,7 +190,7 @@ class HTMLSanitizerMixin(object):
                         'xlink:href' in attrs and re.search('^\s*[^#\s].*',
                                                             attrs['xlink:href'])):
                         del attrs['xlink:href']
-                    if attrs.has_key('style'):
+                    if 'style' in attrs:
                         attrs['style'] = self.sanitize_css(attrs['style'])
                     token["data"] = [[name,val] for name,val in attrs.items()]
                 return token

@@ -124,7 +124,7 @@ def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder,
 
 def unescape_test(test):
     def decode(inp):
-        return inp.decode("unicode-escape")
+        return inp.encode("utf-8").decode("unicode-escape")
 
     test["input"] = decode(test["input"])
     for token in test["output"]:
