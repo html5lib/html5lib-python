@@ -1,6 +1,6 @@
 import os
 import unittest
-from support import html5lib_test_files
+from support import get_data_files
 
 try:
     import json
@@ -170,7 +170,7 @@ if "lxml" in optionals_loaded:
             self.assertEquals(u"""<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&beta;</html>""", result)
 
 def test_serializer():
-    for filename in html5lib_test_files('serializer', '*.test'):
+    for filename in get_data_files('serializer', '*.test'):
         tests = json.load(file(filename))
         test_name = os.path.basename(filename).replace('.test','')
         for index, test in enumerate(tests['tests']):

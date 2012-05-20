@@ -9,7 +9,7 @@ try:
 except ImportError:
     import simplejson as json
 
-from support import html5lib_test_files
+from support import get_data_files
 from html5lib.tokenizer import HTMLTokenizer
 from html5lib import constants
 
@@ -141,7 +141,7 @@ def runTokenizerTest(test):
     #XXX - move this out into the setup function
     #concatenate all consecutive character tokens into a single token
     if 'doubleEscaped' in test:
-        test = unescape_test(test)
+        test = unescape(test)
 
     expected = concatenateCharacterTokens(test['output'])            
     if 'lastStartTag' not in test:
@@ -174,7 +174,7 @@ def capitalize(s):
     return s
 
 def testTokenizer():
-    for filename in html5lib_test_files('tokenizer', '*.test'):
+    for filename in get_data_files('tokenizer', '*.test'):
         tests = json.load(file(filename))
         testName = os.path.basename(filename).replace(".test","")
         if 'tests' in tests:

@@ -1,6 +1,6 @@
 import os
 import unittest
-from support import html5lib_test_files, TestData, test_dir
+from support import get_data_files, TestData, test_dir
 
 from html5lib import HTMLParser, inputstream
 
@@ -14,7 +14,7 @@ class Html5EncodingTestCase(unittest.TestCase):
         self.assertEquals(inputstream.codecName("ISO_8859--1"), "windows-1252")
 
 def buildTestSuite():
-    for filename in html5lib_test_files("encoding"):
+    for filename in get_data_files("encoding"):
         test_name = os.path.basename(filename).replace('.dat',''). \
             replace('-','')
         tests = TestData(filename, "data")
