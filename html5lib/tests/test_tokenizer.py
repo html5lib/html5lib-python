@@ -138,7 +138,6 @@ def unescape(test):
                     del token[2][key]
                     token[2][decode(key)] = decode(value)
     return test
-unescape_test.__test__ = False
 
 def runTokenizerTest(test):
     #XXX - move this out into the setup function
