@@ -18,7 +18,10 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             attrs = {}
             for attr in node.attributes.keys():
                 attr = node.getAttributeNode(attr)
-                attrs[(attr.namespaceURI,attr.localName)] = attr.value
+                if attr.namespaceURI:
+                    attrs[(attr.namespaceURI,attr.localName)] = attr.value
+                else:
+                    attrs[(None,attr.name)] = attr.value
             return (_base.ELEMENT, node.namespaceURI, node.nodeName, 
                     attrs, node.hasChildNodes())
 
