@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 import sys
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import codecs
 
 def main():
     encodings = []
-    f = urllib2.urlopen(sys.argv[1])
+    f = urllib.request.urlopen(sys.argv[1])
     for line in f:
         if line.startswith("Name: ") or line.startswith("Alias: "):
             enc = line.split()[1]

@@ -90,7 +90,7 @@ class deque(object):
     def rotate(self, n=1):
         if self:
             n %= len(self)
-            for i in xrange(n):
+            for i in range(n):
                 self.appendleft(self.pop())
 
     def __getitem__(self, i):
@@ -116,7 +116,7 @@ class deque(object):
         data = self.data
         if i < 0:
             i += size
-        for j in xrange(self.left+i, self.right-1):
+        for j in range(self.left+i, self.right-1):
             data[j] = data[j+1]
         self.pop()
     

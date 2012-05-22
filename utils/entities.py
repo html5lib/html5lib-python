@@ -15,7 +15,7 @@ def entity_name(inp):
     return inp.strip()
 
 def entity_characters(inp):
-    return u"".join(codepoint_to_character(item)
+    return "".join(codepoint_to_character(item)
                     for item in inp.split()
                     if item)
 
@@ -55,14 +55,14 @@ def test_expected(name, characters, good):
 
 def make_test_list(entities):
     tests = []
-    for entity_name, characters in entities.iteritems():
+    for entity_name, characters in entities.items():
         if entity_name.endswith(";") and not subentity_exists(entity_name, entities):
-            tests.append((entity_name[:-1], u"&" + entity_name[:-1], False))
+            tests.append((entity_name[:-1], "&" + entity_name[:-1], False))
         tests.append((entity_name, characters, True))
     return sorted(tests)
 
 def subentity_exists(entity_name, entities):
-    for i in xrange(1, len(entity_name)):
+    for i in range(1, len(entity_name)):
         if entity_name[:-i] in entities:
             return True
     return False
@@ -71,7 +71,7 @@ def make_entities_code(entities):
     entities_text = "\n".join("    \"%s\": u\"%s\","%(
             name, entities[name].encode(
                 "unicode-escape").replace("\"", "\\\""))
-                              for name in sorted(entities.iterkeys()))
+                              for name in sorted(entities.keys()))
     return """entities = {
 %s
 }"""%entities_text

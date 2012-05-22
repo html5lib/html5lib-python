@@ -5,7 +5,7 @@ except:
 import re
 import types
 
-import _base
+from . import _base
 from html5lib import ihatexml
 from html5lib import constants
 from html5lib.constants import namespaces
@@ -72,9 +72,9 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
         def _setAttributes(self, attributes):
             #Delete existing attributes first
             #XXX - there may be a better way to do this...
-            for key in self._element.attrib.keys():
+            for key in list(self._element.attrib.keys()):
                 del self._element.attrib[key]
-            for key, value in attributes.iteritems():
+            for key, value in attributes.items():
                 if isinstance(key, tuple):
                     name = "{%s}%s"%(key[2], key[1])
                 else:
@@ -136,7 +136,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
     
         def cloneNode(self):
             element = type(self)(self.name, self.namespace)
-            for name, value in self.attributes.iteritems():
+            for name, value in self.attributes.items():
                 element.attributes[name] = value
             return element
     
@@ -176,20 +176,20 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             self.systemId = systemId
 
         def _getPublicId(self):
-            return self._element.get(u"publicId", "")
+            return self._element.get("publicId", "")
 
         def _setPublicId(self, value):
             if value is not None:
-                self._element.set(u"publicId", value)
+                self._element.set("publicId", value)
 
         publicId = property(_getPublicId, _setPublicId)
     
         def _getSystemId(self):
-            return self._element.get(u"systemId", "")
+            return self._element.get("systemId", "")
 
         def _setSystemId(self, value):
             if value is not None:
-                self._element.set(u"systemId", value)
+                self._element.set("systemId", value)
 
         systemId = property(_getSystemId, _setSystemId)
     
@@ -224,7 +224,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             elif element.tag == ElementTree.Comment:
                 rv.append("|%s<!-- %s -->"%(' '*indent, element.text))
             else:
-                assert type(element.tag) in types.StringTypes, "Expected unicode, got %s"%type(element.tag)
+                assert type(element.tag) is str, "Expected unicode, got %s, %s"%(type(element.tag), element.tag)
                 nsmatch = tag_regexp.match(element.tag)
 
                 if nsmatch is None:
@@ -237,7 +237,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
 
                 if hasattr(element, "attrib"):
                     attributes = []
-                    for name, value in element.attrib.iteritems():
+                    for name, value in element.attrib.items():
                         nsmatch = tag_regexp.match(name)
                         if nsmatch is not None:
                             ns, name = nsmatch.groups()
@@ -298,7 +298,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                 else:
                     attr = " ".join(["%s=\"%s\""%(
                                 filter.fromXmlName(name), value) 
-                                     for name, value in element.attrib.iteritems()])
+                                     for name, value in element.attrib.items()])
                     rv.append("<%s %s>"%(element.tag, attr))
                 if element.text:
                     rv.append(element.text)

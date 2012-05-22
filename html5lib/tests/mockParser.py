@@ -14,7 +14,7 @@ class HTMLParser(object):
         tokenizer = HTMLTokenizer(stream)
         for token in tokenizer:
             if output:
-                print token
+                print(token)
 
 if __name__ == "__main__":
     x = HTMLParser()
@@ -31,7 +31,7 @@ if __name__ == "__main__":
         else:
             x.parse(sys.argv[1])
     else:
-        print """Usage: python mockParser.py filename [stats]
+        print("""Usage: python mockParser.py filename [stats]
         If stats is specified the hotshots profiler will run and output the
         stats instead.
-        """
+        """)

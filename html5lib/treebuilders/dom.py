@@ -7,7 +7,7 @@ except:
 import re
 import weakref
 
-import _base
+from . import _base
 from html5lib import constants, ihatexml
 from html5lib.constants import namespaces
 
@@ -30,16 +30,16 @@ def getDomBuilder(DomImplementation):
         def __init__(self, element):
             self.element = element
         def __iter__(self):
-            return self.element.attributes.items().__iter__()
+            return list(self.element.attributes.items()).__iter__()
         def __setitem__(self, name, value):
             self.element.setAttribute(name, value)
         def __len__(self):
-            return len(self.element.attributes.items())
+            return len(list(self.element.attributes.items()))
         def items(self):
             return [(item[0], item[1]) for item in
-                     self.element.attributes.items()]
+                     list(self.element.attributes.items())]
         def keys(self):
-            return self.element.attributes.keys()
+            return list(self.element.attributes.keys())
         def __getitem__(self, name):
             return self.element.getAttribute(name)
 
@@ -89,7 +89,7 @@ def getDomBuilder(DomImplementation):
     
         def setAttributes(self, attributes):
             if attributes:
-                for name, value in attributes.items():
+                for name, value in list(attributes.items()):
                     if isinstance(name, tuple):
                         if name[0] is not None:
                             qualifiedName = (name[0] + ":" + name[1])
@@ -160,7 +160,7 @@ def getDomBuilder(DomImplementation):
     
         def insertText(self, data, parent=None):
             data=data
-            if parent <> self:
+            if parent != self:
                 _base.TreeBuilder.insertText(self, data, parent)
             else:
                 # HACK: allow text nodes as children of the document node
@@ -236,7 +236,7 @@ def getDomBuilder(DomImplementation):
     
           # gather namespace declarations
           prefixes = []
-          for attrname in node.attributes.keys():
+          for attrname in list(node.attributes.keys()):
             attr = node.getAttributeNode(attrname)
             if (attr.namespaceURI == XMLNS_NAMESPACE or
                (attr.namespaceURI == None and attr.nodeName.startswith('xmlns'))):
@@ -248,11 +248,11 @@ def getDomBuilder(DomImplementation):
               del attributes[(attr.namespaceURI, attr.nodeName)]
     
           # apply namespace declarations
-          for attrname in node.attributes.keys():
+          for attrname in list(node.attributes.keys()):
             attr = node.getAttributeNode(attrname)
             if attr.namespaceURI == None and ':' in attr.nodeName:
               prefix = attr.nodeName.split(':')[0]
-              if nsmap.has_key(prefix):
+              if prefix in nsmap:
                 del attributes[(attr.namespaceURI, attr.nodeName)]
                 attributes[(nsmap[prefix],attr.nodeName)]=attr.nodeValue
     
@@ -287,5 +287,5 @@ def getDomBuilder(DomImplementation):
 
 # Keep backwards compatibility with things that directly load 
 # classes/functions from this module
-for key, value in getDomModule(minidom).__dict__.items():
+for key, value in list(getDomModule(minidom).__dict__.items()):
 	globals()[key] = value

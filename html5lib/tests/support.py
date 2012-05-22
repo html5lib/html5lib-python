@@ -64,6 +64,7 @@ except ImportError:
 
 def html5lib_test_files(subdirectory, files='*.dat'):
     return glob.glob(os.path.join(test_dir,subdirectory,files))
+html5lib_test_files.__test__ = False
 
 class DefaultDict(dict):
     def __init__(self, default, *args, **kwargs):
@@ -77,6 +78,9 @@ class TestData(object):
     def __init__(self, filename, newTestHeading="data"):
         self.f = codecs.open(filename, encoding="utf8")
         self.newTestHeading = newTestHeading
+
+    def __del__(self):
+        self.f.close()
     
     def __iter__(self):
         data = DefaultDict(None)
@@ -106,7 +110,7 @@ class TestData(object):
     
     def normaliseOutput(self, data):
         #Remove trailing newlines
-        for key,value in data.iteritems():
+        for key,value in data.items():
             if value.endswith("\n"):
                 data[key] = value[:-1]
         return data

@@ -2,7 +2,12 @@ import unittest
 
 from html5lib.filters.whitespace import Filter
 from html5lib.constants import spaceCharacters
-spaceCharacters = u"".join(spaceCharacters)
+spaceCharacters = "".join(spaceCharacters)
+
+try:
+    unittest.TestCase.assertEqual
+except AttributeError:
+    unittest.TestCase.assertEqual = unittest.TestCase.assertEquals
 
 class TestCase(unittest.TestCase):
     def runTest(self, input, expected):
@@ -10,107 +15,107 @@ class TestCase(unittest.TestCase):
         errorMsg = "\n".join(["\n\nInput:", str(input),
                               "\nExpected:", str(expected),
                               "\nReceived:", str(output)])
-        self.assertEquals(output, expected, errorMsg)
+        self.assertEqual(output, expected, errorMsg)
 
     def runTestUnmodifiedOutput(self, input):
         self.runTest(input, input)
 
     def testPhrasingElements(self):
         self.runTestUnmodifiedOutput(
-            [{"type": u"Characters", "data": u"This is a " },
-             {"type": u"StartTag", "name": u"span", "data": [] },
-             {"type": u"Characters", "data": u"phrase" },
-             {"type": u"EndTag", "name": u"span", "data": []},
-             {"type": u"SpaceCharacters", "data": u" " },
-             {"type": u"Characters", "data": u"with" },
-             {"type": u"SpaceCharacters", "data": u" " },
-             {"type": u"StartTag", "name": u"em", "data": [] },
-             {"type": u"Characters", "data": u"emphasised text" },
-             {"type": u"EndTag", "name": u"em", "data": []},
-             {"type": u"Characters", "data": u" and an " },
-             {"type": u"StartTag", "name": u"img", "data": [[u"alt", u"image"]] },
-             {"type": u"Characters", "data": u"." }])
+            [{"type": "Characters", "data": "This is a " },
+             {"type": "StartTag", "name": "span", "data": [] },
+             {"type": "Characters", "data": "phrase" },
+             {"type": "EndTag", "name": "span", "data": []},
+             {"type": "SpaceCharacters", "data": " " },
+             {"type": "Characters", "data": "with" },
+             {"type": "SpaceCharacters", "data": " " },
+             {"type": "StartTag", "name": "em", "data": [] },
+             {"type": "Characters", "data": "emphasised text" },
+             {"type": "EndTag", "name": "em", "data": []},
+             {"type": "Characters", "data": " and an " },
+             {"type": "StartTag", "name": "img", "data": [["alt", "image"]] },
+             {"type": "Characters", "data": "." }])
 
     def testLeadingWhitespace(self):
         self.runTest(
-            [{"type": u"StartTag", "name": u"p", "data": []},
-             {"type": u"SpaceCharacters", "data": spaceCharacters},
-             {"type": u"Characters", "data": u"foo"},
-             {"type": u"EndTag", "name": u"p", "data": []}],
-            [{"type": u"StartTag", "name": u"p", "data": []},
-             {"type": u"SpaceCharacters", "data": u" "},
-             {"type": u"Characters", "data": u"foo"},
-             {"type": u"EndTag", "name": u"p", "data": []}])
+            [{"type": "StartTag", "name": "p", "data": []},
+             {"type": "SpaceCharacters", "data": spaceCharacters},
+             {"type": "Characters", "data": "foo"},
+             {"type": "EndTag", "name": "p", "data": []}],
+            [{"type": "StartTag", "name": "p", "data": []},
+             {"type": "SpaceCharacters", "data": " "},
+             {"type": "Characters", "data": "foo"},
+             {"type": "EndTag", "name": "p", "data": []}])
 
     def testLeadingWhitespaceAsCharacters(self):
         self.runTest(
-            [{"type": u"StartTag", "name": u"p", "data": []},
-             {"type": u"Characters", "data": spaceCharacters + u"foo"},
-             {"type": u"EndTag", "name": u"p", "data": []}],
-            [{"type": u"StartTag", "name": u"p", "data": []},
-             {"type": u"Characters", "data": u" foo"},
-             {"type": u"EndTag", "name": u"p", "data": []}])
+            [{"type": "StartTag", "name": "p", "data": []},
+             {"type": "Characters", "data": spaceCharacters + "foo"},
+             {"type": "EndTag", "name": "p", "data": []}],
+            [{"type": "StartTag", "name": "p", "data": []},
+             {"type": "Characters", "data": " foo"},
+             {"type": "EndTag", "name": "p", "data": []}])
 
     def testTrailingWhitespace(self):
         self.runTest(
-            [{"type": u"StartTag", "name": u"p", "data": []},
-             {"type": u"Characters", "data": u"foo"},
-             {"type": u"SpaceCharacters", "data": spaceCharacters},
-             {"type": u"EndTag", "name": u"p", "data": []}],
-            [{"type": u"StartTag", "name": u"p", "data": []},
-             {"type": u"Characters", "data": u"foo"},
-             {"type": u"SpaceCharacters", "data": u" "},
-             {"type": u"EndTag", "name": u"p", "data": []}])
+            [{"type": "StartTag", "name": "p", "data": []},
+             {"type": "Characters", "data": "foo"},
+             {"type": "SpaceCharacters", "data": spaceCharacters},
+             {"type": "EndTag", "name": "p", "data": []}],
+            [{"type": "StartTag", "name": "p", "data": []},
+             {"type": "Characters", "data": "foo"},
+             {"type": "SpaceCharacters", "data": " "},
+             {"type": "EndTag", "name": "p", "data": []}])
 
     def testTrailingWhitespaceAsCharacters(self):
         self.runTest(
-            [{"type": u"StartTag", "name": u"p", "data": []},
-             {"type": u"Characters", "data": u"foo" + spaceCharacters},
-             {"type": u"EndTag", "name": u"p", "data": []}],
-            [{"type": u"StartTag", "name": u"p", "data": []},
-             {"type": u"Characters", "data": u"foo "},
-             {"type": u"EndTag", "name": u"p", "data": []}])
+            [{"type": "StartTag", "name": "p", "data": []},
+             {"type": "Characters", "data": "foo" + spaceCharacters},
+             {"type": "EndTag", "name": "p", "data": []}],
+            [{"type": "StartTag", "name": "p", "data": []},
+             {"type": "Characters", "data": "foo "},
+             {"type": "EndTag", "name": "p", "data": []}])
 
     def testWhitespace(self):
         self.runTest(
-            [{"type": u"StartTag", "name": u"p", "data": []},
-             {"type": u"Characters", "data": u"foo" + spaceCharacters + "bar"},
-             {"type": u"EndTag", "name": u"p", "data": []}],
-            [{"type": u"StartTag", "name": u"p", "data": []},
-             {"type": u"Characters", "data": u"foo bar"},
-             {"type": u"EndTag", "name": u"p", "data": []}])
+            [{"type": "StartTag", "name": "p", "data": []},
+             {"type": "Characters", "data": "foo" + spaceCharacters + "bar"},
+             {"type": "EndTag", "name": "p", "data": []}],
+            [{"type": "StartTag", "name": "p", "data": []},
+             {"type": "Characters", "data": "foo bar"},
+             {"type": "EndTag", "name": "p", "data": []}])
 
     def testLeadingWhitespaceInPre(self):
         self.runTestUnmodifiedOutput(
-            [{"type": u"StartTag", "name": u"pre", "data": []},
-             {"type": u"SpaceCharacters", "data": spaceCharacters},
-             {"type": u"Characters", "data": u"foo"},
-             {"type": u"EndTag", "name": u"pre", "data": []}])
+            [{"type": "StartTag", "name": "pre", "data": []},
+             {"type": "SpaceCharacters", "data": spaceCharacters},
+             {"type": "Characters", "data": "foo"},
+             {"type": "EndTag", "name": "pre", "data": []}])
 
     def testLeadingWhitespaceAsCharactersInPre(self):
         self.runTestUnmodifiedOutput(
-            [{"type": u"StartTag", "name": u"pre", "data": []},
-             {"type": u"Characters", "data": spaceCharacters + u"foo"},
-             {"type": u"EndTag", "name": u"pre", "data": []}])
+            [{"type": "StartTag", "name": "pre", "data": []},
+             {"type": "Characters", "data": spaceCharacters + "foo"},
+             {"type": "EndTag", "name": "pre", "data": []}])
 
     def testTrailingWhitespaceInPre(self):
         self.runTestUnmodifiedOutput(
-            [{"type": u"StartTag", "name": u"pre", "data": []},
-             {"type": u"Characters", "data": u"foo"},
-             {"type": u"SpaceCharacters", "data": spaceCharacters},
-             {"type": u"EndTag", "name": u"pre", "data": []}])
+            [{"type": "StartTag", "name": "pre", "data": []},
+             {"type": "Characters", "data": "foo"},
+             {"type": "SpaceCharacters", "data": spaceCharacters},
+             {"type": "EndTag", "name": "pre", "data": []}])
 
     def testTrailingWhitespaceAsCharactersInPre(self):
         self.runTestUnmodifiedOutput(
-            [{"type": u"StartTag", "name": u"pre", "data": []},
-             {"type": u"Characters", "data": u"foo" + spaceCharacters},
-             {"type": u"EndTag", "name": u"pre", "data": []}])
+            [{"type": "StartTag", "name": "pre", "data": []},
+             {"type": "Characters", "data": "foo" + spaceCharacters},
+             {"type": "EndTag", "name": "pre", "data": []}])
 
     def testWhitespaceInPre(self):
         self.runTestUnmodifiedOutput(
-            [{"type": u"StartTag", "name": u"pre", "data": []},
-             {"type": u"Characters", "data": u"foo" + spaceCharacters + "bar"},
-             {"type": u"EndTag", "name": u"pre", "data": []}])
+            [{"type": "StartTag", "name": "pre", "data": []},
+             {"type": "Characters", "data": "foo" + spaceCharacters + "bar"},
+             {"type": "EndTag", "name": "pre", "data": []}])
 
 def buildTestSuite():
     return unittest.defaultTestLoader.loadTestsFromName(__name__)

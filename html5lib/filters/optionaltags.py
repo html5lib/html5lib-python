@@ -1,4 +1,4 @@
-import _base
+from . import _base
 
 class Filter(_base.Filter):
     def slider(self):

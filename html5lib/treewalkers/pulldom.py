@@ -1,7 +1,7 @@
 from xml.dom.pulldom import START_ELEMENT, END_ELEMENT, \
     COMMENT, IGNORABLE_WHITESPACE, CHARACTERS
 
-import _base
+from . import _base
 
 from html5lib.constants import voidElements
 
@@ -31,7 +31,7 @@ class TreeWalker(_base.TreeWalker):
             name = node.nodeName
             namespace = node.namespaceURI
             attrs = {}
-            for attr in node.attributes.keys():
+            for attr in list(node.attributes.keys()):
                 attr = node.getAttributeNode(attr)
                 attrs[(attr.namespaceURI,attr.localName)] = attr.value
             if name in voidElements:

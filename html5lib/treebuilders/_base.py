@@ -42,10 +42,10 @@ class Node(object):
         self.childNodes = []
         self._flags = []
 
-    def __unicode__(self):
+    def __str__(self):
         attributesStr =  " ".join(["%s=\"%s\""%(name, value) 
                                    for name, value in 
-                                   self.attributes.iteritems()])
+                                   self.attributes.items()])
         if attributesStr:
             return "<%s %s>"%(self.name,attributesStr)
         else:
@@ -287,7 +287,7 @@ class TreeBuilder(object):
         
     def insertElementNormal(self, token):
         name = token["name"]
-        assert type(name) == unicode, "Element %s not unicode"%name
+        assert type(name) == str, "Element %s not unicode"%name
         namespace = token.get("namespace", self.defaultNamespace)
         element = self.elementClass(name, namespace)
         element.attributes = token["data"]

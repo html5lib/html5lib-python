@@ -30,21 +30,21 @@ except:
 import sys
 import types
 
-import inputstream
-import tokenizer
+from . import inputstream
+from . import tokenizer
 
-import treebuilders
-from treebuilders._base import Marker
-from treebuilders import simpletree
+from . import treebuilders
+from .treebuilders._base import Marker
+from .treebuilders import simpletree
 
-import utils
-import constants
-from constants import spaceCharacters, asciiUpper2Lower
-from constants import formattingElements, specialElements
-from constants import headingElements, tableInsertModeElements
-from constants import cdataElements, rcdataElements, voidElements
-from constants import tokenTypes, ReparseException, namespaces, spaceCharacters
-from constants import htmlIntegrationPointElements, mathmlTextIntegrationPointElements
+from . import utils
+from . import constants
+from .constants import spaceCharacters, asciiUpper2Lower
+from .constants import formattingElements, specialElements
+from .constants import headingElements, tableInsertModeElements
+from .constants import cdataElements, rcdataElements, voidElements
+from .constants import tokenTypes, ReparseException, namespaces, spaceCharacters
+from .constants import htmlIntegrationPointElements, mathmlTextIntegrationPointElements
 
 def parse(doc, treebuilder="simpletree", encoding=None,
           namespaceHTMLElements=True):
@@ -62,7 +62,7 @@ def parseFragment(doc, container="div", treebuilder="simpletree", encoding=None,
 def method_decorator_metaclass(function):
     class Decorated(type):
         def __new__(meta, classname, bases, classDict):
-            for attributeName, attribute in classDict.iteritems():
+            for attributeName, attribute in classDict.items():
                 if type(attribute) == types.FunctionType:
                     attribute = function(attribute)
 
@@ -97,7 +97,7 @@ class HTMLParser(object):
         self.errors = []
 
         self.phases = dict([(name, cls(self, self.tree)) for name, cls in
-                            getPhases(debug).iteritems()])
+                            getPhases(debug).items()])
 
     def _parse(self, stream, innerHTML=False, container="div",
                encoding=None, parseMeta=True, useChardet=True, **kwargs):
@@ -114,7 +114,7 @@ class HTMLParser(object):
             try:
                 self.mainLoop()
                 break
-            except ReparseException, e:
+            except ReparseException as e:
                 self.reset()
 
     def reset(self):
@@ -279,78 +279,78 @@ class HTMLParser(object):
         return token
 
     def adjustMathMLAttributes(self, token):
-        replacements = {"definitionurl":u"definitionURL"}
-        for k,v in replacements.iteritems():
+        replacements = {"definitionurl":"definitionURL"}
+        for k,v in replacements.items():
             if k in token["data"]:
                 token["data"][v] = token["data"][k]
                 del token["data"][k]
 
     def adjustSVGAttributes(self, token):
         replacements = {
-            "attributename":u"attributeName",
-            "attributetype":u"attributeType",
-            "basefrequency":u"baseFrequency",
-            "baseprofile":u"baseProfile",
-            "calcmode":u"calcMode",
-            "clippathunits":u"clipPathUnits",
-            "contentscripttype":u"contentScriptType",
-            "contentstyletype":u"contentStyleType",
-            "diffuseconstant":u"diffuseConstant",
-            "edgemode":u"edgeMode",
-            "externalresourcesrequired":u"externalResourcesRequired",
-            "filterres":u"filterRes",
-            "filterunits":u"filterUnits",
-            "glyphref":u"glyphRef",
-            "gradienttransform":u"gradientTransform",
-            "gradientunits":u"gradientUnits",
-            "kernelmatrix":u"kernelMatrix",
-            "kernelunitlength":u"kernelUnitLength",
-            "keypoints":u"keyPoints",
-            "keysplines":u"keySplines",
-            "keytimes":u"keyTimes",
-            "lengthadjust":u"lengthAdjust",
-            "limitingconeangle":u"limitingConeAngle",
-            "markerheight":u"markerHeight",
-            "markerunits":u"markerUnits",
-            "markerwidth":u"markerWidth",
-            "maskcontentunits":u"maskContentUnits",
-            "maskunits":u"maskUnits",
-            "numoctaves":u"numOctaves",
-            "pathlength":u"pathLength",
-            "patterncontentunits":u"patternContentUnits",
-            "patterntransform":u"patternTransform",
-            "patternunits":u"patternUnits",
-            "pointsatx":u"pointsAtX",
-            "pointsaty":u"pointsAtY",
-            "pointsatz":u"pointsAtZ",
-            "preservealpha":u"preserveAlpha",
-            "preserveaspectratio":u"preserveAspectRatio",
-            "primitiveunits":u"primitiveUnits",
-            "refx":u"refX",
-            "refy":u"refY",
-            "repeatcount":u"repeatCount",
-            "repeatdur":u"repeatDur",
-            "requiredextensions":u"requiredExtensions",
-            "requiredfeatures":u"requiredFeatures",
-            "specularconstant":u"specularConstant",
-            "specularexponent":u"specularExponent",
-            "spreadmethod":u"spreadMethod",
-            "startoffset":u"startOffset",
-            "stddeviation":u"stdDeviation",
-            "stitchtiles":u"stitchTiles",
-            "surfacescale":u"surfaceScale",
-            "systemlanguage":u"systemLanguage",
-            "tablevalues":u"tableValues",
-            "targetx":u"targetX",
-            "targety":u"targetY",
-            "textlength":u"textLength",
-            "viewbox":u"viewBox",
-            "viewtarget":u"viewTarget",
-            "xchannelselector":u"xChannelSelector",
-            "ychannelselector":u"yChannelSelector",
-            "zoomandpan":u"zoomAndPan"
+            "attributename":"attributeName",
+            "attributetype":"attributeType",
+            "basefrequency":"baseFrequency",
+            "baseprofile":"baseProfile",
+            "calcmode":"calcMode",
+            "clippathunits":"clipPathUnits",
+            "contentscripttype":"contentScriptType",
+            "contentstyletype":"contentStyleType",
+            "diffuseconstant":"diffuseConstant",
+            "edgemode":"edgeMode",
+            "externalresourcesrequired":"externalResourcesRequired",
+            "filterres":"filterRes",
+            "filterunits":"filterUnits",
+            "glyphref":"glyphRef",
+            "gradienttransform":"gradientTransform",
+            "gradientunits":"gradientUnits",
+            "kernelmatrix":"kernelMatrix",
+            "kernelunitlength":"kernelUnitLength",
+            "keypoints":"keyPoints",
+            "keysplines":"keySplines",
+            "keytimes":"keyTimes",
+            "lengthadjust":"lengthAdjust",
+            "limitingconeangle":"limitingConeAngle",
+            "markerheight":"markerHeight",
+            "markerunits":"markerUnits",
+            "markerwidth":"markerWidth",
+            "maskcontentunits":"maskContentUnits",
+            "maskunits":"maskUnits",
+            "numoctaves":"numOctaves",
+            "pathlength":"pathLength",
+            "patterncontentunits":"patternContentUnits",
+            "patterntransform":"patternTransform",
+            "patternunits":"patternUnits",
+            "pointsatx":"pointsAtX",
+            "pointsaty":"pointsAtY",
+            "pointsatz":"pointsAtZ",
+            "preservealpha":"preserveAlpha",
+            "preserveaspectratio":"preserveAspectRatio",
+            "primitiveunits":"primitiveUnits",
+            "refx":"refX",
+            "refy":"refY",
+            "repeatcount":"repeatCount",
+            "repeatdur":"repeatDur",
+            "requiredextensions":"requiredExtensions",
+            "requiredfeatures":"requiredFeatures",
+            "specularconstant":"specularConstant",
+            "specularexponent":"specularExponent",
+            "spreadmethod":"spreadMethod",
+            "startoffset":"startOffset",
+            "stddeviation":"stdDeviation",
+            "stitchtiles":"stitchTiles",
+            "surfacescale":"surfaceScale",
+            "systemlanguage":"systemLanguage",
+            "tablevalues":"tableValues",
+            "targetx":"targetX",
+            "targety":"targetY",
+            "textlength":"textLength",
+            "viewbox":"viewBox",
+            "viewtarget":"viewTarget",
+            "xchannelselector":"xChannelSelector",
+            "ychannelselector":"yChannelSelector",
+            "zoomandpan":"zoomAndPan"
             }
-        for originalName in token["data"].keys():
+        for originalName in list(token["data"].keys()):
             if originalName in replacements:
                 svgName = replacements[originalName]
                 token["data"][svgName] = token["data"][originalName]
@@ -372,7 +372,7 @@ class HTMLParser(object):
             "xmlns:xlink":("xmlns", "xlink", namespaces["xmlns"])
             }
 
-        for originalName in token["data"].iterkeys():
+        for originalName in token["data"].keys():
             if originalName in replacements:
                 foreignName = replacements[originalName]
                 token["data"][foreignName] = token["data"][originalName]
@@ -446,7 +446,7 @@ def getPhases(debug):
     def log(function):
         """Logger that records which phase processes each token"""
         type_names = dict((value, key) for key, value in 
-                          constants.tokenTypes.iteritems())
+                          constants.tokenTypes.items())
         def wrapped(self, *args, **kwargs):
             if function.__name__.startswith("process") and len(args) > 0:
                 token = args[0]
@@ -473,21 +473,9 @@ def getPhases(debug):
         else:
             return type
 
-    class Phase(object):
+    class Phase(object, metaclass=getMetaclass(debug, log)):
         """Base class for helper object that implements each phase of processing
         """
-        # Order should be (they can be omitted):
-        # * EOF
-        # * Comment
-        # * Doctype
-        # * SpaceCharacters
-        # * Characters
-        # * StartTag
-        #   - startTag* methods
-        # * EndTag
-        #   - endTag* methods
-
-        __metaclass__ = getMetaclass(debug, log)
 
         def __init__(self, parser, tree):
             self.parser = parser
@@ -518,7 +506,7 @@ def getPhases(debug):
                self.parser.parseError("non-html-root")
             # XXX Need a check here to see if the first start tag token emitted is
             # this token... If it's not, invoke self.parser.parseError().
-            for attr, value in token["data"].iteritems():
+            for attr, value in token["data"].items():
                 if attr not in self.tree.openElements[0].attributes:
                     self.tree.openElements[0].attributes[attr] = value
             self.parser.firstStartTag = False
@@ -1033,7 +1021,7 @@ def getPhases(debug):
                 self.tree.insertText(data)
 
         def processCharacters(self, token):
-            if token["data"] == u"\u0000":
+            if token["data"] == "\u0000":
                 #The tokenizer should always emit null on its own
                 return
             self.tree.reconstructActiveFormattingElements()
@@ -1058,7 +1046,7 @@ def getPhases(debug):
                 assert self.parser.innerHTML
             else:
                 self.parser.framesetOK = False
-                for attr, value in token["data"].iteritems():
+                for attr, value in token["data"].items():
                     if attr not in self.tree.openElements[1].attributes:
                         self.tree.openElements[1].attributes[attr] = value
 
@@ -1090,7 +1078,7 @@ def getPhases(debug):
 
         def startTagForm(self, token):
             if self.tree.formPointer:
-                self.parser.parseError(u"unexpected-start-tag", {"name": "form"})
+                self.parser.parseError("unexpected-start-tag", {"name": "form"})
             else:
                 if self.tree.elementInScope("p", variant="button"):
                     self.endTagP(impliedTagToken("p"))
@@ -1243,7 +1231,7 @@ def getPhases(debug):
             if "prompt" in token["data"]:
                 prompt = token["data"]["prompt"]
             else:
-                prompt = u"This is a searchable index. Enter search keywords: "
+                prompt = "This is a searchable index. Enter search keywords: "
             self.processCharacters(
                 {"type":tokenTypes["Characters"], "data":prompt})
             attributes = token["data"].copy()
@@ -1798,7 +1786,7 @@ def getPhases(debug):
             return True
 
         def processCharacters(self, token):
-            if token["data"] == u"\u0000":
+            if token["data"] == "\u0000":
                 return
             self.characterTokens.append(token)
 
@@ -2249,7 +2237,7 @@ def getPhases(debug):
                 assert self.parser.innerHTML
 
         def processCharacters(self, token):
-            if token["data"] == u"\u0000":
+            if token["data"] == "\u0000":
                 return
             self.tree.insertText(token["data"])
 
@@ -2374,49 +2362,49 @@ def getPhases(debug):
             Phase.__init__(self, parser, tree)
 
         def adjustSVGTagNames(self, token):
-            replacements = {u"altglyph":u"altGlyph",
-                            u"altglyphdef":u"altGlyphDef",
-                            u"altglyphitem":u"altGlyphItem",
-                            u"animatecolor":u"animateColor",
-                            u"animatemotion":u"animateMotion",
-                            u"animatetransform":u"animateTransform",
-                            u"clippath":u"clipPath",
-                            u"feblend":u"feBlend",
-                            u"fecolormatrix":u"feColorMatrix",
-                            u"fecomponenttransfer":u"feComponentTransfer",
-                            u"fecomposite":u"feComposite",
-                            u"feconvolvematrix":u"feConvolveMatrix",
-                            u"fediffuselighting":u"feDiffuseLighting",
-                            u"fedisplacementmap":u"feDisplacementMap",
-                            u"fedistantlight":u"feDistantLight",
-                            u"feflood":u"feFlood",
-                            u"fefunca":u"feFuncA",
-                            u"fefuncb":u"feFuncB",
-                            u"fefuncg":u"feFuncG",
-                            u"fefuncr":u"feFuncR",
-                            u"fegaussianblur":u"feGaussianBlur",
-                            u"feimage":u"feImage",
-                            u"femerge":u"feMerge",
-                            u"femergenode":u"feMergeNode",
-                            u"femorphology":u"feMorphology",
-                            u"feoffset":u"feOffset",
-                            u"fepointlight":u"fePointLight",
-                            u"fespecularlighting":u"feSpecularLighting",
-                            u"fespotlight":u"feSpotLight",
-                            u"fetile":u"feTile",
-                            u"feturbulence":u"feTurbulence",
-                            u"foreignobject":u"foreignObject",
-                            u"glyphref":u"glyphRef",
-                            u"lineargradient":u"linearGradient",
-                            u"radialgradient":u"radialGradient",
-                            u"textpath":u"textPath"}
+            replacements = {"altglyph":"altGlyph",
+                            "altglyphdef":"altGlyphDef",
+                            "altglyphitem":"altGlyphItem",
+                            "animatecolor":"animateColor",
+                            "animatemotion":"animateMotion",
+                            "animatetransform":"animateTransform",
+                            "clippath":"clipPath",
+                            "feblend":"feBlend",
+                            "fecolormatrix":"feColorMatrix",
+                            "fecomponenttransfer":"feComponentTransfer",
+                            "fecomposite":"feComposite",
+                            "feconvolvematrix":"feConvolveMatrix",
+                            "fediffuselighting":"feDiffuseLighting",
+                            "fedisplacementmap":"feDisplacementMap",
+                            "fedistantlight":"feDistantLight",
+                            "feflood":"feFlood",
+                            "fefunca":"feFuncA",
+                            "fefuncb":"feFuncB",
+                            "fefuncg":"feFuncG",
+                            "fefuncr":"feFuncR",
+                            "fegaussianblur":"feGaussianBlur",
+                            "feimage":"feImage",
+                            "femerge":"feMerge",
+                            "femergenode":"feMergeNode",
+                            "femorphology":"feMorphology",
+                            "feoffset":"feOffset",
+                            "fepointlight":"fePointLight",
+                            "fespecularlighting":"feSpecularLighting",
+                            "fespotlight":"feSpotLight",
+                            "fetile":"feTile",
+                            "feturbulence":"feTurbulence",
+                            "foreignobject":"foreignObject",
+                            "glyphref":"glyphRef",
+                            "lineargradient":"linearGradient",
+                            "radialgradient":"radialGradient",
+                            "textpath":"textPath"}
 
             if token["name"] in replacements:
                 token["name"] = replacements[token["name"]]
 
         def processCharacters(self, token):
-            if token["data"] == u"\u0000":
-                token["data"] = u"\uFFFD"
+            if token["data"] == "\u0000":
+                token["data"] = "\uFFFD"
             elif (self.parser.framesetOK and 
                   any(char not in spaceCharacters for char in token["data"])):
                 self.parser.framesetOK = False
@@ -2725,7 +2713,7 @@ def impliedTagToken(name, type="EndTag", attributes = None,
                     selfClosing = False):
     if attributes is None:
         attributes = {}
-    return {"type":tokenTypes[type], "name":unicode(name), "data":attributes,
+    return {"type":tokenTypes[type], "name":str(name), "data":attributes,
             "selfClosing":selfClosing}
 
 class ParseError(Exception):

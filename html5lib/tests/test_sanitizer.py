@@ -21,7 +21,7 @@ def sanitize_html(stream):
                      parseFragment(stream).childNodes])
 
 def test_should_handle_astral_plane_characters():
-    assert u"<p>\U0001d4b5 \U0001d538</p>" == sanitize_html("<p>&#x1d4b5; &#x1d538;</p>")
+    assert "<p>\U0001d4b5 \U0001d538</p>" == sanitize_html("<p>&#x1d4b5; &#x1d538;</p>")
 
 def test_sanitizer():
     for tag_name in sanitizer.HTMLSanitizer.allowed_elements:

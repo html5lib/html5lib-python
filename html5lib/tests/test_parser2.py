@@ -1,6 +1,6 @@
-import StringIO
+import io
 
-import support
+from . import support
 from html5lib import html5parser
 from html5lib.constants import namespaces
 from html5lib.treebuilders import dom
@@ -32,7 +32,7 @@ class MoreParserTests(unittest.TestCase):
 
   def test_unicode_file(self):
     parser = html5parser.HTMLParser()
-    doc = parser.parse(StringIO.StringIO(u"a"))
+    doc = parser.parse(io.StringIO("a"))
 
 def buildTestSuite():
   return unittest.defaultTestLoader.loadTestsFromName(__name__)

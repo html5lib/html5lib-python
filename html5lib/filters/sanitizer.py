@@ -1,4 +1,4 @@
-import _base
+from . import _base
 from html5lib.sanitizer import HTMLSanitizerMixin
 
 class Filter(_base.Filter, HTMLSanitizerMixin):

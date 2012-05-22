@@ -1,10 +1,10 @@
 import warnings
 import re
 
-import _base
+from . import _base
 from html5lib.constants import DataLossWarning
 import html5lib.constants as constants
-import etree as etree_builders
+from . import etree as etree_builders
 from html5lib import ihatexml
 
 try:
@@ -70,7 +70,7 @@ def testSerializer(element):
                 while next_element is not None:
                     serializeElement(next_element, indent+2)
                     next_element = next_element.getnext()
-            elif isinstance(element, basestring):
+            elif isinstance(element, str):
                 #Text in a fragment
                 rv.append("|%s\"%s\""%(' '*indent, element))
             else:
@@ -94,7 +94,7 @@ def testSerializer(element):
 
             if hasattr(element, "attrib"):
                 attributes = []
-                for name, value in element.attrib.iteritems():
+                for name, value in element.attrib.items():
                     nsmatch = tag_regexp.match(name)
                     if nsmatch is not None:
                         ns, name = nsmatch.groups()
@@ -145,7 +145,7 @@ def tostring(element):
                 rv.append("<%s>"%(element.tag,))
             else:
                 attr = " ".join(["%s=\"%s\""%(name, value) 
-                                 for name, value in element.attrib.iteritems()])
+                                 for name, value in element.attrib.items()])
                 rv.append("<%s %s>"%(element.tag, attr))
             if element.text:
                 rv.append(element.text)
@@ -182,7 +182,7 @@ class TreeBuilder(_base.TreeBuilder):
             def __init__(self, element, value={}):
                 self._element = element
                 dict.__init__(self, value)
-                for key, value in self.iteritems():
+                for key, value in self.items():
                     if isinstance(key, tuple):
                         name = "{%s}%s"%(key[2], filter.coerceAttribute(key[1]))
                     else:
@@ -306,7 +306,7 @@ class TreeBuilder(_base.TreeBuilder):
         try:
             root = etree.fromstring(docStr)
         except etree.XMLSyntaxError:
-            print docStr
+            print(docStr)
             raise
         
         #Append the initial comments:

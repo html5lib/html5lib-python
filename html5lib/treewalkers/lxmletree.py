@@ -4,7 +4,7 @@ from html5lib.treebuilders.etree import tag_regexp
 from gettext import gettext
 _ = gettext
 
-import _base
+from . import _base
 
 from html5lib.constants import voidElements
 from html5lib import ihatexml
@@ -71,7 +71,7 @@ class FragmentWrapper(object):
             self.tail = self.obj.tail
         else:
             self.tail = None
-        self.isstring = isinstance(obj, basestring)
+        self.isstring = isinstance(obj, str)
         
     def __getattr__(self, name):
         return getattr(self.obj, name)
@@ -87,7 +87,7 @@ class FragmentWrapper(object):
     def __getitem__(self, key):
         return self.obj[key]
 
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self.obj)
 
     def getparent(self):
@@ -97,7 +97,7 @@ class FragmentWrapper(object):
         return str(self.obj)
 
     def __unicode__(self):
-        return unicode(self.obj)
+        return str(self.obj)
 
     def __len__(self):
         return len(self.obj)
@@ -141,7 +141,7 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
                 namespace = None
                 tag = node.tag
             attrs = {}
-            for name, value in node.attrib.items():
+            for name, value in list(node.attrib.items()):
                 match = tag_regexp.match(name)
                 if match:
                     attrs[(match.group(1),match.group(2))] = value

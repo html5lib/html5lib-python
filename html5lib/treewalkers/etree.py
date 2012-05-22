@@ -8,7 +8,7 @@ except:
 import copy
 import re
 
-import _base
+from . import _base
 from html5lib.constants import voidElements
 
 tag_regexp = re.compile("{([^}]*)}(.*)")
@@ -65,7 +65,7 @@ def getETreeBuilder(ElementTreeImplementation):
                 return _base.COMMENT, node.text
 
             else:
-                assert type(node.tag) in (str, unicode), type(node.tag)
+                assert type(node.tag) in (str, str), type(node.tag)
                 #This is assumed to be an ordinary element
                 match = tag_regexp.match(node.tag)
                 if match:
@@ -74,7 +74,7 @@ def getETreeBuilder(ElementTreeImplementation):
                     namespace = None
                     tag = node.tag
                 attrs = {}
-                for name, value in node.attrib.items():
+                for name, value in list(node.attrib.items()):
                     match = tag_regexp.match(name)
                     if match:
                         attrs[(match.group(1),match.group(2))] = value

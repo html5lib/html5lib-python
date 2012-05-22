@@ -4,7 +4,7 @@ _ = gettext.gettext
 
 from BeautifulSoup import BeautifulSoup, Declaration, Comment, Tag
 from html5lib.constants import namespaces
-import _base
+from . import _base
 
 class TreeWalker(_base.NonRecursiveTreeWalker):
     doctype_regexp = re.compile(
@@ -14,7 +14,7 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             return (_base.DOCUMENT,)
 
         elif isinstance(node, Declaration): # DocumentType
-            string = unicode(node.string)
+            string = str(node.string)
             #Slice needed to remove markup added during unicode conversion,
             #but only in some versions of BeautifulSoup/Python
             if string.startswith('<!') and string.endswith('>'):
@@ -36,17 +36,17 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             return _base.DOCTYPE, name, publicId or "", systemId or ""
 
         elif isinstance(node, Comment):
-            string = unicode(node.string)
+            string = str(node.string)
             if string.startswith('<!--') and string.endswith('-->'):
                 string = string[4:-3]
             return _base.COMMENT, string
 
-        elif isinstance(node, unicode): # TextNode
+        elif isinstance(node, str): # TextNode
             return _base.TEXT, node
 
         elif isinstance(node, Tag): # Element
             return (_base.ELEMENT, namespaces["html"], node.name,
-                    dict(node.attrs).items(), node.contents)
+                    list(dict(node.attrs).items()), node.contents)
         else:
             return _base.UNKNOWN, node.__class__.__name__
 

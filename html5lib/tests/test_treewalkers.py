@@ -3,9 +3,14 @@ import sys
 import unittest
 import warnings
 
+try:
+    unittest.TestCase.assertEqual
+except AttributeError:
+    unittest.TestCase.assertEqual = unittest.TestCase.assertEquals
+
 warnings.simplefilter("error")
 
-from support import html5lib_test_files, TestData, convertExpected
+from .support import html5lib_test_files, TestData, convertExpected
 
 from html5lib import html5parser, treewalkers, treebuilders, constants
 from html5lib.filters.lint import Filter as LintFilter, LintError
@@ -126,7 +131,7 @@ try:
 
             if type in ("StartTag", "EmptyTag"):
                 if token["namespace"]:
-                    name = u"{%s}%s" % (token["namespace"], token["name"])
+                    name = "{%s}%s" % (token["namespace"], token["name"])
                 else:
                     name = token["name"]
                 yield (START,
@@ -188,10 +193,10 @@ def convertTokens(tokens):
                     name = constants.prefixes[token["namespace"]]
                 else:
                     name = token["namespace"]
-                name += u" " + token["name"]
+                name += " " + token["name"]
             else:
                 name = token["name"]
-            output.append(u"%s<%s>" % (" "*indent, name))
+            output.append("%s<%s>" % (" "*indent, name))
             indent += 2
             attrs = token["data"]
             if attrs:
@@ -202,10 +207,10 @@ def convertTokens(tokens):
                             outputname = constants.prefixes[namespace]
                         else:
                             outputname = namespace
-                        outputname += u" " + name
+                        outputname += " " + name
                     else:
                         outputname = name
-                    output.append(u"%s%s=\"%s\"" % (" "*indent, outputname, value))
+                    output.append("%s%s=\"%s\"" % (" "*indent, outputname, value))
             if type == "EmptyTag":
                 indent -= 2
         elif type == "EndTag":
@@ -232,7 +237,7 @@ def convertTokens(tokens):
             output.append("%s\"%s\"" % (" "*indent, token["data"]))
         else:
             pass # TODO: what to do with errors?
-    return u"\n".join(output)
+    return "\n".join(output)
 
 import re
 attrlist = re.compile(r"^(\s+)\w+=.*(\n\1\w+=.*)+",re.M)
@@ -245,27 +250,27 @@ def sortattrs(x):
 class TokenTestCase(unittest.TestCase):
     def test_all_tokens(self):
         expected = [
-            {'data': {}, 'type': 'StartTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'html'},
-            {'data': {}, 'type': 'StartTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'head'},
-            {'data': {}, 'type': 'EndTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'head'},
-            {'data': {}, 'type': 'StartTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'body'},
-            {'data': u'a', 'type': 'Characters'},
-            {'data': {}, 'type': 'StartTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'div'},
-            {'data': u'b', 'type': 'Characters'},
-            {'data': {}, 'type': 'EndTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'div'},
-            {'data': u'c', 'type': 'Characters'},
-            {'data': {}, 'type': 'EndTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'body'},
-            {'data': {}, 'type': 'EndTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'html'}
+            {'data': {}, 'type': 'StartTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'html'},
+            {'data': {}, 'type': 'StartTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'head'},
+            {'data': {}, 'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'head'},
+            {'data': {}, 'type': 'StartTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'body'},
+            {'data': 'a', 'type': 'Characters'},
+            {'data': {}, 'type': 'StartTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'div'},
+            {'data': 'b', 'type': 'Characters'},
+            {'data': {}, 'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'div'},
+            {'data': 'c', 'type': 'Characters'},
+            {'data': {}, 'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'body'},
+            {'data': {}, 'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'html'}
             ]
-        for treeName, treeCls in treeTypes.iteritems():
+        for treeName, treeCls in treeTypes.items():
             p = html5parser.HTMLParser(tree = treeCls["builder"])
             document = p.parse("<html><head></head><body>a<div>b</div>c</body></html>")
             document = treeCls.get("adapter", lambda x: x)(document)
             output = treeCls["walker"](document)
             for expectedToken, outputToken in zip(expected, output):
-                self.assertEquals(expectedToken, outputToken)
+                self.assertEqual(expectedToken, outputToken)
 
-def run_test(innerHTML, input, expected, errors, treeClass):
+def runTreewalkerTest(innerHTML, input, expected, errors, treeClass):
     try:
         p = html5parser.HTMLParser(tree = treeClass["builder"])
         if innerHTML:
@@ -290,9 +295,9 @@ def run_test(innerHTML, input, expected, errors, treeClass):
         pass # Amnesty for those that confess...
             
 def test_treewalker():
-    sys.stdout.write('Testing tree walkers '+ " ".join(treeTypes.keys()) + "\n")
+    sys.stdout.write('Testing tree walkers '+ " ".join(list(treeTypes.keys())) + "\n")
 
-    for treeName, treeCls in treeTypes.iteritems():
+    for treeName, treeCls in treeTypes.items():
         files = html5lib_test_files('tree-construction')
         for filename in files:
             testName = os.path.basename(filename).replace(".dat","")
@@ -305,6 +310,6 @@ def test_treewalker():
                                                                "document-fragment",
                                                                "document")]
                 errors = errors.split("\n")
-                yield run_test, innerHTML, input, expected, errors, treeCls
+                yield runTreewalkerTest, innerHTML, input, expected, errors, treeCls
 
 

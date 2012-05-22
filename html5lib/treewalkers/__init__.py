@@ -37,16 +37,16 @@ def getTreeWalker(treeType, implementation=None, **kwargs):
             mod = __import__(treeType, globals())
             treeWalkerCache[treeType] = mod.TreeWalker
         elif treeType == "genshi":
-            import genshistream
+            from . import genshistream
             treeWalkerCache[treeType] = genshistream.TreeWalker
         elif treeType == "beautifulsoup":
-            import soup
+            from . import soup
             treeWalkerCache[treeType] = soup.TreeWalker
         elif treeType == "lxml":
-            import lxmletree
+            from . import lxmletree
             treeWalkerCache[treeType] = lxmletree.TreeWalker
         elif treeType == "etree":
-            import etree
+            from . import etree
             # XXX: NEVER cache here, caching is done in the etree submodule
             return etree.getETreeModule(implementation, **kwargs).TreeWalker
     return treeWalkerCache.get(treeType)

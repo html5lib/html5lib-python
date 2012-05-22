@@ -4,9 +4,9 @@ import json
 import re
 
 import html5lib
-import support
-import test_parser
-import test_tokenizer
+from . import support
+from . import test_parser
+from . import test_tokenizer
 
 p = html5lib.HTMLParser()
 

@@ -4,7 +4,7 @@ warnings.warn("BeautifulSoup 3.x (as of 3.1) is not fully compatible with html5l
 
 from BeautifulSoup import BeautifulSoup, Tag, NavigableString, Comment, Declaration
 
-import _base
+from . import _base
 from html5lib.constants import namespaces, DataLossWarning
 
 class AttrList(object):
@@ -12,22 +12,22 @@ class AttrList(object):
         self.element = element
         self.attrs = dict(self.element.attrs)
     def __iter__(self):
-        return self.attrs.items().__iter__()
+        return list(self.attrs.items()).__iter__()
     def __setitem__(self, name, value):
         "set attr", name, value
         self.element[name] = value
     def items(self):
-        return self.attrs.items()
+        return list(self.attrs.items())
     def keys(self):
-        return self.attrs.keys()
+        return list(self.attrs.keys())
     def __getitem__(self, name):
         return self.attrs[name]
     def __contains__(self, name):
-        return name in self.attrs.keys()
+        return name in list(self.attrs.keys())
     def __eq__(self, other):
-        if len(self.keys()) != len(other.keys()):
+        if len(list(self.keys())) != len(list(other.keys())):
             return False
-        for item in self.keys():
+        for item in list(self.keys()):
             if item not in other:
                 return False
             if self[item] != other[item]:
@@ -73,7 +73,7 @@ class Element(_base.Node):
 
     def setAttributes(self, attributes):
         if attributes:
-            for name, value in attributes.items():
+            for name, value in list(attributes.items()):
                 self.element[name] =  value
 
     attributes = property(getAttributes, setAttributes)
@@ -220,7 +220,7 @@ def testSerializer(element):
 
         elif isinstance(element, Comment):
             rv.append("|%s<!-- %s -->"%(' '*indent, element.string))
-        elif isinstance(element, unicode):
+        elif isinstance(element, str):
             rv.append("|%s\"%s\"" %(' '*indent, element))
         else:
             rv.append("|%s<%s>"%(' '*indent, element.name))
