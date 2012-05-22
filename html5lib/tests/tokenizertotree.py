@@ -17,7 +17,7 @@ def main(out_path):
         sys.stderr.write("Path %s does not exist"%out_path)
         sys.exit(1)
 
-    for filename in support.html5lib_test_files('tokenizer', '*.test'):
+    for filename in support.get_data_files('tokenizer', '*.test'):
         run_file(filename, out_path)
 
 def run_file(filename, out_path):

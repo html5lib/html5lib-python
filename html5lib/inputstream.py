@@ -193,9 +193,9 @@ class HTMLInputStream:
         else:
             # Otherwise treat source as a string and convert to a file object
             if isinstance(source, str):
-                # This can error (on invalid characters, thus the need for the argument)
-                source = source.encode('utf-32', errors="replace")
-                self.charEncoding = ("utf-32", "certain")
+                # XXX: we should handle lone surrogates here
+                source = source.encode('utf-8', errors="replace")
+                self.charEncoding = ("utf-8", "certain")
             try:
                 from io import BytesIO
             except:
@@ -783,9 +783,7 @@ def codecName(encoding):
     """Return the python codec name corresponding to an encoding or None if the
     string doesn't correspond to a valid encoding."""
     if encoding:
-        print(encoding)
         canonicalName = ascii_punctuation_re.sub("", encoding).lower()
-        print(canonicalName)
         return encodings.get(canonicalName, None)
     else:
         return None
