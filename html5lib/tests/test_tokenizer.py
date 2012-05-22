@@ -1,3 +1,5 @@
+from __future__ import with_statement
+
 import sys
 import os
 import unittest
@@ -137,6 +139,7 @@ def unescape_test(test):
                     del token[2][key]
                     token[2][decode(key)] = decode(value)
     return test
+unescape_test.__test__ = False
 
 
 def runTokenizerTest(test):
@@ -161,7 +164,7 @@ def runTokenizerTest(test):
                           "\nInput:", unicode(test['input']),
                           "\nExpected:", unicode(expected),
                           "\nreceived:", unicode(tokens)])
-    errorMsg = errorMsg.encode("utf-8")
+    errorMsg = errorMsg
     ignoreErrorOrder = test.get('ignoreErrorOrder', False)
     assert tokensMatch(expected, received, ignoreErrorOrder), errorMsg
 
@@ -179,15 +182,16 @@ def capitalize(s):
 
 def test_tokenizer():
     for filename in html5lib_test_files('tokenizer', '*.test'):
-        tests = json.load(file(filename))
-        testName = os.path.basename(filename).replace(".test","")
-        if 'tests' in tests:
-            for index,test in enumerate(tests['tests']):
-                #Skip tests with a self closing flag
-                skip = False
-                if 'initialStates' not in test:
-                    test["initialStates"] = ["Data state"]
-                for initialState in test["initialStates"]:
-                    test["initialState"] = capitalize(initialState)
-                    yield runTokenizerTest, test
+        with open(filename) as fp:
+            tests = json.load(fp)
+            testName = os.path.basename(filename).replace(".test","")
+            if 'tests' in tests:
+                for index,test in enumerate(tests['tests']):
+                    #Skip tests with a self closing flag
+                    skip = False
+                    if 'initialStates' not in test:
+                        test["initialStates"] = ["Data state"]
+                    for initialState in test["initialStates"]:
+                        test["initialState"] = capitalize(initialState)
+                        yield runTokenizerTest, test
 

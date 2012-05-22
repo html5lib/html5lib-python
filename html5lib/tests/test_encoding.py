@@ -1,17 +1,27 @@
+import re
 import os
 import unittest
-from support import html5lib_test_files, TestData, test_dir
 
+try:
+    unittest.TestCase.assertEqual
+except AttributeError:
+    unittest.TestCase.assertEqual = unittest.TestCase.assertEquals
+
+from support import html5lib_test_files, TestData, test_dir
 from html5lib import HTMLParser, inputstream
 
-import re, unittest
-
 class Html5EncodingTestCase(unittest.TestCase):
-    def test_codec_name(self):
-        self.assertEquals(inputstream.codecName("utf-8"), "utf-8")
-        self.assertEquals(inputstream.codecName("utf8"), "utf-8")
-        self.assertEquals(inputstream.codecName("  utf8  "), "utf-8")
-        self.assertEquals(inputstream.codecName("ISO_8859--1"), "windows-1252")
+    def test_codec_name_a(self):
+        self.assertEqual(inputstream.codecName("utf-8"), "utf-8")
+
+    def test_codec_name_b(self):
+        self.assertEqual(inputstream.codecName("utf8"), "utf-8")
+
+    def test_codec_name_c(self):
+        self.assertEqual(inputstream.codecName("  utf8  "), "utf-8")
+
+    def test_codec_name_d(self):
+        self.assertEqual(inputstream.codecName("ISO_8859--1"), "windows-1252")
 
 def buildTestSuite():
     for filename in html5lib_test_files("encoding"):

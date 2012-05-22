@@ -23,7 +23,7 @@ non_bmp_invalid_codepoints = set([0x1FFFE, 0x1FFFF, 0x2FFFE, 0x2FFFF, 0x3FFFE,
                                   0xDFFFF, 0xEFFFE, 0xEFFFF, 0xFFFFE, 0xFFFFF,
                                   0x10FFFE, 0x10FFFF])
 
-ascii_punctuation_re = re.compile(ur"[\u0009-\u000D\u0020-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007E]")
+ascii_punctuation_re = re.compile(u"[\u0009-\u000D\u0020-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007E]")
 
 # Cache for charsUntil()
 charsUntilRegEx = {}
@@ -193,7 +193,8 @@ class HTMLInputStream:
         else:
             # Otherwise treat source as a string and convert to a file object
             if isinstance(source, unicode):
-                source = source.encode('utf-8')
+                # XXX: we should handle lone surrogates here
+                source = source.encode('utf-8', errors="replace")
                 self.charEncoding = ("utf-8", "certain")
             try:
                 from io import BytesIO
@@ -230,7 +231,7 @@ class HTMLInputStream:
                 detector = UniversalDetector()
                 while not detector.done:
                     buffer = self.rawStream.read(self.numBytesChardet)
-                    assert isinstance(buffer, str)
+                    assert isinstance(buffer, bytes)
                     if not buffer:
                         break
                     buffers.append(buffer)
@@ -279,7 +280,7 @@ class HTMLInputStream:
 
         # Go to beginning of file and read in 4 bytes
         string = self.rawStream.read(4)
-        assert isinstance(string, str)
+        assert isinstance(string, bytes)
 
         # Try detecting the BOM using bytes from the string
         encoding = bomDict.get(string[:3])         # UTF-8
@@ -302,7 +303,7 @@ class HTMLInputStream:
         """Report the encoding declared by the meta element
         """
         buffer = self.rawStream.read(self.numBytesMeta)
-        assert isinstance(buffer, str)
+        assert isinstance(buffer, bytes)
         parser = EncodingParser(buffer)
         self.rawStream.seek(0)
         encoding = parser.getEncoding()
@@ -781,7 +782,7 @@ class ContentAttrParser(object):
 def codecName(encoding):
     """Return the python codec name corresponding to an encoding or None if the
     string doesn't correspond to a valid encoding."""
-    if (encoding is not None and type(encoding) in types.StringTypes):
+    if encoding:
         canonicalName = ascii_punctuation_re.sub("", encoding).lower()
         return encodings.get(canonicalName, None)
     else:

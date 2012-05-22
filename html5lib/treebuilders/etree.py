@@ -195,11 +195,11 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
     
     class Document(Element):
         def __init__(self):
-            Element.__init__(self, "<DOCUMENT_ROOT>") 
+            Element.__init__(self, u"<DOCUMENT_ROOT>") 
     
     class DocumentFragment(Element):
         def __init__(self):
-            Element.__init__(self, "<DOCUMENT_FRAGMENT>")
+            Element.__init__(self, u"<DOCUMENT_FRAGMENT>")
     
     def testSerializer(element):
         rv = []
@@ -207,7 +207,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
         def serializeElement(element, indent=0):
             if not(hasattr(element, "tag")):
                 element = element.getroot()
-            if element.tag == "<!DOCTYPE>":
+            if element.tag == u"<!DOCTYPE>":
                 if element.get("publicId") or element.get("systemId"):
                     publicId = element.get("publicId") or ""
                     systemId = element.get("systemId") or ""
@@ -215,7 +215,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                             element.text, publicId, systemId))
                 else:     
                     rv.append("<!DOCTYPE %s>"%(element.text,))
-            elif element.tag == "<DOCUMENT_ROOT>":
+            elif element.tag == u"<DOCUMENT_ROOT>":
                 rv.append("#document")
                 if element.text:
                     rv.append("|%s\"%s\""%(' '*(indent+2), element.text))
@@ -224,7 +224,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             elif element.tag == ElementTree.Comment:
                 rv.append("|%s<!-- %s -->"%(' '*indent, element.text))
             else:
-                assert type(element.tag) in types.StringTypes, "Expected unicode, got %s"%type(element.tag)
+                assert type(element.tag) is unicode, "Expected unicode, got %s, %s"%(type(element.tag), element.tag)
                 nsmatch = tag_regexp.match(element.tag)
 
                 if nsmatch is None:

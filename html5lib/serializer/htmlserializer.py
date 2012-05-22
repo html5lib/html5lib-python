@@ -303,7 +303,7 @@ class HTMLSerializer(object):
 
     def render(self, treewalker, encoding=None):
         if encoding:
-            return "".join(list(self.serialize(treewalker, encoding)))
+            return b"".join(list(self.serialize(treewalker, encoding)))
         else:
             return u"".join(list(self.serialize(treewalker)))
 

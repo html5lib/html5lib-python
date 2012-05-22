@@ -3,6 +3,11 @@ import sys
 import unittest
 import warnings
 
+try:
+    unittest.TestCase.assertEqual
+except AttributeError:
+    unittest.TestCase.assertEqual = unittest.TestCase.assertEquals
+
 warnings.simplefilter("error")
 
 from support import html5lib_test_files, TestData, convertExpected
@@ -263,9 +268,9 @@ class TokenTestCase(unittest.TestCase):
             document = treeCls.get("adapter", lambda x: x)(document)
             output = treeCls["walker"](document)
             for expectedToken, outputToken in zip(expected, output):
-                self.assertEquals(expectedToken, outputToken)
+                self.assertEqual(expectedToken, outputToken)
 
-def run_test(innerHTML, input, expected, errors, treeClass):
+def runTreewalkerTest(innerHTML, input, expected, errors, treeClass):
     try:
         p = html5parser.HTMLParser(tree = treeClass["builder"])
         if innerHTML:
@@ -305,6 +310,6 @@ def test_treewalker():
                                                                "document-fragment",
                                                                "document")]
                 errors = errors.split("\n")
-                yield run_test, innerHTML, input, expected, errors, treeCls
+                yield runTreewalkerTest, innerHTML, input, expected, errors, treeCls
 
 

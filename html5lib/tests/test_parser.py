@@ -18,9 +18,9 @@ checkParseErrors = False
 #XXX - There should just be one function here but for some reason the testcase
 #format differs from the treedump format by a single space character
 def convertTreeDump(data):
-    return "\n".join(convert(3)(data).split("\n")[1:])
+    return u"\n".join(convert(3)(data).split(u"\n")[1:])
 
-namespaceExpected = re.compile(r"^(\s*)<(\S+)>", re.M).sub
+namespaceExpected = re.compile(ur"^(\s*)<(\S+)>", re.M).sub
 
 
 def runParserTest(innerHTML, input, expected, errors, treeClass,
@@ -44,17 +44,17 @@ def runParserTest(innerHTML, input, expected, errors, treeClass,
     except:
         errorMsg = u"\n".join([u"\n\nInput:", input, u"\nExpected:", expected,
                                u"\nTraceback:", traceback.format_exc().decode('utf8')])
-        assert False, errorMsg.encode("utf8")
+        assert False, errorMsg
 
     output = convertTreeDump(p.tree.testSerializer(document))
 
     expected = convertExpected(expected)
     if namespaceHTMLElements:
-        expected = namespaceExpected(r"\1<html \2>", expected)
+        expected = namespaceExpected(ur"\1<html \2>", expected)
 
     errorMsg = u"\n".join([u"\n\nInput:", input, u"\nExpected:", expected,
                            u"\nReceived:", output])
-    assert expected == output, errorMsg.encode("utf8")
+    assert expected == output, errorMsg
     errStr = [u"Line: %i Col: %i %s"%(line, col, 
                                       constants.E[errorcode] % datavars if isinstance(datavars, dict) else (datavars,)) for
               ((line,col), errorcode, datavars) in p.errors]
@@ -63,7 +63,7 @@ def runParserTest(innerHTML, input, expected, errors, treeClass,
                             u"\nExpected errors (" + unicode(len(errors)) + u"):\n" + u"\n".join(errors),
                             u"\nActual errors (" + unicode(len(p.errors)) + u"):\n" + u"\n".join(errStr)])
     if checkParseErrors:
-            assert len(p.errors) == len(errors), errorMsg2.encode("utf-8")
+            assert len(p.errors) == len(errors), errorMsg2
 
 def test_parser():
     sys.stderr.write('Testing tree builders '+ " ".join(treeTypes.keys()) + "\n")
@@ -87,6 +87,3 @@ def test_parser():
                     print input
                     yield (runParserTest, innerHTML, input, expected, errors, treeCls,
                            namespaceHTMLElements)
-                    break
-                
-                

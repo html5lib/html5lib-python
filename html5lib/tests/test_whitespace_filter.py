@@ -4,13 +4,18 @@ from html5lib.filters.whitespace import Filter
 from html5lib.constants import spaceCharacters
 spaceCharacters = u"".join(spaceCharacters)
 
+try:
+    unittest.TestCase.assertEqual
+except AttributeError:
+    unittest.TestCase.assertEqual = unittest.TestCase.assertEquals
+
 class TestCase(unittest.TestCase):
     def runTest(self, input, expected):
         output = list(Filter(input))
         errorMsg = "\n".join(["\n\nInput:", str(input),
                               "\nExpected:", str(expected),
                               "\nReceived:", str(output)])
-        self.assertEquals(output, expected, errorMsg)
+        self.assertEqual(output, expected, errorMsg)
 
     def runTestUnmodifiedOutput(self, input):
         self.runTest(input, input)
