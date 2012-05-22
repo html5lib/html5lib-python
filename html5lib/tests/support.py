@@ -62,7 +62,7 @@ try:
 except ImportError:
     pass
 
-def html5lib_test_files(subdirectory, files='*.dat'):
+def get_data_files(subdirectory, files='*.dat'):
     return glob.glob(os.path.join(test_dir,subdirectory,files))
 html5lib_test_files.__test__ = False
 

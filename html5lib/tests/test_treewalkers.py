@@ -10,7 +10,7 @@ except AttributeError:
 
 warnings.simplefilter("error")
 
-from support import html5lib_test_files, TestData, convertExpected
+from support import get_data_files, TestData, convertExpected
 
 from html5lib import html5parser, treewalkers, treebuilders, constants
 from html5lib.filters.lint import Filter as LintFilter, LintError
@@ -298,7 +298,7 @@ def test_treewalker():
     sys.stdout.write('Testing tree walkers '+ " ".join(treeTypes.keys()) + "\n")
 
     for treeName, treeCls in treeTypes.iteritems():
-        files = html5lib_test_files('tree-construction')
+        files = get_data_files('tree-construction')
         for filename in files:
             testName = os.path.basename(filename).replace(".dat","")
 

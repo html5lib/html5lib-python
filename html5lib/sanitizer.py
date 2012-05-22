@@ -49,8 +49,8 @@ class HTMLSanitizerMixin(object):
         'lang', 'list', 'longdesc', 'loop', 'loopcount', 'loopend',
         'loopstart', 'low', 'lowsrc', 'max', 'maxlength', 'media', 'method',
         'min', 'multiple', 'name', 'nohref', 'noshade', 'nowrap', 'open',
-        'optimum', 'pattern', 'ping', 'point-size', 'prompt', 'pqg',
-        'radiogroup', 'readonly', 'rel', 'repeat-max', 'repeat-min',
+        'optimum', 'pattern', 'ping', 'point-size', 'poster', 'pqg', 'preload',
+        'prompt', 'radiogroup', 'readonly', 'rel', 'repeat-max', 'repeat-min',
         'replace', 'required', 'rev', 'rightspacing', 'rows', 'rowspan',
         'rules', 'scope', 'selected', 'shape', 'size', 'span', 'src', 'start',
         'step', 'style', 'summary', 'suppress', 'tabindex', 'target',
@@ -97,7 +97,7 @@ class HTMLSanitizerMixin(object):
         'xml:base', 'xml:lang', 'xml:space', 'xmlns', 'xmlns:xlink', 'y',
         'y1', 'y2', 'zoomAndPan']
 
-    attr_val_is_uri = ['href', 'src', 'cite', 'action', 'longdesc',
+    attr_val_is_uri = ['href', 'src', 'cite', 'action', 'longdesc', 'poster',
         'xlink:href', 'xml:base']
 
     svg_attr_val_allows_ref = ['clip-path', 'color-profile', 'cursor', 'fill',

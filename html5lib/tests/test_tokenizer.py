@@ -2,7 +2,6 @@ from __future__ import with_statement
 
 import sys
 import os
-import unittest
 import cStringIO
 import warnings
 import re
@@ -12,7 +11,7 @@ try:
 except ImportError:
     import simplejson as json
 
-from support import html5lib_test_files
+from support import get_data_files
 from html5lib.tokenizer import HTMLTokenizer
 from html5lib import constants
 
@@ -124,7 +123,7 @@ def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder,
                         tokens[tokenType][1].append(token)
         return tokens["expected"] == tokens["received"]
 
-def unescape_test(test):
+def unescape(test):
     def decode(inp):
         return inp.encode("utf-8").decode("unicode-escape")
 
@@ -141,12 +140,11 @@ def unescape_test(test):
     return test
 unescape_test.__test__ = False
 
-
 def runTokenizerTest(test):
     #XXX - move this out into the setup function
     #concatenate all consecutive character tokens into a single token
     if 'doubleEscaped' in test:
-        test = unescape_test(test)
+        test = unescape(test)
 
     expected = concatenateCharacterTokens(test['output'])            
     if 'lastStartTag' not in test:
@@ -166,8 +164,7 @@ def runTokenizerTest(test):
                           "\nreceived:", unicode(tokens)])
     errorMsg = errorMsg
     ignoreErrorOrder = test.get('ignoreErrorOrder', False)
-    assert tokensMatch(expected, received, ignoreErrorOrder), errorMsg
-
+    assert tokensMatch(expected, received, ignoreErrorOrder, True), errorMsg
 
 def _doCapitalize(match):
     return match.group(1).upper()
@@ -179,19 +176,17 @@ def capitalize(s):
     s = _capitalizeRe(_doCapitalize, s)
     return s
 
-
-def test_tokenizer():
-    for filename in html5lib_test_files('tokenizer', '*.test'):
+def testTokenizer():
+    for filename in get_data_files('tokenizer', '*.test'):
         with open(filename) as fp:
             tests = json.load(fp)
             testName = os.path.basename(filename).replace(".test","")
             if 'tests' in tests:
                 for index,test in enumerate(tests['tests']):
-                    #Skip tests with a self closing flag
+                #Skip tests with a self closing flag
                     skip = False
                     if 'initialStates' not in test:
                         test["initialStates"] = ["Data state"]
                     for initialState in test["initialStates"]:
                         test["initialState"] = capitalize(initialState)
                         yield runTokenizerTest, test
-

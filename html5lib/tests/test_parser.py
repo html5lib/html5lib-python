@@ -7,7 +7,7 @@ import re
 
 warnings.simplefilter("error")
 
-from support import html5lib_test_files as data_files
+from support import get_data_files
 from support import TestData, convert, convertExpected, treeTypes
 import html5lib
 from html5lib import html5parser, treebuilders, constants
@@ -67,7 +67,7 @@ def runParserTest(innerHTML, input, expected, errors, treeClass,
 
 def test_parser():
     sys.stderr.write('Testing tree builders '+ " ".join(treeTypes.keys()) + "\n")
-    files = data_files('tree-construction')
+    files = get_data_files('tree-construction')
     
     for filename in files:
         testName = os.path.basename(filename).replace(".dat","")
