@@ -7,6 +7,19 @@ from .constants import EOF, spaceCharacters, asciiLetters, asciiUppercase
 from .constants import encodings, ReparseException
 from . import utils
 
+from io import StringIO
+
+try:
+    from io import BytesIO
+except ImportError:
+    BytesIO = StringIO
+
+try:
+    from io import BufferedIOBase
+except ImportError:
+    class BufferedIOBase(object):
+        pass
+
 #Non-unicode versions of constants for use in the pre-parser
 spaceCharactersBytes = frozenset([str(item) for item in spaceCharacters])
 asciiLettersBytes = frozenset([str(item) for item in asciiLetters])
@@ -101,10 +114,21 @@ class BufferedStream:
             rv.append(self._readStream(remainingBytes))
         
         return "".join(rv)
-        
 
 
-class HTMLInputStream:
+def HTMLInputStream(source, encoding=None, parseMeta=True, chardet=True):
+    if hasattr(source, "read"):
+        isUnicode = isinstance(source.read(0), str)
+    else:
+        isUnicode = isinstance(source, str)
+
+    if isUnicode:
+        return HTMLUnicodeInputStream(source)
+    else:
+        return HTMLBinaryInputStream(source, encoding, parseMeta, chardet)
+
+
+class HTMLUnicodeInputStream:
     """Provides a unicode stream of characters to the HTMLTokenizer.
 
     This class takes care of character encoding and removing or replacing
@@ -114,7 +138,7 @@ class HTMLInputStream:
 
     _defaultChunkSize = 10240
 
-    def __init__(self, source, encoding=None, parseMeta=True, chardet=True):
+    def __init__(self, source):
         """Initialises the HTMLInputStream.
 
         HTMLInputStream(source, [encoding]) -> Normalized stream from source
@@ -142,32 +166,12 @@ class HTMLInputStream:
         # List of where new lines occur
         self.newLines = [0]
 
-        self.charEncoding = (codecName(encoding), "certain")
-
-        # Raw Stream - for unicode objects this will encode to utf-8 and set
-        #              self.charEncoding as appropriate
-        self.rawStream = self.openStream(source)
-
-        # Encoding Information
-        #Number of bytes to use when looking for a meta element with
-        #encoding information
-        self.numBytesMeta = 512
-        #Number of bytes to use when using detecting encoding using chardet
-        self.numBytesChardet = 100
-        #Encoding to use if no other information can be found
-        self.defaultEncoding = "windows-1252"
-        
-        #Detect encoding iff no explicit "transport level" encoding is supplied
-        if (self.charEncoding[0] is None):
-            self.charEncoding = self.detectEncoding(parseMeta, chardet)
-
+        self.charEncoding = ("utf-8", "certain")
+        self.dataStream = self.openStream(source)
 
         self.reset()
 
     def reset(self):
-        self.dataStream = codecs.getreader(self.charEncoding[0])(self.rawStream,
-                                                                 'replace')
-
         self.chunk = ""
         self.chunkSize = 0
         self.chunkOffset = 0
@@ -191,127 +195,15 @@ class HTMLInputStream:
         if hasattr(source, 'read'):
             stream = source
         else:
-            # Otherwise treat source as a string and convert to a file object
-            if isinstance(source, str):
-                # XXX: we should handle lone surrogates here
-                source = source.encode('utf-8', errors="replace")
-                self.charEncoding = ("utf-8", "certain")
-            try:
-                from io import BytesIO
-            except:
-                try:
-                    # 2to3 converts this line to: from io import StringIO  
-                    from io import StringIO as BytesIO
-                except:
-                    from io import StringIO as BytesIO
-            stream = BytesIO(source)
+            stream = StringIO(source)
 
-        if (not(hasattr(stream, "tell") and hasattr(stream, "seek")) or
+        if (#not isinstance(stream, BufferedIOBase) and
+            not(hasattr(stream, "tell") and
+                hasattr(stream, "seek")) or
             stream is sys.stdin):
             stream = BufferedStream(stream)
 
         return stream
-
-    def detectEncoding(self, parseMeta=True, chardet=True):
-        #First look for a BOM
-        #This will also read past the BOM if present
-        encoding = self.detectBOM()
-        confidence = "certain"
-        #If there is no BOM need to look for meta elements with encoding 
-        #information
-        if encoding is None and parseMeta:
-            encoding = self.detectEncodingMeta()
-            confidence = "tentative"
-        #Guess with chardet, if avaliable
-        if encoding is None and chardet:
-            confidence = "tentative"
-            try:
-                from chardet.universaldetector import UniversalDetector
-                buffers = []
-                detector = UniversalDetector()
-                while not detector.done:
-                    buffer = self.rawStream.read(self.numBytesChardet)
-                    assert isinstance(buffer, bytes)
-                    if not buffer:
-                        break
-                    buffers.append(buffer)
-                    detector.feed(buffer)
-                detector.close()
-                encoding = detector.result['encoding']
-                self.rawStream.seek(0)
-            except ImportError:
-                pass
-        # If all else fails use the default encoding
-        if encoding is None:
-            confidence="tentative"
-            encoding = self.defaultEncoding
-        
-        #Substitute for equivalent encodings:
-        encodingSub = {"iso-8859-1":"windows-1252"}
-
-        if encoding.lower() in encodingSub:
-            encoding = encodingSub[encoding.lower()]
-
-        return encoding, confidence
-
-    def changeEncoding(self, newEncoding):
-        newEncoding = codecName(newEncoding)
-        if newEncoding in ("utf-16", "utf-16-be", "utf-16-le"):
-            newEncoding = "utf-8"
-        if newEncoding is None:
-            return
-        elif newEncoding == self.charEncoding[0]:
-            self.charEncoding = (self.charEncoding[0], "certain")
-        else:
-            self.rawStream.seek(0)
-            self.reset()
-            self.charEncoding = (newEncoding, "certain")
-            raise ReparseException("Encoding changed from %s to %s"%(self.charEncoding[0], newEncoding))
-            
-    def detectBOM(self):
-        """Attempts to detect at BOM at the start of the stream. If
-        an encoding can be determined from the BOM return the name of the
-        encoding otherwise return None"""
-        bomDict = {
-            codecs.BOM_UTF8: 'utf-8',
-            codecs.BOM_UTF16_LE: 'utf-16-le', codecs.BOM_UTF16_BE: 'utf-16-be',
-            codecs.BOM_UTF32_LE: 'utf-32-le', codecs.BOM_UTF32_BE: 'utf-32-be'
-        }
-
-        # Go to beginning of file and read in 4 bytes
-        string = self.rawStream.read(4)
-        assert isinstance(string, bytes)
-
-        # Try detecting the BOM using bytes from the string
-        encoding = bomDict.get(string[:3])         # UTF-8
-        seek = 3
-        if not encoding:
-            # Need to detect UTF-32 before UTF-16
-            encoding = bomDict.get(string)         # UTF-32
-            seek = 4
-            if not encoding:
-                encoding = bomDict.get(string[:2]) # UTF-16
-                seek = 2
-
-        # Set the read position past the BOM if one was found, otherwise
-        # set it to the start of the stream
-        self.rawStream.seek(encoding and seek or 0)
-
-        return encoding
-
-    def detectEncodingMeta(self):
-        """Report the encoding declared by the meta element
-        """
-        buffer = self.rawStream.read(self.numBytesMeta)
-        assert isinstance(buffer, bytes)
-        parser = EncodingParser(buffer)
-        self.rawStream.seek(0)
-        encoding = parser.getEncoding()
-        
-        if encoding in ("utf-16", "utf-16-be", "utf-16-le"):
-            encoding = "utf-8"
-
-        return encoding
 
     def _position(self, offset):
         chunk = self.chunk
@@ -474,6 +366,177 @@ class HTMLInputStream:
             else:
                 self.chunkOffset -= 1
                 assert self.chunk[self.chunkOffset] == char
+
+class HTMLBinaryInputStream(HTMLUnicodeInputStream):
+    """Provides a unicode stream of characters to the HTMLTokenizer.
+
+    This class takes care of character encoding and removing or replacing
+    incorrect byte-sequences and also provides column and line tracking.
+
+    """
+
+    def __init__(self, source, encoding=None, parseMeta=True, chardet=True):
+        """Initialises the HTMLInputStream.
+
+        HTMLInputStream(source, [encoding]) -> Normalized stream from source
+        for use by html5lib.
+
+        source can be either a file-object, local filename or a string.
+
+        The optional encoding parameter must be a string that indicates
+        the encoding.  If specified, that encoding will be used,
+        regardless of any BOM or later declaration (such as in a meta
+        element)
+        
+        parseMeta - Look for a <meta> element containing encoding information
+
+        """
+        self.charEncoding = (codecName(encoding), "certain")
+
+        # Raw Stream - for unicode objects this will encode to utf-8 and set
+        #              self.charEncoding as appropriate
+        self.rawStream = self.openStream(source)
+
+        # Encoding Information
+        #Number of bytes to use when looking for a meta element with
+        #encoding information
+        self.numBytesMeta = 512
+        #Number of bytes to use when using detecting encoding using chardet
+        self.numBytesChardet = 100
+        #Encoding to use if no other information can be found
+        self.defaultEncoding = "windows-1252"
+        
+        #Detect encoding iff no explicit "transport level" encoding is supplied
+        if (self.charEncoding[0] is None):
+            self.charEncoding = self.detectEncoding(parseMeta, chardet)
+
+        #Call superclass
+        HTMLUnicodeInputStream.__init__(self, self.rawStream)
+
+    def reset(self):
+        self.dataStream = codecs.getreader(self.charEncoding[0])(self.rawStream,
+                                                                 'replace')
+        HTMLUnicodeInputStream.reset(self)
+
+    def openStream(self, source):
+        """Produces a file object from source.
+
+        source can be either a file object, local filename or a string.
+
+        """
+        # Already a file object
+        if hasattr(source, 'read'):
+            stream = source
+        else:
+            stream = BytesIO(source)
+
+        if (not(hasattr(stream, "tell") and hasattr(stream, "seek")) or
+            stream is sys.stdin):
+            stream = BufferedStream(stream)
+
+        return stream
+
+    def detectEncoding(self, parseMeta=True, chardet=True):
+        #First look for a BOM
+        #This will also read past the BOM if present
+        encoding = self.detectBOM()
+        confidence = "certain"
+        #If there is no BOM need to look for meta elements with encoding 
+        #information
+        if encoding is None and parseMeta:
+            encoding = self.detectEncodingMeta()
+            confidence = "tentative"
+        #Guess with chardet, if avaliable
+        if encoding is None and chardet:
+            confidence = "tentative"
+            try:
+                from chardet.universaldetector import UniversalDetector
+                buffers = []
+                detector = UniversalDetector()
+                while not detector.done:
+                    buffer = self.rawStream.read(self.numBytesChardet)
+                    assert isinstance(buffer, bytes)
+                    if not buffer:
+                        break
+                    buffers.append(buffer)
+                    detector.feed(buffer)
+                detector.close()
+                encoding = detector.result['encoding']
+                self.rawStream.seek(0)
+            except ImportError:
+                pass
+        # If all else fails use the default encoding
+        if encoding is None:
+            confidence="tentative"
+            encoding = self.defaultEncoding
+        
+        #Substitute for equivalent encodings:
+        encodingSub = {"iso-8859-1":"windows-1252"}
+
+        if encoding.lower() in encodingSub:
+            encoding = encodingSub[encoding.lower()]
+
+        return encoding, confidence
+
+    def changeEncoding(self, newEncoding):
+        assert self.charEncoding[1] != "certain"
+        newEncoding = codecName(newEncoding)
+        if newEncoding in ("utf-16", "utf-16-be", "utf-16-le"):
+            newEncoding = "utf-8"
+        if newEncoding is None:
+            return
+        elif newEncoding == self.charEncoding[0]:
+            self.charEncoding = (self.charEncoding[0], "certain")
+        else:
+            self.rawStream.seek(0)
+            self.reset()
+            self.charEncoding = (newEncoding, "certain")
+            raise ReparseException("Encoding changed from %s to %s"%(self.charEncoding[0], newEncoding))
+            
+    def detectBOM(self):
+        """Attempts to detect at BOM at the start of the stream. If
+        an encoding can be determined from the BOM return the name of the
+        encoding otherwise return None"""
+        bomDict = {
+            codecs.BOM_UTF8: 'utf-8',
+            codecs.BOM_UTF16_LE: 'utf-16-le', codecs.BOM_UTF16_BE: 'utf-16-be',
+            codecs.BOM_UTF32_LE: 'utf-32-le', codecs.BOM_UTF32_BE: 'utf-32-be'
+        }
+
+        # Go to beginning of file and read in 4 bytes
+        string = self.rawStream.read(4)
+        assert isinstance(string, bytes)
+
+        # Try detecting the BOM using bytes from the string
+        encoding = bomDict.get(string[:3])         # UTF-8
+        seek = 3
+        if not encoding:
+            # Need to detect UTF-32 before UTF-16
+            encoding = bomDict.get(string)         # UTF-32
+            seek = 4
+            if not encoding:
+                encoding = bomDict.get(string[:2]) # UTF-16
+                seek = 2
+
+        # Set the read position past the BOM if one was found, otherwise
+        # set it to the start of the stream
+        self.rawStream.seek(encoding and seek or 0)
+
+        return encoding
+
+    def detectEncodingMeta(self):
+        """Report the encoding declared by the meta element
+        """
+        buffer = self.rawStream.read(self.numBytesMeta)
+        assert isinstance(buffer, bytes)
+        parser = EncodingParser(buffer)
+        self.rawStream.seek(0)
+        encoding = parser.getEncoding()
+        
+        if encoding in ("utf-16", "utf-16-be", "utf-16-le"):
+            encoding = "utf-8"
+
+        return encoding
 
 class EncodingBytes(str):
     """String-like object with an associated position and various extra methods
