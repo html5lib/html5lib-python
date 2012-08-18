@@ -148,9 +148,6 @@ def runTokenizerTest(test):
     expected = concatenateCharacterTokens(test['output'])            
     if 'lastStartTag' not in test:
         test['lastStartTag'] = None
-    outBuffer = cStringIO.StringIO()
-    stdout = sys.stdout
-    sys.stdout = outBuffer
     parser = TokenizerTestParser(test['initialState'], 
                                  test['lastStartTag'])
     tokens = parser.parse(test['input'])
