@@ -202,10 +202,9 @@ class HTMLUnicodeInputStream:
         else:
             stream = StringIO(source)
 
-        if (  # not isinstance(stream, BufferedIOBase) and
-            not(hasattr(stream, "tell") and
-                hasattr(stream, "seek")) or
-                stream is sys.stdin):
+        try:
+            stream.seek(stream.tell())
+        except:
             stream = BufferedStream(stream)
 
         return stream
@@ -437,8 +436,9 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
         else:
             stream = BytesIO(source)
 
-        if (not(hasattr(stream, "tell") and hasattr(stream, "seek")) or
-                stream is sys.stdin):
+        try:
+            stream.seek(stream.tell())
+        except:
             stream = BufferedStream(stream)
 
         return stream
