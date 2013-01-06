@@ -105,7 +105,7 @@ def printOutput(parser, document, opts):
             if not hasattr(document,'__getitem__'): 
                 document = [document]
             for fragment in document:
-                print(parser.tree.testSerializer(fragment).encode("utf-8"))
+                print(parser.tree.testSerializer(fragment))
         elif opts.hilite:
             sys.stdout.write(document.hilite("utf-8"))
         elif opts.html:
