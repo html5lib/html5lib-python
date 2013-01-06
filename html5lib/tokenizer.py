@@ -1716,21 +1716,18 @@ class HTMLTokenizer(object):
         data = []
         while True:
             data.append(self.stream.charsUntil("]"))
-            charStack = []
-
-            for expected in ["]", "]", ">"]:
-                charStack.append(self.stream.char())
-                matched = True
-                if charStack[-1] == EOF:
-                    data.extend(charStack[:-1])
-                    break
-                elif charStack[-1] != expected:
-                    matched = False
-                    data.extend(charStack)
-                    break
-
-            if matched:
+            data.append(self.stream.charsUntil(">"))
+            char = self.stream.char()
+            if char == EOF:
                 break
+            else:
+                assert char == ">"
+                if data[-1][-2:] == "]]":
+                    data[-1] = data[-1][:-2]
+                    break
+                else:
+                    data.append(char)
+
         data = "".join(data)
         #Deal with null here rather than in the parser
         nullCount = data.count("\u0000")
