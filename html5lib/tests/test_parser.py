@@ -84,6 +84,5 @@ def test_parser():
 
             for treeName, treeCls in treeTypes.items():
                 for namespaceHTMLElements in (True, False):
-                    print(input)
                     yield (runParserTest, innerHTML, input, expected, errors, treeCls,
                            namespaceHTMLElements)

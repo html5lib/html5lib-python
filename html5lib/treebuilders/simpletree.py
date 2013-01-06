@@ -203,7 +203,6 @@ class Element(Node):
         return result + '&lt;/<code class="markup element-name">%s</code>>' % self.name
 
     def printTree(self, indent):
-        print(self.name)
         tree = '\n|%s%s' % (' '*indent, str(self))
         indent += 2
         if self.attributes:
