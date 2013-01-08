@@ -52,7 +52,7 @@ except ImportError:
     
 try:
     import lxml.etree as lxml
-    treeTypes['lxml'] = treebuilders.getTreeBuilder("etree", lxml, fullTree=True)
+    treeTypes['lxml'] = treebuilders.getTreeBuilder("lxml")
 except ImportError:
     pass
 
