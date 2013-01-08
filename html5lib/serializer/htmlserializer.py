@@ -5,8 +5,8 @@ except NameError:
     from sets import ImmutableSet as frozenset
 
 try:
-    # use functools.reduce to avoid DeprecationWarning with -3
     from functools import reduce
+    pass # no-op statement to avoid 3to2 introducing parse error
 except ImportError:
     pass
 
