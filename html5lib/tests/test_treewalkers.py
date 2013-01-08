@@ -8,8 +8,6 @@ try:
 except AttributeError:
     unittest.TestCase.assertEqual = unittest.TestCase.assertEquals
 
-warnings.simplefilter("error")
-
 from .support import get_data_files, TestData, convertExpected
 
 from html5lib import html5parser, treewalkers, treebuilders, constants
@@ -271,6 +269,8 @@ class TokenTestCase(unittest.TestCase):
                 self.assertEqual(expectedToken, outputToken)
 
 def runTreewalkerTest(innerHTML, input, expected, errors, treeClass):
+    warnings.resetwarnings()
+    warnings.simplefilter("error")
     try:
         p = html5parser.HTMLParser(tree = treeClass["builder"])
         if innerHTML:

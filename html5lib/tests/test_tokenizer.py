@@ -140,6 +140,8 @@ def unescape(test):
     return test
 
 def runTokenizerTest(test):
+    warnings.resetwarnings()
+    warnings.simplefilter("error")
     #XXX - move this out into the setup function
     #concatenate all consecutive character tokens into a single token
     if 'doubleEscaped' in test:

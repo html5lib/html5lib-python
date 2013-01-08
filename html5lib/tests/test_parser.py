@@ -25,6 +25,8 @@ namespaceExpected = re.compile(r"^(\s*)<(\S+)>", re.M).sub
 
 def runParserTest(innerHTML, input, expected, errors, treeClass,
                   namespaceHTMLElements):
+    warnings.resetwarnings()
+    warnings.simplefilter("error")
     #XXX - move this out into the setup function
     #concatenate all consecutive character tokens into a single token
     try:
