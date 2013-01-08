@@ -80,6 +80,8 @@ def testSerializer(element):
                     serializeElement(next_element, indent+2)
         elif type(element.tag) == type(etree.Comment):
             rv.append("|%s<!-- %s -->"%(' '*indent, element.text))
+            if hasattr(element, "tail") and element.tail:
+                rv.append("|%s\"%s\"" %(' '*indent, element.tail))
         else:
             nsmatch = etree_builders.tag_regexp.match(element.tag)
             if nsmatch is not None:
@@ -113,8 +115,8 @@ def testSerializer(element):
             indent += 2
             for child in element.getchildren():
                 serializeElement(child, indent)
-        if hasattr(element, "tail") and element.tail:
-            rv.append("|%s\"%s\"" %(' '*(indent-2), element.tail))
+            if hasattr(element, "tail") and element.tail:
+                rv.append("|%s\"%s\"" %(' '*(indent-2), element.tail))
     serializeElement(element, 0)
 
     if finalText is not None:
@@ -286,6 +288,12 @@ class TreeBuilder(_base.TreeBuilder):
     
     def insertCommentInitial(self, data, parent=None):
         self.initial_comments.append(data)
+
+    def insertCommentMain(self, data, parent=None):
+        if (parent == self.document and
+            type(self.document._elementTree.getroot()[-1].tag) == type(etree.Comment)):
+                warnings.warn("lxml cannot represent adjacent comments beyond the root elements", DataLossWarning)
+        super().insertComment(data, parent)
     
     def insertRoot(self, token):
         """Create the document root"""
@@ -301,6 +309,8 @@ class TreeBuilder(_base.TreeBuilder):
                 docStr += ' PUBLIC "%s" "%s"'%(self.doctype.publicId or "",
                                                self.doctype.systemId or "")
             docStr += ">"
+            if self.doctype.name != token["name"]:
+                warnings.warn("lxml cannot represent doctype with a different name to the root element", DataLossWarning)
         docStr += "<THIS_SHOULD_NEVER_APPEAR_PUBLICLY/>"
         
         try:
@@ -333,4 +343,4 @@ class TreeBuilder(_base.TreeBuilder):
         self.openElements.append(root_element)
     
         #Reset to the default insert comment function
-        self.insertComment = super(TreeBuilder, self).insertComment
+        self.insertComment = self.insertCommentMain

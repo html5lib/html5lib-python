@@ -38,7 +38,7 @@ def getETreeBuilder(ElementTreeImplementation):
             if not(hasattr(node, "tag")):
                 node = node.getroot()
 
-            if node.tag in ("<DOCUMENT_ROOT>", "<DOCUMENT_FRAGMENT>"):
+            if node.tag in ("DOCUMENT_ROOT", "DOCUMENT_FRAGMENT"):
                 return (_base.DOCUMENT,)
 
             elif node.tag == "<!DOCTYPE>":

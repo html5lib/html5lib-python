@@ -178,11 +178,11 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
     
     class Document(Element):
         def __init__(self):
-            Element.__init__(self, "<DOCUMENT_ROOT>") 
+            Element.__init__(self, "DOCUMENT_ROOT")
     
     class DocumentFragment(Element):
         def __init__(self):
-            Element.__init__(self, "<DOCUMENT_FRAGMENT>")
+            Element.__init__(self, "DOCUMENT_FRAGMENT")
     
     def testSerializer(element):
         rv = []
@@ -198,7 +198,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                             element.text, publicId, systemId))
                 else:     
                     rv.append("<!DOCTYPE %s>"%(element.text,))
-            elif element.tag == "<DOCUMENT_ROOT>":
+            elif element.tag == "DOCUMENT_ROOT":
                 rv.append("#document")
                 if element.text:
                     rv.append("|%s\"%s\""%(' '*(indent+2), element.text))
@@ -263,7 +263,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                             element.text, publicId, systemId))
                 else:     
                     rv.append("<!DOCTYPE %s>"%(element.text,))
-            elif element.tag == "<DOCUMENT_ROOT>":
+            elif element.tag == "DOCUMENT_ROOT":
                 if element.text:
                     rv.append(element.text)
                 if element.tail:
