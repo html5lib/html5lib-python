@@ -1,28 +1,12 @@
 
 from xml.dom import minidom, Node, XML_NAMESPACE, XMLNS_NAMESPACE
-try:
-    from types import ModuleType
-except:
-    from new import module as ModuleType
 import re
 import weakref
 
 from . import _base
 from html5lib import constants, ihatexml
 from html5lib.constants import namespaces
-
-moduleCache = {}
-
-def getDomModule(DomImplementation):
-    name = "_" + DomImplementation.__name__+"builder"
-    if name in moduleCache:
-        return moduleCache[name]
-    else:
-        mod = ModuleType(name)
-        objs = getDomBuilder(DomImplementation)
-        mod.__dict__.update(objs)
-        moduleCache[name] = mod    
-        return mod
+from html5lib.utils import moduleFactoryFactory
 
 def getDomBuilder(DomImplementation):
     Dom = DomImplementation
@@ -284,6 +268,11 @@ def getDomBuilder(DomImplementation):
         pass
         
     return locals()
+
+
+# The actual means to get a module!
+getDomModule = moduleFactoryFactory(getDomBuilder)
+
 
 # Keep backwards compatibility with things that directly load 
 # classes/functions from this module

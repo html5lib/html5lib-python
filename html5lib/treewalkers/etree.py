@@ -1,30 +1,14 @@
 import gettext
 _ = gettext.gettext
 
-try:
-    from types import ModuleType
-except:
-    from new import module as ModuleType
 import copy
 import re
 
 from . import _base
 from html5lib.constants import voidElements
+from html5lib.utils import moduleFactorFactory
 
 tag_regexp = re.compile("{([^}]*)}(.*)")
-
-moduleCache = {}
-
-def getETreeModule(ElementTreeImplementation):
-    name = "_" + ElementTreeImplementation.__name__+"builder"
-    if name in moduleCache:
-        return moduleCache[name]
-    else:
-        mod = ModuleType("_" + ElementTreeImplementation.__name__+"builder")
-        objs = getETreeBuilder(ElementTreeImplementation)
-        mod.__dict__.update(objs)
-        moduleCache[name] = mod
-        return mod
 
 def getETreeBuilder(ElementTreeImplementation):
     ElementTree = ElementTreeImplementation
@@ -139,3 +123,5 @@ def getETreeBuilder(ElementTreeImplementation):
                     return parent, list(parents[-1]).index(parent), parents, None
 
     return locals()
+
+getETreeModule = moduleFactoryFactory(getETreeBuilder)

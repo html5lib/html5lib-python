@@ -8,6 +8,8 @@ implements a 'serialize' method taking a tree as sole argument and
 returning an iterator generating tokens.
 """
 
+from importlib import import_module
+
 treeWalkerCache = {}
 
 def getTreeWalker(treeType, implementation=None, **kwargs):
@@ -34,7 +36,7 @@ def getTreeWalker(treeType, implementation=None, **kwargs):
     treeType = treeType.lower()
     if treeType not in treeWalkerCache:
         if treeType in ("dom", "pulldom", "simpletree"):
-            mod = __import__(treeType, globals())
+            mod = import_module("."+treeType, "html5lib.treewalkers")
             treeWalkerCache[treeType] = mod.TreeWalker
         elif treeType == "genshi":
             from . import genshistream

@@ -5,6 +5,9 @@ except NameError:
     from sets import Set as set
     from sets import ImmutableSet as frozenset
 
+from types import ModuleType
+
+
 class MethodDispatcher(dict):
     """Dict with 2 special properties:
 
@@ -173,3 +176,25 @@ def surrogatePairToCodepoint(data):
     char_val = (0x10000 + (ord(data[0]) - 0xD800) * 0x400 + 
                 (ord(data[1]) - 0xDC00))
     return char_val
+
+# Module Factory Factory (no, this isn't Java, I know)
+# Here to stop this being duplicated all over the place.
+
+def moduleFactoryFactory(factory):
+    moduleCache = {}
+    def moduleFactory(baseModule, *args, **kwargs):
+        if type(ModuleType.__name__) is str:
+            name = "_%s_factory" % baseModule.__name__
+        else:
+            name = b"_%s_factory" % baseModule.__name__
+
+        if name in moduleCache:
+            return moduleCache[name]
+        else:
+            mod = ModuleType(name)
+            objs = factory(baseModule, *args, **kwargs)
+            mod.__dict__.update(objs)
+            moduleCache[name] = mod    
+            return mod
+
+    return moduleFactory

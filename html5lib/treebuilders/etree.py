@@ -1,29 +1,12 @@
-try:
-    from types import ModuleType
-except:
-    from new import module as ModuleType
 import re
-import types
 
 from . import _base
 from html5lib import ihatexml
 from html5lib import constants
 from html5lib.constants import namespaces
+from html5lib.utils import moduleFactoryFactory
 
 tag_regexp = re.compile("{([^}]*)}(.*)")
-
-moduleCache = {}
-
-def getETreeModule(ElementTreeImplementation, fullTree=False):
-    name = "_" + ElementTreeImplementation.__name__+"builder"
-    if name in moduleCache:
-        return moduleCache[name]
-    else:
-        mod = ModuleType("_" + ElementTreeImplementation.__name__+"builder")
-        objs = getETreeBuilder(ElementTreeImplementation, fullTree)
-        mod.__dict__.update(objs)
-        moduleCache[name] = mod    
-        return mod
 
 def getETreeBuilder(ElementTreeImplementation, fullTree=False):
     ElementTree = ElementTreeImplementation
@@ -342,3 +325,6 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             return _base.TreeBuilder.getFragment(self)._element
         
     return locals()
+
+
+getETreeModule = moduleFactoryFactory(getETreeBuilder)
