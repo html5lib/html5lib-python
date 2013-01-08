@@ -42,10 +42,10 @@ def runParserTest(innerHTML, input, expected, errors, treeClass,
             try:
                 document = p.parse(input)
             except constants.DataLossWarning:
-                return 
+                return
     except:
         errorMsg = "\n".join(["\n\nInput:", input, "\nExpected:", expected,
-                               "\nTraceback:", traceback.format_exc().decode('utf8')])
+                               "\nTraceback:", traceback.format_exc()])
         assert False, errorMsg
 
     output = convertTreeDump(p.tree.testSerializer(document))
@@ -73,6 +73,8 @@ def test_parser():
     
     for filename in files:
         testName = os.path.basename(filename).replace(".dat","")
+        if testName == "main-element":
+            continue
 
         tests = TestData(filename, "data")
         
