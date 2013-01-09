@@ -7,7 +7,7 @@ try:
 except AttributeError:
     unittest.TestCase.assertEqual = unittest.TestCase.assertEquals
 
-from .support import get_data_files, TestData, test_dir
+from .support import get_data_files, TestData, test_dir, errorMessage
 from html5lib import HTMLParser, inputstream
 
 class Html5EncodingTestCase(unittest.TestCase):
@@ -28,23 +28,17 @@ def runParserEncodingTest(data, encoding):
     t = p.parse(data, useChardet=False)
     encoding = encoding.lower().decode("ascii")
 
-    errorMessage = ("Input:\n%s\nExpected:\n%s\nRecieved\n%s\n"%
-                    (data, repr(encoding), 
-                     repr(p.tokenizer.stream.charEncoding[0])))
-    assert encoding == p.tokenizer.stream.charEncoding[0], errorMessage
-
+    assert encoding == p.tokenizer.stream.charEncoding[0], errorMessage(data, encoding, p.tokenizer.stream.charEncoding[0])
 
 def runPreScanEncodingTest(data, encoding):
     stream = inputstream.HTMLBinaryInputStream(data, chardet=False)
     encoding = encoding.lower().decode("ascii")
 
+    # Very crude way to ignore irrelevant tests
     if len(data) > stream.numBytesMeta:
         return
 
-    errorMessage = ("Input:\n%s\nExpected:\n%s\nRecieved\n%s\n"%
-                    (data, repr(encoding), 
-                     repr(stream.charEncoding[0])))
-    assert encoding == stream.charEncoding[0], errorMessage
+    assert encoding == stream.charEncoding[0], errorMessage(data, encoding, stream.charEncoding[0])
 
 def test_encoding():
     for filename in get_data_files("encoding"):
