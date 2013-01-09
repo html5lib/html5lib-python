@@ -1,21 +1,20 @@
 from . import support
 import unittest, codecs
 
-from html5lib.inputstream import HTMLInputStream
+from html5lib.inputstream import HTMLInputStream, HTMLUnicodeInputStream, HTMLBinaryInputStream
 
-class HTMLInputStreamShortChunk(HTMLInputStream):
+class HTMLUnicodeInputStreamShortChunk(HTMLUnicodeInputStream):
+    _defaultChunkSize = 2
+
+class HTMLBinaryInputStreamShortChunk(HTMLBinaryInputStream):
     _defaultChunkSize = 2
 
 class HTMLInputStreamTest(unittest.TestCase):
 
     def test_char_ascii(self):
-        stream = HTMLInputStream("'", encoding='ascii')
+        stream = HTMLInputStream(b"'", encoding='ascii')
         self.assertEquals(stream.charEncoding[0], 'ascii')
         self.assertEquals(stream.char(), "'")
-
-    def test_char_null(self):
-        stream = HTMLInputStream("\x00")
-        self.assertEquals(stream.char(), '\ufffd')
 
     def test_char_utf8(self):
         stream = HTMLInputStream('\u2018'.encode('utf-8'), encoding='utf-8')
@@ -30,7 +29,7 @@ class HTMLInputStreamTest(unittest.TestCase):
         self.assertEquals(stream.char(), "\u2019")
 
     def test_bom(self):
-        stream = HTMLInputStream(codecs.BOM_UTF8 + "'")
+        stream = HTMLInputStream(codecs.BOM_UTF8 + b"'")
         self.assertEquals(stream.charEncoding[0], 'utf-8')
         self.assertEquals(stream.char(), "'")
 
@@ -40,7 +39,7 @@ class HTMLInputStreamTest(unittest.TestCase):
         self.assertEquals(len(stream.charsUntil(' ', True)), 1025)
 
     def test_newlines(self):
-        stream = HTMLInputStreamShortChunk(codecs.BOM_UTF8 + "a\nbb\r\nccc\rddddxe")
+        stream = HTMLBinaryInputStreamShortChunk(codecs.BOM_UTF8 + b"a\nbb\r\nccc\rddddxe")
         self.assertEquals(stream.position(), (1, 0))
         self.assertEquals(stream.charsUntil('c'), "a\nbb\n")
         self.assertEquals(stream.position(), (3, 0))
@@ -50,12 +49,12 @@ class HTMLInputStreamTest(unittest.TestCase):
         self.assertEquals(stream.position(), (4, 5))
 
     def test_newlines2(self):
-        size = HTMLInputStream._defaultChunkSize
+        size = HTMLUnicodeInputStream._defaultChunkSize
         stream = HTMLInputStream("\r" * size + "\n")
         self.assertEquals(stream.charsUntil('x'), "\n" * size)
 
     def test_position(self):
-        stream = HTMLInputStreamShortChunk(codecs.BOM_UTF8 + "a\nbb\nccc\nddde\nf\ngh")
+        stream = HTMLBinaryInputStreamShortChunk(codecs.BOM_UTF8 + b"a\nbb\nccc\nddde\nf\ngh")
         self.assertEquals(stream.position(), (1, 0))
         self.assertEquals(stream.charsUntil('c'), "a\nbb\n")
         self.assertEquals(stream.position(), (3, 0))
@@ -73,7 +72,7 @@ class HTMLInputStreamTest(unittest.TestCase):
         self.assertEquals(stream.position(), (6, 1))
 
     def test_position2(self):
-        stream = HTMLInputStreamShortChunk("abc\nd")
+        stream = HTMLUnicodeInputStreamShortChunk("abc\nd")
         self.assertEquals(stream.position(), (1, 0))
         self.assertEquals(stream.char(), "a")
         self.assertEquals(stream.position(), (1, 1))
