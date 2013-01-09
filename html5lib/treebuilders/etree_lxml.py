@@ -49,7 +49,7 @@ class Document(object):
 def testSerializer(element):
     rv = []
     finalText = None
-    filter = ihatexml.InfosetFilter()
+    infosetFilter = ihatexml.InfosetFilter()
     def serializeElement(element, indent=0):
         if not hasattr(element, "tag"):
             if  hasattr(element, "getroot"):
@@ -90,10 +90,10 @@ def testSerializer(element):
                 tag = nsmatch.group(2)
                 prefix = constants.prefixes[ns]
                 rv.append("|%s<%s %s>"%(' '*indent, prefix,
-                                        filter.fromXmlName(tag)))
+                                        infosetFilter.fromXmlName(tag)))
             else:
                 rv.append("|%s<%s>"%(' '*indent,
-                                     filter.fromXmlName(element.tag)))
+                                     infosetFilter.fromXmlName(element.tag)))
 
             if hasattr(element, "attrib"):
                 attributes = []
@@ -101,11 +101,11 @@ def testSerializer(element):
                     nsmatch = tag_regexp.match(name)
                     if nsmatch is not None:
                         ns, name = nsmatch.groups()
-                        name = filter.fromXmlName(name)
+                        name = infosetFilter.fromXmlName(name)
                         prefix = constants.prefixes[ns]
                         attr_string = "%s %s"%(prefix, name)
                     else:
-                        attr_string = filter.fromXmlName(name)
+                        attr_string = infosetFilter.fromXmlName(name)
                     attributes.append((attr_string, value))
 
                 for name, value in sorted(attributes):
@@ -178,7 +178,7 @@ class TreeBuilder(_base.TreeBuilder):
 
     def __init__(self, namespaceHTMLElements, fullTree = False):
         builder = etree_builders.getETreeModule(etree, fullTree=fullTree)
-        filter = self.filter = ihatexml.InfosetFilter()
+        infosetFilter = self.infosetFilter = ihatexml.InfosetFilter()
         self.namespaceHTMLElements = namespaceHTMLElements
 
         class Attributes(dict):
@@ -187,32 +187,32 @@ class TreeBuilder(_base.TreeBuilder):
                 dict.__init__(self, value)
                 for key, value in self.items():
                     if isinstance(key, tuple):
-                        name = "{%s}%s"%(key[2], filter.coerceAttribute(key[1]))
+                        name = "{%s}%s"%(key[2], infosetFilter.coerceAttribute(key[1]))
                     else:
-                        name = filter.coerceAttribute(key)
+                        name = infosetFilter.coerceAttribute(key)
                     self._element._element.attrib[name] = value
 
             def __setitem__(self, key, value):
                 dict.__setitem__(self, key, value)
                 if isinstance(key, tuple):
-                    name = "{%s}%s"%(key[2], filter.coerceAttribute(key[1]))
+                    name = "{%s}%s"%(key[2], infosetFilter.coerceAttribute(key[1]))
                 else:
-                    name = filter.coerceAttribute(key)
+                    name = infosetFilter.coerceAttribute(key)
                 self._element._element.attrib[name] = value
 
         class Element(builder.Element):
             def __init__(self, name, namespace):
-                name = filter.coerceElement(name)
+                name = infosetFilter.coerceElement(name)
                 builder.Element.__init__(self, name, namespace=namespace)
                 self._attributes = Attributes(self)
 
             def _setName(self, name):
-                self._name = filter.coerceElement(name)
+                self._name = infosetFilter.coerceElement(name)
                 self._element.tag = self._getETreeTag(
                     self._name, self._namespace)
         
             def _getName(self):
-                return filter.fromXmlName(self._name)
+                return infosetFilter.fromXmlName(self._name)
         
             name = property(_getName, _setName)
 
@@ -225,7 +225,7 @@ class TreeBuilder(_base.TreeBuilder):
             attributes = property(_getAttributes, _setAttributes)
 
             def insertText(self, data, insertBefore=None):
-                data = filter.coerceCharacters(data)
+                data = infosetFilter.coerceCharacters(data)
                 builder.Element.insertText(self, data, insertBefore)
 
             def appendChild(self, child):
@@ -234,11 +234,11 @@ class TreeBuilder(_base.TreeBuilder):
 
         class Comment(builder.Comment):
             def __init__(self, data):
-                data = filter.coerceComment(data)
+                data = infosetFilter.coerceComment(data)
                 builder.Comment.__init__(self, data)
 
             def _setData(self, data):
-                data = filter.coerceComment(data)
+                data = infosetFilter.coerceComment(data)
                 self._element.text = data
 
             def _getData(self):
