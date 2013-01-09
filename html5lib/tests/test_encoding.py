@@ -23,7 +23,7 @@ class Html5EncodingTestCase(unittest.TestCase):
     def test_codec_name_d(self):
         self.assertEqual(inputstream.codecName("ISO_8859--1"), "windows-1252")
 
-def runEncodingTest(data, encoding):
+def runParserEncodingTest(data, encoding):
     p = HTMLParser()
     t = p.parse(data, useChardet=False)
     encoding = encoding.lower().decode("ascii")
@@ -33,13 +33,27 @@ def runEncodingTest(data, encoding):
                      repr(p.tokenizer.stream.charEncoding[0])))
     assert encoding == p.tokenizer.stream.charEncoding[0], errorMessage
 
+
+def runPreScanEncodingTest(data, encoding):
+    stream = inputstream.HTMLBinaryInputStream(data, chardet=False)
+    encoding = encoding.lower().decode("ascii")
+
+    if len(data) > stream.numBytesMeta:
+        return
+
+    errorMessage = ("Input:\n%s\nExpected:\n%s\nRecieved\n%s\n"%
+                    (data, repr(encoding), 
+                     repr(stream.charEncoding[0])))
+    assert encoding == stream.charEncoding[0], errorMessage
+
 def test_encoding():
     for filename in get_data_files("encoding"):
         test_name = os.path.basename(filename).replace('.dat',''). \
             replace('-','')
         tests = TestData(filename, b"data", encoding=None)
         for idx, test in enumerate(tests):
-            yield (runEncodingTest, test[b'data'], test[b'encoding'])
+            yield (runParserEncodingTest, test[b'data'], test[b'encoding'])
+            yield (runPreScanEncodingTest, test[b'data'], test[b'encoding'])
 
 try:
     import chardet

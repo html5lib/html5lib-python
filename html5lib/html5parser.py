@@ -777,7 +777,9 @@ def getPhases(debug):
             if self.parser.tokenizer.stream.charEncoding[1] == "tentative":
                 if "charset" in attributes:
                     self.parser.tokenizer.stream.changeEncoding(attributes["charset"])
-                elif "content" in attributes:
+                elif ("content" in attributes and
+                      "http-equiv" in attributes and
+                      attributes["http-equiv"].lower() == "content-type"):
                     # Encoding it as UTF-8 here is a hack, as really we should pass
                     # the abstract Unicode string, and just use the
                     # ContentAttrParser on that, but using UTF-8 allows all chars
