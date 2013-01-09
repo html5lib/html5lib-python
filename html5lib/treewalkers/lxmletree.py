@@ -2,6 +2,7 @@ from lxml import etree
 from html5lib.treebuilders.etree import tag_regexp
 
 from gettext import gettext
+import sys
 _ = gettext
 
 from . import _base
@@ -71,7 +72,8 @@ class FragmentWrapper(object):
             self.tail = self.obj.tail
         else:
             self.tail = None
-        self.isstring = isinstance(obj, str)
+        self.isstring = isinstance(obj, str) or isinstance(obj, bytes)
+        assert not self.isstring or isinstance(obj, str) or sys.version_info.major == 2
         
     def __getattr__(self, name):
         return getattr(self.obj, name)

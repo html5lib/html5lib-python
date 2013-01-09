@@ -11,6 +11,7 @@ When any of these things occur, we emit a DataLossWarning
 
 import warnings
 import re
+import sys
 
 from . import _base
 from html5lib.constants import DataLossWarning
@@ -71,8 +72,9 @@ def testSerializer(element):
                 while next_element is not None:
                     serializeElement(next_element, indent+2)
                     next_element = next_element.getnext()
-            elif isinstance(element, str):
+            elif isinstance(element, str) or isinstance(element, bytes):
                 #Text in a fragment
+                assert isinstance(element, str) or sys.version_info.major == 2
                 rv.append("|%s\"%s\""%(' '*indent, element))
             else:
                 #Fragment case
@@ -84,6 +86,7 @@ def testSerializer(element):
             if hasattr(element, "tail") and element.tail:
                 rv.append("|%s\"%s\"" %(' '*indent, element.tail))
         else:
+            assert isinstance(element, etree._Element)
             nsmatch = etree_builders.tag_regexp.match(element.tag)
             if nsmatch is not None:
                 ns = nsmatch.group(1)
