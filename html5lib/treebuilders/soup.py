@@ -1,38 +1,47 @@
+from __future__ import absolute_import
 import warnings
 
-warnings.warn("BeautifulSoup 3.x (as of 3.1) is not fully compatible with html5lib and support will be removed in the future", DeprecationWarning)
+warnings.warn(u"BeautifulSoup 3.x (as of 3.1) is not fully compatible with html5lib and support will be removed in the future", DeprecationWarning)
 
 from BeautifulSoup import BeautifulSoup, Tag, NavigableString, Comment, Declaration
 
-import _base
+from . import _base
 from html5lib.constants import namespaces, DataLossWarning
 
 class AttrList(object):
     def __init__(self, element):
         self.element = element
         self.attrs = dict(self.element.attrs)
+    __init__.func_annotations = {}
     def __iter__(self):
-        return self.attrs.items().__iter__()
+        return list(self.attrs.items()).__iter__()
+    __iter__.func_annotations = {}
     def __setitem__(self, name, value):
-        "set attr", name, value
+        u"set attr", name, value
         self.element[name] = value
+    __setitem__.func_annotations = {}
     def items(self):
-        return self.attrs.items()
+        return list(self.attrs.items())
+    items.func_annotations = {}
     def keys(self):
-        return self.attrs.keys()
+        return list(self.attrs.keys())
+    keys.func_annotations = {}
     def __getitem__(self, name):
         return self.attrs[name]
+    __getitem__.func_annotations = {}
     def __contains__(self, name):
-        return name in self.attrs.keys()
+        return name in list(self.attrs.keys())
+    __contains__.func_annotations = {}
     def __eq__(self, other):
-        if len(self.keys()) != len(other.keys()):
+        if len(list(self.keys())) != len(list(other.keys())):
             return False
-        for item in self.keys():
+        for item in list(self.keys()):
             if item not in other:
                 return False
             if self[item] != other[item]:
                 return False
         return True
+    __eq__.func_annotations = {}
 
 class Element(_base.Node):
     def __init__(self, element, soup, namespace):
@@ -40,13 +49,15 @@ class Element(_base.Node):
         self.element = element
         self.soup = soup
         self.namespace = namespace
+    __init__.func_annotations = {}
 
     def _nodeIndex(self, node, refNode):
         # Finds a node by identity rather than equality
-        for index in range(len(self.element.contents)):
+        for index in xrange(len(self.element.contents)):
             if id(self.element.contents[index]) == id(refNode.element):
                 return index
         return None
+    _nodeIndex.func_annotations = {}
 
     def appendChild(self, node):
         if (node.element.__class__ == NavigableString and self.element.contents
@@ -67,14 +78,17 @@ class Element(_base.Node):
         else:
             self.element.insert(len(self.element.contents), node.element)
             node.parent = self
+    appendChild.func_annotations = {}
 
     def getAttributes(self):
         return AttrList(self.element)
+    getAttributes.func_annotations = {}
 
     def setAttributes(self, attributes):
         if attributes:
-            for name, value in attributes.items():
+            for name, value in list(attributes.items()):
                 self.element[name] =  value
+    setAttributes.func_annotations = {}
 
     attributes = property(getAttributes, setAttributes)
     
@@ -84,6 +98,7 @@ class Element(_base.Node):
             self.insertBefore(text, insertBefore)
         else:
             self.appendChild(text)
+    insertText.func_annotations = {}
 
     def insertBefore(self, node, refNode):
         index = self._nodeIndex(node, refNode)
@@ -100,6 +115,7 @@ class Element(_base.Node):
         else:
             self.element.insert(index, node.element)
             node.parent = self
+    insertBefore.func_annotations = {}
 
     def removeChild(self, node):
         index = self._nodeIndex(node.parent, node)
@@ -107,30 +123,35 @@ class Element(_base.Node):
         node.element.parent = None
         node.element.extract()
         node.parent = None
+    removeChild.func_annotations = {}
 
     def reparentChildren(self, newParent):
         while self.element.contents:
             child = self.element.contents[0]
             child.extract()
             if isinstance(child, Tag):
-                newParent.appendChild(Element(child, self.soup, namespaces["html"]))
+                newParent.appendChild(Element(child, self.soup, namespaces[u"html"]))
             else:
                 newParent.appendChild(TextNode(child, self.soup))
+    reparentChildren.func_annotations = {}
 
     def cloneNode(self):
         node = Element(Tag(self.soup, self.element.name), self.soup, self.namespace)
         for key,value in self.attributes:
             node.attributes[key] = value
         return node
+    cloneNode.func_annotations = {}
 
     def hasContent(self):
         return self.element.contents
+    hasContent.func_annotations = {}
 
     def getNameTuple(self):
         if self.namespace == None:
-            return namespaces["html"], self.name
+            return namespaces[u"html"], self.name
         else:
             return self.namespace, self.name
+    getNameTuple.func_annotations = {}
 
     nameTuple = property(getNameTuple)
 
@@ -139,98 +160,112 @@ class TextNode(Element):
         _base.Node.__init__(self, None)
         self.element = element
         self.soup = soup
+    __init__.func_annotations = {}
     
     def cloneNode(self):
         raise NotImplementedError
+    cloneNode.func_annotations = {}
 
 class TreeBuilder(_base.TreeBuilder):
     def __init__(self, namespaceHTMLElements):
         if namespaceHTMLElements:
-            warnings.warn("BeautifulSoup cannot represent elements in any namespace", DataLossWarning)
+            warnings.warn(u"BeautifulSoup cannot represent elements in any namespace", DataLossWarning)
         _base.TreeBuilder.__init__(self, namespaceHTMLElements)
+    __init__.func_annotations = {}
         
     def documentClass(self):
-        self.soup = BeautifulSoup("")
+        self.soup = BeautifulSoup(u"")
         return Element(self.soup, self.soup, None)
+    documentClass.func_annotations = {}
     
     def insertDoctype(self, token):
-        name = token["name"]
-        publicId = token["publicId"]
-        systemId = token["systemId"]
+        name = token[u"name"]
+        publicId = token[u"publicId"]
+        systemId = token[u"systemId"]
 
         if publicId:
-            self.soup.insert(0, Declaration("DOCTYPE %s PUBLIC \"%s\" \"%s\""%(name, publicId, systemId or "")))
+            self.soup.insert(0, Declaration(u"DOCTYPE %s PUBLIC \"%s\" \"%s\""%(name, publicId, systemId or u"")))
         elif systemId:
-            self.soup.insert(0, Declaration("DOCTYPE %s SYSTEM \"%s\""%
+            self.soup.insert(0, Declaration(u"DOCTYPE %s SYSTEM \"%s\""%
                                             (name, systemId)))
         else:
-            self.soup.insert(0, Declaration("DOCTYPE %s"%name))
+            self.soup.insert(0, Declaration(u"DOCTYPE %s"%name))
+    insertDoctype.func_annotations = {}
     
     def elementClass(self, name, namespace):
         if namespace is not None:
-            warnings.warn("BeautifulSoup cannot represent elements in any namespace", DataLossWarning)
+            warnings.warn(u"BeautifulSoup cannot represent elements in any namespace", DataLossWarning)
         return Element(Tag(self.soup, name), self.soup, namespace)
+    elementClass.func_annotations = {}
         
     def commentClass(self, data):
         return TextNode(Comment(data), self.soup)
+    commentClass.func_annotations = {}
     
     def fragmentClass(self):
-        self.soup = BeautifulSoup("")
-        self.soup.name = "[document_fragment]"
+        self.soup = BeautifulSoup(u"")
+        self.soup.name = u"[document_fragment]"
         return Element(self.soup, self.soup, None) 
+    fragmentClass.func_annotations = {}
 
     def appendChild(self, node):
         self.soup.insert(len(self.soup.contents), node.element)
+    appendChild.func_annotations = {}
 
     def testSerializer(self, element):
         return testSerializer(element)
+    testSerializer.func_annotations = {}
 
     def getDocument(self):
         return self.soup
+    getDocument.func_annotations = {}
     
     def getFragment(self):
         return _base.TreeBuilder.getFragment(self).element
+    getFragment.func_annotations = {}
     
 def testSerializer(element):
     import re
     rv = []
     def serializeElement(element, indent=0):
         if isinstance(element, Declaration):
-            doctype_regexp = r'DOCTYPE\s+(?P<name>[^\s]*)( PUBLIC "(?P<publicId>.*)" "(?P<systemId1>.*)"| SYSTEM "(?P<systemId2>.*)")?'
+            doctype_regexp = ur'DOCTYPE\s+(?P<name>[^\s]*)( PUBLIC "(?P<publicId>.*)" "(?P<systemId1>.*)"| SYSTEM "(?P<systemId2>.*)")?'
             m = re.compile(doctype_regexp).match(element.string)
-            assert m is not None, "DOCTYPE did not match expected format"
-            name = m.group('name')
-            publicId = m.group('publicId')
+            assert m is not None, u"DOCTYPE did not match expected format"
+            name = m.group(u'name')
+            publicId = m.group(u'publicId')
             if publicId is not None:
-                systemId = m.group('systemId1') or ""
+                systemId = m.group(u'systemId1') or u""
             else:
-                systemId = m.group('systemId2')
+                systemId = m.group(u'systemId2')
 
             if publicId is not None or systemId is not None:
-                rv.append("""|%s<!DOCTYPE %s "%s" "%s">"""%
-                          (' '*indent, name, publicId or "", systemId or ""))
+                rv.append(u"""|%s<!DOCTYPE %s "%s" "%s">"""%
+                          (u' '*indent, name, publicId or u"", systemId or u""))
             else:
-                rv.append("|%s<!DOCTYPE %s>"%(' '*indent, name))
+                rv.append(u"|%s<!DOCTYPE %s>"%(u' '*indent, name))
             
         elif isinstance(element, BeautifulSoup):
-            if element.name == "[document_fragment]":
-                rv.append("#document-fragment")                
+            if element.name == u"[document_fragment]":
+                rv.append(u"#document-fragment")                
             else:
-                rv.append("#document")
+                rv.append(u"#document")
 
         elif isinstance(element, Comment):
-            rv.append("|%s<!-- %s -->"%(' '*indent, element.string))
+            rv.append(u"|%s<!-- %s -->"%(u' '*indent, element.string))
         elif isinstance(element, unicode):
-            rv.append("|%s\"%s\"" %(' '*indent, element))
+            rv.append(u"|%s\"%s\"" %(u' '*indent, element))
         else:
-            rv.append("|%s<%s>"%(' '*indent, element.name))
+            rv.append(u"|%s<%s>"%(u' '*indent, element.name))
             if element.attrs:
                 for name, value in sorted(element.attrs):
-                    rv.append('|%s%s="%s"' % (' '*(indent+2), name, value))
+                    rv.append(u'|%s%s="%s"' % (u' '*(indent+2), name, value))
         indent += 2
-        if hasattr(element, "contents"):
+        if hasattr(element, u"contents"):
             for child in element.contents:
                 serializeElement(child, indent)
+    serializeElement.func_annotations = {}
     serializeElement(element, 0)
 
-    return "\n".join(rv)
+    return u"\n".join(rv)
+testSerializer.func_annotations = {}

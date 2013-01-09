@@ -1,16 +1,16 @@
+from __future__ import absolute_import
 import os
 import sys
 import unittest
 import warnings
+from itertools import izip
 
 try:
     unittest.TestCase.assertEqual
 except AttributeError:
     unittest.TestCase.assertEqual = unittest.TestCase.assertEquals
 
-warnings.simplefilter("error")
-
-from support import get_data_files, TestData, convertExpected
+from .support import get_data_files, TestData, convertExpected
 
 from html5lib import html5parser, treewalkers, treebuilders, constants
 from html5lib.filters.lint import Filter as LintFilter, LintError
@@ -25,7 +25,7 @@ def PullDOMAdapter(node):
                 yield event
 
     elif node.nodeType == Node.DOCUMENT_TYPE_NODE:
-        raise NotImplementedError("DOCTYPE nodes are not supported by PullDOM")
+        raise NotImplementedError(u"DOCTYPE nodes are not supported by PullDOM")
 
     elif node.nodeType == Node.COMMENT_NODE:
         yield COMMENT, node
@@ -41,45 +41,46 @@ def PullDOMAdapter(node):
         yield END_ELEMENT, node
 
     else:
-        raise NotImplementedError("Node type not supported: " + str(node.nodeType))
+        raise NotImplementedError(u"Node type not supported: " + unicode(node.nodeType))
+PullDOMAdapter.func_annotations = {}
 
 treeTypes = {
-"simpletree":  {"builder": treebuilders.getTreeBuilder("simpletree"),
-                "walker":  treewalkers.getTreeWalker("simpletree")},
-"DOM":         {"builder": treebuilders.getTreeBuilder("dom"),
-                "walker":  treewalkers.getTreeWalker("dom")},
-"PullDOM":     {"builder": treebuilders.getTreeBuilder("dom"),
-                "adapter": PullDOMAdapter,
-                "walker":  treewalkers.getTreeWalker("pulldom")},
+u"simpletree":  {u"builder": treebuilders.getTreeBuilder(u"simpletree"),
+                u"walker":  treewalkers.getTreeWalker(u"simpletree")},
+u"DOM":         {u"builder": treebuilders.getTreeBuilder(u"dom"),
+                u"walker":  treewalkers.getTreeWalker(u"dom")},
+u"PullDOM":     {u"builder": treebuilders.getTreeBuilder(u"dom"),
+                u"adapter": PullDOMAdapter,
+                u"walker":  treewalkers.getTreeWalker(u"pulldom")},
 }
 
 #Try whatever etree implementations are available from a list that are
 #"supposed" to work
 try:
     import xml.etree.ElementTree as ElementTree
-    treeTypes['ElementTree'] = \
-        {"builder": treebuilders.getTreeBuilder("etree", ElementTree),
-         "walker":  treewalkers.getTreeWalker("etree", ElementTree)}
+    treeTypes[u'ElementTree'] = \
+        {u"builder": treebuilders.getTreeBuilder(u"etree", ElementTree),
+         u"walker":  treewalkers.getTreeWalker(u"etree", ElementTree)}
 except ImportError:
     try:
         import elementtree.ElementTree as ElementTree
-        treeTypes['ElementTree'] = \
-            {"builder": treebuilders.getTreeBuilder("etree", ElementTree),
-             "walker":  treewalkers.getTreeWalker("etree", ElementTree)}
+        treeTypes[u'ElementTree'] = \
+            {u"builder": treebuilders.getTreeBuilder(u"etree", ElementTree),
+             u"walker":  treewalkers.getTreeWalker(u"etree", ElementTree)}
     except ImportError:
         pass
 
 try:
     import xml.etree.cElementTree as ElementTree
-    treeTypes['cElementTree'] = \
-        {"builder": treebuilders.getTreeBuilder("etree", ElementTree),
-         "walker":  treewalkers.getTreeWalker("etree", ElementTree)}
+    treeTypes[u'cElementTree'] = \
+        {u"builder": treebuilders.getTreeBuilder(u"etree", ElementTree),
+         u"walker":  treewalkers.getTreeWalker(u"etree", ElementTree)}
 except ImportError:
     try:
         import cElementTree as ElementTree
-        treeTypes['cElementTree'] = \
-            {"builder": treebuilders.getTreeBuilder("etree", ElementTree),
-             "walker":  treewalkers.getTreeWalker("etree", ElementTree)}
+        treeTypes[u'cElementTree'] = \
+            {u"builder": treebuilders.getTreeBuilder(u"etree", ElementTree),
+             u"walker":  treewalkers.getTreeWalker(u"etree", ElementTree)}
     except ImportError:
         pass
 
@@ -88,17 +89,17 @@ try:
 #    treeTypes['lxml_as_etree'] = \
 #        {"builder": treebuilders.getTreeBuilder("etree", ElementTree),
 #         "walker":  treewalkers.getTreeWalker("etree", ElementTree)}
-    treeTypes['lxml_native'] = \
-        {"builder": treebuilders.getTreeBuilder("lxml"),
-         "walker":  treewalkers.getTreeWalker("lxml")}
+    treeTypes[u'lxml_native'] = \
+        {u"builder": treebuilders.getTreeBuilder(u"lxml"),
+         u"walker":  treewalkers.getTreeWalker(u"lxml")}
 except ImportError:
     pass
 
 try:
     import BeautifulSoup
-    treeTypes["beautifulsoup"] = \
-        {"builder": treebuilders.getTreeBuilder("beautifulsoup"),
-         "walker":  treewalkers.getTreeWalker("beautifulsoup")}
+    treeTypes[u"beautifulsoup"] = \
+        {u"builder": treebuilders.getTreeBuilder(u"beautifulsoup"),
+         u"walker":  treewalkers.getTreeWalker(u"beautifulsoup")}
 except ImportError:
     pass
     
@@ -106,9 +107,9 @@ except ImportError:
 #"supposed" to work
 try:
     import pxdom
-    treeTypes['pxdom'] = \
-        {"builder": treebuilders.getTreeBuilder("dom", pxdom),
-         "walker":  treewalkers.getTreeWalker("dom")}
+    treeTypes[u'pxdom'] = \
+        {u"builder": treebuilders.getTreeBuilder(u"dom", pxdom),
+         u"walker":  treewalkers.getTreeWalker(u"dom")}
 except ImportError:
     pass
 
@@ -118,44 +119,45 @@ try:
 
     def GenshiAdapter(tree):
         text = None
-        for token in treewalkers.getTreeWalker("simpletree")(tree):
-            type = token["type"]
-            if type in ("Characters", "SpaceCharacters"):
+        for token in treewalkers.getTreeWalker(u"simpletree")(tree):
+            type = token[u"type"]
+            if type in (u"Characters", u"SpaceCharacters"):
                 if text is None:
-                    text = token["data"]
+                    text = token[u"data"]
                 else:
-                    text += token["data"]
+                    text += token[u"data"]
             elif text is not None:
                 yield TEXT, text, (None, -1, -1)
                 text = None
 
-            if type in ("StartTag", "EmptyTag"):
-                if token["namespace"]:
-                    name = u"{%s}%s" % (token["namespace"], token["name"])
+            if type in (u"StartTag", u"EmptyTag"):
+                if token[u"namespace"]:
+                    name = u"{%s}%s" % (token[u"namespace"], token[u"name"])
                 else:
-                    name = token["name"]
+                    name = token[u"name"]
                 yield (START,
                        (QName(name),
-                        Attrs([(QName(attr),value) for attr,value in token["data"]])),
+                        Attrs([(QName(attr),value) for attr,value in token[u"data"]])),
                        (None, -1, -1))
-                if type == "EmptyTag":
-                    type = "EndTag"
+                if type == u"EmptyTag":
+                    type = u"EndTag"
 
-            if type == "EndTag":
-                yield END, QName(token["name"]), (None, -1, -1)
+            if type == u"EndTag":
+                yield END, QName(token[u"name"]), (None, -1, -1)
 
-            elif type == "Comment":
-                yield COMMENT, token["data"], (None, -1, -1)
+            elif type == u"Comment":
+                yield COMMENT, token[u"data"], (None, -1, -1)
 
-            elif type == "Doctype":
-                yield DOCTYPE, (token["name"], token["publicId"], 
-                                token["systemId"]), (None, -1, -1)
+            elif type == u"Doctype":
+                yield DOCTYPE, (token[u"name"], token[u"publicId"], 
+                                token[u"systemId"]), (None, -1, -1)
 
             else:
                 pass # FIXME: What to do?
 
         if text is not None:
             yield TEXT, text, (None, -1, -1)
+    GenshiAdapter.func_annotations = {}
 
     #treeTypes["genshi"] = \
     #    {"builder": treebuilders.getTreeBuilder("simpletree"),
@@ -167,12 +169,12 @@ except ImportError:
 def concatenateCharacterTokens(tokens):
     charactersToken = None
     for token in tokens:
-        type = token["type"]
-        if type in ("Characters", "SpaceCharacters"):
+        type = token[u"type"]
+        if type in (u"Characters", u"SpaceCharacters"):
             if charactersToken is None:
-                charactersToken = {"type": "Characters", "data": token["data"]}
+                charactersToken = {u"type": u"Characters", u"data": token[u"data"]}
             else:
-                charactersToken["data"] += token["data"]
+                charactersToken[u"data"] += token[u"data"]
         else:
             if charactersToken is not None:
                 yield charactersToken
@@ -180,25 +182,26 @@ def concatenateCharacterTokens(tokens):
             yield token
     if charactersToken is not None:
         yield charactersToken
+concatenateCharacterTokens.func_annotations = {}
 
 def convertTokens(tokens):
     output = []
     indent = 0
     for token in concatenateCharacterTokens(tokens):
-        type = token["type"]
-        if type in ("StartTag", "EmptyTag"):
-            if (token["namespace"] and
-                token["namespace"] != constants.namespaces["html"]):
-                if token["namespace"] in constants.prefixes:
-                    name = constants.prefixes[token["namespace"]]
+        type = token[u"type"]
+        if type in (u"StartTag", u"EmptyTag"):
+            if (token[u"namespace"] and
+                token[u"namespace"] != constants.namespaces[u"html"]):
+                if token[u"namespace"] in constants.prefixes:
+                    name = constants.prefixes[token[u"namespace"]]
                 else:
-                    name = token["namespace"]
-                name += u" " + token["name"]
+                    name = token[u"namespace"]
+                name += u" " + token[u"name"]
             else:
-                name = token["name"]
-            output.append(u"%s<%s>" % (" "*indent, name))
+                name = token[u"name"]
+            output.append(u"%s<%s>" % (u" "*indent, name))
             indent += 2
-            attrs = token["data"]
+            attrs = token[u"data"]
             if attrs:
                 #TODO: Remove this if statement, attrs should always exist
                 for (namespace,name),value in sorted(attrs.items()):
@@ -210,69 +213,74 @@ def convertTokens(tokens):
                         outputname += u" " + name
                     else:
                         outputname = name
-                    output.append(u"%s%s=\"%s\"" % (" "*indent, outputname, value))
-            if type == "EmptyTag":
+                    output.append(u"%s%s=\"%s\"" % (u" "*indent, outputname, value))
+            if type == u"EmptyTag":
                 indent -= 2
-        elif type == "EndTag":
+        elif type == u"EndTag":
             indent -= 2
-        elif type == "Comment":
-            output.append("%s<!-- %s -->" % (" "*indent, token["data"]))
-        elif type == "Doctype":
-            if token["name"]:
-                if token["publicId"]:
-                    output.append("""%s<!DOCTYPE %s "%s" "%s">"""% 
-                                  (" "*indent, token["name"], 
-                                   token["publicId"],
-                                   token["systemId"] and token["systemId"] or ""))
-                elif token["systemId"]:
-                    output.append("""%s<!DOCTYPE %s "" "%s">"""% 
-                                  (" "*indent, token["name"], 
-                                   token["systemId"]))
+        elif type == u"Comment":
+            output.append(u"%s<!-- %s -->" % (u" "*indent, token[u"data"]))
+        elif type == u"Doctype":
+            if token[u"name"]:
+                if token[u"publicId"]:
+                    output.append(u"""%s<!DOCTYPE %s "%s" "%s">"""% 
+                                  (u" "*indent, token[u"name"], 
+                                   token[u"publicId"],
+                                   token[u"systemId"] and token[u"systemId"] or u""))
+                elif token[u"systemId"]:
+                    output.append(u"""%s<!DOCTYPE %s "" "%s">"""% 
+                                  (u" "*indent, token[u"name"], 
+                                   token[u"systemId"]))
                 else:
-                    output.append("%s<!DOCTYPE %s>"%(" "*indent,
-                                                     token["name"]))
+                    output.append(u"%s<!DOCTYPE %s>"%(u" "*indent,
+                                                     token[u"name"]))
             else:
-                output.append("%s<!DOCTYPE >" % (" "*indent,))
-        elif type in ("Characters", "SpaceCharacters"):
-            output.append("%s\"%s\"" % (" "*indent, token["data"]))
+                output.append(u"%s<!DOCTYPE >" % (u" "*indent,))
+        elif type in (u"Characters", u"SpaceCharacters"):
+            output.append(u"%s\"%s\"" % (u" "*indent, token[u"data"]))
         else:
             pass # TODO: what to do with errors?
     return u"\n".join(output)
+convertTokens.func_annotations = {}
 
 import re
-attrlist = re.compile(r"^(\s+)\w+=.*(\n\1\w+=.*)+",re.M)
+attrlist = re.compile(ur"^(\s+)\w+=.*(\n\1\w+=.*)+",re.M)
 def sortattrs(x):
-  lines = x.group(0).split("\n")
+  lines = x.group(0).split(u"\n")
   lines.sort()
-  return "\n".join(lines)
+  return u"\n".join(lines)
+sortattrs.func_annotations = {}
 
 
 class TokenTestCase(unittest.TestCase):
     def test_all_tokens(self):
         expected = [
-            {'data': {}, 'type': 'StartTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'html'},
-            {'data': {}, 'type': 'StartTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'head'},
-            {'data': {}, 'type': 'EndTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'head'},
-            {'data': {}, 'type': 'StartTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'body'},
-            {'data': u'a', 'type': 'Characters'},
-            {'data': {}, 'type': 'StartTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'div'},
-            {'data': u'b', 'type': 'Characters'},
-            {'data': {}, 'type': 'EndTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'div'},
-            {'data': u'c', 'type': 'Characters'},
-            {'data': {}, 'type': 'EndTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'body'},
-            {'data': {}, 'type': 'EndTag', 'namespace': u'http://www.w3.org/1999/xhtml', 'name': u'html'}
+            {u'data': {}, u'type': u'StartTag', u'namespace': u'http://www.w3.org/1999/xhtml', u'name': u'html'},
+            {u'data': {}, u'type': u'StartTag', u'namespace': u'http://www.w3.org/1999/xhtml', u'name': u'head'},
+            {u'data': {}, u'type': u'EndTag', u'namespace': u'http://www.w3.org/1999/xhtml', u'name': u'head'},
+            {u'data': {}, u'type': u'StartTag', u'namespace': u'http://www.w3.org/1999/xhtml', u'name': u'body'},
+            {u'data': u'a', u'type': u'Characters'},
+            {u'data': {}, u'type': u'StartTag', u'namespace': u'http://www.w3.org/1999/xhtml', u'name': u'div'},
+            {u'data': u'b', u'type': u'Characters'},
+            {u'data': {}, u'type': u'EndTag', u'namespace': u'http://www.w3.org/1999/xhtml', u'name': u'div'},
+            {u'data': u'c', u'type': u'Characters'},
+            {u'data': {}, u'type': u'EndTag', u'namespace': u'http://www.w3.org/1999/xhtml', u'name': u'body'},
+            {u'data': {}, u'type': u'EndTag', u'namespace': u'http://www.w3.org/1999/xhtml', u'name': u'html'}
             ]
-        for treeName, treeCls in treeTypes.iteritems():
-            p = html5parser.HTMLParser(tree = treeCls["builder"])
-            document = p.parse("<html><head></head><body>a<div>b</div>c</body></html>")
-            document = treeCls.get("adapter", lambda x: x)(document)
-            output = treeCls["walker"](document)
-            for expectedToken, outputToken in zip(expected, output):
+        for treeName, treeCls in treeTypes.items():
+            p = html5parser.HTMLParser(tree = treeCls[u"builder"])
+            document = p.parse(u"<html><head></head><body>a<div>b</div>c</body></html>")
+            document = treeCls.get(u"adapter", lambda x: x)(document)
+            output = treeCls[u"walker"](document)
+            for expectedToken, outputToken in izip(expected, output):
                 self.assertEqual(expectedToken, outputToken)
+    test_all_tokens.func_annotations = {}
 
 def runTreewalkerTest(innerHTML, input, expected, errors, treeClass):
+    warnings.resetwarnings()
+    warnings.simplefilter(u"error")
     try:
-        p = html5parser.HTMLParser(tree = treeClass["builder"])
+        p = html5parser.HTMLParser(tree = treeClass[u"builder"])
         if innerHTML:
             document = p.parseFragment(input, innerHTML)
         else:
@@ -281,35 +289,39 @@ def runTreewalkerTest(innerHTML, input, expected, errors, treeClass):
         #Ignore testcases we know we don't pass
         return
 
-    document = treeClass.get("adapter", lambda x: x)(document)
+    document = treeClass.get(u"adapter", lambda x: x)(document)
     try:
-        output = convertTokens(treeClass["walker"](document))
+        output = convertTokens(treeClass[u"walker"](document))
         output = attrlist.sub(sortattrs, output)
         expected = attrlist.sub(sortattrs, convertExpected(expected))
-        assert expected == output, "\n".join([
-                "", "Input:", input,
-                "", "Expected:", expected,
-                "", "Received:", output
+        assert expected == output, u"\n".join([
+                u"", u"Input:", input,
+                u"", u"Expected:", expected,
+                u"", u"Received:", output
                 ])
     except NotImplementedError:
         pass # Amnesty for those that confess...
+runTreewalkerTest.func_annotations = {}
             
 def test_treewalker():
-    sys.stdout.write('Testing tree walkers '+ " ".join(treeTypes.keys()) + "\n")
+    sys.stdout.write(u'Testing tree walkers '+ u" ".join(list(treeTypes.keys())) + u"\n")
 
-    for treeName, treeCls in treeTypes.iteritems():
-        files = get_data_files('tree-construction')
+    for treeName, treeCls in treeTypes.items():
+        files = get_data_files(u'tree-construction')
         for filename in files:
-            testName = os.path.basename(filename).replace(".dat","")
+            testName = os.path.basename(filename).replace(u".dat",u"")
+            if testName == u"main-element":
+                continue
 
-            tests = TestData(filename, "data")
+            tests = TestData(filename, u"data")
 
             for index, test in enumerate(tests):
                 (input, errors,
-                 innerHTML, expected) = [test[key] for key in ("data", "errors",
-                                                               "document-fragment",
-                                                               "document")]
-                errors = errors.split("\n")
+                 innerHTML, expected) = [test[key] for key in (u"data", u"errors",
+                                                               u"document-fragment",
+                                                               u"document")]
+                errors = errors.split(u"\n")
                 yield runTreewalkerTest, innerHTML, input, expected, errors, treeCls
+test_treewalker.func_annotations = {}
 
 

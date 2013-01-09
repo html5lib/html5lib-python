@@ -1,141 +1,142 @@
+from __future__ import absolute_import
 import re
 from xml.sax.saxutils import escape, unescape
 
-from tokenizer import HTMLTokenizer
-from constants import tokenTypes
+from .tokenizer import HTMLTokenizer
+from .constants import tokenTypes
 
 class HTMLSanitizerMixin(object):
-    """ sanitization of XHTML+MathML+SVG and of inline style attributes."""
+    u""" sanitization of XHTML+MathML+SVG and of inline style attributes."""
 
-    acceptable_elements = ['a', 'abbr', 'acronym', 'address', 'area',
-        'article', 'aside', 'audio', 'b', 'big', 'blockquote', 'br', 'button',
-        'canvas', 'caption', 'center', 'cite', 'code', 'col', 'colgroup',
-        'command', 'datagrid', 'datalist', 'dd', 'del', 'details', 'dfn',
-        'dialog', 'dir', 'div', 'dl', 'dt', 'em', 'event-source', 'fieldset',
-        'figcaption', 'figure', 'footer', 'font', 'form', 'header', 'h1',
-        'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'i', 'img', 'input', 'ins',
-        'keygen', 'kbd', 'label', 'legend', 'li', 'm', 'map', 'menu', 'meter',
-        'multicol', 'nav', 'nextid', 'ol', 'output', 'optgroup', 'option',
-        'p', 'pre', 'progress', 'q', 's', 'samp', 'section', 'select',
-        'small', 'sound', 'source', 'spacer', 'span', 'strike', 'strong',
-        'sub', 'sup', 'table', 'tbody', 'td', 'textarea', 'time', 'tfoot',
-        'th', 'thead', 'tr', 'tt', 'u', 'ul', 'var', 'video']
+    acceptable_elements = [u'a', u'abbr', u'acronym', u'address', u'area',
+        u'article', u'aside', u'audio', u'b', u'big', u'blockquote', u'br', u'button',
+        u'canvas', u'caption', u'center', u'cite', u'code', u'col', u'colgroup',
+        u'command', u'datagrid', u'datalist', u'dd', u'del', u'details', u'dfn',
+        u'dialog', u'dir', u'div', u'dl', u'dt', u'em', u'event-source', u'fieldset',
+        u'figcaption', u'figure', u'footer', u'font', u'form', u'header', u'h1',
+        u'h2', u'h3', u'h4', u'h5', u'h6', u'hr', u'i', u'img', u'input', u'ins',
+        u'keygen', u'kbd', u'label', u'legend', u'li', u'm', u'map', u'menu', u'meter',
+        u'multicol', u'nav', u'nextid', u'ol', u'output', u'optgroup', u'option',
+        u'p', u'pre', u'progress', u'q', u's', u'samp', u'section', u'select',
+        u'small', u'sound', u'source', u'spacer', u'span', u'strike', u'strong',
+        u'sub', u'sup', u'table', u'tbody', u'td', u'textarea', u'time', u'tfoot',
+        u'th', u'thead', u'tr', u'tt', u'u', u'ul', u'var', u'video']
       
-    mathml_elements = ['maction', 'math', 'merror', 'mfrac', 'mi',
-        'mmultiscripts', 'mn', 'mo', 'mover', 'mpadded', 'mphantom',
-        'mprescripts', 'mroot', 'mrow', 'mspace', 'msqrt', 'mstyle', 'msub',
-        'msubsup', 'msup', 'mtable', 'mtd', 'mtext', 'mtr', 'munder',
-        'munderover', 'none']
+    mathml_elements = [u'maction', u'math', u'merror', u'mfrac', u'mi',
+        u'mmultiscripts', u'mn', u'mo', u'mover', u'mpadded', u'mphantom',
+        u'mprescripts', u'mroot', u'mrow', u'mspace', u'msqrt', u'mstyle', u'msub',
+        u'msubsup', u'msup', u'mtable', u'mtd', u'mtext', u'mtr', u'munder',
+        u'munderover', u'none']
       
-    svg_elements = ['a', 'animate', 'animateColor', 'animateMotion',
-        'animateTransform', 'clipPath', 'circle', 'defs', 'desc', 'ellipse',
-        'font-face', 'font-face-name', 'font-face-src', 'g', 'glyph', 'hkern',
-        'linearGradient', 'line', 'marker', 'metadata', 'missing-glyph',
-        'mpath', 'path', 'polygon', 'polyline', 'radialGradient', 'rect',
-        'set', 'stop', 'svg', 'switch', 'text', 'title', 'tspan', 'use']
+    svg_elements = [u'a', u'animate', u'animateColor', u'animateMotion',
+        u'animateTransform', u'clipPath', u'circle', u'defs', u'desc', u'ellipse',
+        u'font-face', u'font-face-name', u'font-face-src', u'g', u'glyph', u'hkern',
+        u'linearGradient', u'line', u'marker', u'metadata', u'missing-glyph',
+        u'mpath', u'path', u'polygon', u'polyline', u'radialGradient', u'rect',
+        u'set', u'stop', u'svg', u'switch', u'text', u'title', u'tspan', u'use']
         
-    acceptable_attributes = ['abbr', 'accept', 'accept-charset', 'accesskey',
-        'action', 'align', 'alt', 'autocomplete', 'autofocus', 'axis',
-        'background', 'balance', 'bgcolor', 'bgproperties', 'border',
-        'bordercolor', 'bordercolordark', 'bordercolorlight', 'bottompadding',
-        'cellpadding', 'cellspacing', 'ch', 'challenge', 'char', 'charoff',
-        'choff', 'charset', 'checked', 'cite', 'class', 'clear', 'color',
-        'cols', 'colspan', 'compact', 'contenteditable', 'controls', 'coords',
-        'data', 'datafld', 'datapagesize', 'datasrc', 'datetime', 'default',
-        'delay', 'dir', 'disabled', 'draggable', 'dynsrc', 'enctype', 'end',
-        'face', 'for', 'form', 'frame', 'galleryimg', 'gutter', 'headers',
-        'height', 'hidefocus', 'hidden', 'high', 'href', 'hreflang', 'hspace',
-        'icon', 'id', 'inputmode', 'ismap', 'keytype', 'label', 'leftspacing',
-        'lang', 'list', 'longdesc', 'loop', 'loopcount', 'loopend',
-        'loopstart', 'low', 'lowsrc', 'max', 'maxlength', 'media', 'method',
-        'min', 'multiple', 'name', 'nohref', 'noshade', 'nowrap', 'open',
-        'optimum', 'pattern', 'ping', 'point-size', 'poster', 'pqg', 'preload',
-        'prompt', 'radiogroup', 'readonly', 'rel', 'repeat-max', 'repeat-min',
-        'replace', 'required', 'rev', 'rightspacing', 'rows', 'rowspan',
-        'rules', 'scope', 'selected', 'shape', 'size', 'span', 'src', 'start',
-        'step', 'style', 'summary', 'suppress', 'tabindex', 'target',
-        'template', 'title', 'toppadding', 'type', 'unselectable', 'usemap',
-        'urn', 'valign', 'value', 'variable', 'volume', 'vspace', 'vrml',
-        'width', 'wrap', 'xml:lang']
+    acceptable_attributes = [u'abbr', u'accept', u'accept-charset', u'accesskey',
+        u'action', u'align', u'alt', u'autocomplete', u'autofocus', u'axis',
+        u'background', u'balance', u'bgcolor', u'bgproperties', u'border',
+        u'bordercolor', u'bordercolordark', u'bordercolorlight', u'bottompadding',
+        u'cellpadding', u'cellspacing', u'ch', u'challenge', u'char', u'charoff',
+        u'choff', u'charset', u'checked', u'cite', u'class', u'clear', u'color',
+        u'cols', u'colspan', u'compact', u'contenteditable', u'controls', u'coords',
+        u'data', u'datafld', u'datapagesize', u'datasrc', u'datetime', u'default',
+        u'delay', u'dir', u'disabled', u'draggable', u'dynsrc', u'enctype', u'end',
+        u'face', u'for', u'form', u'frame', u'galleryimg', u'gutter', u'headers',
+        u'height', u'hidefocus', u'hidden', u'high', u'href', u'hreflang', u'hspace',
+        u'icon', u'id', u'inputmode', u'ismap', u'keytype', u'label', u'leftspacing',
+        u'lang', u'list', u'longdesc', u'loop', u'loopcount', u'loopend',
+        u'loopstart', u'low', u'lowsrc', u'max', u'maxlength', u'media', u'method',
+        u'min', u'multiple', u'name', u'nohref', u'noshade', u'nowrap', u'open',
+        u'optimum', u'pattern', u'ping', u'point-size', u'poster', u'pqg', u'preload',
+        u'prompt', u'radiogroup', u'readonly', u'rel', u'repeat-max', u'repeat-min',
+        u'replace', u'required', u'rev', u'rightspacing', u'rows', u'rowspan',
+        u'rules', u'scope', u'selected', u'shape', u'size', u'span', u'src', u'start',
+        u'step', u'style', u'summary', u'suppress', u'tabindex', u'target',
+        u'template', u'title', u'toppadding', u'type', u'unselectable', u'usemap',
+        u'urn', u'valign', u'value', u'variable', u'volume', u'vspace', u'vrml',
+        u'width', u'wrap', u'xml:lang']
 
-    mathml_attributes = ['actiontype', 'align', 'columnalign', 'columnalign',
-        'columnalign', 'columnlines', 'columnspacing', 'columnspan', 'depth',
-        'display', 'displaystyle', 'equalcolumns', 'equalrows', 'fence',
-        'fontstyle', 'fontweight', 'frame', 'height', 'linethickness', 'lspace',
-        'mathbackground', 'mathcolor', 'mathvariant', 'mathvariant', 'maxsize',
-        'minsize', 'other', 'rowalign', 'rowalign', 'rowalign', 'rowlines',
-        'rowspacing', 'rowspan', 'rspace', 'scriptlevel', 'selection',
-        'separator', 'stretchy', 'width', 'width', 'xlink:href', 'xlink:show',
-        'xlink:type', 'xmlns', 'xmlns:xlink']
+    mathml_attributes = [u'actiontype', u'align', u'columnalign', u'columnalign',
+        u'columnalign', u'columnlines', u'columnspacing', u'columnspan', u'depth',
+        u'display', u'displaystyle', u'equalcolumns', u'equalrows', u'fence',
+        u'fontstyle', u'fontweight', u'frame', u'height', u'linethickness', u'lspace',
+        u'mathbackground', u'mathcolor', u'mathvariant', u'mathvariant', u'maxsize',
+        u'minsize', u'other', u'rowalign', u'rowalign', u'rowalign', u'rowlines',
+        u'rowspacing', u'rowspan', u'rspace', u'scriptlevel', u'selection',
+        u'separator', u'stretchy', u'width', u'width', u'xlink:href', u'xlink:show',
+        u'xlink:type', u'xmlns', u'xmlns:xlink']
   
-    svg_attributes = ['accent-height', 'accumulate', 'additive', 'alphabetic',
-        'arabic-form', 'ascent', 'attributeName', 'attributeType',
-        'baseProfile', 'bbox', 'begin', 'by', 'calcMode', 'cap-height',
-        'class', 'clip-path', 'color', 'color-rendering', 'content', 'cx',
-        'cy', 'd', 'dx', 'dy', 'descent', 'display', 'dur', 'end', 'fill',
-        'fill-opacity', 'fill-rule', 'font-family', 'font-size',
-        'font-stretch', 'font-style', 'font-variant', 'font-weight', 'from',
-        'fx', 'fy', 'g1', 'g2', 'glyph-name', 'gradientUnits', 'hanging',
-        'height', 'horiz-adv-x', 'horiz-origin-x', 'id', 'ideographic', 'k',
-        'keyPoints', 'keySplines', 'keyTimes', 'lang', 'marker-end',
-        'marker-mid', 'marker-start', 'markerHeight', 'markerUnits',
-        'markerWidth', 'mathematical', 'max', 'min', 'name', 'offset',
-        'opacity', 'orient', 'origin', 'overline-position',
-        'overline-thickness', 'panose-1', 'path', 'pathLength', 'points',
-        'preserveAspectRatio', 'r', 'refX', 'refY', 'repeatCount',
-        'repeatDur', 'requiredExtensions', 'requiredFeatures', 'restart',
-        'rotate', 'rx', 'ry', 'slope', 'stemh', 'stemv', 'stop-color',
-        'stop-opacity', 'strikethrough-position', 'strikethrough-thickness',
-        'stroke', 'stroke-dasharray', 'stroke-dashoffset', 'stroke-linecap',
-        'stroke-linejoin', 'stroke-miterlimit', 'stroke-opacity',
-        'stroke-width', 'systemLanguage', 'target', 'text-anchor', 'to',
-        'transform', 'type', 'u1', 'u2', 'underline-position',
-        'underline-thickness', 'unicode', 'unicode-range', 'units-per-em',
-        'values', 'version', 'viewBox', 'visibility', 'width', 'widths', 'x',
-        'x-height', 'x1', 'x2', 'xlink:actuate', 'xlink:arcrole',
-        'xlink:href', 'xlink:role', 'xlink:show', 'xlink:title', 'xlink:type',
-        'xml:base', 'xml:lang', 'xml:space', 'xmlns', 'xmlns:xlink', 'y',
-        'y1', 'y2', 'zoomAndPan']
+    svg_attributes = [u'accent-height', u'accumulate', u'additive', u'alphabetic',
+        u'arabic-form', u'ascent', u'attributeName', u'attributeType',
+        u'baseProfile', u'bbox', u'begin', u'by', u'calcMode', u'cap-height',
+        u'class', u'clip-path', u'color', u'color-rendering', u'content', u'cx',
+        u'cy', u'd', u'dx', u'dy', u'descent', u'display', u'dur', u'end', u'fill',
+        u'fill-opacity', u'fill-rule', u'font-family', u'font-size',
+        u'font-stretch', u'font-style', u'font-variant', u'font-weight', u'from',
+        u'fx', u'fy', u'g1', u'g2', u'glyph-name', u'gradientUnits', u'hanging',
+        u'height', u'horiz-adv-x', u'horiz-origin-x', u'id', u'ideographic', u'k',
+        u'keyPoints', u'keySplines', u'keyTimes', u'lang', u'marker-end',
+        u'marker-mid', u'marker-start', u'markerHeight', u'markerUnits',
+        u'markerWidth', u'mathematical', u'max', u'min', u'name', u'offset',
+        u'opacity', u'orient', u'origin', u'overline-position',
+        u'overline-thickness', u'panose-1', u'path', u'pathLength', u'points',
+        u'preserveAspectRatio', u'r', u'refX', u'refY', u'repeatCount',
+        u'repeatDur', u'requiredExtensions', u'requiredFeatures', u'restart',
+        u'rotate', u'rx', u'ry', u'slope', u'stemh', u'stemv', u'stop-color',
+        u'stop-opacity', u'strikethrough-position', u'strikethrough-thickness',
+        u'stroke', u'stroke-dasharray', u'stroke-dashoffset', u'stroke-linecap',
+        u'stroke-linejoin', u'stroke-miterlimit', u'stroke-opacity',
+        u'stroke-width', u'systemLanguage', u'target', u'text-anchor', u'to',
+        u'transform', u'type', u'u1', u'u2', u'underline-position',
+        u'underline-thickness', u'unicode', u'unicode-range', u'units-per-em',
+        u'values', u'version', u'viewBox', u'visibility', u'width', u'widths', u'x',
+        u'x-height', u'x1', u'x2', u'xlink:actuate', u'xlink:arcrole',
+        u'xlink:href', u'xlink:role', u'xlink:show', u'xlink:title', u'xlink:type',
+        u'xml:base', u'xml:lang', u'xml:space', u'xmlns', u'xmlns:xlink', u'y',
+        u'y1', u'y2', u'zoomAndPan']
 
-    attr_val_is_uri = ['href', 'src', 'cite', 'action', 'longdesc', 'poster',
-        'xlink:href', 'xml:base']
+    attr_val_is_uri = [u'href', u'src', u'cite', u'action', u'longdesc', u'poster',
+        u'xlink:href', u'xml:base']
 
-    svg_attr_val_allows_ref = ['clip-path', 'color-profile', 'cursor', 'fill',
-        'filter', 'marker', 'marker-start', 'marker-mid', 'marker-end',
-        'mask', 'stroke']
+    svg_attr_val_allows_ref = [u'clip-path', u'color-profile', u'cursor', u'fill',
+        u'filter', u'marker', u'marker-start', u'marker-mid', u'marker-end',
+        u'mask', u'stroke']
 
-    svg_allow_local_href = ['altGlyph', 'animate', 'animateColor',
-        'animateMotion', 'animateTransform', 'cursor', 'feImage', 'filter',
-        'linearGradient', 'pattern', 'radialGradient', 'textpath', 'tref',
-        'set', 'use']
+    svg_allow_local_href = [u'altGlyph', u'animate', u'animateColor',
+        u'animateMotion', u'animateTransform', u'cursor', u'feImage', u'filter',
+        u'linearGradient', u'pattern', u'radialGradient', u'textpath', u'tref',
+        u'set', u'use']
   
-    acceptable_css_properties = ['azimuth', 'background-color',
-        'border-bottom-color', 'border-collapse', 'border-color',
-        'border-left-color', 'border-right-color', 'border-top-color', 'clear',
-        'color', 'cursor', 'direction', 'display', 'elevation', 'float', 'font',
-        'font-family', 'font-size', 'font-style', 'font-variant', 'font-weight',
-        'height', 'letter-spacing', 'line-height', 'overflow', 'pause',
-        'pause-after', 'pause-before', 'pitch', 'pitch-range', 'richness',
-        'speak', 'speak-header', 'speak-numeral', 'speak-punctuation',
-        'speech-rate', 'stress', 'text-align', 'text-decoration', 'text-indent',
-        'unicode-bidi', 'vertical-align', 'voice-family', 'volume',
-        'white-space', 'width']
+    acceptable_css_properties = [u'azimuth', u'background-color',
+        u'border-bottom-color', u'border-collapse', u'border-color',
+        u'border-left-color', u'border-right-color', u'border-top-color', u'clear',
+        u'color', u'cursor', u'direction', u'display', u'elevation', u'float', u'font',
+        u'font-family', u'font-size', u'font-style', u'font-variant', u'font-weight',
+        u'height', u'letter-spacing', u'line-height', u'overflow', u'pause',
+        u'pause-after', u'pause-before', u'pitch', u'pitch-range', u'richness',
+        u'speak', u'speak-header', u'speak-numeral', u'speak-punctuation',
+        u'speech-rate', u'stress', u'text-align', u'text-decoration', u'text-indent',
+        u'unicode-bidi', u'vertical-align', u'voice-family', u'volume',
+        u'white-space', u'width']
   
-    acceptable_css_keywords = ['auto', 'aqua', 'black', 'block', 'blue',
-        'bold', 'both', 'bottom', 'brown', 'center', 'collapse', 'dashed',
-        'dotted', 'fuchsia', 'gray', 'green', '!important', 'italic', 'left',
-        'lime', 'maroon', 'medium', 'none', 'navy', 'normal', 'nowrap', 'olive',
-        'pointer', 'purple', 'red', 'right', 'solid', 'silver', 'teal', 'top',
-        'transparent', 'underline', 'white', 'yellow']
+    acceptable_css_keywords = [u'auto', u'aqua', u'black', u'block', u'blue',
+        u'bold', u'both', u'bottom', u'brown', u'center', u'collapse', u'dashed',
+        u'dotted', u'fuchsia', u'gray', u'green', u'!important', u'italic', u'left',
+        u'lime', u'maroon', u'medium', u'none', u'navy', u'normal', u'nowrap', u'olive',
+        u'pointer', u'purple', u'red', u'right', u'solid', u'silver', u'teal', u'top',
+        u'transparent', u'underline', u'white', u'yellow']
   
-    acceptable_svg_properties = [ 'fill', 'fill-opacity', 'fill-rule',
-        'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin',
-        'stroke-opacity']
+    acceptable_svg_properties = [ u'fill', u'fill-opacity', u'fill-rule',
+        u'stroke', u'stroke-width', u'stroke-linecap', u'stroke-linejoin',
+        u'stroke-opacity']
   
-    acceptable_protocols = [ 'ed2k', 'ftp', 'http', 'https', 'irc',
-        'mailto', 'news', 'gopher', 'nntp', 'telnet', 'webcal',
-        'xmpp', 'callto', 'feed', 'urn', 'aim', 'rsync', 'tag',
-        'ssh', 'sftp', 'rtsp', 'afs' ]
+    acceptable_protocols = [ u'ed2k', u'ftp', u'http', u'https', u'irc',
+        u'mailto', u'news', u'gopher', u'nntp', u'telnet', u'webcal',
+        u'xmpp', u'callto', u'feed', u'urn', u'aim', u'rsync', u'tag',
+        u'ssh', u'sftp', u'rtsp', u'afs' ]
   
     # subclasses may define their own versions of these constants
     allowed_elements = acceptable_elements + mathml_elements + svg_elements
@@ -159,89 +160,91 @@ class HTMLSanitizerMixin(object):
     def sanitize_token(self, token):
 
         # accommodate filters which use token_type differently
-        token_type = token["type"]
-        if token_type in tokenTypes.keys():
+        token_type = token[u"type"]
+        if token_type in list(tokenTypes.keys()):
           token_type = tokenTypes[token_type]
 
-        if token_type in (tokenTypes["StartTag"], tokenTypes["EndTag"], 
-                             tokenTypes["EmptyTag"]):
-            if token["name"] in self.allowed_elements:
-                if "data" in token:
+        if token_type in (tokenTypes[u"StartTag"], tokenTypes[u"EndTag"], 
+                             tokenTypes[u"EmptyTag"]):
+            if token[u"name"] in self.allowed_elements:
+                if u"data" in token:
                     attrs = dict([(name,val) for name,val in
-                                  token["data"][::-1] 
+                                  token[u"data"][::-1] 
                                   if name in self.allowed_attributes])
                     for attr in self.attr_val_is_uri:
                         if attr not in attrs:
                             continue
-                        val_unescaped = re.sub("[`\000-\040\177-\240\s]+", '',
+                        val_unescaped = re.sub(u"[`\000-\040\177-\240\s]+", u'',
                                                unescape(attrs[attr])).lower()
                         #remove replacement characters from unescaped characters
-                        val_unescaped = val_unescaped.replace(u"\ufffd", "")
-                        if (re.match("^[a-z0-9][-+.a-z0-9]*:",val_unescaped) and
-                            (val_unescaped.split(':')[0] not in 
+                        val_unescaped = val_unescaped.replace(u"\ufffd", u"")
+                        if (re.match(u"^[a-z0-9][-+.a-z0-9]*:",val_unescaped) and
+                            (val_unescaped.split(u':')[0] not in 
                              self.allowed_protocols)):
                             del attrs[attr]
                     for attr in self.svg_attr_val_allows_ref:
                         if attr in attrs:
-                            attrs[attr] = re.sub(r'url\s*\(\s*[^#\s][^)]+?\)',
-                                                 ' ',
+                            attrs[attr] = re.sub(ur'url\s*\(\s*[^#\s][^)]+?\)',
+                                                 u' ',
                                                  unescape(attrs[attr]))
-                    if (token["name"] in self.svg_allow_local_href and
-                        'xlink:href' in attrs and re.search('^\s*[^#\s].*',
-                                                            attrs['xlink:href'])):
-                        del attrs['xlink:href']
-                    if 'style' in attrs:
-                        attrs['style'] = self.sanitize_css(attrs['style'])
-                    token["data"] = [[name,val] for name,val in attrs.items()]
+                    if (token[u"name"] in self.svg_allow_local_href and
+                        u'xlink:href' in attrs and re.search(u'^\s*[^#\s].*',
+                                                            attrs[u'xlink:href'])):
+                        del attrs[u'xlink:href']
+                    if u'style' in attrs:
+                        attrs[u'style'] = self.sanitize_css(attrs[u'style'])
+                    token[u"data"] = [[name,val] for name,val in list(attrs.items())]
                 return token
             else:
-                if token_type == tokenTypes["EndTag"]:
-                    token["data"] = "</%s>" % token["name"]
-                elif token["data"]:
-                    attrs = ''.join([' %s="%s"' % (k,escape(v)) for k,v in token["data"]])
-                    token["data"] = "<%s%s>" % (token["name"],attrs)
+                if token_type == tokenTypes[u"EndTag"]:
+                    token[u"data"] = u"</%s>" % token[u"name"]
+                elif token[u"data"]:
+                    attrs = u''.join([u' %s="%s"' % (k,escape(v)) for k,v in token[u"data"]])
+                    token[u"data"] = u"<%s%s>" % (token[u"name"],attrs)
                 else:
-                    token["data"] = "<%s>" % token["name"]
-                if token.get("selfClosing"):
-                    token["data"]=token["data"][:-1] + "/>"
+                    token[u"data"] = u"<%s>" % token[u"name"]
+                if token.get(u"selfClosing"):
+                    token[u"data"]=token[u"data"][:-1] + u"/>"
 
-                if token["type"] in tokenTypes.keys():
-                    token["type"] = "Characters"
+                if token[u"type"] in list(tokenTypes.keys()):
+                    token[u"type"] = u"Characters"
                 else:
-                    token["type"] = tokenTypes["Characters"]
+                    token[u"type"] = tokenTypes[u"Characters"]
 
-                del token["name"]
+                del token[u"name"]
                 return token
-        elif token_type == tokenTypes["Comment"]:
+        elif token_type == tokenTypes[u"Comment"]:
             pass
         else:
             return token
+    sanitize_token.func_annotations = {}
 
     def sanitize_css(self, style):
         # disallow urls
-        style=re.compile('url\s*\(\s*[^\s)]+?\s*\)\s*').sub(' ',style)
+        style=re.compile(u'url\s*\(\s*[^\s)]+?\s*\)\s*').sub(u' ',style)
 
         # gauntlet
-        if not re.match("""^([:,;#%.\sa-zA-Z0-9!]|\w-\w|'[\s\w]+'|"[\s\w]+"|\([\d,\s]+\))*$""", style): return ''
-        if not re.match("^\s*([-\w]+\s*:[^:;]*(;\s*|$))*$", style): return ''
+        if not re.match(u"""^([:,;#%.\sa-zA-Z0-9!]|\w-\w|'[\s\w]+'|"[\s\w]+"|\([\d,\s]+\))*$""", style): return u''
+        if not re.match(u"^\s*([-\w]+\s*:[^:;]*(;\s*|$))*$", style): return u''
 
         clean = []
-        for prop,value in re.findall("([-\w]+)\s*:\s*([^:;]*)",style):
+        for prop,value in re.findall(u"([-\w]+)\s*:\s*([^:;]*)",style):
           if not value: continue
           if prop.lower() in self.allowed_css_properties:
-              clean.append(prop + ': ' + value + ';')
-          elif prop.split('-')[0].lower() in ['background','border','margin',
-                                              'padding']:
+              clean.append(prop + u': ' + value + u';')
+          elif prop.split(u'-')[0].lower() in [u'background',u'border',u'margin',
+                                              u'padding']:
               for keyword in value.split():
                   if not keyword in self.acceptable_css_keywords and \
-                      not re.match("^(#[0-9a-f]+|rgb\(\d+%?,\d*%?,?\d*%?\)?|\d{0,2}\.?\d{0,2}(cm|em|ex|in|mm|pc|pt|px|%|,|\))?)$",keyword):
+                      not re.match(u"^(#[0-9a-f]+|rgb\(\d+%?,\d*%?,?\d*%?\)?|\d{0,2}\.?\d{0,2}(cm|em|ex|in|mm|pc|pt|px|%|,|\))?)$",keyword):
                       break
               else:
-                  clean.append(prop + ': ' + value + ';')
+                  clean.append(prop + u': ' + value + u';')
           elif prop.lower() in self.allowed_svg_properties:
-              clean.append(prop + ': ' + value + ';')
+              clean.append(prop + u': ' + value + u';')
 
-        return ' '.join(clean)
+        return u' '.join(clean)
+    sanitize_css.func_annotations = {}
 
 class HTMLSanitizer(HTMLTokenizer, HTMLSanitizerMixin):
     def __init__(self, stream, encoding=None, parseMeta=True, useChardet=True,
@@ -250,9 +253,11 @@ class HTMLSanitizer(HTMLTokenizer, HTMLSanitizerMixin):
         #This solution doesn't seem ideal...
         HTMLTokenizer.__init__(self, stream, encoding, parseMeta, useChardet,
                                lowercaseElementName, lowercaseAttrName, parser=parser)
+    __init__.func_annotations = {}
 
     def __iter__(self):
         for token in HTMLTokenizer.__iter__(self):
             token = self.sanitize_token(token)
             if token:
                 yield token
+    __iter__.func_annotations = {}

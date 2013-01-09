@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 try:
     frozenset
 except NameError:
@@ -5,8 +6,7 @@ except NameError:
     from sets import ImmutableSet as frozenset
 
 try:
-    # use functools.reduce to avoid DeprecationWarning with -3
-    from functools import reduce
+    pass # no-op statement to avoid 3to2 introducing parse error
 except ImportError:
     pass
 
@@ -23,20 +23,20 @@ spaceCharacters = u"".join(spaceCharacters)
 try:
     from codecs import register_error, xmlcharrefreplace_errors
 except ImportError:
-    unicode_encode_errors = "strict"
+    unicode_encode_errors = u"strict"
 else:
-    unicode_encode_errors = "htmlentityreplace"
+    unicode_encode_errors = u"htmlentityreplace"
 
     from html5lib.constants import entities
 
     encode_entity_map = {}
     is_ucs4 = len(u"\U0010FFFF") == 1
-    for k, v in entities.items():
+    for k, v in list(entities.items()):
         #skip multi-character entities
         if ((is_ucs4 and len(v) > 1) or
             (not is_ucs4 and len(v) > 2)):
             continue
-        if v != "&":
+        if v != u"&":
             if len(v) == 2:
                 v = utils.surrogatePairToCodepoint(v)
             else:
@@ -68,15 +68,16 @@ else:
             for cp in codepoints:
                 e = encode_entity_map.get(cp)
                 if e:
-                    res.append("&")
+                    res.append(u"&")
                     res.append(e)
-                    if not e.endswith(";"):
-                        res.append(";")
+                    if not e.endswith(u";"):
+                        res.append(u";")
                 else:
-                    res.append("&#x%s;"%(hex(cp)[2:]))
+                    res.append(u"&#x%s;"%(hex(cp)[2:]))
             return (u"".join(res), exc.end)
         else:
             return xmlcharrefreplace_errors(exc)
+    htmlentityreplace_errors.func_annotations = {}
 
     register_error(unicode_encode_errors, htmlentityreplace_errors)
 
@@ -106,14 +107,14 @@ class HTMLSerializer(object):
     strip_whitespace = False
     sanitize = False
 
-    options = ("quote_attr_values", "quote_char", "use_best_quote_char",
-          "minimize_boolean_attributes", "use_trailing_solidus",
-          "space_before_trailing_solidus", "omit_optional_tags",
-          "strip_whitespace", "inject_meta_charset", "escape_lt_in_attrs",
-          "escape_rcdata", "resolve_entities", "sanitize")
+    options = (u"quote_attr_values", u"quote_char", u"use_best_quote_char",
+          u"minimize_boolean_attributes", u"use_trailing_solidus",
+          u"space_before_trailing_solidus", u"omit_optional_tags",
+          u"strip_whitespace", u"inject_meta_charset", u"escape_lt_in_attrs",
+          u"escape_rcdata", u"resolve_entities", u"sanitize")
 
     def __init__(self, **kwargs):
-        """Initialize HTMLSerializer.
+        u"""Initialize HTMLSerializer.
 
         Keyword options (default given first unless specified) include:
 
@@ -156,12 +157,13 @@ class HTMLSerializer(object):
 
         .. _html5lib user documentation: http://code.google.com/p/html5lib/wiki/UserDocumentation
         """
-        if 'quote_char' in kwargs:
+        if u'quote_char' in kwargs:
             self.use_best_quote_char = False
         for attr in self.options:
             setattr(self, attr, kwargs.get(attr, getattr(self, attr)))
         self.errors = []
         self.strict = False
+    __init__.func_annotations = {}
 
     def encode(self, string):
         assert(isinstance(string, unicode))
@@ -169,13 +171,15 @@ class HTMLSerializer(object):
             return string.encode(self.encoding, unicode_encode_errors)
         else:
             return string
+    encode.func_annotations = {}
 
     def encodeStrict(self, string):
         assert(isinstance(string, unicode))
         if self.encoding:
-            return string.encode(self.encoding, "strict")
+            return string.encode(self.encoding, u"strict")
         else:
             return string
+    encodeStrict.func_annotations = {}
 
     def serialize(self, treewalker, encoding=None):
         self.encoding = encoding
@@ -196,43 +200,43 @@ class HTMLSerializer(object):
             from html5lib.filters.optionaltags import Filter
             treewalker = Filter(treewalker)
         for token in treewalker:
-            type = token["type"]
-            if type == "Doctype":
-                doctype = u"<!DOCTYPE %s" % token["name"]
+            type = token[u"type"]
+            if type == u"Doctype":
+                doctype = u"<!DOCTYPE %s" % token[u"name"]
                 
-                if token["publicId"]:
-                    doctype += u' PUBLIC "%s"' % token["publicId"]
-                elif token["systemId"]:
+                if token[u"publicId"]:
+                    doctype += u' PUBLIC "%s"' % token[u"publicId"]
+                elif token[u"systemId"]:
                     doctype += u" SYSTEM"
-                if token["systemId"]:                
-                    if token["systemId"].find(u'"') >= 0:
-                        if token["systemId"].find(u"'") >= 0:
-                            self.serializeError(_("System identifer contains both single and double quote characters"))
+                if token[u"systemId"]:                
+                    if token[u"systemId"].find(u'"') >= 0:
+                        if token[u"systemId"].find(u"'") >= 0:
+                            self.serializeError(_(u"System identifer contains both single and double quote characters"))
                         quote_char = u"'"
                     else:
                         quote_char = u'"'
-                    doctype += u" %s%s%s" % (quote_char, token["systemId"], quote_char)
+                    doctype += u" %s%s%s" % (quote_char, token[u"systemId"], quote_char)
                 
                 doctype += u">"
                 yield self.encodeStrict(doctype)
 
-            elif type in ("Characters", "SpaceCharacters"):
-                if type == "SpaceCharacters" or in_cdata:
-                    if in_cdata and token["data"].find("</") >= 0:
-                        self.serializeError(_("Unexpected </ in CDATA"))
-                    yield self.encode(token["data"])
+            elif type in (u"Characters", u"SpaceCharacters"):
+                if type == u"SpaceCharacters" or in_cdata:
+                    if in_cdata and token[u"data"].find(u"</") >= 0:
+                        self.serializeError(_(u"Unexpected </ in CDATA"))
+                    yield self.encode(token[u"data"])
                 else:
-                    yield self.encode(escape(token["data"]))
+                    yield self.encode(escape(token[u"data"]))
 
-            elif type in ("StartTag", "EmptyTag"):
-                name = token["name"]
+            elif type in (u"StartTag", u"EmptyTag"):
+                name = token[u"name"]
                 yield self.encodeStrict(u"<%s" % name)
                 if name in rcdataElements and not self.escape_rcdata:
                     in_cdata = True
                 elif in_cdata:
-                    self.serializeError(_("Unexpected child element of a CDATA element"))
+                    self.serializeError(_(u"Unexpected child element of a CDATA element"))
                 attributes = []
-                for (attr_namespace,attr_name),attr_value in sorted(token["data"].items()):
+                for (attr_namespace,attr_name),attr_value in sorted(token[u"data"].items()):
                     #TODO: Add namespace support here
                     k = attr_name
                     v = attr_value
@@ -241,7 +245,7 @@ class HTMLSerializer(object):
                     yield self.encodeStrict(k)
                     if not self.minimize_boolean_attributes or \
                       (k not in booleanAttributes.get(name, tuple()) \
-                      and k not in booleanAttributes.get("", tuple())):
+                      and k not in booleanAttributes.get(u"", tuple())):
                         yield self.encodeStrict(u"=")
                         if self.quote_attr_values or not v:
                             quote_attr = True
@@ -273,25 +277,25 @@ class HTMLSerializer(object):
                         yield self.encodeStrict(u"/")
                 yield self.encode(u">")
 
-            elif type == "EndTag":
-                name = token["name"]
+            elif type == u"EndTag":
+                name = token[u"name"]
                 if name in rcdataElements:
                     in_cdata = False
                 elif in_cdata:
-                    self.serializeError(_("Unexpected child element of a CDATA element"))
+                    self.serializeError(_(u"Unexpected child element of a CDATA element"))
                 yield self.encodeStrict(u"</%s>" % name)
 
-            elif type == "Comment":
-                data = token["data"]
-                if data.find("--") >= 0:
-                    self.serializeError(_("Comment contains --"))
-                yield self.encodeStrict(u"<!--%s-->" % token["data"])
+            elif type == u"Comment":
+                data = token[u"data"]
+                if data.find(u"--") >= 0:
+                    self.serializeError(_(u"Comment contains --"))
+                yield self.encodeStrict(u"<!--%s-->" % token[u"data"])
 
-            elif type == "Entity":
-                name = token["name"]
-                key = name + ";"
+            elif type == u"Entity":
+                name = token[u"name"]
+                key = name + u";"
                 if not key in entities:
-                    self.serializeError(_("Entity %s not recognized" % name))
+                    self.serializeError(_(u"Entity %s not recognized" % name))
                 if self.resolve_entities and key not in xmlEntities:
                     data = entities[key]
                 else:
@@ -299,20 +303,24 @@ class HTMLSerializer(object):
                 yield self.encodeStrict(data)
 
             else:
-                self.serializeError(token["data"])
+                self.serializeError(token[u"data"])
+    serialize.func_annotations = {}
 
     def render(self, treewalker, encoding=None):
         if encoding:
-            return b"".join(list(self.serialize(treewalker, encoding)))
+            return "".join(list(self.serialize(treewalker, encoding)))
         else:
             return u"".join(list(self.serialize(treewalker)))
+    render.func_annotations = {}
 
-    def serializeError(self, data="XXX ERROR MESSAGE NEEDED"):
+    def serializeError(self, data=u"XXX ERROR MESSAGE NEEDED"):
         # XXX The idea is to make data mandatory.
         self.errors.append(data)
         if self.strict:
             raise SerializeError
+    serializeError.func_annotations = {}
 
 def SerializeError(Exception):
-    """Error in serialized tree"""
+    u"""Error in serialized tree"""
     pass
+SerializeError.func_annotations = {}

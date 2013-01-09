@@ -24,8 +24,8 @@ def parse():
         # Try opening from the internet
         if f.startswith('http://'):
             try:
-                import urllib, cgi
-                f = urllib.urlopen(f)
+                import urllib.request, urllib.parse, urllib.error, cgi
+                f = urllib.request.urlopen(f)
                 contentType = f.headers.get('content-type')
                 if contentType:
                     (mediaType, params) = cgi.parse_header(contentType)
@@ -93,10 +93,10 @@ def run(parseMethod, f, encoding):
 
 def printOutput(parser, document, opts):
     if opts.encoding:
-        print "Encoding:", parser.tokenizer.stream.charEncoding
+        print("Encoding:", parser.tokenizer.stream.charEncoding)
 
     for item in parser.log:
-        print item
+        print(item)
 
     if document is not None:
         if opts.xml:
@@ -105,7 +105,7 @@ def printOutput(parser, document, opts):
             if not hasattr(document,'__getitem__'): 
                 document = [document]
             for fragment in document:
-                print parser.tree.testSerializer(fragment).encode("utf-8")
+                print(parser.tree.testSerializer(fragment))
         elif opts.hilite:
             sys.stdout.write(document.hilite("utf-8"))
         elif opts.html:

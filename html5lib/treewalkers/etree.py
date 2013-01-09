@@ -1,36 +1,21 @@
+from __future__ import absolute_import
 import gettext
 _ = gettext.gettext
 
-try:
-    from types import ModuleType
-except:
-    from new import module as ModuleType
 import copy
 import re
 
-import _base
+from . import _base
 from html5lib.constants import voidElements
+from html5lib.utils import moduleFactorFactory
 
-tag_regexp = re.compile("{([^}]*)}(.*)")
-
-moduleCache = {}
-
-def getETreeModule(ElementTreeImplementation):
-    name = "_" + ElementTreeImplementation.__name__+"builder"
-    if name in moduleCache:
-        return moduleCache[name]
-    else:
-        mod = ModuleType("_" + ElementTreeImplementation.__name__+"builder")
-        objs = getETreeBuilder(ElementTreeImplementation)
-        mod.__dict__.update(objs)
-        moduleCache[name] = mod
-        return mod
+tag_regexp = re.compile(u"{([^}]*)}(.*)")
 
 def getETreeBuilder(ElementTreeImplementation):
     ElementTree = ElementTreeImplementation
 
     class TreeWalker(_base.NonRecursiveTreeWalker):
-        """Given the particular ElementTree representation, this implementation,
+        u"""Given the particular ElementTree representation, this implementation,
         to avoid using recursion, returns "nodes" as tuples with the following
         content:
 
@@ -46,26 +31,26 @@ def getETreeBuilder(ElementTreeImplementation):
         def getNodeDetails(self, node):
             if isinstance(node, tuple): # It might be the root Element
                 elt, key, parents, flag = node
-                if flag in ("text", "tail"):
+                if flag in (u"text", u"tail"):
                     return _base.TEXT, getattr(elt, flag)
                 else:
                     node = elt
 
-            if not(hasattr(node, "tag")):
+            if not(hasattr(node, u"tag")):
                 node = node.getroot()
 
-            if node.tag in ("<DOCUMENT_ROOT>", "<DOCUMENT_FRAGMENT>"):
+            if node.tag in (u"DOCUMENT_ROOT", u"DOCUMENT_FRAGMENT"):
                 return (_base.DOCUMENT,)
 
-            elif node.tag == "<!DOCTYPE>":
+            elif node.tag == u"<!DOCTYPE>":
                 return (_base.DOCTYPE, node.text, 
-                        node.get("publicId"), node.get("systemId"))
+                        node.get(u"publicId"), node.get(u"systemId"))
 
             elif node.tag == ElementTree.Comment:
                 return _base.COMMENT, node.text
 
             else:
-                assert type(node.tag) in (str, unicode), type(node.tag)
+                assert type(node.tag) in (unicode, unicode), type(node.tag)
                 #This is assumed to be an ordinary element
                 match = tag_regexp.match(node.tag)
                 if match:
@@ -74,7 +59,7 @@ def getETreeBuilder(ElementTreeImplementation):
                     namespace = None
                     tag = node.tag
                 attrs = {}
-                for name, value in node.attrib.items():
+                for name, value in list(node.attrib.items()):
                     match = tag_regexp.match(name)
                     if match:
                         attrs[(match.group(1),match.group(2))] = value
@@ -82,6 +67,7 @@ def getETreeBuilder(ElementTreeImplementation):
                         attrs[(None,name)] = value
                 return (_base.ELEMENT, namespace, tag, 
                         attrs, len(node) or node.text)
+        getNodeDetails.func_annotations = {}
     
         def getFirstChild(self, node):
             if isinstance(node, tuple):
@@ -89,16 +75,17 @@ def getETreeBuilder(ElementTreeImplementation):
             else:
                 element, key, parents, flag = node, None, [], None
                 
-            if flag in ("text", "tail"):
+            if flag in (u"text", u"tail"):
                 return None
             else:
                 if element.text:
-                    return element, key, parents, "text"
+                    return element, key, parents, u"text"
                 elif len(element):
                     parents.append(element)
                     return element[0], 0, parents, None
                 else:
                     return None
+        getFirstChild.func_annotations = {}
         
         def getNextSibling(self, node):
             if isinstance(node, tuple):
@@ -106,19 +93,20 @@ def getETreeBuilder(ElementTreeImplementation):
             else:
                 return None
                 
-            if flag == "text":
+            if flag == u"text":
                 if len(element):
                     parents.append(element)
                     return element[0], 0, parents, None
                 else:
                     return None
             else:
-                if element.tail and flag != "tail":
-                    return element, key, parents, "tail"
+                if element.tail and flag != u"tail":
+                    return element, key, parents, u"tail"
                 elif key < len(parents[-1]) - 1:
                     return parents[-1][key+1], key+1, parents, None
                 else:
                     return None
+        getNextSibling.func_annotations = {}
         
         def getParentNode(self, node):
             if isinstance(node, tuple):
@@ -126,7 +114,7 @@ def getETreeBuilder(ElementTreeImplementation):
             else:
                 return None
             
-            if flag == "text":
+            if flag == u"text":
                 if not parents:
                     return element
                 else:
@@ -137,5 +125,9 @@ def getETreeBuilder(ElementTreeImplementation):
                     return parent
                 else:
                     return parent, list(parents[-1]).index(parent), parents, None
+        getParentNode.func_annotations = {}
 
     return locals()
+getETreeBuilder.func_annotations = {}
+
+getETreeModule = moduleFactoryFactory(getETreeBuilder)

@@ -1,4 +1,5 @@
-import _base
+from __future__ import absolute_import
+from . import _base
 from html5lib.sanitizer import HTMLSanitizerMixin
 
 class Filter(_base.Filter, HTMLSanitizerMixin):
@@ -6,3 +7,4 @@ class Filter(_base.Filter, HTMLSanitizerMixin):
         for token in _base.Filter.__iter__(self):
             token = self.sanitize_token(token)
             if token: yield token
+    __iter__.func_annotations = {}

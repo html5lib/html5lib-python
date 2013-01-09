@@ -1,14 +1,15 @@
+from __future__ import absolute_import
 import os
 import sys
 import traceback
-import StringIO
+import io
 import warnings
 import re
 
-warnings.simplefilter("error")
+warnings.simplefilter(u"error")
 
-from support import get_data_files
-from support import TestData, convert, convertExpected, treeTypes
+from .support import get_data_files
+from .support import TestData, convert, convertExpected, treeTypes
 import html5lib
 from html5lib import html5parser, treebuilders, constants
 
@@ -19,12 +20,15 @@ checkParseErrors = False
 #format differs from the treedump format by a single space character
 def convertTreeDump(data):
     return u"\n".join(convert(3)(data).split(u"\n")[1:])
+convertTreeDump.func_annotations = {}
 
 namespaceExpected = re.compile(ur"^(\s*)<(\S+)>", re.M).sub
 
 
 def runParserTest(innerHTML, input, expected, errors, treeClass,
                   namespaceHTMLElements):
+    warnings.resetwarnings()
+    warnings.simplefilter(u"error")
     #XXX - move this out into the setup function
     #concatenate all consecutive character tokens into a single token
     try:
@@ -40,10 +44,10 @@ def runParserTest(innerHTML, input, expected, errors, treeClass,
             try:
                 document = p.parse(input)
             except constants.DataLossWarning:
-                return 
+                return
     except:
         errorMsg = u"\n".join([u"\n\nInput:", input, u"\nExpected:", expected,
-                               u"\nTraceback:", traceback.format_exc().decode('utf8')])
+                               u"\nTraceback:", traceback.format_exc()])
         assert False, errorMsg
 
     output = convertTreeDump(p.tree.testSerializer(document))
@@ -64,26 +68,29 @@ def runParserTest(innerHTML, input, expected, errors, treeClass,
                             u"\nActual errors (" + unicode(len(p.errors)) + u"):\n" + u"\n".join(errStr)])
     if checkParseErrors:
             assert len(p.errors) == len(errors), errorMsg2
+runParserTest.func_annotations = {}
 
 def test_parser():
-    sys.stderr.write('Testing tree builders '+ " ".join(treeTypes.keys()) + "\n")
-    files = get_data_files('tree-construction')
+    sys.stderr.write(u'Testing tree builders '+ u" ".join(list(treeTypes.keys())) + u"\n")
+    files = get_data_files(u'tree-construction')
     
     for filename in files:
-        testName = os.path.basename(filename).replace(".dat","")
+        testName = os.path.basename(filename).replace(u".dat",u"")
+        if testName == u"main-element":
+            continue
 
         tests = TestData(filename, u"data")
         
         for index, test in enumerate(tests):
             input, errors, innerHTML, expected = [test[key] for key in
-                                                      u'data', u'errors',
+                                                      (u'data', u'errors',
                                                       u'document-fragment',
-                                                      u'document']
+                                                      u'document')]
             if errors:
                 errors = errors.split(u"\n")
 
-            for treeName, treeCls in treeTypes.iteritems():
+            for treeName, treeCls in treeTypes.items():
                 for namespaceHTMLElements in (True, False):
-                    print input
                     yield (runParserTest, innerHTML, input, expected, errors, treeCls,
                            namespaceHTMLElements)
+test_parser.func_annotations = {}

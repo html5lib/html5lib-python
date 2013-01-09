@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import string, gettext
 _ = gettext.gettext
 
@@ -11,427 +12,427 @@ except NameError:
 EOF = None
 
 E = {
-    "null-character": 
+    u"null-character": 
        _(u"Null character in input stream, replaced with U+FFFD."),
-    "invalid-codepoint": 
+    u"invalid-codepoint": 
        _(u"Invalid codepoint in stream."),
-    "incorrectly-placed-solidus":
+    u"incorrectly-placed-solidus":
        _(u"Solidus (/) incorrectly placed in tag."),
-    "incorrect-cr-newline-entity":
+    u"incorrect-cr-newline-entity":
        _(u"Incorrect CR newline entity, replaced with LF."),
-    "illegal-windows-1252-entity":
+    u"illegal-windows-1252-entity":
        _(u"Entity used with illegal number (windows-1252 reference)."),
-    "cant-convert-numeric-entity":
+    u"cant-convert-numeric-entity":
        _(u"Numeric entity couldn't be converted to character "
          u"(codepoint U+%(charAsInt)08x)."),
-    "illegal-codepoint-for-numeric-entity":
+    u"illegal-codepoint-for-numeric-entity":
        _(u"Numeric entity represents an illegal codepoint: "
          u"U+%(charAsInt)08x."),
-    "numeric-entity-without-semicolon":
+    u"numeric-entity-without-semicolon":
        _(u"Numeric entity didn't end with ';'."),
-    "expected-numeric-entity-but-got-eof":
+    u"expected-numeric-entity-but-got-eof":
        _(u"Numeric entity expected. Got end of file instead."),
-    "expected-numeric-entity":
+    u"expected-numeric-entity":
        _(u"Numeric entity expected but none found."),
-    "named-entity-without-semicolon":
+    u"named-entity-without-semicolon":
        _(u"Named entity didn't end with ';'."),
-    "expected-named-entity":
+    u"expected-named-entity":
        _(u"Named entity expected. Got none."),
-    "attributes-in-end-tag":
+    u"attributes-in-end-tag":
        _(u"End tag contains unexpected attributes."),
-    'self-closing-flag-on-end-tag':
+    u'self-closing-flag-on-end-tag':
         _(u"End tag contains unexpected self-closing flag."),
-    "expected-tag-name-but-got-right-bracket":
+    u"expected-tag-name-but-got-right-bracket":
        _(u"Expected tag name. Got '>' instead."),
-    "expected-tag-name-but-got-question-mark":
+    u"expected-tag-name-but-got-question-mark":
        _(u"Expected tag name. Got '?' instead. (HTML doesn't "
          u"support processing instructions.)"),
-    "expected-tag-name":
+    u"expected-tag-name":
        _(u"Expected tag name. Got something else instead"),
-    "expected-closing-tag-but-got-right-bracket":
+    u"expected-closing-tag-but-got-right-bracket":
        _(u"Expected closing tag. Got '>' instead. Ignoring '</>'."),
-    "expected-closing-tag-but-got-eof":
+    u"expected-closing-tag-but-got-eof":
        _(u"Expected closing tag. Unexpected end of file."),
-    "expected-closing-tag-but-got-char":
+    u"expected-closing-tag-but-got-char":
        _(u"Expected closing tag. Unexpected character '%(data)s' found."),
-    "eof-in-tag-name":
+    u"eof-in-tag-name":
        _(u"Unexpected end of file in the tag name."),
-    "expected-attribute-name-but-got-eof":
+    u"expected-attribute-name-but-got-eof":
        _(u"Unexpected end of file. Expected attribute name instead."),
-    "eof-in-attribute-name":
+    u"eof-in-attribute-name":
        _(u"Unexpected end of file in attribute name."),
-    "invalid-character-in-attribute-name":
+    u"invalid-character-in-attribute-name":
         _(u"Invalid chracter in attribute name"),
-    "duplicate-attribute":
+    u"duplicate-attribute":
        _(u"Dropped duplicate attribute on tag."),
-    "expected-end-of-tag-name-but-got-eof":
+    u"expected-end-of-tag-name-but-got-eof":
        _(u"Unexpected end of file. Expected = or end of tag."),
-    "expected-attribute-value-but-got-eof":
+    u"expected-attribute-value-but-got-eof":
        _(u"Unexpected end of file. Expected attribute value."),
-    "expected-attribute-value-but-got-right-bracket":
+    u"expected-attribute-value-but-got-right-bracket":
        _(u"Expected attribute value. Got '>' instead."),
-    'equals-in-unquoted-attribute-value':
+    u'equals-in-unquoted-attribute-value':
         _(u"Unexpected = in unquoted attribute"),
-    'unexpected-character-in-unquoted-attribute-value':
+    u'unexpected-character-in-unquoted-attribute-value':
         _(u"Unexpected character in unquoted attribute"),
-    "invalid-character-after-attribute-name":
+    u"invalid-character-after-attribute-name":
        _(u"Unexpected character after attribute name."),
-    "unexpected-character-after-attribute-value":
+    u"unexpected-character-after-attribute-value":
        _(u"Unexpected character after attribute value."),
-    "eof-in-attribute-value-double-quote":
+    u"eof-in-attribute-value-double-quote":
        _(u"Unexpected end of file in attribute value (\")."),
-    "eof-in-attribute-value-single-quote":
+    u"eof-in-attribute-value-single-quote":
        _(u"Unexpected end of file in attribute value (')."),
-    "eof-in-attribute-value-no-quotes":
+    u"eof-in-attribute-value-no-quotes":
        _(u"Unexpected end of file in attribute value."),
-    "unexpected-EOF-after-solidus-in-tag":
+    u"unexpected-EOF-after-solidus-in-tag":
         _(u"Unexpected end of file in tag. Expected >"),
-    "unexpected-character-after-soldius-in-tag":
+    u"unexpected-character-after-soldius-in-tag":
         _(u"Unexpected character after / in tag. Expected >"),
-    "expected-dashes-or-doctype":
+    u"expected-dashes-or-doctype":
        _(u"Expected '--' or 'DOCTYPE'. Not found."),
-    "unexpected-bang-after-double-dash-in-comment":
+    u"unexpected-bang-after-double-dash-in-comment":
         _(u"Unexpected ! after -- in comment"),
-    "unexpected-space-after-double-dash-in-comment":
+    u"unexpected-space-after-double-dash-in-comment":
         _(u"Unexpected space after -- in comment"),
-    "incorrect-comment":
+    u"incorrect-comment":
        _(u"Incorrect comment."),
-    "eof-in-comment":
+    u"eof-in-comment":
        _(u"Unexpected end of file in comment."),
-    "eof-in-comment-end-dash":
+    u"eof-in-comment-end-dash":
        _(u"Unexpected end of file in comment (-)"),
-    "unexpected-dash-after-double-dash-in-comment":
+    u"unexpected-dash-after-double-dash-in-comment":
        _(u"Unexpected '-' after '--' found in comment."),
-    "eof-in-comment-double-dash":
+    u"eof-in-comment-double-dash":
        _(u"Unexpected end of file in comment (--)."),
-    "eof-in-comment-end-space-state":
+    u"eof-in-comment-end-space-state":
        _(u"Unexpected end of file in comment."),
-    "eof-in-comment-end-bang-state":
+    u"eof-in-comment-end-bang-state":
        _(u"Unexpected end of file in comment."),
-    "unexpected-char-in-comment":
+    u"unexpected-char-in-comment":
        _(u"Unexpected character in comment found."),
-    "need-space-after-doctype":
+    u"need-space-after-doctype":
        _(u"No space after literal string 'DOCTYPE'."),
-    "expected-doctype-name-but-got-right-bracket":
+    u"expected-doctype-name-but-got-right-bracket":
        _(u"Unexpected > character. Expected DOCTYPE name."),
-    "expected-doctype-name-but-got-eof":
+    u"expected-doctype-name-but-got-eof":
        _(u"Unexpected end of file. Expected DOCTYPE name."),
-    "eof-in-doctype-name":
+    u"eof-in-doctype-name":
        _(u"Unexpected end of file in DOCTYPE name."),
-    "eof-in-doctype":
+    u"eof-in-doctype":
        _(u"Unexpected end of file in DOCTYPE."),
-    "expected-space-or-right-bracket-in-doctype":
+    u"expected-space-or-right-bracket-in-doctype":
        _(u"Expected space or '>'. Got '%(data)s'"),
-    "unexpected-end-of-doctype":
+    u"unexpected-end-of-doctype":
        _(u"Unexpected end of DOCTYPE."),
-    "unexpected-char-in-doctype":
+    u"unexpected-char-in-doctype":
        _(u"Unexpected character in DOCTYPE."),
-    "eof-in-innerhtml":
+    u"eof-in-innerhtml":
        _(u"XXX innerHTML EOF"),
-    "unexpected-doctype":
+    u"unexpected-doctype":
        _(u"Unexpected DOCTYPE. Ignored."),
-    "non-html-root":
+    u"non-html-root":
        _(u"html needs to be the first start tag."),
-    "expected-doctype-but-got-eof":
+    u"expected-doctype-but-got-eof":
        _(u"Unexpected End of file. Expected DOCTYPE."),
-    "unknown-doctype":
+    u"unknown-doctype":
        _(u"Erroneous DOCTYPE."),
-    "expected-doctype-but-got-chars":
+    u"expected-doctype-but-got-chars":
        _(u"Unexpected non-space characters. Expected DOCTYPE."),
-    "expected-doctype-but-got-start-tag":
+    u"expected-doctype-but-got-start-tag":
        _(u"Unexpected start tag (%(name)s). Expected DOCTYPE."),
-    "expected-doctype-but-got-end-tag":
+    u"expected-doctype-but-got-end-tag":
        _(u"Unexpected end tag (%(name)s). Expected DOCTYPE."),
-    "end-tag-after-implied-root":
+    u"end-tag-after-implied-root":
        _(u"Unexpected end tag (%(name)s) after the (implied) root element."),
-    "expected-named-closing-tag-but-got-eof":
+    u"expected-named-closing-tag-but-got-eof":
        _(u"Unexpected end of file. Expected end tag (%(name)s)."),
-    "two-heads-are-not-better-than-one":
+    u"two-heads-are-not-better-than-one":
        _(u"Unexpected start tag head in existing head. Ignored."),
-    "unexpected-end-tag":
+    u"unexpected-end-tag":
        _(u"Unexpected end tag (%(name)s). Ignored."),
-    "unexpected-start-tag-out-of-my-head":
+    u"unexpected-start-tag-out-of-my-head":
        _(u"Unexpected start tag (%(name)s) that can be in head. Moved."),
-    "unexpected-start-tag":
+    u"unexpected-start-tag":
        _(u"Unexpected start tag (%(name)s)."),
-    "missing-end-tag":
+    u"missing-end-tag":
        _(u"Missing end tag (%(name)s)."),
-    "missing-end-tags":
+    u"missing-end-tags":
        _(u"Missing end tags (%(name)s)."),
-    "unexpected-start-tag-implies-end-tag":
+    u"unexpected-start-tag-implies-end-tag":
        _(u"Unexpected start tag (%(startName)s) "
          u"implies end tag (%(endName)s)."),
-    "unexpected-start-tag-treated-as":
+    u"unexpected-start-tag-treated-as":
        _(u"Unexpected start tag (%(originalName)s). Treated as %(newName)s."),
-    "deprecated-tag":
+    u"deprecated-tag":
        _(u"Unexpected start tag %(name)s. Don't use it!"),
-    "unexpected-start-tag-ignored":
+    u"unexpected-start-tag-ignored":
        _(u"Unexpected start tag %(name)s. Ignored."),
-    "expected-one-end-tag-but-got-another":
+    u"expected-one-end-tag-but-got-another":
        _(u"Unexpected end tag (%(gotName)s). "
          u"Missing end tag (%(expectedName)s)."),
-    "end-tag-too-early":
+    u"end-tag-too-early":
        _(u"End tag (%(name)s) seen too early. Expected other end tag."),
-    "end-tag-too-early-named":
+    u"end-tag-too-early-named":
        _(u"Unexpected end tag (%(gotName)s). Expected end tag (%(expectedName)s)."),
-    "end-tag-too-early-ignored":
+    u"end-tag-too-early-ignored":
        _(u"End tag (%(name)s) seen too early. Ignored."),
-    "adoption-agency-1.1":
+    u"adoption-agency-1.1":
        _(u"End tag (%(name)s) violates step 1, "
          u"paragraph 1 of the adoption agency algorithm."),
-    "adoption-agency-1.2":
+    u"adoption-agency-1.2":
        _(u"End tag (%(name)s) violates step 1, "
          u"paragraph 2 of the adoption agency algorithm."),
-    "adoption-agency-1.3":
+    u"adoption-agency-1.3":
        _(u"End tag (%(name)s) violates step 1, "
          u"paragraph 3 of the adoption agency algorithm."),
-    "unexpected-end-tag-treated-as":
+    u"unexpected-end-tag-treated-as":
        _(u"Unexpected end tag (%(originalName)s). Treated as %(newName)s."),
-    "no-end-tag":
+    u"no-end-tag":
        _(u"This element (%(name)s) has no end tag."),
-    "unexpected-implied-end-tag-in-table":
+    u"unexpected-implied-end-tag-in-table":
        _(u"Unexpected implied end tag (%(name)s) in the table phase."),
-    "unexpected-implied-end-tag-in-table-body":
+    u"unexpected-implied-end-tag-in-table-body":
        _(u"Unexpected implied end tag (%(name)s) in the table body phase."),
-    "unexpected-char-implies-table-voodoo":
+    u"unexpected-char-implies-table-voodoo":
        _(u"Unexpected non-space characters in "
          u"table context caused voodoo mode."),
-    "unexpected-hidden-input-in-table":
+    u"unexpected-hidden-input-in-table":
        _(u"Unexpected input with type hidden in table context."),
-    "unexpected-form-in-table":
+    u"unexpected-form-in-table":
        _(u"Unexpected form in table context."),
-    "unexpected-start-tag-implies-table-voodoo":
+    u"unexpected-start-tag-implies-table-voodoo":
        _(u"Unexpected start tag (%(name)s) in "
          u"table context caused voodoo mode."),
-    "unexpected-end-tag-implies-table-voodoo":
+    u"unexpected-end-tag-implies-table-voodoo":
        _(u"Unexpected end tag (%(name)s) in "
          u"table context caused voodoo mode."),
-    "unexpected-cell-in-table-body":
+    u"unexpected-cell-in-table-body":
        _(u"Unexpected table cell start tag (%(name)s) "
          u"in the table body phase."),
-    "unexpected-cell-end-tag":
+    u"unexpected-cell-end-tag":
        _(u"Got table cell end tag (%(name)s) "
          u"while required end tags are missing."),
-    "unexpected-end-tag-in-table-body":
+    u"unexpected-end-tag-in-table-body":
        _(u"Unexpected end tag (%(name)s) in the table body phase. Ignored."),
-    "unexpected-implied-end-tag-in-table-row":
+    u"unexpected-implied-end-tag-in-table-row":
        _(u"Unexpected implied end tag (%(name)s) in the table row phase."),
-    "unexpected-end-tag-in-table-row":
+    u"unexpected-end-tag-in-table-row":
        _(u"Unexpected end tag (%(name)s) in the table row phase. Ignored."),
-    "unexpected-select-in-select":
+    u"unexpected-select-in-select":
        _(u"Unexpected select start tag in the select phase "
          u"treated as select end tag."),
-    "unexpected-input-in-select":
+    u"unexpected-input-in-select":
        _(u"Unexpected input start tag in the select phase."),
-    "unexpected-start-tag-in-select":
+    u"unexpected-start-tag-in-select":
        _(u"Unexpected start tag token (%(name)s in the select phase. "
          u"Ignored."),
-    "unexpected-end-tag-in-select":
+    u"unexpected-end-tag-in-select":
        _(u"Unexpected end tag (%(name)s) in the select phase. Ignored."),
-    "unexpected-table-element-start-tag-in-select-in-table":
+    u"unexpected-table-element-start-tag-in-select-in-table":
        _(u"Unexpected table element start tag (%(name)s) in the select in table phase."),
-    "unexpected-table-element-end-tag-in-select-in-table":
+    u"unexpected-table-element-end-tag-in-select-in-table":
        _(u"Unexpected table element end tag (%(name)s) in the select in table phase."),
-    "unexpected-char-after-body":
+    u"unexpected-char-after-body":
        _(u"Unexpected non-space characters in the after body phase."),
-    "unexpected-start-tag-after-body":
+    u"unexpected-start-tag-after-body":
        _(u"Unexpected start tag token (%(name)s)"
          u" in the after body phase."),
-    "unexpected-end-tag-after-body":
+    u"unexpected-end-tag-after-body":
        _(u"Unexpected end tag token (%(name)s)"
          u" in the after body phase."),
-    "unexpected-char-in-frameset":
+    u"unexpected-char-in-frameset":
        _(u"Unepxected characters in the frameset phase. Characters ignored."),
-    "unexpected-start-tag-in-frameset":
+    u"unexpected-start-tag-in-frameset":
        _(u"Unexpected start tag token (%(name)s)"
          u" in the frameset phase. Ignored."),
-    "unexpected-frameset-in-frameset-innerhtml":
+    u"unexpected-frameset-in-frameset-innerhtml":
        _(u"Unexpected end tag token (frameset) "
          u"in the frameset phase (innerHTML)."),
-    "unexpected-end-tag-in-frameset":
+    u"unexpected-end-tag-in-frameset":
        _(u"Unexpected end tag token (%(name)s)"
          u" in the frameset phase. Ignored."),
-    "unexpected-char-after-frameset":
+    u"unexpected-char-after-frameset":
        _(u"Unexpected non-space characters in the "
          u"after frameset phase. Ignored."),
-    "unexpected-start-tag-after-frameset":
+    u"unexpected-start-tag-after-frameset":
        _(u"Unexpected start tag (%(name)s)"
          u" in the after frameset phase. Ignored."),
-    "unexpected-end-tag-after-frameset":
+    u"unexpected-end-tag-after-frameset":
        _(u"Unexpected end tag (%(name)s)"
          u" in the after frameset phase. Ignored."),
-    "unexpected-end-tag-after-body-innerhtml":
+    u"unexpected-end-tag-after-body-innerhtml":
        _(u"Unexpected end tag after body(innerHtml)"),
-    "expected-eof-but-got-char":
+    u"expected-eof-but-got-char":
        _(u"Unexpected non-space characters. Expected end of file."),
-    "expected-eof-but-got-start-tag":
+    u"expected-eof-but-got-start-tag":
        _(u"Unexpected start tag (%(name)s)"
          u". Expected end of file."),
-    "expected-eof-but-got-end-tag":
+    u"expected-eof-but-got-end-tag":
        _(u"Unexpected end tag (%(name)s)"
          u". Expected end of file."),
-    "eof-in-table":
+    u"eof-in-table":
        _(u"Unexpected end of file. Expected table content."),
-    "eof-in-select":
+    u"eof-in-select":
        _(u"Unexpected end of file. Expected select content."),
-    "eof-in-frameset":
+    u"eof-in-frameset":
        _(u"Unexpected end of file. Expected frameset content."),
-    "eof-in-script-in-script":
+    u"eof-in-script-in-script":
        _(u"Unexpected end of file. Expected script content."),
-    "eof-in-foreign-lands":
+    u"eof-in-foreign-lands":
        _(u"Unexpected end of file. Expected foreign content"),
-    "non-void-element-with-trailing-solidus":
+    u"non-void-element-with-trailing-solidus":
        _(u"Trailing solidus not allowed on element %(name)s"),
-    "unexpected-html-element-in-foreign-content":
+    u"unexpected-html-element-in-foreign-content":
        _(u"Element %(name)s not allowed in a non-html context"),
-    "unexpected-end-tag-before-html":
+    u"unexpected-end-tag-before-html":
         _(u"Unexpected end tag (%(name)s) before html."),
-    "XXX-undefined-error":
+    u"XXX-undefined-error":
         (u"Undefined error (this sucks and should be fixed)"),
 }
 
 namespaces = {
-    "html":"http://www.w3.org/1999/xhtml",
-    "mathml":"http://www.w3.org/1998/Math/MathML",
-    "svg":"http://www.w3.org/2000/svg",
-    "xlink":"http://www.w3.org/1999/xlink",
-    "xml":"http://www.w3.org/XML/1998/namespace",
-    "xmlns":"http://www.w3.org/2000/xmlns/"
+    u"html":u"http://www.w3.org/1999/xhtml",
+    u"mathml":u"http://www.w3.org/1998/Math/MathML",
+    u"svg":u"http://www.w3.org/2000/svg",
+    u"xlink":u"http://www.w3.org/1999/xlink",
+    u"xml":u"http://www.w3.org/XML/1998/namespace",
+    u"xmlns":u"http://www.w3.org/2000/xmlns/"
 }
 
 scopingElements = frozenset((
-    (namespaces["html"], "applet"),
-    (namespaces["html"], "caption"),
-    (namespaces["html"], "html"),
-    (namespaces["html"], "marquee"),
-    (namespaces["html"], "object"),
-    (namespaces["html"], "table"),
-    (namespaces["html"], "td"),
-    (namespaces["html"], "th"),
-    (namespaces["mathml"], "mi"),
-    (namespaces["mathml"], "mo"),
-    (namespaces["mathml"], "mn"),
-    (namespaces["mathml"], "ms"),
-    (namespaces["mathml"], "mtext"),
-    (namespaces["mathml"], "annotation-xml"),
-    (namespaces["svg"], "foreignObject"),
-    (namespaces["svg"], "desc"),
-    (namespaces["svg"], "title"),
+    (namespaces[u"html"], u"applet"),
+    (namespaces[u"html"], u"caption"),
+    (namespaces[u"html"], u"html"),
+    (namespaces[u"html"], u"marquee"),
+    (namespaces[u"html"], u"object"),
+    (namespaces[u"html"], u"table"),
+    (namespaces[u"html"], u"td"),
+    (namespaces[u"html"], u"th"),
+    (namespaces[u"mathml"], u"mi"),
+    (namespaces[u"mathml"], u"mo"),
+    (namespaces[u"mathml"], u"mn"),
+    (namespaces[u"mathml"], u"ms"),
+    (namespaces[u"mathml"], u"mtext"),
+    (namespaces[u"mathml"], u"annotation-xml"),
+    (namespaces[u"svg"], u"foreignObject"),
+    (namespaces[u"svg"], u"desc"),
+    (namespaces[u"svg"], u"title"),
 ))
 
 formattingElements = frozenset((
-    (namespaces["html"], "a"),
-    (namespaces["html"], "b"),
-    (namespaces["html"], "big"),
-    (namespaces["html"], "code"),
-    (namespaces["html"], "em"),
-    (namespaces["html"], "font"),
-    (namespaces["html"], "i"),
-    (namespaces["html"], "nobr"),
-    (namespaces["html"], "s"),
-    (namespaces["html"], "small"),
-    (namespaces["html"], "strike"),
-    (namespaces["html"], "strong"),
-    (namespaces["html"], "tt"),
-    (namespaces["html"], "u")
+    (namespaces[u"html"], u"a"),
+    (namespaces[u"html"], u"b"),
+    (namespaces[u"html"], u"big"),
+    (namespaces[u"html"], u"code"),
+    (namespaces[u"html"], u"em"),
+    (namespaces[u"html"], u"font"),
+    (namespaces[u"html"], u"i"),
+    (namespaces[u"html"], u"nobr"),
+    (namespaces[u"html"], u"s"),
+    (namespaces[u"html"], u"small"),
+    (namespaces[u"html"], u"strike"),
+    (namespaces[u"html"], u"strong"),
+    (namespaces[u"html"], u"tt"),
+    (namespaces[u"html"], u"u")
 ))
 
 specialElements = frozenset((
-    (namespaces["html"], "address"),
-    (namespaces["html"], "applet"),
-    (namespaces["html"], "area"),
-    (namespaces["html"], "article"),
-    (namespaces["html"], "aside"),
-    (namespaces["html"], "base"),
-    (namespaces["html"], "basefont"),
-    (namespaces["html"], "bgsound"),
-    (namespaces["html"], "blockquote"),
-    (namespaces["html"], "body"),
-    (namespaces["html"], "br"),
-    (namespaces["html"], "button"),
-    (namespaces["html"], "caption"),
-    (namespaces["html"], "center"),
-    (namespaces["html"], "col"),
-    (namespaces["html"], "colgroup"),
-    (namespaces["html"], "command"),
-    (namespaces["html"], "dd"),
-    (namespaces["html"], "details"),
-    (namespaces["html"], "dir"),
-    (namespaces["html"], "div"),
-    (namespaces["html"], "dl"),
-    (namespaces["html"], "dt"),
-    (namespaces["html"], "embed"),
-    (namespaces["html"], "fieldset"),
-    (namespaces["html"], "figure"),
-    (namespaces["html"], "footer"),
-    (namespaces["html"], "form"),
-    (namespaces["html"], "frame"),
-    (namespaces["html"], "frameset"),
-    (namespaces["html"], "h1"),
-    (namespaces["html"], "h2"),
-    (namespaces["html"], "h3"),
-    (namespaces["html"], "h4"),
-    (namespaces["html"], "h5"),
-    (namespaces["html"], "h6"),
-    (namespaces["html"], "head"),
-    (namespaces["html"], "header"),
-    (namespaces["html"], "hr"),
-    (namespaces["html"], "html"),
-    (namespaces["html"], "iframe"),
+    (namespaces[u"html"], u"address"),
+    (namespaces[u"html"], u"applet"),
+    (namespaces[u"html"], u"area"),
+    (namespaces[u"html"], u"article"),
+    (namespaces[u"html"], u"aside"),
+    (namespaces[u"html"], u"base"),
+    (namespaces[u"html"], u"basefont"),
+    (namespaces[u"html"], u"bgsound"),
+    (namespaces[u"html"], u"blockquote"),
+    (namespaces[u"html"], u"body"),
+    (namespaces[u"html"], u"br"),
+    (namespaces[u"html"], u"button"),
+    (namespaces[u"html"], u"caption"),
+    (namespaces[u"html"], u"center"),
+    (namespaces[u"html"], u"col"),
+    (namespaces[u"html"], u"colgroup"),
+    (namespaces[u"html"], u"command"),
+    (namespaces[u"html"], u"dd"),
+    (namespaces[u"html"], u"details"),
+    (namespaces[u"html"], u"dir"),
+    (namespaces[u"html"], u"div"),
+    (namespaces[u"html"], u"dl"),
+    (namespaces[u"html"], u"dt"),
+    (namespaces[u"html"], u"embed"),
+    (namespaces[u"html"], u"fieldset"),
+    (namespaces[u"html"], u"figure"),
+    (namespaces[u"html"], u"footer"),
+    (namespaces[u"html"], u"form"),
+    (namespaces[u"html"], u"frame"),
+    (namespaces[u"html"], u"frameset"),
+    (namespaces[u"html"], u"h1"),
+    (namespaces[u"html"], u"h2"),
+    (namespaces[u"html"], u"h3"),
+    (namespaces[u"html"], u"h4"),
+    (namespaces[u"html"], u"h5"),
+    (namespaces[u"html"], u"h6"),
+    (namespaces[u"html"], u"head"),
+    (namespaces[u"html"], u"header"),
+    (namespaces[u"html"], u"hr"),
+    (namespaces[u"html"], u"html"),
+    (namespaces[u"html"], u"iframe"),
     # Note that image is commented out in the spec as "this isn't an
     # element that can end up on the stack, so it doesn't matter,"
-    (namespaces["html"], "image"), 
-    (namespaces["html"], "img"),
-    (namespaces["html"], "input"),
-    (namespaces["html"], "isindex"),
-    (namespaces["html"], "li"),
-    (namespaces["html"], "link"),
-    (namespaces["html"], "listing"),
-    (namespaces["html"], "marquee"),
-    (namespaces["html"], "menu"),
-    (namespaces["html"], "meta"),
-    (namespaces["html"], "nav"),
-    (namespaces["html"], "noembed"),
-    (namespaces["html"], "noframes"),
-    (namespaces["html"], "noscript"),
-    (namespaces["html"], "object"),
-    (namespaces["html"], "ol"),
-    (namespaces["html"], "p"),
-    (namespaces["html"], "param"),
-    (namespaces["html"], "plaintext"),
-    (namespaces["html"], "pre"),
-    (namespaces["html"], "script"),
-    (namespaces["html"], "section"),
-    (namespaces["html"], "select"),
-    (namespaces["html"], "style"),
-    (namespaces["html"], "table"),
-    (namespaces["html"], "tbody"),
-    (namespaces["html"], "td"),
-    (namespaces["html"], "textarea"),
-    (namespaces["html"], "tfoot"),
-    (namespaces["html"], "th"),
-    (namespaces["html"], "thead"),
-    (namespaces["html"], "title"),
-    (namespaces["html"], "tr"),
-    (namespaces["html"], "ul"),
-    (namespaces["html"], "wbr"),
-    (namespaces["html"], "xmp"),
-    (namespaces["svg"], "foreignObject")
+    (namespaces[u"html"], u"image"), 
+    (namespaces[u"html"], u"img"),
+    (namespaces[u"html"], u"input"),
+    (namespaces[u"html"], u"isindex"),
+    (namespaces[u"html"], u"li"),
+    (namespaces[u"html"], u"link"),
+    (namespaces[u"html"], u"listing"),
+    (namespaces[u"html"], u"marquee"),
+    (namespaces[u"html"], u"menu"),
+    (namespaces[u"html"], u"meta"),
+    (namespaces[u"html"], u"nav"),
+    (namespaces[u"html"], u"noembed"),
+    (namespaces[u"html"], u"noframes"),
+    (namespaces[u"html"], u"noscript"),
+    (namespaces[u"html"], u"object"),
+    (namespaces[u"html"], u"ol"),
+    (namespaces[u"html"], u"p"),
+    (namespaces[u"html"], u"param"),
+    (namespaces[u"html"], u"plaintext"),
+    (namespaces[u"html"], u"pre"),
+    (namespaces[u"html"], u"script"),
+    (namespaces[u"html"], u"section"),
+    (namespaces[u"html"], u"select"),
+    (namespaces[u"html"], u"style"),
+    (namespaces[u"html"], u"table"),
+    (namespaces[u"html"], u"tbody"),
+    (namespaces[u"html"], u"td"),
+    (namespaces[u"html"], u"textarea"),
+    (namespaces[u"html"], u"tfoot"),
+    (namespaces[u"html"], u"th"),
+    (namespaces[u"html"], u"thead"),
+    (namespaces[u"html"], u"title"),
+    (namespaces[u"html"], u"tr"),
+    (namespaces[u"html"], u"ul"),
+    (namespaces[u"html"], u"wbr"),
+    (namespaces[u"html"], u"xmp"),
+    (namespaces[u"svg"], u"foreignObject")
 ))
 
 htmlIntegrationPointElements = frozenset((
-    (namespaces["mathml"], "annotaion-xml"),
-    (namespaces["svg"], "foreignObject"),
-    (namespaces["svg"], "desc"),
-    (namespaces["svg"], "title")
+    (namespaces[u"mathml"], u"annotaion-xml"),
+    (namespaces[u"svg"], u"foreignObject"),
+    (namespaces[u"svg"], u"desc"),
+    (namespaces[u"svg"], u"title")
 ))
 
 mathmlTextIntegrationPointElements = frozenset((
-    (namespaces["mathml"], "mi"),
-    (namespaces["mathml"], "mo"),
-    (namespaces["mathml"], "mn"),
-    (namespaces["mathml"], "ms"),
-    (namespaces["mathml"], "mtext")
+    (namespaces[u"mathml"], u"mi"),
+    (namespaces[u"mathml"], u"mo"),
+    (namespaces[u"mathml"], u"mn"),
+    (namespaces[u"mathml"], u"ms"),
+    (namespaces[u"mathml"], u"mtext")
 ))
 
 spaceCharacters = frozenset((
@@ -443,11 +444,11 @@ spaceCharacters = frozenset((
 ))
 
 tableInsertModeElements = frozenset((
-    "table",
-    "tbody",
-    "tfoot",
-    "thead",
-    "tr"
+    u"table",
+    u"tbody",
+    u"tfoot",
+    u"thead",
+    u"tr"
 ))
 
 asciiLowercase = frozenset(string.ascii_lowercase)
@@ -461,63 +462,63 @@ asciiUpper2Lower = dict([(ord(c),ord(c.lower()))
 
 # Heading elements need to be ordered
 headingElements = (
-    "h1",
-    "h2",
-    "h3",
-    "h4",
-    "h5",
-    "h6"
+    u"h1",
+    u"h2",
+    u"h3",
+    u"h4",
+    u"h5",
+    u"h6"
 )
 
 voidElements = frozenset((
-    "base",
-    "command",
-    "event-source",
-    "link",
-    "meta",
-    "hr",
-    "br",
-    "img",
-    "embed",
-    "param",
-    "area",
-    "col",
-    "input",
-    "source",
-    "track"
+    u"base",
+    u"command",
+    u"event-source",
+    u"link",
+    u"meta",
+    u"hr",
+    u"br",
+    u"img",
+    u"embed",
+    u"param",
+    u"area",
+    u"col",
+    u"input",
+    u"source",
+    u"track"
 ))
 
-cdataElements = frozenset(('title', 'textarea'))
+cdataElements = frozenset((u'title', u'textarea'))
 
 rcdataElements = frozenset((
-    'style',
-    'script',
-    'xmp',
-    'iframe',
-    'noembed',
-    'noframes',
-    'noscript'
+    u'style',
+    u'script',
+    u'xmp',
+    u'iframe',
+    u'noembed',
+    u'noframes',
+    u'noscript'
 ))
 
 booleanAttributes = {
-    "": frozenset(("irrelevant",)),
-    "style": frozenset(("scoped",)),
-    "img": frozenset(("ismap",)),
-    "audio": frozenset(("autoplay","controls")),
-    "video": frozenset(("autoplay","controls")),
-    "script": frozenset(("defer", "async")),
-    "details": frozenset(("open",)),
-    "datagrid": frozenset(("multiple", "disabled")),
-    "command": frozenset(("hidden", "disabled", "checked", "default")),
-    "hr": frozenset(("noshade")),
-    "menu": frozenset(("autosubmit",)),
-    "fieldset": frozenset(("disabled", "readonly")),
-    "option": frozenset(("disabled", "readonly", "selected")),
-    "optgroup": frozenset(("disabled", "readonly")),
-    "button": frozenset(("disabled", "autofocus")),
-    "input": frozenset(("disabled", "readonly", "required", "autofocus", "checked", "ismap")),
-    "select": frozenset(("disabled", "readonly", "autofocus", "multiple")),
-    "output": frozenset(("disabled", "readonly")),
+    u"": frozenset((u"irrelevant",)),
+    u"style": frozenset((u"scoped",)),
+    u"img": frozenset((u"ismap",)),
+    u"audio": frozenset((u"autoplay",u"controls")),
+    u"video": frozenset((u"autoplay",u"controls")),
+    u"script": frozenset((u"defer", u"async")),
+    u"details": frozenset((u"open",)),
+    u"datagrid": frozenset((u"multiple", u"disabled")),
+    u"command": frozenset((u"hidden", u"disabled", u"checked", u"default")),
+    u"hr": frozenset((u"noshade")),
+    u"menu": frozenset((u"autosubmit",)),
+    u"fieldset": frozenset((u"disabled", u"readonly")),
+    u"option": frozenset((u"disabled", u"readonly", u"selected")),
+    u"optgroup": frozenset((u"disabled", u"readonly")),
+    u"button": frozenset((u"disabled", u"autofocus")),
+    u"input": frozenset((u"disabled", u"readonly", u"required", u"autofocus", u"checked", u"ismap")),
+    u"select": frozenset((u"disabled", u"readonly", u"autofocus", u"multiple")),
+    u"output": frozenset((u"disabled", u"readonly")),
 }
 
 # entitiesWindows1252 has to be _ordered_ and needs to have an index. It
@@ -557,7 +558,7 @@ entitiesWindows1252 = (
     376    # 0x9F  0x0178  LATIN CAPITAL LETTER Y WITH DIAERESIS
 )
 
-xmlEntities = frozenset(('lt;', 'gt;', 'amp;', 'apos;', 'quot;'))
+xmlEntities = frozenset((u'lt;', u'gt;', u'amp;', u'apos;', u'quot;'))
 
 entities = {
     u"AElig": u"\xc6",
@@ -2832,251 +2833,251 @@ replacementCharacters = {
 }
 
 encodings = {
-    '437': 'cp437',
-    '850': 'cp850',
-    '852': 'cp852',
-    '855': 'cp855',
-    '857': 'cp857',
-    '860': 'cp860',
-    '861': 'cp861',
-    '862': 'cp862',
-    '863': 'cp863',
-    '865': 'cp865',
-    '866': 'cp866',
-    '869': 'cp869',
-    'ansix341968': 'ascii',
-    'ansix341986': 'ascii',
-    'arabic': 'iso8859-6',
-    'ascii': 'ascii',
-    'asmo708': 'iso8859-6',
-    'big5': 'big5',
-    'big5hkscs': 'big5hkscs',
-    'chinese': 'gbk',
-    'cp037': 'cp037',
-    'cp1026': 'cp1026',
-    'cp154': 'ptcp154',
-    'cp367': 'ascii',
-    'cp424': 'cp424',
-    'cp437': 'cp437',
-    'cp500': 'cp500',
-    'cp775': 'cp775',
-    'cp819': 'windows-1252',
-    'cp850': 'cp850',
-    'cp852': 'cp852',
-    'cp855': 'cp855',
-    'cp857': 'cp857',
-    'cp860': 'cp860',
-    'cp861': 'cp861',
-    'cp862': 'cp862',
-    'cp863': 'cp863',
-    'cp864': 'cp864',
-    'cp865': 'cp865',
-    'cp866': 'cp866',
-    'cp869': 'cp869',
-    'cp936': 'gbk',
-    'cpgr': 'cp869',
-    'cpis': 'cp861',
-    'csascii': 'ascii',
-    'csbig5': 'big5',
-    'cseuckr': 'cp949',
-    'cseucpkdfmtjapanese': 'euc_jp',
-    'csgb2312': 'gbk',
-    'cshproman8': 'hp-roman8',
-    'csibm037': 'cp037',
-    'csibm1026': 'cp1026',
-    'csibm424': 'cp424',
-    'csibm500': 'cp500',
-    'csibm855': 'cp855',
-    'csibm857': 'cp857',
-    'csibm860': 'cp860',
-    'csibm861': 'cp861',
-    'csibm863': 'cp863',
-    'csibm864': 'cp864',
-    'csibm865': 'cp865',
-    'csibm866': 'cp866',
-    'csibm869': 'cp869',
-    'csiso2022jp': 'iso2022_jp',
-    'csiso2022jp2': 'iso2022_jp_2',
-    'csiso2022kr': 'iso2022_kr',
-    'csiso58gb231280': 'gbk',
-    'csisolatin1': 'windows-1252',
-    'csisolatin2': 'iso8859-2',
-    'csisolatin3': 'iso8859-3',
-    'csisolatin4': 'iso8859-4',
-    'csisolatin5': 'windows-1254',
-    'csisolatin6': 'iso8859-10',
-    'csisolatinarabic': 'iso8859-6',
-    'csisolatincyrillic': 'iso8859-5',
-    'csisolatingreek': 'iso8859-7',
-    'csisolatinhebrew': 'iso8859-8',
-    'cskoi8r': 'koi8-r',
-    'csksc56011987': 'cp949',
-    'cspc775baltic': 'cp775',
-    'cspc850multilingual': 'cp850',
-    'cspc862latinhebrew': 'cp862',
-    'cspc8codepage437': 'cp437',
-    'cspcp852': 'cp852',
-    'csptcp154': 'ptcp154',
-    'csshiftjis': 'shift_jis',
-    'csunicode11utf7': 'utf-7',
-    'cyrillic': 'iso8859-5',
-    'cyrillicasian': 'ptcp154',
-    'ebcdiccpbe': 'cp500',
-    'ebcdiccpca': 'cp037',
-    'ebcdiccpch': 'cp500',
-    'ebcdiccphe': 'cp424',
-    'ebcdiccpnl': 'cp037',
-    'ebcdiccpus': 'cp037',
-    'ebcdiccpwt': 'cp037',
-    'ecma114': 'iso8859-6',
-    'ecma118': 'iso8859-7',
-    'elot928': 'iso8859-7',
-    'eucjp': 'euc_jp',
-    'euckr': 'cp949',
-    'extendedunixcodepackedformatforjapanese': 'euc_jp',
-    'gb18030': 'gb18030',
-    'gb2312': 'gbk',
-    'gb231280': 'gbk',
-    'gbk': 'gbk',
-    'greek': 'iso8859-7',
-    'greek8': 'iso8859-7',
-    'hebrew': 'iso8859-8',
-    'hproman8': 'hp-roman8',
-    'hzgb2312': 'hz',
-    'ibm037': 'cp037',
-    'ibm1026': 'cp1026',
-    'ibm367': 'ascii',
-    'ibm424': 'cp424',
-    'ibm437': 'cp437',
-    'ibm500': 'cp500',
-    'ibm775': 'cp775',
-    'ibm819': 'windows-1252',
-    'ibm850': 'cp850',
-    'ibm852': 'cp852',
-    'ibm855': 'cp855',
-    'ibm857': 'cp857',
-    'ibm860': 'cp860',
-    'ibm861': 'cp861',
-    'ibm862': 'cp862',
-    'ibm863': 'cp863',
-    'ibm864': 'cp864',
-    'ibm865': 'cp865',
-    'ibm866': 'cp866',
-    'ibm869': 'cp869',
-    'iso2022jp': 'iso2022_jp',
-    'iso2022jp2': 'iso2022_jp_2',
-    'iso2022kr': 'iso2022_kr',
-    'iso646irv1991': 'ascii',
-    'iso646us': 'ascii',
-    'iso88591': 'windows-1252',
-    'iso885910': 'iso8859-10',
-    'iso8859101992': 'iso8859-10',
-    'iso885911987': 'windows-1252',
-    'iso885913': 'iso8859-13',
-    'iso885914': 'iso8859-14',
-    'iso8859141998': 'iso8859-14',
-    'iso885915': 'iso8859-15',
-    'iso885916': 'iso8859-16',
-    'iso8859162001': 'iso8859-16',
-    'iso88592': 'iso8859-2',
-    'iso885921987': 'iso8859-2',
-    'iso88593': 'iso8859-3',
-    'iso885931988': 'iso8859-3',
-    'iso88594': 'iso8859-4',
-    'iso885941988': 'iso8859-4',
-    'iso88595': 'iso8859-5',
-    'iso885951988': 'iso8859-5',
-    'iso88596': 'iso8859-6',
-    'iso885961987': 'iso8859-6',
-    'iso88597': 'iso8859-7',
-    'iso885971987': 'iso8859-7',
-    'iso88598': 'iso8859-8',
-    'iso885981988': 'iso8859-8',
-    'iso88599': 'windows-1254',
-    'iso885991989': 'windows-1254',
-    'isoceltic': 'iso8859-14',
-    'isoir100': 'windows-1252',
-    'isoir101': 'iso8859-2',
-    'isoir109': 'iso8859-3',
-    'isoir110': 'iso8859-4',
-    'isoir126': 'iso8859-7',
-    'isoir127': 'iso8859-6',
-    'isoir138': 'iso8859-8',
-    'isoir144': 'iso8859-5',
-    'isoir148': 'windows-1254',
-    'isoir149': 'cp949',
-    'isoir157': 'iso8859-10',
-    'isoir199': 'iso8859-14',
-    'isoir226': 'iso8859-16',
-    'isoir58': 'gbk',
-    'isoir6': 'ascii',
-    'koi8r': 'koi8-r',
-    'koi8u': 'koi8-u',
-    'korean': 'cp949',
-    'ksc5601': 'cp949',
-    'ksc56011987': 'cp949',
-    'ksc56011989': 'cp949',
-    'l1': 'windows-1252',
-    'l10': 'iso8859-16',
-    'l2': 'iso8859-2',
-    'l3': 'iso8859-3',
-    'l4': 'iso8859-4',
-    'l5': 'windows-1254',
-    'l6': 'iso8859-10',
-    'l8': 'iso8859-14',
-    'latin1': 'windows-1252',
-    'latin10': 'iso8859-16',
-    'latin2': 'iso8859-2',
-    'latin3': 'iso8859-3',
-    'latin4': 'iso8859-4',
-    'latin5': 'windows-1254',
-    'latin6': 'iso8859-10',
-    'latin8': 'iso8859-14',
-    'latin9': 'iso8859-15',
-    'ms936': 'gbk',
-    'mskanji': 'shift_jis',
-    'pt154': 'ptcp154',
-    'ptcp154': 'ptcp154',
-    'r8': 'hp-roman8',
-    'roman8': 'hp-roman8',
-    'shiftjis': 'shift_jis',
-    'tis620': 'cp874',
-    'unicode11utf7': 'utf-7',
-    'us': 'ascii',
-    'usascii': 'ascii',
-    'utf16': 'utf-16',
-    'utf16be': 'utf-16-be',
-    'utf16le': 'utf-16-le',
-    'utf8': 'utf-8',
-    'windows1250': 'cp1250',
-    'windows1251': 'cp1251',
-    'windows1252': 'cp1252',
-    'windows1253': 'cp1253',
-    'windows1254': 'cp1254',
-    'windows1255': 'cp1255',
-    'windows1256': 'cp1256',
-    'windows1257': 'cp1257',
-    'windows1258': 'cp1258',
-    'windows936': 'gbk',
-    'x-x-big5': 'big5'}
+    u'437': u'cp437',
+    u'850': u'cp850',
+    u'852': u'cp852',
+    u'855': u'cp855',
+    u'857': u'cp857',
+    u'860': u'cp860',
+    u'861': u'cp861',
+    u'862': u'cp862',
+    u'863': u'cp863',
+    u'865': u'cp865',
+    u'866': u'cp866',
+    u'869': u'cp869',
+    u'ansix341968': u'ascii',
+    u'ansix341986': u'ascii',
+    u'arabic': u'iso8859-6',
+    u'ascii': u'ascii',
+    u'asmo708': u'iso8859-6',
+    u'big5': u'big5',
+    u'big5hkscs': u'big5hkscs',
+    u'chinese': u'gbk',
+    u'cp037': u'cp037',
+    u'cp1026': u'cp1026',
+    u'cp154': u'ptcp154',
+    u'cp367': u'ascii',
+    u'cp424': u'cp424',
+    u'cp437': u'cp437',
+    u'cp500': u'cp500',
+    u'cp775': u'cp775',
+    u'cp819': u'windows-1252',
+    u'cp850': u'cp850',
+    u'cp852': u'cp852',
+    u'cp855': u'cp855',
+    u'cp857': u'cp857',
+    u'cp860': u'cp860',
+    u'cp861': u'cp861',
+    u'cp862': u'cp862',
+    u'cp863': u'cp863',
+    u'cp864': u'cp864',
+    u'cp865': u'cp865',
+    u'cp866': u'cp866',
+    u'cp869': u'cp869',
+    u'cp936': u'gbk',
+    u'cpgr': u'cp869',
+    u'cpis': u'cp861',
+    u'csascii': u'ascii',
+    u'csbig5': u'big5',
+    u'cseuckr': u'cp949',
+    u'cseucpkdfmtjapanese': u'euc_jp',
+    u'csgb2312': u'gbk',
+    u'cshproman8': u'hp-roman8',
+    u'csibm037': u'cp037',
+    u'csibm1026': u'cp1026',
+    u'csibm424': u'cp424',
+    u'csibm500': u'cp500',
+    u'csibm855': u'cp855',
+    u'csibm857': u'cp857',
+    u'csibm860': u'cp860',
+    u'csibm861': u'cp861',
+    u'csibm863': u'cp863',
+    u'csibm864': u'cp864',
+    u'csibm865': u'cp865',
+    u'csibm866': u'cp866',
+    u'csibm869': u'cp869',
+    u'csiso2022jp': u'iso2022_jp',
+    u'csiso2022jp2': u'iso2022_jp_2',
+    u'csiso2022kr': u'iso2022_kr',
+    u'csiso58gb231280': u'gbk',
+    u'csisolatin1': u'windows-1252',
+    u'csisolatin2': u'iso8859-2',
+    u'csisolatin3': u'iso8859-3',
+    u'csisolatin4': u'iso8859-4',
+    u'csisolatin5': u'windows-1254',
+    u'csisolatin6': u'iso8859-10',
+    u'csisolatinarabic': u'iso8859-6',
+    u'csisolatincyrillic': u'iso8859-5',
+    u'csisolatingreek': u'iso8859-7',
+    u'csisolatinhebrew': u'iso8859-8',
+    u'cskoi8r': u'koi8-r',
+    u'csksc56011987': u'cp949',
+    u'cspc775baltic': u'cp775',
+    u'cspc850multilingual': u'cp850',
+    u'cspc862latinhebrew': u'cp862',
+    u'cspc8codepage437': u'cp437',
+    u'cspcp852': u'cp852',
+    u'csptcp154': u'ptcp154',
+    u'csshiftjis': u'shift_jis',
+    u'csunicode11utf7': u'utf-7',
+    u'cyrillic': u'iso8859-5',
+    u'cyrillicasian': u'ptcp154',
+    u'ebcdiccpbe': u'cp500',
+    u'ebcdiccpca': u'cp037',
+    u'ebcdiccpch': u'cp500',
+    u'ebcdiccphe': u'cp424',
+    u'ebcdiccpnl': u'cp037',
+    u'ebcdiccpus': u'cp037',
+    u'ebcdiccpwt': u'cp037',
+    u'ecma114': u'iso8859-6',
+    u'ecma118': u'iso8859-7',
+    u'elot928': u'iso8859-7',
+    u'eucjp': u'euc_jp',
+    u'euckr': u'cp949',
+    u'extendedunixcodepackedformatforjapanese': u'euc_jp',
+    u'gb18030': u'gb18030',
+    u'gb2312': u'gbk',
+    u'gb231280': u'gbk',
+    u'gbk': u'gbk',
+    u'greek': u'iso8859-7',
+    u'greek8': u'iso8859-7',
+    u'hebrew': u'iso8859-8',
+    u'hproman8': u'hp-roman8',
+    u'hzgb2312': u'hz',
+    u'ibm037': u'cp037',
+    u'ibm1026': u'cp1026',
+    u'ibm367': u'ascii',
+    u'ibm424': u'cp424',
+    u'ibm437': u'cp437',
+    u'ibm500': u'cp500',
+    u'ibm775': u'cp775',
+    u'ibm819': u'windows-1252',
+    u'ibm850': u'cp850',
+    u'ibm852': u'cp852',
+    u'ibm855': u'cp855',
+    u'ibm857': u'cp857',
+    u'ibm860': u'cp860',
+    u'ibm861': u'cp861',
+    u'ibm862': u'cp862',
+    u'ibm863': u'cp863',
+    u'ibm864': u'cp864',
+    u'ibm865': u'cp865',
+    u'ibm866': u'cp866',
+    u'ibm869': u'cp869',
+    u'iso2022jp': u'iso2022_jp',
+    u'iso2022jp2': u'iso2022_jp_2',
+    u'iso2022kr': u'iso2022_kr',
+    u'iso646irv1991': u'ascii',
+    u'iso646us': u'ascii',
+    u'iso88591': u'windows-1252',
+    u'iso885910': u'iso8859-10',
+    u'iso8859101992': u'iso8859-10',
+    u'iso885911987': u'windows-1252',
+    u'iso885913': u'iso8859-13',
+    u'iso885914': u'iso8859-14',
+    u'iso8859141998': u'iso8859-14',
+    u'iso885915': u'iso8859-15',
+    u'iso885916': u'iso8859-16',
+    u'iso8859162001': u'iso8859-16',
+    u'iso88592': u'iso8859-2',
+    u'iso885921987': u'iso8859-2',
+    u'iso88593': u'iso8859-3',
+    u'iso885931988': u'iso8859-3',
+    u'iso88594': u'iso8859-4',
+    u'iso885941988': u'iso8859-4',
+    u'iso88595': u'iso8859-5',
+    u'iso885951988': u'iso8859-5',
+    u'iso88596': u'iso8859-6',
+    u'iso885961987': u'iso8859-6',
+    u'iso88597': u'iso8859-7',
+    u'iso885971987': u'iso8859-7',
+    u'iso88598': u'iso8859-8',
+    u'iso885981988': u'iso8859-8',
+    u'iso88599': u'windows-1254',
+    u'iso885991989': u'windows-1254',
+    u'isoceltic': u'iso8859-14',
+    u'isoir100': u'windows-1252',
+    u'isoir101': u'iso8859-2',
+    u'isoir109': u'iso8859-3',
+    u'isoir110': u'iso8859-4',
+    u'isoir126': u'iso8859-7',
+    u'isoir127': u'iso8859-6',
+    u'isoir138': u'iso8859-8',
+    u'isoir144': u'iso8859-5',
+    u'isoir148': u'windows-1254',
+    u'isoir149': u'cp949',
+    u'isoir157': u'iso8859-10',
+    u'isoir199': u'iso8859-14',
+    u'isoir226': u'iso8859-16',
+    u'isoir58': u'gbk',
+    u'isoir6': u'ascii',
+    u'koi8r': u'koi8-r',
+    u'koi8u': u'koi8-u',
+    u'korean': u'cp949',
+    u'ksc5601': u'cp949',
+    u'ksc56011987': u'cp949',
+    u'ksc56011989': u'cp949',
+    u'l1': u'windows-1252',
+    u'l10': u'iso8859-16',
+    u'l2': u'iso8859-2',
+    u'l3': u'iso8859-3',
+    u'l4': u'iso8859-4',
+    u'l5': u'windows-1254',
+    u'l6': u'iso8859-10',
+    u'l8': u'iso8859-14',
+    u'latin1': u'windows-1252',
+    u'latin10': u'iso8859-16',
+    u'latin2': u'iso8859-2',
+    u'latin3': u'iso8859-3',
+    u'latin4': u'iso8859-4',
+    u'latin5': u'windows-1254',
+    u'latin6': u'iso8859-10',
+    u'latin8': u'iso8859-14',
+    u'latin9': u'iso8859-15',
+    u'ms936': u'gbk',
+    u'mskanji': u'shift_jis',
+    u'pt154': u'ptcp154',
+    u'ptcp154': u'ptcp154',
+    u'r8': u'hp-roman8',
+    u'roman8': u'hp-roman8',
+    u'shiftjis': u'shift_jis',
+    u'tis620': u'cp874',
+    u'unicode11utf7': u'utf-7',
+    u'us': u'ascii',
+    u'usascii': u'ascii',
+    u'utf16': u'utf-16',
+    u'utf16be': u'utf-16-be',
+    u'utf16le': u'utf-16-le',
+    u'utf8': u'utf-8',
+    u'windows1250': u'cp1250',
+    u'windows1251': u'cp1251',
+    u'windows1252': u'cp1252',
+    u'windows1253': u'cp1253',
+    u'windows1254': u'cp1254',
+    u'windows1255': u'cp1255',
+    u'windows1256': u'cp1256',
+    u'windows1257': u'cp1257',
+    u'windows1258': u'cp1258',
+    u'windows936': u'gbk',
+    u'x-x-big5': u'big5'}
 
 tokenTypes = {
-    "Doctype":0,
-    "Characters":1,
-    "SpaceCharacters":2,
-    "StartTag":3,
-    "EndTag":4,
-    "EmptyTag":5,
-    "Comment":6,
-    "ParseError":7
+    u"Doctype":0,
+    u"Characters":1,
+    u"SpaceCharacters":2,
+    u"StartTag":3,
+    u"EndTag":4,
+    u"EmptyTag":5,
+    u"Comment":6,
+    u"ParseError":7
 }
 
-tagTokenTypes = frozenset((tokenTypes["StartTag"], tokenTypes["EndTag"], 
-                           tokenTypes["EmptyTag"]))
+tagTokenTypes = frozenset((tokenTypes[u"StartTag"], tokenTypes[u"EndTag"], 
+                           tokenTypes[u"EmptyTag"]))
 
 
-prefixes = dict([(v,k) for k,v in namespaces.iteritems()])
-prefixes["http://www.w3.org/1998/Math/MathML"] = "math"
+prefixes = dict([(v,k) for k,v in namespaces.items()])
+prefixes[u"http://www.w3.org/1998/Math/MathML"] = u"math"
 
 class DataLossWarning(UserWarning):
     pass

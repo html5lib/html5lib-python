@@ -1,4 +1,4 @@
-"""A collection of modules for iterating through different kinds of
+u"""A collection of modules for iterating through different kinds of
 tree, generating tokens identical to those produced by the tokenizer
 module.
 
@@ -8,10 +8,13 @@ implements a 'serialize' method taking a tree as sole argument and
 returning an iterator generating tokens.
 """
 
+from __future__ import absolute_import
+from importlib import import_module
+
 treeWalkerCache = {}
 
 def getTreeWalker(treeType, implementation=None, **kwargs):
-    """Get a TreeWalker class for various types of tree with built-in support
+    u"""Get a TreeWalker class for various types of tree with built-in support
 
     treeType - the name of the tree type required (case-insensitive). Supported
                values are "simpletree", "dom", "etree" and "beautifulsoup"
@@ -33,20 +36,21 @@ def getTreeWalker(treeType, implementation=None, **kwargs):
 
     treeType = treeType.lower()
     if treeType not in treeWalkerCache:
-        if treeType in ("dom", "pulldom", "simpletree"):
-            mod = __import__(treeType, globals())
+        if treeType in (u"dom", u"pulldom", u"simpletree"):
+            mod = import_module(u"."+treeType, u"html5lib.treewalkers")
             treeWalkerCache[treeType] = mod.TreeWalker
-        elif treeType == "genshi":
-            import genshistream
+        elif treeType == u"genshi":
+            from . import genshistream
             treeWalkerCache[treeType] = genshistream.TreeWalker
-        elif treeType == "beautifulsoup":
-            import soup
+        elif treeType == u"beautifulsoup":
+            from . import soup
             treeWalkerCache[treeType] = soup.TreeWalker
-        elif treeType == "lxml":
-            import lxmletree
+        elif treeType == u"lxml":
+            from . import lxmletree
             treeWalkerCache[treeType] = lxmletree.TreeWalker
-        elif treeType == "etree":
-            import etree
+        elif treeType == u"etree":
+            from . import etree
             # XXX: NEVER cache here, caching is done in the etree submodule
             return etree.getETreeModule(implementation, **kwargs).TreeWalker
     return treeWalkerCache.get(treeType)
+getTreeWalker.func_annotations = {}

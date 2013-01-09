@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 from genshi.core import START, END, XML_NAMESPACE, DOCTYPE, TEXT
 from genshi.core  import  START_NS, END_NS, START_CDATA, END_CDATA, PI, COMMENT
 from genshi.output import NamespaceFlattener
 
-import _base
+from . import _base
 
 from html5lib.constants import voidElements
 
@@ -20,7 +21,7 @@ class TreeWalker(_base.TreeWalker):
                 if ignore_until is None:
                     for token in self.tokens(previous, event):
                         yield token
-                        if token["type"] == "EmptyTag":
+                        if token[u"type"] == u"EmptyTag":
                             ignore_until = depth
                 if previous[0] == END:
                     depth -= 1
@@ -30,7 +31,8 @@ class TreeWalker(_base.TreeWalker):
                 for token in self.tokens(previous, None):
                     yield token
             elif ignore_until is not None:
-                raise ValueError("Illformed DOM event stream: void element without END_ELEMENT")
+                raise ValueError(u"Illformed DOM event stream: void element without END_ELEMENT")
+    __iter__.func_annotations = {}
 
     def tokens(self, event, next):
         kind, data, pos = event
@@ -68,3 +70,4 @@ class TreeWalker(_base.TreeWalker):
 
         else:
             yield self.unknown(kind)
+    tokens.func_annotations = {}

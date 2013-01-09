@@ -45,7 +45,7 @@ class Package(object):
 
     def copyTestData(self):
         outDir = os.path.join(self.inDir, "tests/testdata")
-        print 
+        print() 
         try:
             os.mkdir(outDir)
         except OSError:
@@ -204,7 +204,7 @@ class Preprocessor(object):
     def getInstruction(self, line):
         rv = None
         if line.startswith("#RELEASE"):
-            for item in self.instructions.keys():
+            for item in list(self.instructions.keys()):
                 if line[len("#RELEASE"):].strip().startswith(item):
                     rv = item
                     break

@@ -1,10 +1,11 @@
+from __future__ import absolute_import
 import gettext
 _ = gettext.gettext
 
-import _base
+from . import _base
 
 class TreeWalker(_base.NonRecursiveTreeWalker):
-    """Given that simpletree has no performant way of getting a node's
+    u"""Given that simpletree has no performant way of getting a node's
     next sibling, this implementation returns "nodes" as tuples with the
     following content:
 
@@ -33,7 +34,7 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
 
         elif node.type == 5: # Element
             attrs = {}
-            for name, value in node.attributes.items():
+            for name, value in list(node.attributes.items()):
                 if isinstance(name, tuple):
                     attrs[(name[2],name[1])] = value
                 else:
@@ -46,6 +47,7 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
 
         else:
             return _node.UNKNOWN, node.type
+    getNodeDetails.func_annotations = {}
 
     def getFirstChild(self, node):
         if isinstance(node, tuple): # It might be the root Node
@@ -55,17 +57,19 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
         else:
             parents = []
 
-        assert node.hasContent(), "Node has no children"
+        assert node.hasContent(), u"Node has no children"
         return (node, 0, parents)
+    getFirstChild.func_annotations = {}
 
     def getNextSibling(self, node):
-        assert isinstance(node, tuple), "Node is not a tuple: " + str(node)
+        assert isinstance(node, tuple), u"Node is not a tuple: " + unicode(node)
         parent, idx, parents = node
         idx += 1
         if len(parent.childNodes) > idx:
             return (parent, idx, parents)
         else:
             return None
+    getNextSibling.func_annotations = {}
 
     def getParentNode(self, node):
         assert isinstance(node, tuple)
@@ -76,3 +80,4 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
         else:
             # HACK: We could return ``parent`` but None will stop the algorithm the same way
             return None
+    getParentNode.func_annotations = {}

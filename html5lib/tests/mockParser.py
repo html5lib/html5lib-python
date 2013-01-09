@@ -1,37 +1,39 @@
+from __future__ import absolute_import
 import sys
 import os
 
-if __name__ == '__main__':
+if __name__ == u'__main__':
     #Allow us to import from the src directory
     os.chdir(os.path.split(os.path.abspath(__file__))[0])
-    sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
+    sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, u"src")))
 
 from tokenizer import HTMLTokenizer
 
 class HTMLParser(object):
-    """ Fake parser to test tokenizer output """
+    u""" Fake parser to test tokenizer output """
     def parse(self, stream, output=True):
         tokenizer = HTMLTokenizer(stream)
         for token in tokenizer:
             if output:
                 print token
+    parse.func_annotations = {}
 
-if __name__ == "__main__":
+if __name__ == u"__main__":
     x = HTMLParser()
     if len(sys.argv) > 1:
         if len(sys.argv) > 2:
             import hotshot, hotshot.stats
-            prof = hotshot.Profile('stats.prof')
+            prof = hotshot.Profile(u'stats.prof')
             prof.runcall(x.parse, sys.argv[1], False)
             prof.close()
-            stats = hotshot.stats.load('stats.prof')
+            stats = hotshot.stats.load(u'stats.prof')
             stats.strip_dirs()
-            stats.sort_stats('time')
+            stats.sort_stats(u'time')
             stats.print_stats()
         else:
             x.parse(sys.argv[1])
     else:
-        print """Usage: python mockParser.py filename [stats]
+        print u"""Usage: python mockParser.py filename [stats]
         If stats is specified the hotshots profiler will run and output the
         stats instead.
         """

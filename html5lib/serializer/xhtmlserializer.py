@@ -1,4 +1,5 @@
-from htmlserializer import HTMLSerializer
+from __future__ import absolute_import
+from .htmlserializer import HTMLSerializer
 
 class XHTMLSerializer(HTMLSerializer):
     quote_attr_values = True

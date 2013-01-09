@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import gettext
 _ = gettext.gettext
 
@@ -7,76 +8,89 @@ spaceCharacters = u"".join(spaceCharacters)
 class TreeWalker(object):
     def __init__(self, tree):
         self.tree = tree
+    __init__.func_annotations = {}
 
     def __iter__(self):
         raise NotImplementedError
+    __iter__.func_annotations = {}
 
     def error(self, msg):
-        return {"type": "SerializeError", "data": msg}
+        return {u"type": u"SerializeError", u"data": msg}
+    error.func_annotations = {}
 
     def normalizeAttrs(self, attrs):
         newattrs = {}
         if attrs:
             #TODO: treewalkers should always have attrs
-            for (namespace,name),value in attrs.iteritems():
+            for (namespace,name),value in attrs.items():
                 namespace = unicode(namespace) if namespace else None
                 name = unicode(name)
                 value = unicode(value)
                 newattrs[(namespace,name)] = value
         return newattrs
+    normalizeAttrs.func_annotations = {}
 
     def emptyTag(self, namespace, name, attrs, hasChildren=False):
-        yield {"type": "EmptyTag", "name": unicode(name), 
-               "namespace":unicode(namespace),
-               "data": self.normalizeAttrs(attrs)}
+        yield {u"type": u"EmptyTag", u"name": unicode(name), 
+               u"namespace":unicode(namespace),
+               u"data": self.normalizeAttrs(attrs)}
         if hasChildren:
-            yield self.error(_("Void element has children"))
+            yield self.error(_(u"Void element has children"))
+    emptyTag.func_annotations = {}
 
     def startTag(self, namespace, name, attrs):
-        return {"type": "StartTag", 
-                "name": unicode(name),
-                "namespace":unicode(namespace),
-                "data": self.normalizeAttrs(attrs)}
+        return {u"type": u"StartTag", 
+                u"name": unicode(name),
+                u"namespace":unicode(namespace),
+                u"data": self.normalizeAttrs(attrs)}
+    startTag.func_annotations = {}
 
     def endTag(self, namespace, name):
-        return {"type": "EndTag", 
-                "name": unicode(name),
-                "namespace":unicode(namespace),
-                "data": {}}
+        return {u"type": u"EndTag", 
+                u"name": unicode(name),
+                u"namespace":unicode(namespace),
+                u"data": {}}
+    endTag.func_annotations = {}
 
     def text(self, data):
         data = unicode(data)
         middle = data.lstrip(spaceCharacters)
         left = data[:len(data)-len(middle)]
         if left:
-            yield {"type": "SpaceCharacters", "data": left}
+            yield {u"type": u"SpaceCharacters", u"data": left}
         data = middle
         middle = data.rstrip(spaceCharacters)
         right = data[len(middle):]
         if middle:
-            yield {"type": "Characters", "data": middle}
+            yield {u"type": u"Characters", u"data": middle}
         if right:
-            yield {"type": "SpaceCharacters", "data": right}
+            yield {u"type": u"SpaceCharacters", u"data": right}
+    text.func_annotations = {}
 
     def comment(self, data):
-        return {"type": "Comment", "data": unicode(data)}
+        return {u"type": u"Comment", u"data": unicode(data)}
+    comment.func_annotations = {}
 
     def doctype(self, name, publicId=None, systemId=None, correct=True):
-        return {"type": "Doctype",
-                "name": name is not None and unicode(name) or u"",
-                "publicId": publicId,
-                "systemId": systemId,
-                "correct": correct}
+        return {u"type": u"Doctype",
+                u"name": name is not None and unicode(name) or u"",
+                u"publicId": publicId,
+                u"systemId": systemId,
+                u"correct": correct}
+    doctype.func_annotations = {}
 
     def entity(self, name):
-        return {"type": "Entity", "name": unicode(name)}
+        return {u"type": u"Entity", u"name": unicode(name)}
+    entity.func_annotations = {}
 
     def unknown(self, nodeType):
-        return self.error(_("Unknown node type: ") + nodeType)
+        return self.error(_(u"Unknown node type: ") + nodeType)
+    unknown.func_annotations = {}
 
 class RecursiveTreeWalker(TreeWalker):
     def walkChildren(self, node):
         raise NodeImplementedError
+    walkChildren.func_annotations = {}
 
     def element(self, node, namespace, name, attrs, hasChildren):
         if name in voidElements:
@@ -88,6 +102,7 @@ class RecursiveTreeWalker(TreeWalker):
                 for token in self.walkChildren(node):
                     yield token
             yield self.endTag(name)
+    element.func_annotations = {}
 
 from xml.dom import Node
 
@@ -97,20 +112,24 @@ TEXT = Node.TEXT_NODE
 ELEMENT = Node.ELEMENT_NODE
 COMMENT = Node.COMMENT_NODE
 ENTITY = Node.ENTITY_NODE
-UNKNOWN = "<#UNKNOWN#>"
+UNKNOWN = u"<#UNKNOWN#>"
 
 class NonRecursiveTreeWalker(TreeWalker):
     def getNodeDetails(self, node):
         raise NotImplementedError
+    getNodeDetails.func_annotations = {}
     
     def getFirstChild(self, node):
         raise NotImplementedError
+    getFirstChild.func_annotations = {}
     
     def getNextSibling(self, node):
         raise NotImplementedError
+    getNextSibling.func_annotations = {}
     
     def getParentNode(self, node):
         raise NotImplementedError
+    getParentNode.func_annotations = {}
 
     def __iter__(self):
         currentNode = self.tree
@@ -174,3 +193,4 @@ class NonRecursiveTreeWalker(TreeWalker):
                         break
                     else:
                         currentNode = self.getParentNode(currentNode)
+    __iter__.func_annotations = {}

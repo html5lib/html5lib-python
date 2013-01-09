@@ -7,9 +7,9 @@ s = spider.Spider()
 s.spider("http://www.google.com", maxURLs=100)
 """
 
-import urllib2
-import urlparse
-import robotparser
+import urllib.request, urllib.error, urllib.parse
+import urllib.parse
+import urllib.robotparser
 import md5
 
 import httplib2
@@ -22,7 +22,7 @@ class Spider(object):
         self.unvisitedURLs = set()
         self.visitedURLs = set()
         self.buggyURLs=set()
-        self.robotParser = robotparser.RobotFileParser()
+        self.robotParser = urllib.robotparser.RobotFileParser()
         self.contentDigest = {}
         self.http = httplib2.Http(".cache")
         
@@ -46,7 +46,7 @@ class Spider(object):
         except:
             self.buggyURLs.add(self.currentURL)
             failed = True
-            print "BUGGY:", self.currentURL
+            print("BUGGY:", self.currentURL)
         self.visitedURLs.add(self.currentURL)
         if not failed:
             self.updateURLs(tree)
@@ -74,7 +74,7 @@ class Spider(object):
         #Remove all links we have already visited
         for link in tree.findall(".//a"):
                 try:
-                    url = urlparse.urldefrag(link.attrib['href'])[0]
+                    url = urllib.parse.urldefrag(link.attrib['href'])[0]
                     if (url and url not in self.unvisitedURLs and url
                         not in self.visitedURLs):
                         urls.add(url)
@@ -85,12 +85,12 @@ class Spider(object):
         #missing
         newUrls = set()
         for url in urls:
-            splitURL = list(urlparse.urlsplit(url))
+            splitURL = list(urllib.parse.urlsplit(url))
             if splitURL[0] != "http":
                 continue
             if splitURL[1] == "":
-                splitURL[1] = urlparse.urlsplit(self.currentURL)[1]
-            newUrls.add(urlparse.urlunsplit(splitURL))
+                splitURL[1] = urllib.parse.urlsplit(self.currentURL)[1]
+            newUrls.add(urllib.parse.urlunsplit(splitURL))
         urls = newUrls
         
         responseHeaders = {}
@@ -99,7 +99,7 @@ class Spider(object):
             try:
                 resp, content = self.http.request(url, "HEAD")
                 responseHeaders[url] = resp
-            except AttributeError, KeyError:
+            except AttributeError as KeyError:
                 #Don't know why this happens
                 pass
             
@@ -112,9 +112,9 @@ class Spider(object):
 
         #Now check we are allowed to spider the page
         for url in toVisit:
-            robotURL = list(urlparse.urlsplit(url)[:2])
+            robotURL = list(urllib.parse.urlsplit(url)[:2])
             robotURL.extend(["robots.txt", "", ""])
-            robotURL = urlparse.urlunsplit(robotURL)
+            robotURL = urllib.parse.urlunsplit(robotURL)
             self.robotParser.set_url(robotURL)
             if not self.robotParser.can_fetch("*", url):
                 toVisit.remove(url)
