@@ -74,8 +74,12 @@ class DefaultDict(dict):
         return dict.get(self, key, self.default)
 
 class TestData(object):
-    def __init__(self, filename, newTestHeading="data"):
-        self.f = codecs.open(filename, encoding="utf8")
+    def __init__(self, filename, newTestHeading="data", encoding="utf8"):
+        if encoding == None:
+            self.f = open(filename, mode="rb")
+        else:
+            self.f = codecs.open(filename, encoding=encoding)
+        self.encoding = encoding
         self.newTestHeading = newTestHeading
 
     def __del__(self):
@@ -93,7 +97,7 @@ class TestData(object):
                     yield self.normaliseOutput(data)
                     data = DefaultDict(None)
                 key = heading
-                data[key]=""
+                data[key]="" if self.encoding else b""
             elif key is not None:
                 data[key] += line
         if data:
@@ -102,7 +106,8 @@ class TestData(object):
     def isSectionHeading(self, line):
         """If the current heading is a test section heading return the heading,
         otherwise return False"""
-        if line.startswith("#"):
+        #print(line)
+        if line.startswith("#" if self.encoding else b"#"):
             return line[1:].strip()
         else:
             return False
@@ -110,7 +115,7 @@ class TestData(object):
     def normaliseOutput(self, data):
         #Remove trailing newlines
         for key,value in data.items():
-            if value.endswith("\n"):
+            if value.endswith("\n" if self.encoding else b"\n"):
                 data[key] = value[:-1]
         return data
 
