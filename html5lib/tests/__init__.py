@@ -7,6 +7,4 @@ if not parent_path in sys.path:
     sys.path.insert(0, parent_path)
 del parent_path
 
-from .runtests import buildTestSuite
-
 from . import support
