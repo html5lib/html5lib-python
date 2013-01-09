@@ -1,3 +1,14 @@
+"""Module for supporting the lxml.etree library. The idea here is to use as much
+of the native library as possible, without using fragile hacks like custom element
+names that break between releases. The downside of this is that we cannot represent
+all possible trees; specifically the following are known to cause problems:
+
+Text or comments as siblings of the root element
+Docypes with no name
+
+When any of these things occur, we emit a DataLossWarning
+"""
+
 import warnings
 import re
 
@@ -15,16 +26,6 @@ except ImportError:
 fullTree = True
 tag_regexp = re.compile("{([^}]*)}(.*)")
 
-"""Module for supporting the lxml.etree library. The idea here is to use as much
-of the native library as possible, without using fragile hacks like custom element
-names that break between releases. The downside of this is that we cannot represent
-all possible trees; specifically the following are known to cause problems:
-
-Text or comments as siblings of the root element
-Docypes with no name
-
-When any of these things occur, we emit a DataLossWarning
-"""
 
 class DocumentType(object):
     def __init__(self, name, publicId, systemId):
