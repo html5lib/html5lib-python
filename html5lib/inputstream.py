@@ -123,6 +123,9 @@ def HTMLInputStream(source, encoding=None, parseMeta=True, chardet=True):
         isUnicode = isinstance(source, str)
 
     if isUnicode:
+        if encoding is not None:
+            raise TypeError("Cannot explicitly set an encoding with a unicode string")
+
         return HTMLUnicodeInputStream(source)
     else:
         return HTMLBinaryInputStream(source, encoding, parseMeta, chardet)
