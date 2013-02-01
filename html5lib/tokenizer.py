@@ -1,14 +1,5 @@
 from __future__ import absolute_import
-try:
-    frozenset
-except NameError:
-    # Import from the sets module for python 2.3
-    from sets import Set as set
-    from sets import ImmutableSet as frozenset
-try:
-    from collections import deque
-except ImportError:
-    from .utils import deque
+from collections import deque
     
 from .constants import spaceCharacters
 from .constants import entitiesWindows1252, entities

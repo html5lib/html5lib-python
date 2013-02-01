@@ -1,37 +1,4 @@
 from __future__ import absolute_import
-from itertools import izip
-try:
-    frozenset
-except NameError:
-    # Import from the sets module for python 2.3
-    from sets import Set as set
-    from sets import ImmutableSet as frozenset
-
-try:
-    any
-except:
-    # Implement 'any' for python 2.4 and previous
-    def any(iterable):
-        for element in iterable:
-            if element:
-                return True
-        return False
-    any.func_annotations = {}
-        
-try:
-    u"abc".startswith((u"a", u"b"))
-    def startswithany(unicode, prefixes):
-        return unicode.startswith(prefixes)
-    startswithany.func_annotations = {}
-except:
-    # Python 2.4 doesn't accept a tuple as argument to string startswith
-    def startswithany(unicode, prefixes):
-        for prefix in prefixes:
-            if unicode.startswith(prefix):
-                return True
-        return False
-    startswithany.func_annotations = {}
-
 import sys
 import types
 
@@ -50,6 +17,7 @@ from .constants import headingElements, tableInsertModeElements
 from .constants import cdataElements, rcdataElements, voidElements
 from .constants import tokenTypes, ReparseException, namespaces, spaceCharacters
 from .constants import htmlIntegrationPointElements, mathmlTextIntegrationPointElements
+from itertools import izip
 
 def parse(doc, treebuilder=u"simpletree", encoding=None,
           namespaceHTMLElements=True):
@@ -581,7 +549,7 @@ def getPhases(debug):
                 publicId = publicId.translate(asciiUpper2Lower)
 
             if (not correct or token[u"name"] != u"html"
-                or startswithany(publicId,
+                or publicId.startswith(
                 (u"+//silmaril//dtd html pro v0r11 19970101//",
                  u"-//advasoft ltd//dtd html 3.0 aswedit + extensions//",
                  u"-//as//dtd html 3.0 aswedit + extensions//",
@@ -641,16 +609,16 @@ def getPhases(debug):
                     (u"-//w3o//dtd w3 html strict 3.0//en//",
                      u"-/w3c/dtd html 4.0 transitional/en",
                      u"html")
-                or startswithany(publicId,
+                or publicId.startswith(
                     (u"-//w3c//dtd html 4.01 frameset//",
                      u"-//w3c//dtd html 4.01 transitional//")) and 
                     systemId == None
                 or systemId and systemId.lower() == u"http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd"):
                 self.parser.compatMode = u"quirks"
-            elif (startswithany(publicId,
+            elif (publicId.startswith(
                     (u"-//w3c//dtd xhtml 1.0 frameset//",
                      u"-//w3c//dtd xhtml 1.0 transitional//"))
-                  or startswithany(publicId,
+                  or publicId.startswith(
                       (u"-//w3c//dtd html 4.01 frameset//",
                        u"-//w3c//dtd html 4.01 transitional//")) and 
                       systemId != None):

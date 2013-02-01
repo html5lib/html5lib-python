@@ -2,13 +2,6 @@ from __future__ import absolute_import
 import string, gettext
 _ = gettext.gettext
 
-try:
-    frozenset
-except NameError:
-    # Import from the sets module for python 2.3
-    from sets import Set as set
-    from sets import ImmutableSet as frozenset
-
 EOF = None
 
 E = {
