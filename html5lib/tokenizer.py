@@ -18,10 +18,9 @@ from .constants import replacementCharacters
 
 from .inputstream import HTMLInputStream
 
-# Group entities by their first character, for faster lookups
-entitiesByFirstChar = {}
-for e in entities:
-    entitiesByFirstChar.setdefault(e[0], []).append(e)
+from .trie import Trie
+
+entitiesTrie = Trie(entities)
 
 class HTMLTokenizer(object):
     """ This class takes care of tokenizing HTML.
@@ -179,28 +178,20 @@ class HTMLTokenizer(object):
             #
             # Consume characters and compare to these to a substring of the
             # entity names in the list until the substring no longer matches.
-            filteredEntityList = entitiesByFirstChar.get(charStack[0], [])
-
-            def entitiesStartingWith(name):
-                return [e for e in filteredEntityList if e.startswith(name)]
-
             while (charStack[-1] is not EOF):
-                filteredEntityList = entitiesStartingWith("".join(charStack))
-                if not filteredEntityList:
+                if not entitiesTrie.has_keys_with_prefix("".join(charStack)):
                     break
                 charStack.append(self.stream.char())
 
             # At this point we have a string that starts with some characters
             # that may match an entity
-            entityName = None
-
             # Try to find the longest entity the string will match to take care
             # of &noti for instance.
-            for entityLength in range(len(charStack)-1, 1, -1):
-                possibleEntityName = "".join(charStack[:entityLength])
-                if possibleEntityName in entities:
-                    entityName = possibleEntityName
-                    break
+            try:
+                entityName = entitiesTrie.longest_prefix("".join(charStack[:-1]))
+                entityLength = len(entityName)
+            except KeyError:
+                entityName = None
 
             if entityName is not None:
                 if entityName[-1] != ";":
