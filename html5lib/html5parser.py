@@ -1,32 +1,3 @@
-try:
-    frozenset
-except NameError:
-    # Import from the sets module for python 2.3
-    from sets import Set as set
-    from sets import ImmutableSet as frozenset
-
-try:
-    any
-except:
-    # Implement 'any' for python 2.4 and previous
-    def any(iterable):
-        for element in iterable:
-            if element:
-                return True
-        return False
-        
-try:
-    "abc".startswith(("a", "b"))
-    def startswithany(str, prefixes):
-        return str.startswith(prefixes)
-except:
-    # Python 2.4 doesn't accept a tuple as argument to string startswith
-    def startswithany(str, prefixes):
-        for prefix in prefixes:
-            if str.startswith(prefix):
-                return True
-        return False
-
 import sys
 import types
 
@@ -540,7 +511,7 @@ def getPhases(debug):
                 publicId = publicId.translate(asciiUpper2Lower)
 
             if (not correct or token["name"] != "html"
-                or startswithany(publicId,
+                or publicId.startswith(
                 ("+//silmaril//dtd html pro v0r11 19970101//",
                  "-//advasoft ltd//dtd html 3.0 aswedit + extensions//",
                  "-//as//dtd html 3.0 aswedit + extensions//",
@@ -600,16 +571,16 @@ def getPhases(debug):
                     ("-//w3o//dtd w3 html strict 3.0//en//",
                      "-/w3c/dtd html 4.0 transitional/en",
                      "html")
-                or startswithany(publicId,
+                or publicId.startswith(
                     ("-//w3c//dtd html 4.01 frameset//",
                      "-//w3c//dtd html 4.01 transitional//")) and 
                     systemId == None
                 or systemId and systemId.lower() == "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd"):
                 self.parser.compatMode = "quirks"
-            elif (startswithany(publicId,
+            elif (publicId.startswith(
                     ("-//w3c//dtd xhtml 1.0 frameset//",
                      "-//w3c//dtd xhtml 1.0 transitional//"))
-                  or startswithany(publicId,
+                  or publicId.startswith(
                       ("-//w3c//dtd html 4.01 frameset//",
                        "-//w3c//dtd html 4.01 transitional//")) and 
                       systemId != None):

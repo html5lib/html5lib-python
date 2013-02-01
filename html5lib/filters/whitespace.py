@@ -1,9 +1,3 @@
-try:
-    frozenset
-except NameError:
-    # Import from the sets module for python 2.3
-    from sets import ImmutableSet as frozenset
-
 import re
 
 from . import _base

@@ -1,17 +1,11 @@
-try:
-    frozenset
-except NameError:
-    # Import from the sets module for python 2.3
-    from sets import ImmutableSet as frozenset
+import gettext
+_ = gettext.gettext
 
 try:
     from functools import reduce
     pass # no-op statement to avoid 3to2 introducing parse error
 except ImportError:
     pass
-
-import gettext
-_ = gettext.gettext
 
 from html5lib.constants import voidElements, booleanAttributes, spaceCharacters
 from html5lib.constants import rcdataElements, entities, xmlEntities
