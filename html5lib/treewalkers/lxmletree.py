@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, unicode_literals
+
 from lxml import etree
 from html5lib.treebuilders.etree import tag_regexp
 
@@ -113,6 +115,7 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             tree = FragmentRoot(tree)
         _base.NonRecursiveTreeWalker.__init__(self, tree)
         self.filter = ihatexml.InfosetFilter()
+
     def getNodeDetails(self, node):
         if isinstance(node, tuple): # Text node
             node, key = node
@@ -175,7 +178,7 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             else: # tail
                 return node.getnext()
 
-        return node.tail and (node, "tail") or node.getnext()
+        return (node, "tail") if node.tail else node.getnext()
 
     def getParentNode(self, node):
         if isinstance(node, tuple): # Text node

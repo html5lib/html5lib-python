@@ -1,3 +1,6 @@
+from __future__ import absolute_import, division, unicode_literals
+from six import with_metaclass
+
 import sys
 import types
 
@@ -444,7 +447,7 @@ def getPhases(debug):
         else:
             return type
 
-    class Phase(object, metaclass=getMetaclass(debug, log)):
+    class Phase(with_metaclass(getMetaclass(debug, log))):
         """Base class for helper object that implements each phase of processing
         """
 
@@ -2686,7 +2689,7 @@ def impliedTagToken(name, type="EndTag", attributes = None,
                     selfClosing = False):
     if attributes is None:
         attributes = {}
-    return {"type":tokenTypes[type], "name":str(name), "data":attributes,
+    return {"type":tokenTypes[type], "name":name, "data":attributes,
             "selfClosing":selfClosing}
 
 class ParseError(Exception):

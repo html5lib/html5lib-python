@@ -1,3 +1,6 @@
+from __future__ import absolute_import, division, unicode_literals
+from six import text_type
+
 import codecs
 import re
 import types
@@ -118,9 +121,9 @@ class BufferedStream:
 
 def HTMLInputStream(source, encoding=None, parseMeta=True, chardet=True):
     if hasattr(source, "read"):
-        isUnicode = isinstance(source.read(0), str)
+        isUnicode = isinstance(source.read(0), text_type)
     else:
-        isUnicode = isinstance(source, str)
+        isUnicode = isinstance(source, text_type)
 
     if isUnicode:
         if encoding is not None:
@@ -565,6 +568,10 @@ class EncodingBytes(bytes):
             raise TypeError
         return self[p:p+1]
 
+    def next(self):
+        # Py2 compat
+        return self.__next__()
+
     def previous(self):
         p = self._position
         if p >= len(self):
@@ -640,6 +647,7 @@ class EncodingBytes(bytes):
             return True
         else:
             raise StopIteration
+
 
 class EncodingParser(object):
     """Mini parser for detecting character encoding from meta elements"""

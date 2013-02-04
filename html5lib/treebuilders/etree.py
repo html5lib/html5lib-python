@@ -1,3 +1,6 @@
+from __future__ import absolute_import, division, unicode_literals
+from six import text_type
+
 import re
 
 from . import _base
@@ -207,7 +210,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             elif element.tag == ElementTree.Comment:
                 rv.append("|%s<!-- %s -->"%(' '*indent, element.text))
             else:
-                assert type(element.tag) is str, "Expected unicode, got %s, %s"%(type(element.tag), element.tag)
+                assert isinstance(element.tag, text_type), "Expected unicode, got %s, %s"%(type(element.tag), element.tag)
                 nsmatch = tag_regexp.match(element.tag)
 
                 if nsmatch is None:

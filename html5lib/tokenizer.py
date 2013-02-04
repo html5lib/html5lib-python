@@ -1,3 +1,10 @@
+from __future__ import absolute_import, division, unicode_literals
+
+try:
+    chr = unichr
+except NameError:
+    pass
+
 from collections import deque
     
 from .constants import spaceCharacters
@@ -122,7 +129,8 @@ class HTMLTokenizer(object):
                 # within the BMP.
                 char = chr(charAsInt)
             except ValueError:
-                char = eval("u'\\U%08x'" % charAsInt)
+                v = charAsInt - 0x10000
+                char = chr(0xD800 | (v >> 10)) + chr(0xDC00 | (v & 0x3FF))
 
         # Discard the ; if present. Otherwise, put it back on the queue and
         # invoke parseError on parser.

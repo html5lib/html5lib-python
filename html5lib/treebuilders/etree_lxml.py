@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, unicode_literals
+
 """Module for supporting the lxml.etree library. The idea here is to use as much
 of the native library as possible, without using fragile hacks like custom element
 names that break between releases. The downside of this is that we cannot represent
@@ -297,7 +299,7 @@ class TreeBuilder(_base.TreeBuilder):
         if (parent == self.document and
             type(self.document._elementTree.getroot()[-1].tag) == type(etree.Comment)):
                 warnings.warn("lxml cannot represent adjacent comments beyond the root elements", DataLossWarning)
-        super().insertComment(data, parent)
+        super(TreeBuilder, self).insertComment(data, parent)
     
     def insertRoot(self, token):
         """Create the document root"""

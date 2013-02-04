@@ -1,3 +1,6 @@
+from __future__ import absolute_import, division, unicode_literals
+from six import text_type
+
 from . import _base
 from html5lib.constants import voidElements, namespaces, prefixes
 from xml.sax.saxutils import escape
@@ -25,7 +28,7 @@ class Node(_base.Node):
         raise NotImplementedError
 
     def printTree(self, indent=0):
-        tree = '\n|%s%s' % (' '* indent, str(self))
+        tree = '\n|%s%s' % (' '* indent, text_type(self))
         for child in self.childNodes:
             tree += child.printTree(indent + 2)
         return tree
@@ -40,7 +43,7 @@ class Node(_base.Node):
         node.parent = self
 
     def insertText(self, data, insertBefore=None):
-        assert isinstance(data, str), "data %s is of type %s expected unicode"%(repr(data), type(data))
+        assert isinstance(data, text_type), "data %s is of type %s expected unicode"%(repr(data), type(data))
         if insertBefore is None:
             self.appendChild(TextNode(data))
         else:
@@ -102,7 +105,7 @@ class Document(Node):
         return result.encode(encoding) + "</pre>"
     
     def printTree(self):
-        tree = str(self)
+        tree = text_type(self)
         for child in self.childNodes:
             tree += child.printTree(2)
         return tree
@@ -203,7 +206,7 @@ class Element(Node):
         return result + '&lt;/<code class="markup element-name">%s</code>>' % self.name
 
     def printTree(self, indent):
-        tree = '\n|%s%s' % (' '*indent, str(self))
+        tree = '\n|%s%s' % (' '*indent, text_type(self))
         indent += 2
         if self.attributes:
             for name, value in sorted(self.attributes.items()):

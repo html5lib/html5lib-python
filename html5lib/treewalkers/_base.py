@@ -1,3 +1,6 @@
+from __future__ import absolute_import, division, unicode_literals
+from six import text_type
+
 import gettext
 _ = gettext.gettext
 
@@ -19,33 +22,33 @@ class TreeWalker(object):
         if attrs:
             #TODO: treewalkers should always have attrs
             for (namespace,name),value in attrs.items():
-                namespace = str(namespace) if namespace else None
-                name = str(name)
-                value = str(value)
+                assert namespace is None or isinstance(namespace, text_type), type(namespace)
+                assert isinstance(name, text_type)
+                assert isinstance(value, text_type)
                 newattrs[(namespace,name)] = value
         return newattrs
 
     def emptyTag(self, namespace, name, attrs, hasChildren=False):
-        yield {"type": "EmptyTag", "name": str(name), 
-               "namespace":str(namespace),
+        yield {"type": "EmptyTag", "name": name, 
+               "namespace":namespace,
                "data": self.normalizeAttrs(attrs)}
         if hasChildren:
             yield self.error(_("Void element has children"))
 
     def startTag(self, namespace, name, attrs):
         return {"type": "StartTag", 
-                "name": str(name),
-                "namespace":str(namespace),
+                "name": name,
+                "namespace":namespace,
                 "data": self.normalizeAttrs(attrs)}
 
     def endTag(self, namespace, name):
         return {"type": "EndTag", 
-                "name": str(name),
-                "namespace":str(namespace),
+                "name": name,
+                "namespace":namespace,
                 "data": {}}
 
     def text(self, data):
-        data = str(data)
+        data = data
         middle = data.lstrip(spaceCharacters)
         left = data[:len(data)-len(middle)]
         if left:
@@ -59,17 +62,17 @@ class TreeWalker(object):
             yield {"type": "SpaceCharacters", "data": right}
 
     def comment(self, data):
-        return {"type": "Comment", "data": str(data)}
+        return {"type": "Comment", "data": data}
 
     def doctype(self, name, publicId=None, systemId=None, correct=True):
         return {"type": "Doctype",
-                "name": name is not None and str(name) or "",
+                "name": name is not None and name or "",
                 "publicId": publicId,
                 "systemId": systemId,
                 "correct": correct}
 
     def entity(self, name):
-        return {"type": "Entity", "name": str(name)}
+        return {"type": "Entity", "name": name}
 
     def unknown(self, nodeType):
         return self.error(_("Unknown node type: ") + nodeType)

@@ -1,3 +1,6 @@
+from __future__ import absolute_import, division, unicode_literals
+from six import text_type
+
 from html5lib.constants import scopingElements, tableInsertModeElements, namespaces
 
 # The scope markers are inserted when entering object elements,
@@ -281,7 +284,7 @@ class TreeBuilder(object):
         
     def insertElementNormal(self, token):
         name = token["name"]
-        assert type(name) == str, "Element %s not unicode"%name
+        assert isinstance(name, text_type), "Element %s not unicode"%name
         namespace = token.get("namespace", self.defaultNamespace)
         element = self.elementClass(name, namespace)
         element.attributes = token["data"]

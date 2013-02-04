@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, unicode_literals
+
 from xml.dom.pulldom import START_ELEMENT, END_ELEMENT, \
     COMMENT, IGNORABLE_WHITESPACE, CHARACTERS
 

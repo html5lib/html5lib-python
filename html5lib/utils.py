@@ -1,5 +1,7 @@
-from types import ModuleType
+from __future__ import absolute_import, division, unicode_literals
 
+from sys import version_info
+from types import ModuleType
 
 class MethodDispatcher(dict):
     """Dict with 2 special properties:
@@ -35,12 +37,6 @@ class MethodDispatcher(dict):
 #Some utility functions to dal with weirdness around UCS2 vs UCS4
 #python builds
 
-def encodingType():
-    if len() == 2:
-        return "UCS2"
-    else:
-        return "UCS4"
-
 def isSurrogatePair(data):   
     return (len(data) == 2 and
             ord(data[0]) >= 0xD800 and ord(data[0]) <= 0xDBFF and
@@ -57,7 +53,7 @@ def surrogatePairToCodepoint(data):
 def moduleFactoryFactory(factory):
     moduleCache = {}
     def moduleFactory(baseModule, *args, **kwargs):
-        if type(ModuleType.__name__) is str:
+        if type(ModuleType.__name__) is type(""):
             name = "_%s_factory" % baseModule.__name__
         else:
             name = b"_%s_factory" % baseModule.__name__

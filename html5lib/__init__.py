@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, unicode_literals
+
 """ 
 HTML parsing library based on the WHATWG "HTML5"
 specification. The parser is designed to be compatible with existing

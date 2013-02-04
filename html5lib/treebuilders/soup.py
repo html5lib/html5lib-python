@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, unicode_literals
+
 import warnings
 
 warnings.warn("BeautifulSoup 3.x (as of 3.1) is not fully compatible with html5lib and support will be removed in the future", DeprecationWarning)

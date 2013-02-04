@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, unicode_literals
+
 
 
 import sys
@@ -157,9 +159,9 @@ def runTokenizerTest(test):
     received = normalizeTokens(tokens)
     errorMsg = "\n".join(["\n\nInitial state:",
                           test['initialState'] ,
-                          "\nInput:", str(test['input']),
-                          "\nExpected:", str(expected),
-                          "\nreceived:", str(tokens)])
+                          "\nInput:", test['input'],
+                          "\nExpected:", repr(expected),
+                          "\nreceived:", repr(tokens)])
     errorMsg = errorMsg
     ignoreErrorOrder = test.get('ignoreErrorOrder', False)
     assert tokensMatch(expected, received, ignoreErrorOrder, True), errorMsg

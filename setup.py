@@ -34,5 +34,5 @@ setup(name='html5lib',
           for name in os.listdir(os.path.join('html5lib'))
           if os.path.isdir(os.path.join('html5lib',name)) and
               not name.startswith('.')],
-      test_suite = "html5lib.tests.buildTestSuite"
+      install_requires=['six']
       )

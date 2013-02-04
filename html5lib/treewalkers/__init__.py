@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, unicode_literals
+
 """A collection of modules for iterating through different kinds of
 tree, generating tokens identical to those produced by the tokenizer
 module.
