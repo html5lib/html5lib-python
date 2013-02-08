@@ -303,7 +303,7 @@ def test_treewalker():
         files = get_data_files('tree-construction')
         for filename in files:
             testName = os.path.basename(filename).replace(".dat","")
-            if testName == "main-element":
+            if testName in ("main-element", "template"):
                 continue
 
             tests = TestData(filename, "data")
