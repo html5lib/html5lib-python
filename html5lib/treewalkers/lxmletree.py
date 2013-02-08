@@ -1,4 +1,5 @@
 from __future__ import absolute_import, division, unicode_literals
+from six import text_type
 
 from lxml import etree
 from html5lib.treebuilders.etree import tag_regexp
@@ -12,14 +13,23 @@ from . import _base
 from html5lib.constants import voidElements
 from html5lib import ihatexml
 
+def ensure_str(s):
+    if s is None:
+        return None
+    elif isinstance(s, text_type):
+        return s
+    else:
+        return s.decode("utf-8", "strict")
+
 class Root(object):
     def __init__(self, et):
         self.elementtree = et
         self.children = []
         if et.docinfo.internalDTD:
-            self.children.append(Doctype(self, et.docinfo.root_name, 
-                                         et.docinfo.public_id, 
-                                         et.docinfo.system_url))
+            self.children.append(Doctype(self,
+                                         ensure_str(et.docinfo.root_name),
+                                         ensure_str(et.docinfo.public_id),
+                                         ensure_str(et.docinfo.system_url)))
         root = et.getroot()
         node = root
 
@@ -67,15 +77,17 @@ class FragmentWrapper(object):
         self.root_node = fragment_root
         self.obj = obj
         if hasattr(self.obj, 'text'):
-            self.text = self.obj.text
+            self.text = ensure_str(self.obj.text)
         else:
             self.text = None
         if hasattr(self.obj, 'tail'):
-            self.tail = self.obj.tail
+            self.tail = ensure_str(self.obj.tail)
         else:
             self.tail = None
         self.isstring = isinstance(obj, str) or isinstance(obj, bytes)
-        assert not self.isstring or isinstance(obj, str) or sys.version_info.major == 2
+        # Support for bytes here is Py2
+        if self.isstring:
+            self.obj = ensure_str(self.obj)
         
     def __getattr__(self, name):
         return getattr(self.obj, name)
@@ -120,7 +132,7 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
         if isinstance(node, tuple): # Text node
             node, key = node
             assert key in ("text", "tail"), _("Text nodes are text or tail, found %s") % key
-            return _base.TEXT, getattr(node, key)
+            return _base.TEXT, ensure_str(getattr(node, key))
 
         elif isinstance(node, Root):
             return (_base.DOCUMENT,)
@@ -129,24 +141,26 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             return _base.DOCTYPE, node.name, node.public_id, node.system_id
 
         elif isinstance(node, FragmentWrapper) and node.isstring:
-            return _base.TEXT, node
+            return _base.TEXT, node.obj
 
         elif node.tag == etree.Comment:
-            return _base.COMMENT, node.text
+            return _base.COMMENT, ensure_str(node.text)
 
         elif node.tag == etree.Entity:
-            return _base.ENTITY, node.text[1:-1] # strip &;
+            return _base.ENTITY, ensure_str(node.text)[1:-1] # strip &;
 
         else:
             #This is assumed to be an ordinary element
-            match = tag_regexp.match(node.tag)
+            match = tag_regexp.match(ensure_str(node.tag))
             if match:
                 namespace, tag = match.groups()
             else:
                 namespace = None
-                tag = node.tag
+                tag = ensure_str(node.tag)
             attrs = {}
             for name, value in list(node.attrib.items()):
+                name = ensure_str(name)
+                value = ensure_str(value)
                 match = tag_regexp.match(name)
                 if match:
                     attrs[(match.group(1),match.group(2))] = value
