@@ -1,7 +1,7 @@
-from setuptools import setup
+from distutils.core import setup
 import os
 
-long_description="""HTML parser designed to follow the WHATWG HTML5 
+long_description="""HTML parser designed to follow the WHATWG HTML
 specification. The parser is designed to handle all flavours of HTML and 
 parses invalid documents using well-defined error handling rules compatible
 with the behaviour of major desktop web browsers.
@@ -16,16 +16,17 @@ classifiers=[
     'License :: OSI Approved :: MIT License',
     'Operating System :: OS Independent',
     'Programming Language :: Python',
+    'Programming Language :: Python :: 2',
+    'Programming Language :: Python :: 3',
     'Topic :: Software Development :: Libraries :: Python Modules',
     'Topic :: Text Processing :: Markup :: HTML'
     ]
 
 setup(name='html5lib',
-      version='0.95',
-      url='http://code.google.com/p/html5lib/',
+      version='1.0b1',
+      url='https://github.com/html5lib/html5lib-python',
       license="MIT License",
-      description='HTML parser based on the WHAT-WG Web Applications 1.0' 
-                  '("HTML5") specifcation',
+      description='HTML parser based on the WHATWG HTML specifcation',
       long_description=long_description,
       classifiers=classifiers,
       maintainer='James Graham',
@@ -33,6 +34,5 @@ setup(name='html5lib',
       packages=['html5lib'] + ['html5lib.'+name
           for name in os.listdir(os.path.join('html5lib'))
           if os.path.isdir(os.path.join('html5lib',name)) and
-              not name.startswith('.')],
-      install_requires=['six']
+              not name.startswith('.')]
       )
