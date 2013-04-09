@@ -11,7 +11,8 @@ class Trie(Mapping):
         if prefix is None:
             return set(keys)
 
-        return {x for x in keys if x.startswith(prefix)}
+        # Python 2.6: no set comprehensions
+        return set([x for x in keys if x.startswith(prefix)])
 
     def has_keys_with_prefix(self, prefix):
         for key in self.keys():
