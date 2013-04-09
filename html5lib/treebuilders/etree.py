@@ -13,6 +13,7 @@ tag_regexp = re.compile("{([^}]*)}(.*)")
 
 def getETreeBuilder(ElementTreeImplementation, fullTree=False):
     ElementTree = ElementTreeImplementation
+    ElementTreeCommentType = ElementTree.Comment("asd").tag
     class Element(_base.Node):
         def __init__(self, name, namespace=None):
             self._name = name
@@ -207,7 +208,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                     rv.append("|%s\"%s\""%(' '*(indent+2), element.text))
                 if element.tail:
                     finalText = element.tail
-            elif element.tag == ElementTree.Comment:
+            elif element.tag == ElementTreeCommentType:
                 rv.append("|%s<!-- %s -->"%(' '*indent, element.text))
             else:
                 assert isinstance(element.tag, text_type), "Expected unicode, got %s, %s"%(type(element.tag), element.tag)
@@ -275,7 +276,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                 for child in element:
                     serializeElement(child)
     
-            elif type(element.tag) == type(ElementTree.Comment):
+            elif element.tag == ElementTreeCommentType:
                 rv.append("<!--%s-->"%(element.text,))
             else:
                 #This is assumed to be an ordinary element
