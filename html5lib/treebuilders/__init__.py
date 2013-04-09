@@ -40,7 +40,7 @@ def getTreeBuilder(treeType, implementation=None, **kwargs):
     """Get a TreeBuilder class for various types of tree with built-in support
     
     treeType - the name of the tree type required (case-insensitive). Supported
-               values are "simpletree", "dom", "etree" and "beautifulsoup"
+               values are "simpletree", "dom", and "etree"
                
                "simpletree" - a built-in DOM-ish tree type with support for some
                               more pythonic idioms.
@@ -51,7 +51,6 @@ def getTreeBuilder(treeType, implementation=None, **kwargs):
                 "etree" - A generic builder for tree implementations exposing an
                           elementtree-like interface (known to work with
                           ElementTree, cElementTree and lxml.etree).
-                "beautifulsoup" - Beautiful soup (if installed)
                
     implementation - (Currently applies to the "etree" and "dom" tree types). A
                       module implementing the tree type e.g.
@@ -70,9 +69,6 @@ def getTreeBuilder(treeType, implementation=None, **kwargs):
         elif treeType == "simpletree":
             from . import simpletree
             treeBuilderCache[treeType] = simpletree.TreeBuilder
-        elif treeType == "beautifulsoup":
-            from . import soup
-            treeBuilderCache[treeType] = soup.TreeBuilder
         elif treeType == "lxml":
             from . import etree_lxml
             treeBuilderCache[treeType] = etree_lxml.TreeBuilder

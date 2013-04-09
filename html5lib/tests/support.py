@@ -48,12 +48,6 @@ try:
 except ImportError:
     pass
 
-try:
-    import BeautifulSoup
-    treeTypes["beautifulsoup"] = treebuilders.getTreeBuilder("beautifulsoup", fullTree=True)
-except ImportError:
-    pass
-
 def get_data_files(subdirectory, files='*.dat'):
     return glob.glob(os.path.join(test_dir,subdirectory,files))
 

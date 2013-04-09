@@ -93,14 +93,6 @@ try:
          "walker":  treewalkers.getTreeWalker("lxml")}
 except ImportError:
     pass
-
-try:
-    import BeautifulSoup
-    treeTypes["beautifulsoup"] = \
-        {"builder": treebuilders.getTreeBuilder("beautifulsoup"),
-         "walker":  treewalkers.getTreeWalker("beautifulsoup")}
-except ImportError:
-    pass
     
 #Try whatever etree implementations are available from a list that are
 #"supposed" to work

@@ -7,7 +7,7 @@ parses invalid documents using well-defined error handling rules compatible
 with the behaviour of major desktop web browsers.
 
 Output is to a tree structure; the current release supports output to
-DOM, ElementTree, lxml and BeautifulSoup tree formats as well as a
+DOM, ElementTree, and lxml tree formats as well as a
 simple custom format"""
 
 classifiers=[
