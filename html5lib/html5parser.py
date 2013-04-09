@@ -1572,7 +1572,7 @@ def getPhases(debug):
 
         def processEOF(self):
             self.parser.parseError("expected-named-closing-tag-but-got-eof", 
-                                   self.tree.openElements[-1].name)
+                                   {"name":self.tree.openElements[-1].name})
             self.tree.openElements.pop()
             self.parser.phase = self.parser.originalPhase
             return True
@@ -2392,7 +2392,7 @@ def getPhases(debug):
                 (token["name"] == "font" and
                  set(token["data"].keys()) & set(["color", "face", "size"]))):
                 self.parser.parseError("unexpected-html-element-in-foreign-content",
-                                       token["name"])
+                                       {"name": token["name"]})
                 while (self.tree.openElements[-1].namespace !=
                        self.tree.defaultNamespace and 
                        not self.parser.isHTMLIntegrationPoint(self.tree.openElements[-1]) and
@@ -2417,7 +2417,7 @@ def getPhases(debug):
             nodeIndex = len(self.tree.openElements) - 1
             node = self.tree.openElements[-1]
             if node.name != token["name"]:
-                self.parser.parseError("unexpected-end-tag", token["name"])
+                self.parser.parseError("unexpected-end-tag", {"name": token["name"]})
 
             while True:
                 if node.name.translate(asciiUpper2Lower) == token["name"]:

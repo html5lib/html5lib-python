@@ -59,9 +59,12 @@ def runParserTest(innerHTML, input, expected, errors, treeClass,
     errorMsg = "\n".join(["\n\nInput:", input, "\nExpected:", expected,
                            "\nReceived:", output])
     assert expected == output, errorMsg
-    errStr = ["Line: %i Col: %i %s"%(line, col, 
-                                      constants.E[errorcode] % datavars if isinstance(datavars, dict) else (datavars,)) for
-              ((line,col), errorcode, datavars) in p.errors]
+
+    errStr = []
+    for (line, col), errorcode, datavars in p.errors:
+        assert isinstance(datavars, dict), "%s, %s" % (errorcode, repr(datavars))
+        errStr.append("Line: %i Col: %i %s" % (line, col, 
+                                               constants.E[errorcode] % datavars))
 
     errorMsg2 = "\n".join(["\n\nInput:", input,
                             "\nExpected errors (" + str(len(errors)) + "):\n" + "\n".join(errors),
