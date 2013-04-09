@@ -86,34 +86,18 @@ def serialize_html(input, options):
     options = dict([(str(k),v) for k,v in options.items()])
     return serializer.HTMLSerializer(**options).render(JsonWalker(input),options.get("encoding",None))
 
-def serialize_xhtml(input, options):
-    options = dict([(str(k),v) for k,v in options.items()])
-    return serializer.XHTMLSerializer(**options).render(JsonWalker(input),options.get("encoding",None))
-
-def runSerializerTest(input, expected, xhtml, options):
+def runSerializerTest(input, expected, options):
     encoding = options.get("encoding", None)
 
     if encoding:
         encode = lambda x: x.encode(encoding)
         expected = list(map(encode, expected))
-        if xhtml:
-            xhtml = list(map(encode, xhtml))
-        
     
     result = serialize_html(input, options)
     if len(expected) == 1:
-        assert expected[0] == result, "Expected:\n%s\nActual:\n%s\nOptions\nxhtml:False\n%s"%(expected[0], result, str(options))
+        assert expected[0] == result, "Expected:\n%s\nActual:\n%s\nOptions:\n%s"%(expected[0], result, str(options))
     elif result not in expected:
         assert False, "Expected: %s, Received: %s" % (expected, result)
-
-    if not xhtml:
-        return
-
-    result = serialize_xhtml(input, options)
-    if len(xhtml) == 1:
-        assert xhtml[0] == result, "Expected:\n%s\nActual:\n%s\nOptions\nxhtml:True\n%s"%(xhtml[0], result, str(options))
-    elif result not in xhtml:
-        assert False, "Expected: %s, Received: %s" % (xhtml, result)
 
 
 class EncodingTestCase(unittest.TestCase):
@@ -131,11 +115,11 @@ class EncodingTestCase(unittest.TestCase):
 
     def testCdataCharacters(self):
         runSerializerTest([["StartTag", "http://www.w3.org/1999/xhtml", "style", {}], ["Characters", "\u0101"]],
-                          ["<style>&amacr;"], None, {"encoding": "iso-8859-1"})
+                          ["<style>&amacr;"], {"encoding": "iso-8859-1"})
 
     def testCharacters(self):
         runSerializerTest([["Characters", "\u0101"]],
-                          ["&amacr;"], None, {"encoding": "iso-8859-1"})
+                          ["&amacr;"], {"encoding": "iso-8859-1"})
 
     def testStartTagName(self):
         self.throwsWithLatin1([["StartTag", "http://www.w3.org/1999/xhtml", "\u0101", []]])
@@ -149,7 +133,7 @@ class EncodingTestCase(unittest.TestCase):
     def testAttributeValue(self):
         runSerializerTest([["StartTag", "http://www.w3.org/1999/xhtml", "span",
                             [{"namespace": None, "name": "potato", "value": "\u0101"}]]],
-                          ["<span potato=&amacr;>"], None, {"encoding": "iso-8859-1"})
+                          ["<span potato=&amacr;>"], {"encoding": "iso-8859-1"})
 
     def testEndTagName(self):
         self.throwsWithLatin1([["EndTag", "http://www.w3.org/1999/xhtml", "\u0101"]])
@@ -190,7 +174,4 @@ def test_serializer():
             tests = json.load(fp)
             test_name = os.path.basename(filename).replace('.test','')
             for index, test in enumerate(tests['tests']):
-                xhtml = test.get("xhtml", test["expected"])
-                if test_name == 'optionaltags': 
-                    xhtml = None
-                yield runSerializerTest, test["input"], test["expected"], xhtml, test.get("options", {})
+                yield runSerializerTest, test["input"], test["expected"], test.get("options", {})
