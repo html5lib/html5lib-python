@@ -56,7 +56,7 @@ E = {
     "eof-in-attribute-name":
        _("Unexpected end of file in attribute name."),
     "invalid-character-in-attribute-name":
-        _("Invalid chracter in attribute name"),
+        _("Invalid character in attribute name"),
     "duplicate-attribute":
        _("Dropped duplicate attribute on tag."),
     "expected-end-of-tag-name-but-got-eof":
@@ -81,7 +81,7 @@ E = {
        _("Unexpected end of file in attribute value."),
     "unexpected-EOF-after-solidus-in-tag":
         _("Unexpected end of file in tag. Expected >"),
-    "unexpected-character-after-soldius-in-tag":
+    "unexpected-character-after-solidus-in-tag":
         _("Unexpected character after / in tag. Expected >"),
     "expected-dashes-or-doctype":
        _("Expected '--' or 'DOCTYPE'. Not found."),
@@ -236,7 +236,7 @@ E = {
        _("Unexpected end tag token (%(name)s)"
          " in the after body phase."),
     "unexpected-char-in-frameset":
-       _("Unepxected characters in the frameset phase. Characters ignored."),
+       _("Unexpected characters in the frameset phase. Characters ignored."),
     "unexpected-start-tag-in-frameset":
        _("Unexpected start tag token (%(name)s)"
          " in the frameset phase. Ignored."),

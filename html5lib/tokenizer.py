@@ -1097,7 +1097,7 @@ class HTMLTokenizer(object):
             self.state = self.dataState
         else:
             self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
-              "unexpected-character-after-soldius-in-tag"})
+              "unexpected-character-after-solidus-in-tag"})
             self.stream.unget(data)
             self.state = self.beforeAttributeNameState
         return True
