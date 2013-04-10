@@ -1,0 +1,3 @@
+include LICENSE
+graft html5lib/tests/testdata
+recursive-include html5lib/tests *.py

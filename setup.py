@@ -22,6 +22,12 @@ classifiers=[
     'Topic :: Text Processing :: Markup :: HTML'
     ]
 
+
+packages = ['html5lib'] + ['html5lib.'+name
+                           for name in os.listdir(os.path.join('html5lib'))
+                           if os.path.isdir(os.path.join('html5lib', name)) and
+                           not name.startswith('.') and name != 'tests']
+
 setup(name='html5lib',
       version='1.0b1',
       url='https://github.com/html5lib/html5lib-python',
@@ -31,8 +37,5 @@ setup(name='html5lib',
       classifiers=classifiers,
       maintainer='James Graham',
       maintainer_email='james@hoppipolla.co.uk',
-      packages=['html5lib'] + ['html5lib.'+name
-          for name in os.listdir(os.path.join('html5lib'))
-          if os.path.isdir(os.path.join('html5lib',name)) and
-              not name.startswith('.')]
+      packages=packages
       )
