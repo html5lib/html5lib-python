@@ -180,6 +180,9 @@ E = {
     "adoption-agency-1.3":
        _("End tag (%(name)s) violates step 1, "
          "paragraph 3 of the adoption agency algorithm."),
+    "adoption-agency-4.4":
+       _("End tag (%(name)s) violates step 4, "
+         "paragraph 4 of the adoption agency algorithm."),
     "unexpected-end-tag-treated-as":
        _("Unexpected end tag (%(originalName)s). Treated as %(newName)s."),
     "no-end-tag":
