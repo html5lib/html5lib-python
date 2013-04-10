@@ -1404,28 +1404,60 @@ def getPhases(debug):
             # XXX Better parseError messages appreciated.
             name = token["name"]
 
+            # Step 1
             outerLoopCounter = 0
+
+            # Step 2
             while outerLoopCounter < 8:
+
+                # Step 3
                 outerLoopCounter += 1
 
-                # Step 1 paragraph 1
+                # Step 4:
+
+                # Let the formatting element be the last element in
+                # the list of active formatting elements that:
+                # - is between the end of the list and the last scope
+                # marker in the list, if any, or the start of the list
+                # otherwise, and
+                # - has the same tag name as the token.
                 formattingElement = self.tree.elementInActiveFormattingElements(
                     token["name"])
                 if (not formattingElement or 
                     (formattingElement in self.tree.openElements and
                      not self.tree.elementInScope(formattingElement.name))):
-                    self.parser.parseError("adoption-agency-1.1", {"name": token["name"]})
+                    # If there is no such node, then abort these steps
+                    # and instead act as described in the "any other
+                    # end tag" entry below.
+                    self.endTagOther(token)
                     return
 
-                # Step 1 paragraph 2
+                # Otherwise, if there is such a node, but that node is
+                # not in the stack of open elements, then this is a
+                # parse error; remove the element from the list, and
+                # abort these steps.
                 elif formattingElement not in self.tree.openElements:
                     self.parser.parseError("adoption-agency-1.2", {"name": token["name"]})
                     self.tree.activeFormattingElements.remove(formattingElement)
                     return
+                    
 
-                # Step 1 paragraph 3
-                if formattingElement != self.tree.openElements[-1]:
-                    self.parser.parseError("adoption-agency-1.3", {"name": token["name"]})
+                # Otherwise, if there is such a node, and that node is
+                # also in the stack of open elements, but the element
+                # is not in scope, then this is a parse error; ignore
+                # the token, and abort these steps.
+                elif not self.tree.elementInScope(formattingElement.name):
+                    self.parser.parseError("adoption-agency-4.4", {"name": token["name"]})
+                    return
+
+                # Otherwise, there is a formatting element and that
+                # element is in the stack and is in scope. If the
+                # element is not the current node, this is a parse
+                # error. In any case, proceed with the algorithm as
+                # written in the following steps.
+                else:
+                    if formattingElement != self.tree.openElements[-1]:
+                        self.parser.parseError("adoption-agency-1.3", {"name": token["name"]})
 
                 # Step 2
                 # Start of the adoption agency algorithm proper
