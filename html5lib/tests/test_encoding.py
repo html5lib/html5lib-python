@@ -53,10 +53,9 @@ def test_encoding():
 
 try:
     import chardet
-    def test_chardet(self):
+    def test_chardet():
         data = open(os.path.join(test_dir, "encoding" , "chardet", "test_big5.txt")).read()
         encoding = inputstream.HTMLInputStream(data).charEncoding
         assert encoding[0].lower() == "big5"
-    setattr(Html5EncodingTestCase, 'test_chardet', test_chardet)
 except ImportError:
     print("chardet not found, skipping chardet tests")
