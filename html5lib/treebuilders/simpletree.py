@@ -92,7 +92,7 @@ class Document(Node):
     def appendChild(self, child):
         Node.appendChild(self, child)
 
-    def toxml(self, encoding="utf=8"):
+    def toxml(self, encoding="utf-8"):
         result = ""
         for child in self.childNodes:
             result += child.toxml()
