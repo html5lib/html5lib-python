@@ -144,10 +144,6 @@ def unescape(test):
 def runTokenizerTest(test):
     warnings.resetwarnings()
     warnings.simplefilter("error")
-    #XXX - move this out into the setup function
-    #concatenate all consecutive character tokens into a single token
-    if 'doubleEscaped' in test:
-        test = unescape(test)
 
     expected = concatenateCharacterTokens(test['output'])            
     if 'lastStartTag' not in test:
@@ -183,10 +179,10 @@ def testTokenizer():
             testName = os.path.basename(filename).replace(".test","")
             if 'tests' in tests:
                 for index,test in enumerate(tests['tests']):
-                #Skip tests with a self closing flag
-                    skip = False
                     if 'initialStates' not in test:
                         test["initialStates"] = ["Data state"]
+                    if 'doubleEscaped' in test:
+                        test = unescape(test)
                     for initialState in test["initialStates"]:
                         test["initialState"] = capitalize(initialState)
                         yield runTokenizerTest, test
