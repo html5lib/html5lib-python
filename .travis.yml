@@ -16,8 +16,8 @@ before_install:
 install:
   - pip install -r requirements.txt -r requirements-test.txt --use-mirrors
   - if [[ $USE_OPTIONAL == "true" ]]; then pip install -r requirements-optional.txt --use-mirrors; fi
-  - if [[ $TRAVIS_PYTHON_VERSION != "3.*" && $USE_OPTIONAL == "true" ]]; then pip install -r requirements-optional-2.txt --use-mirrors; fi
-  - if [[ $TRAVIS_PYTHON_VERSION == "3.*" && $USE_OPTIONAL == "true" ]]; then pip install -r requirements-optional-3.txt --use-mirrors; fi
+  - if [[ $TRAVIS_PYTHON_VERSION != 3.* && $USE_OPTIONAL == "true" ]]; then pip install -r requirements-optional-2.txt --use-mirrors; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == 3.* && $USE_OPTIONAL == "true" ]]; then pip install -r requirements-optional-3.txt --use-mirrors; fi
   - if [[ $TRAVIS_PYTHON_VERSION != "pypy" && $USE_OPTIONAL == "true" ]]; then pip install -r requirements-optional-cpython.txt --use-mirrors; fi
 
 script:
