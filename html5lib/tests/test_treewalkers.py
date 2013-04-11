@@ -4,6 +4,7 @@ import os
 import sys
 import unittest
 import warnings
+from difflib import unified_diff
 
 try:
     unittest.TestCase.assertEqual
@@ -280,10 +281,14 @@ def runTreewalkerTest(innerHTML, input, expected, errors, treeClass):
         output = convertTokens(treeClass["walker"](document))
         output = attrlist.sub(sortattrs, output)
         expected = attrlist.sub(sortattrs, convertExpected(expected))
+        diff = "".join(unified_diff([line + "\n" for line in expected.splitlines()],
+                                    [line + "\n" for line in output.splitlines()],
+                                    "Expected", "Received"))
         assert expected == output, "\n".join([
                 "", "Input:", input,
                 "", "Expected:", expected,
-                "", "Received:", output
+                "", "Received:", output,
+                "", "Diff:", diff,
                 ])
     except NotImplementedError:
         pass # Amnesty for those that confess...
