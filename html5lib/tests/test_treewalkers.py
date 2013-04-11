@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, unicode_literals
 
+from difflib import unified_diff
 import os
 import sys
 import unittest
@@ -280,10 +281,15 @@ def runTreewalkerTest(innerHTML, input, expected, errors, treeClass):
         output = convertTokens(treeClass["walker"](document))
         output = attrlist.sub(sortattrs, output)
         expected = attrlist.sub(sortattrs, convertExpected(expected))
+        add_lf = lambda x: x + "\n"
+        diff = "".join(unified_diff(map(add_lf, expected.splitlines()),
+                                    map(add_lf, output.splitlines()),
+                                    "Expected", "Received"))
         assert expected == output, "\n".join([
                 "", "Input:", input,
                 "", "Expected:", expected,
-                "", "Received:", output
+                "", "Received:", output,
+                "", "Diff:", diff,
                 ])
     except NotImplementedError:
         pass # Amnesty for those that confess...
