@@ -14,3 +14,6 @@ install:
 
 script:
   - nosetests
+
+after_script:
+  - python debug-info.py
