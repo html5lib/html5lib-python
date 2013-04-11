@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, unicode_literals
 
+from difflib import unified_diff
 import os
 import sys
 import unittest
@@ -126,15 +127,19 @@ try:
                     name = "{%s}%s" % (token["namespace"], token["name"])
                 else:
                     name = token["name"]
-                yield (START,
-                       (QName(name),
-                        Attrs([(QName(attr),value) for attr,value in token["data"]])),
-                       (None, -1, -1))
+                attrs = Attrs([(QName("{%s}%s" % attr if attr[0] is not None else attr[1]), value)
+                               for attr, value in token["data"].items()])
+                yield (START, (QName(name), attrs), (None, -1, -1))
                 if type == "EmptyTag":
                     type = "EndTag"
 
             if type == "EndTag":
-                yield END, QName(token["name"]), (None, -1, -1)
+                if token["namespace"]:
+                    name = "{%s}%s" % (token["namespace"], token["name"])
+                else:
+                    name = token["name"]
+
+                yield END, QName(name), (None, -1, -1)
 
             elif type == "Comment":
                 yield COMMENT, token["data"], (None, -1, -1)
@@ -149,10 +154,10 @@ try:
         if text is not None:
             yield TEXT, text, (None, -1, -1)
 
-    #treeTypes["genshi"] = \
-    #    {"builder": treebuilders.getTreeBuilder("simpletree"),
-    #     "adapter": GenshiAdapter,
-    #     "walker":  treewalkers.getTreeWalker("genshi")}
+    treeTypes["genshi"] = \
+       {"builder": treebuilders.getTreeBuilder("simpletree"),
+        "adapter": GenshiAdapter,
+        "walker":  treewalkers.getTreeWalker("genshi")}
 except ImportError:
     pass
 
@@ -280,10 +285,15 @@ def runTreewalkerTest(innerHTML, input, expected, errors, treeClass):
         output = convertTokens(treeClass["walker"](document))
         output = attrlist.sub(sortattrs, output)
         expected = attrlist.sub(sortattrs, convertExpected(expected))
+        add_lf = lambda x: x + "\n"
+        diff = "".join(unified_diff(list(map(add_lf, expected.splitlines())),
+                                    list(map(add_lf, output.splitlines())),
+                                    "Expected", "Received"))
         assert expected == output, "\n".join([
                 "", "Input:", input,
                 "", "Expected:", expected,
-                "", "Received:", output
+                "", "Received:", output,
+                "", "Diff:", diff,
                 ])
     except NotImplementedError:
         pass # Amnesty for those that confess...

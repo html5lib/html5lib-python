@@ -54,7 +54,7 @@ def test_encoding():
 try:
     import chardet
     def test_chardet():
-        data = open(os.path.join(test_dir, "encoding" , "chardet", "test_big5.txt")).read()
+        data = open(os.path.join(test_dir, "encoding" , "chardet", "test_big5.txt"), "rb").read()
         encoding = inputstream.HTMLInputStream(data).charEncoding
         assert encoding[0].lower() == "big5"
 except ImportError:
