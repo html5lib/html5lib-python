@@ -127,15 +127,19 @@ try:
                     name = "{%s}%s" % (token["namespace"], token["name"])
                 else:
                     name = token["name"]
-                yield (START,
-                       (QName(name),
-                        Attrs([(QName(attr),value) for attr,value in token["data"]])),
-                       (None, -1, -1))
+                attrs = Attrs([(QName("{%s}%s" % attr if attr[0] is not None else attr[1]), value)
+                               for attr, value in token["data"].items()])
+                yield (START, (QName(name), attrs), (None, -1, -1))
                 if type == "EmptyTag":
                     type = "EndTag"
 
             if type == "EndTag":
-                yield END, QName(token["name"]), (None, -1, -1)
+                if token["namespace"]:
+                    name = "{%s}%s" % (token["namespace"], token["name"])
+                else:
+                    name = token["name"]
+
+                yield END, QName(name), (None, -1, -1)
 
             elif type == "Comment":
                 yield COMMENT, token["data"], (None, -1, -1)
@@ -150,10 +154,10 @@ try:
         if text is not None:
             yield TEXT, text, (None, -1, -1)
 
-    #treeTypes["genshi"] = \
-    #    {"builder": treebuilders.getTreeBuilder("simpletree"),
-    #     "adapter": GenshiAdapter,
-    #     "walker":  treewalkers.getTreeWalker("genshi")}
+    treeTypes["genshi"] = \
+       {"builder": treebuilders.getTreeBuilder("simpletree"),
+        "adapter": GenshiAdapter,
+        "walker":  treewalkers.getTreeWalker("genshi")}
 except ImportError:
     pass
 
