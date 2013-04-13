@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
-
 """A collection of modules for iterating through different kinds of
 tree, generating tokens identical to those produced by the tokenizer
 module.
@@ -9,6 +7,8 @@ implement a tree walker object (called TreeWalker by convention) that
 implements a 'serialize' method taking a tree as sole argument and
 returning an iterator generating tokens.
 """
+
+from __future__ import absolute_import, division, unicode_literals
 
 import sys
 

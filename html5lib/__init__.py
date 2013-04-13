@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
-
 """
 HTML parsing library based on the WHATWG "HTML5"
 specification. The parser is designed to be compatible with existing
@@ -12,6 +10,9 @@ import html5lib
 f = open("my_document.html")
 tree = html5lib.parse(f)
 """
+
+from __future__ import absolute_import, division, unicode_literals
+
 __version__ = "0.95-dev"
 from .html5parser import HTMLParser, parse, parseFragment
 from .treebuilders import getTreeBuilder

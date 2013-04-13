@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
-
 """A collection of modules for building different kinds of tree from
 HTML documents.
 
@@ -31,6 +29,8 @@ The supplied simpletree module provides a python-only implementation
 of a full treebuilder and is a useful reference for the semantics of
 the various methods.
 """
+
+from __future__ import absolute_import, division, unicode_literals
 
 treeBuilderCache = {}
 

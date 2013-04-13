@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
-
 """Module for supporting the lxml.etree library. The idea here is to use as much
 of the native library as possible, without using fragile hacks like custom element
 names that break between releases. The downside of this is that we cannot represent
@@ -10,6 +8,8 @@ Docypes with no name
 
 When any of these things occur, we emit a DataLossWarning
 """
+
+from __future__ import absolute_import, division, unicode_literals
 
 import warnings
 import re
