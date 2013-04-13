@@ -259,7 +259,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
         filter = ihatexml.InfosetFilter()
 
         def serializeElement(element):
-            if type(element) == type(ElementTree.ElementTree):
+            if isinstance(element, ElementTree.ElementTree):
                 element = element.getroot()
 
             if element.tag == "<!DOCTYPE>":
