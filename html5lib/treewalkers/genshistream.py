@@ -12,7 +12,7 @@ from html5lib.constants import voidElements, namespaces
 class TreeWalker(_base.TreeWalker):
     def __iter__(self):
         # Buffer the events so we can pass in the following one
-        previous = None        
+        previous = None
         for event in self.tree:
             if previous is not None:
                 for token in self.tokens(previous, event):
