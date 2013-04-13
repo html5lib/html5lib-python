@@ -29,6 +29,8 @@ except ImportError:
 fullTree = True
 tag_regexp = re.compile("{([^}]*)}(.*)")
 
+comment_type = etree.Comment("asd").tag
+
 
 class DocumentType(object):
     def __init__(self, name, publicId, systemId):
@@ -86,7 +88,7 @@ def testSerializer(element):
                 rv.append("#document-fragment")
                 for next_element in element:
                     serializeElement(next_element, indent + 2)
-        elif isinstance(element.tag, etree.Comment):
+        elif element.tag == comment_type:
             rv.append("|%s<!-- %s -->" % (' ' * indent, element.text))
             if hasattr(element, "tail") and element.tail:
                 rv.append("|%s\"%s\"" % (' ' * indent, element.tail))
@@ -149,7 +151,7 @@ def tostring(element):
                 rv.append(dtd_str)
             serializeElement(element.getroot())
 
-        elif isinstance(element.tag, etree.Comment):
+        elif element.tag == comment_type:
             rv.append("<!--%s-->" % (element.text,))
 
         else:
@@ -301,7 +303,7 @@ class TreeBuilder(_base.TreeBuilder):
 
     def insertCommentMain(self, data, parent=None):
         if (parent == self.document and
-                isinstance(self.document._elementTree.getroot()[-1].tag, etree.Comment)):
+                self.document._elementTree.getroot()[-1].tag == comment_type):
                 warnings.warn("lxml cannot represent adjacent comments beyond the root elements", DataLossWarning)
         super(TreeBuilder, self).insertComment(data, parent)
 
