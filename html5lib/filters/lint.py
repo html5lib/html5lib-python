@@ -9,7 +9,10 @@ from html5lib.constants import cdataElements, rcdataElements, voidElements
 from html5lib.constants import spaceCharacters
 spaceCharacters = "".join(spaceCharacters)
 
-class LintError(Exception): pass
+
+class LintError(Exception):
+    pass
+
 
 class Filter(_base.Filter):
     def __iter__(self):

@@ -15,6 +15,7 @@ from .support import get_data_files, TestData, convertExpected
 
 from html5lib import html5parser, treewalkers, treebuilders, constants
 
+
 def PullDOMAdapter(node):
     from xml.dom import Node
     from xml.dom.pulldom import START_ELEMENT, END_ELEMENT, COMMENT, CHARACTERS
@@ -44,16 +45,16 @@ def PullDOMAdapter(node):
         raise NotImplementedError("Node type not supported: " + str(node.nodeType))
 
 treeTypes = {
-"simpletree":  {"builder": treebuilders.getTreeBuilder("simpletree"),
-                "walker":  treewalkers.getTreeWalker("simpletree")},
-"DOM":         {"builder": treebuilders.getTreeBuilder("dom"),
-                "walker":  treewalkers.getTreeWalker("dom")},
-"PullDOM":     {"builder": treebuilders.getTreeBuilder("dom"),
-                "adapter": PullDOMAdapter,
-                "walker":  treewalkers.getTreeWalker("pulldom")},
+    "simpletree": {"builder": treebuilders.getTreeBuilder("simpletree"),
+                   "walker": treewalkers.getTreeWalker("simpletree")},
+"DOM": {"builder": treebuilders.getTreeBuilder("dom"),
+        "walker": treewalkers.getTreeWalker("dom")},
+"PullDOM": {"builder": treebuilders.getTreeBuilder("dom"),
+            "adapter": PullDOMAdapter,
+            "walker": treewalkers.getTreeWalker("pulldom")},
 }
 
-#Try whatever etree implementations are available from a list that are
+# Try whatever etree implementations are available from a list that are
 #"supposed" to work
 try:
     import xml.etree.ElementTree as ElementTree
@@ -62,7 +63,7 @@ except ImportError:
 else:
     treeTypes['ElementTree'] = \
         {"builder": treebuilders.getTreeBuilder("etree", ElementTree),
-         "walker":  treewalkers.getTreeWalker("etree", ElementTree)}
+         "walker": treewalkers.getTreeWalker("etree", ElementTree)}
 
 try:
     import xml.etree.cElementTree as ElementTree
@@ -71,11 +72,11 @@ except ImportError:
 else:
     treeTypes['cElementTree'] = \
         {"builder": treebuilders.getTreeBuilder("etree", ElementTree),
-         "walker":  treewalkers.getTreeWalker("etree", ElementTree)}
+         "walker": treewalkers.getTreeWalker("etree", ElementTree)}
 
 
 try:
-    import lxml.etree as ElementTree # flake8: noqa
+    import lxml.etree as ElementTree  # flake8: noqa
 except ImportError:
     pass
 else:
@@ -84,16 +85,16 @@ else:
 #         "walker":  treewalkers.getTreeWalker("etree", ElementTree)}
     treeTypes['lxml_native'] = \
         {"builder": treebuilders.getTreeBuilder("lxml"),
-         "walker":  treewalkers.getTreeWalker("lxml")}
+         "walker": treewalkers.getTreeWalker("lxml")}
 
 
-#Try whatever etree implementations are available from a list that are
+# Try whatever etree implementations are available from a list that are
 #"supposed" to work
 try:
     import pxdom
     treeTypes['pxdom'] = \
         {"builder": treebuilders.getTreeBuilder("dom", pxdom),
-         "walker":  treewalkers.getTreeWalker("dom")}
+         "walker": treewalkers.getTreeWalker("dom")}
 except ImportError:
     pass
 
@@ -141,17 +142,18 @@ try:
                                 token["systemId"]), (None, -1, -1)
 
             else:
-                pass # FIXME: What to do?
+                pass  # FIXME: What to do?
 
         if text is not None:
             yield TEXT, text, (None, -1, -1)
 
     treeTypes["genshi"] = \
-       {"builder": treebuilders.getTreeBuilder("simpletree"),
-        "adapter": GenshiAdapter,
-        "walker":  treewalkers.getTreeWalker("genshi")}
+        {"builder": treebuilders.getTreeBuilder("simpletree"),
+         "adapter": GenshiAdapter,
+         "walker": treewalkers.getTreeWalker("genshi")}
 except ImportError:
     pass
+
 
 def concatenateCharacterTokens(tokens):
     charactersToken = None
@@ -170,6 +172,7 @@ def concatenateCharacterTokens(tokens):
     if charactersToken is not None:
         yield charactersToken
 
+
 def convertTokens(tokens):
     output = []
     indent = 0
@@ -177,7 +180,7 @@ def convertTokens(tokens):
         type = token["type"]
         if type in ("StartTag", "EmptyTag"):
             if (token["namespace"] and
-                token["namespace"] != constants.namespaces["html"]):
+                    token["namespace"] != constants.namespaces["html"]):
                 if token["namespace"] in constants.prefixes:
                     name = constants.prefixes[token["namespace"]]
                 else:
@@ -185,12 +188,12 @@ def convertTokens(tokens):
                 name += " " + token["name"]
             else:
                 name = token["name"]
-            output.append("%s<%s>" % (" "*indent, name))
+            output.append("%s<%s>" % (" " * indent, name))
             indent += 2
             attrs = token["data"]
             if attrs:
-                #TODO: Remove this if statement, attrs should always exist
-                for (namespace,name),value in sorted(attrs.items()):
+                # TODO: Remove this if statement, attrs should always exist
+                for (namespace, name), value in sorted(attrs.items()):
                     if namespace:
                         if namespace in constants.prefixes:
                             outputname = constants.prefixes[namespace]
@@ -199,41 +202,43 @@ def convertTokens(tokens):
                         outputname += " " + name
                     else:
                         outputname = name
-                    output.append("%s%s=\"%s\"" % (" "*indent, outputname, value))
+                    output.append("%s%s=\"%s\"" % (" " * indent, outputname, value))
             if type == "EmptyTag":
                 indent -= 2
         elif type == "EndTag":
             indent -= 2
         elif type == "Comment":
-            output.append("%s<!-- %s -->" % (" "*indent, token["data"]))
+            output.append("%s<!-- %s -->" % (" " * indent, token["data"]))
         elif type == "Doctype":
             if token["name"]:
                 if token["publicId"]:
-                    output.append("""%s<!DOCTYPE %s "%s" "%s">"""%
-                                  (" "*indent, token["name"],
+                    output.append("""%s<!DOCTYPE %s "%s" "%s">""" %
+                                  (" " * indent, token["name"],
                                    token["publicId"],
                                    token["systemId"] and token["systemId"] or ""))
                 elif token["systemId"]:
-                    output.append("""%s<!DOCTYPE %s "" "%s">"""%
-                                  (" "*indent, token["name"],
+                    output.append("""%s<!DOCTYPE %s "" "%s">""" %
+                                  (" " * indent, token["name"],
                                    token["systemId"]))
                 else:
-                    output.append("%s<!DOCTYPE %s>"%(" "*indent,
-                                                     token["name"]))
+                    output.append("%s<!DOCTYPE %s>" % (" " * indent,
+                                                       token["name"]))
             else:
-                output.append("%s<!DOCTYPE >" % (" "*indent,))
+                output.append("%s<!DOCTYPE >" % (" " * indent,))
         elif type in ("Characters", "SpaceCharacters"):
-            output.append("%s\"%s\"" % (" "*indent, token["data"]))
+            output.append("%s\"%s\"" % (" " * indent, token["data"]))
         else:
-            pass # TODO: what to do with errors?
+            pass  # TODO: what to do with errors?
     return "\n".join(output)
 
 import re
-attrlist = re.compile(r"^(\s+)\w+=.*(\n\1\w+=.*)+",re.M)
+attrlist = re.compile(r"^(\s+)\w+=.*(\n\1\w+=.*)+", re.M)
+
+
 def sortattrs(x):
-  lines = x.group(0).split("\n")
-  lines.sort()
-  return "\n".join(lines)
+    lines = x.group(0).split("\n")
+    lines.sort()
+    return "\n".join(lines)
 
 
 class TokenTestCase(unittest.TestCase):
@@ -250,26 +255,27 @@ class TokenTestCase(unittest.TestCase):
             {'data': 'c', 'type': 'Characters'},
             {'data': {}, 'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'body'},
             {'data': {}, 'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'html'}
-            ]
+        ]
         for treeName, treeCls in treeTypes.items():
-            p = html5parser.HTMLParser(tree = treeCls["builder"])
+            p = html5parser.HTMLParser(tree=treeCls["builder"])
             document = p.parse("<html><head></head><body>a<div>b</div>c</body></html>")
             document = treeCls.get("adapter", lambda x: x)(document)
             output = treeCls["walker"](document)
             for expectedToken, outputToken in zip(expected, output):
                 self.assertEqual(expectedToken, outputToken)
 
+
 def runTreewalkerTest(innerHTML, input, expected, errors, treeClass):
     warnings.resetwarnings()
     warnings.simplefilter("error")
     try:
-        p = html5parser.HTMLParser(tree = treeClass["builder"])
+        p = html5parser.HTMLParser(tree=treeClass["builder"])
         if innerHTML:
             document = p.parseFragment(input, innerHTML)
         else:
             document = p.parse(input)
     except constants.DataLossWarning:
-        #Ignore testcases we know we don't pass
+        # Ignore testcases we know we don't pass
         return
 
     document = treeClass.get("adapter", lambda x: x)(document)
@@ -281,21 +287,22 @@ def runTreewalkerTest(innerHTML, input, expected, errors, treeClass):
                                     [line + "\n" for line in output.splitlines()],
                                     "Expected", "Received"))
         assert expected == output, "\n".join([
-                "", "Input:", input,
+            "", "Input:", input,
                 "", "Expected:", expected,
                 "", "Received:", output,
                 "", "Diff:", diff,
-                ])
+        ])
     except NotImplementedError:
-        pass # Amnesty for those that confess...
+        pass  # Amnesty for those that confess...
+
 
 def test_treewalker():
-    sys.stdout.write('Testing tree walkers '+ " ".join(list(treeTypes.keys())) + "\n")
+    sys.stdout.write('Testing tree walkers ' + " ".join(list(treeTypes.keys())) + "\n")
 
     for treeName, treeCls in treeTypes.items():
         files = get_data_files('tree-construction')
         for filename in files:
-            testName = os.path.basename(filename).replace(".dat","")
+            testName = os.path.basename(filename).replace(".dat", "")
             if testName in ("main-element", "template"):
                 continue
 
@@ -308,5 +315,3 @@ def test_treewalker():
                                                                "document")]
                 errors = errors.split("\n")
                 yield runTreewalkerTest, innerHTML, input, expected, errors, treeCls
-
-

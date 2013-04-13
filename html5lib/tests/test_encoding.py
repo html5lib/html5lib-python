@@ -11,6 +11,7 @@ except AttributeError:
 from .support import get_data_files, TestData, test_dir, errorMessage
 from html5lib import HTMLParser, inputstream
 
+
 class Html5EncodingTestCase(unittest.TestCase):
     def test_codec_name_a(self):
         self.assertEqual(inputstream.codecName("utf-8"), "utf-8")
@@ -24,12 +25,14 @@ class Html5EncodingTestCase(unittest.TestCase):
     def test_codec_name_d(self):
         self.assertEqual(inputstream.codecName("ISO_8859--1"), "windows-1252")
 
+
 def runParserEncodingTest(data, encoding):
     p = HTMLParser()
     p.parse(data, useChardet=False)
     encoding = encoding.lower().decode("ascii")
 
     assert encoding == p.tokenizer.stream.charEncoding[0], errorMessage(data, encoding, p.tokenizer.stream.charEncoding[0])
+
 
 def runPreScanEncodingTest(data, encoding):
     stream = inputstream.HTMLBinaryInputStream(data, chardet=False)
@@ -41,6 +44,7 @@ def runPreScanEncodingTest(data, encoding):
 
     assert encoding == stream.charEncoding[0], errorMessage(data, encoding, stream.charEncoding[0])
 
+
 def test_encoding():
     for filename in get_data_files("encoding"):
         tests = TestData(filename, b"data", encoding=None)
@@ -49,11 +53,11 @@ def test_encoding():
             yield (runPreScanEncodingTest, test[b'data'], test[b'encoding'])
 
 try:
-    import chardet # flake8: noqa
+    import chardet  # flake8: noqa
 except ImportError:
     print("chardet not found, skipping chardet tests")
 else:
     def test_chardet():
-        data = open(os.path.join(test_dir, "encoding" , "chardet", "test_big5.txt"), "rb").read()
+        data = open(os.path.join(test_dir, "encoding", "chardet", "test_big5.txt"), "rb").read()
         encoding = inputstream.HTMLInputStream(data).charEncoding
         assert encoding[0].lower() == "big5"

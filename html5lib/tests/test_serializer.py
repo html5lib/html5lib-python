@@ -27,6 +27,7 @@ except ImportError:
 
 default_namespace = constants.namespaces["html"]
 
+
 class JsonWalker(TreeWalker):
     def __iter__(self):
         for token in self.tree:
@@ -82,8 +83,9 @@ class JsonWalker(TreeWalker):
 
 
 def serialize_html(input, options):
-    options = dict([(str(k),v) for k,v in options.items()])
-    return serializer.HTMLSerializer(**options).render(JsonWalker(input),options.get("encoding",None))
+    options = dict([(str(k), v) for k, v in options.items()])
+    return serializer.HTMLSerializer(**options).render(JsonWalker(input), options.get("encoding", None))
+
 
 def runSerializerTest(input, expected, options):
     encoding = options.get("encoding", None)
@@ -94,7 +96,7 @@ def runSerializerTest(input, expected, options):
 
     result = serialize_html(input, options)
     if len(expected) == 1:
-        assert expected[0] == result, "Expected:\n%s\nActual:\n%s\nOptions:\n%s"%(expected[0], result, str(options))
+        assert expected[0] == result, "Expected:\n%s\nActual:\n%s\nOptions:\n%s" % (expected[0], result, str(options))
     elif result not in expected:
         assert False, "Expected: %s, Received: %s" % (expected, result)
 
@@ -150,22 +152,23 @@ if "lxml" in optionals_loaded:
 
         def testEntityReplacement(self):
             doc = """<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&beta;</html>"""
-            tree = etree.fromstring(doc, parser = self.parser).getroottree()
+            tree = etree.fromstring(doc, parser=self.parser).getroottree()
             result = serializer.serialize(tree, tree="lxml", omit_optional_tags=False)
             self.assertEqual("""<!DOCTYPE html SYSTEM "about:legacy-compat"><html>\u03B2</html>""", result)
 
         def testEntityXML(self):
             doc = """<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&gt;</html>"""
-            tree = etree.fromstring(doc, parser = self.parser).getroottree()
+            tree = etree.fromstring(doc, parser=self.parser).getroottree()
             result = serializer.serialize(tree, tree="lxml", omit_optional_tags=False)
             self.assertEqual("""<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&gt;</html>""", result)
 
         def testEntityNoResolve(self):
             doc = """<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&beta;</html>"""
-            tree = etree.fromstring(doc, parser = self.parser).getroottree()
+            tree = etree.fromstring(doc, parser=self.parser).getroottree()
             result = serializer.serialize(tree, tree="lxml", omit_optional_tags=False,
                                           resolve_entities=False)
             self.assertEqual("""<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&beta;</html>""", result)
+
 
 def test_serializer():
     for filename in get_data_files('serializer', '*.test'):

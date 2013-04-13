@@ -19,6 +19,7 @@ from .constants import cdataElements, rcdataElements
 from .constants import tokenTypes, ReparseException, namespaces
 from .constants import htmlIntegrationPointElements, mathmlTextIntegrationPointElements
 
+
 def parse(doc, treebuilder="simpletree", encoding=None,
           namespaceHTMLElements=True):
     """Parse a string or file-like object into a tree"""
@@ -26,30 +27,33 @@ def parse(doc, treebuilder="simpletree", encoding=None,
     p = HTMLParser(tb, namespaceHTMLElements=namespaceHTMLElements)
     return p.parse(doc, encoding=encoding)
 
+
 def parseFragment(doc, container="div", treebuilder="simpletree", encoding=None,
                   namespaceHTMLElements=True):
     tb = treebuilders.getTreeBuilder(treebuilder)
     p = HTMLParser(tb, namespaceHTMLElements=namespaceHTMLElements)
     return p.parseFragment(doc, container=container, encoding=encoding)
 
+
 def method_decorator_metaclass(function):
     class Decorated(type):
         def __new__(meta, classname, bases, classDict):
             for attributeName, attribute in classDict.items():
-                if type(attribute) == types.FunctionType:
+                if isinstance(attribute, types.FunctionType):
                     attribute = function(attribute)
 
                 classDict[attributeName] = attribute
-            return  type.__new__(meta, classname, bases, classDict)
+            return type.__new__(meta, classname, bases, classDict)
     return Decorated
+
 
 class HTMLParser(object):
     """HTML parser. Generates a tree structure from a stream of (possibly
         malformed) HTML"""
 
-    def __init__(self, tree = simpletree.TreeBuilder,
-                 tokenizer = tokenizer.HTMLTokenizer, strict = False,
-                 namespaceHTMLElements = True, debug=False):
+    def __init__(self, tree=simpletree.TreeBuilder,
+                 tokenizer=tokenizer.HTMLTokenizer, strict=False,
+                 namespaceHTMLElements=True, debug=False):
         """
         strict - raise an exception when a parse error is encountered
 
@@ -94,7 +98,7 @@ class HTMLParser(object):
         self.tree.reset()
         self.firstStartTag = False
         self.errors = []
-        self.log = [] #only used with debug mode
+        self.log = []  # only used with debug mode
         # "quirks" / "limited quirks" / "no quirks"
         self.compatMode = "no quirks"
 
@@ -126,7 +130,7 @@ class HTMLParser(object):
 
     def isHTMLIntegrationPoint(self, element):
         if (element.name == "annotation-xml" and
-            element.namespace == namespaces["mathml"]):
+                element.namespace == namespaces["mathml"]):
             return ("encoding" in element.attributes and
                     element.attributes["encoding"].translate(
                         asciiUpper2Lower) in
@@ -177,7 +181,7 @@ class HTMLParser(object):
                     if type == CharactersToken:
                         new_token = phase.processCharacters(new_token)
                     elif type == SpaceCharactersToken:
-                         new_token= phase.processSpaceCharacters(new_token)
+                        new_token = phase.processSpaceCharacters(new_token)
                     elif type == StartTagToken:
                         new_token = phase.processStartTag(new_token)
                     elif type == EndTagToken:
@@ -188,10 +192,9 @@ class HTMLParser(object):
                         new_token = phase.processDoctype(new_token)
 
             if (type == StartTagToken and token["selfClosing"]
-                and not token["selfClosingAcknowledged"]):
+                    and not token["selfClosingAcknowledged"]):
                 self.parseError("non-void-element-with-trailing-solidus",
-                                {"name":token["name"]})
-
+                                {"name": token["name"]})
 
         # When the loop finishes it's EOF
         reprocess = True
@@ -252,77 +255,77 @@ class HTMLParser(object):
         return token
 
     def adjustMathMLAttributes(self, token):
-        replacements = {"definitionurl":"definitionURL"}
-        for k,v in replacements.items():
+        replacements = {"definitionurl": "definitionURL"}
+        for k, v in replacements.items():
             if k in token["data"]:
                 token["data"][v] = token["data"][k]
                 del token["data"][k]
 
     def adjustSVGAttributes(self, token):
         replacements = {
-            "attributename":"attributeName",
-            "attributetype":"attributeType",
-            "basefrequency":"baseFrequency",
-            "baseprofile":"baseProfile",
-            "calcmode":"calcMode",
-            "clippathunits":"clipPathUnits",
-            "contentscripttype":"contentScriptType",
-            "contentstyletype":"contentStyleType",
-            "diffuseconstant":"diffuseConstant",
-            "edgemode":"edgeMode",
-            "externalresourcesrequired":"externalResourcesRequired",
-            "filterres":"filterRes",
-            "filterunits":"filterUnits",
-            "glyphref":"glyphRef",
-            "gradienttransform":"gradientTransform",
-            "gradientunits":"gradientUnits",
-            "kernelmatrix":"kernelMatrix",
-            "kernelunitlength":"kernelUnitLength",
-            "keypoints":"keyPoints",
-            "keysplines":"keySplines",
-            "keytimes":"keyTimes",
-            "lengthadjust":"lengthAdjust",
-            "limitingconeangle":"limitingConeAngle",
-            "markerheight":"markerHeight",
-            "markerunits":"markerUnits",
-            "markerwidth":"markerWidth",
-            "maskcontentunits":"maskContentUnits",
-            "maskunits":"maskUnits",
-            "numoctaves":"numOctaves",
-            "pathlength":"pathLength",
-            "patterncontentunits":"patternContentUnits",
-            "patterntransform":"patternTransform",
-            "patternunits":"patternUnits",
-            "pointsatx":"pointsAtX",
-            "pointsaty":"pointsAtY",
-            "pointsatz":"pointsAtZ",
-            "preservealpha":"preserveAlpha",
-            "preserveaspectratio":"preserveAspectRatio",
-            "primitiveunits":"primitiveUnits",
-            "refx":"refX",
-            "refy":"refY",
-            "repeatcount":"repeatCount",
-            "repeatdur":"repeatDur",
-            "requiredextensions":"requiredExtensions",
-            "requiredfeatures":"requiredFeatures",
-            "specularconstant":"specularConstant",
-            "specularexponent":"specularExponent",
-            "spreadmethod":"spreadMethod",
-            "startoffset":"startOffset",
-            "stddeviation":"stdDeviation",
-            "stitchtiles":"stitchTiles",
-            "surfacescale":"surfaceScale",
-            "systemlanguage":"systemLanguage",
-            "tablevalues":"tableValues",
-            "targetx":"targetX",
-            "targety":"targetY",
-            "textlength":"textLength",
-            "viewbox":"viewBox",
-            "viewtarget":"viewTarget",
-            "xchannelselector":"xChannelSelector",
-            "ychannelselector":"yChannelSelector",
-            "zoomandpan":"zoomAndPan"
-            }
+            "attributename": "attributeName",
+            "attributetype": "attributeType",
+            "basefrequency": "baseFrequency",
+            "baseprofile": "baseProfile",
+            "calcmode": "calcMode",
+            "clippathunits": "clipPathUnits",
+            "contentscripttype": "contentScriptType",
+            "contentstyletype": "contentStyleType",
+            "diffuseconstant": "diffuseConstant",
+            "edgemode": "edgeMode",
+            "externalresourcesrequired": "externalResourcesRequired",
+            "filterres": "filterRes",
+            "filterunits": "filterUnits",
+            "glyphref": "glyphRef",
+            "gradienttransform": "gradientTransform",
+            "gradientunits": "gradientUnits",
+            "kernelmatrix": "kernelMatrix",
+            "kernelunitlength": "kernelUnitLength",
+            "keypoints": "keyPoints",
+            "keysplines": "keySplines",
+            "keytimes": "keyTimes",
+            "lengthadjust": "lengthAdjust",
+            "limitingconeangle": "limitingConeAngle",
+            "markerheight": "markerHeight",
+            "markerunits": "markerUnits",
+            "markerwidth": "markerWidth",
+            "maskcontentunits": "maskContentUnits",
+            "maskunits": "maskUnits",
+            "numoctaves": "numOctaves",
+            "pathlength": "pathLength",
+            "patterncontentunits": "patternContentUnits",
+            "patterntransform": "patternTransform",
+            "patternunits": "patternUnits",
+            "pointsatx": "pointsAtX",
+            "pointsaty": "pointsAtY",
+            "pointsatz": "pointsAtZ",
+            "preservealpha": "preserveAlpha",
+            "preserveaspectratio": "preserveAspectRatio",
+            "primitiveunits": "primitiveUnits",
+            "refx": "refX",
+            "refy": "refY",
+            "repeatcount": "repeatCount",
+            "repeatdur": "repeatDur",
+            "requiredextensions": "requiredExtensions",
+            "requiredfeatures": "requiredFeatures",
+            "specularconstant": "specularConstant",
+            "specularexponent": "specularExponent",
+            "spreadmethod": "spreadMethod",
+            "startoffset": "startOffset",
+            "stddeviation": "stdDeviation",
+            "stitchtiles": "stitchTiles",
+            "surfacescale": "surfaceScale",
+            "systemlanguage": "systemLanguage",
+            "tablevalues": "tableValues",
+            "targetx": "targetX",
+            "targety": "targetY",
+            "textlength": "textLength",
+            "viewbox": "viewBox",
+            "viewtarget": "viewTarget",
+            "xchannelselector": "xChannelSelector",
+            "ychannelselector": "yChannelSelector",
+            "zoomandpan": "zoomAndPan"
+        }
         for originalName in list(token["data"].keys()):
             if originalName in replacements:
                 svgName = replacements[originalName]
@@ -331,19 +334,19 @@ class HTMLParser(object):
 
     def adjustForeignAttributes(self, token):
         replacements = {
-            "xlink:actuate":("xlink", "actuate", namespaces["xlink"]),
-            "xlink:arcrole":("xlink", "arcrole", namespaces["xlink"]),
-            "xlink:href":("xlink", "href", namespaces["xlink"]),
-            "xlink:role":("xlink", "role", namespaces["xlink"]),
-            "xlink:show":("xlink", "show", namespaces["xlink"]),
-            "xlink:title":("xlink", "title", namespaces["xlink"]),
-            "xlink:type":("xlink", "type", namespaces["xlink"]),
-            "xml:base":("xml", "base", namespaces["xml"]),
-            "xml:lang":("xml", "lang", namespaces["xml"]),
-            "xml:space":("xml", "space", namespaces["xml"]),
-            "xmlns":(None, "xmlns", namespaces["xmlns"]),
-            "xmlns:xlink":("xmlns", "xlink", namespaces["xmlns"])
-            }
+            "xlink:actuate": ("xlink", "actuate", namespaces["xlink"]),
+            "xlink:arcrole": ("xlink", "arcrole", namespaces["xlink"]),
+            "xlink:href": ("xlink", "href", namespaces["xlink"]),
+            "xlink:role": ("xlink", "role", namespaces["xlink"]),
+            "xlink:show": ("xlink", "show", namespaces["xlink"]),
+            "xlink:title": ("xlink", "title", namespaces["xlink"]),
+            "xlink:type": ("xlink", "type", namespaces["xlink"]),
+            "xml:base": ("xml", "base", namespaces["xml"]),
+            "xml:lang": ("xml", "lang", namespaces["xml"]),
+            "xml:space": ("xml", "space", namespaces["xml"]),
+            "xmlns": (None, "xmlns", namespaces["xmlns"]),
+            "xmlns:xlink": ("xmlns", "xlink", namespaces["xmlns"])
+        }
 
         for originalName in token["data"].keys():
             if originalName in replacements:
@@ -359,20 +362,20 @@ class HTMLParser(object):
         # specification.)
         last = False
         newModes = {
-            "select":"inSelect",
-            "td":"inCell",
-            "th":"inCell",
-            "tr":"inRow",
-            "tbody":"inTableBody",
-            "thead":"inTableBody",
-            "tfoot":"inTableBody",
-            "caption":"inCaption",
-            "colgroup":"inColumnGroup",
-            "table":"inTable",
-            "head":"inBody",
-            "body":"inBody",
-            "frameset":"inFrameset",
-            "html":"beforeHead"
+            "select": "inSelect",
+            "td": "inCell",
+            "th": "inCell",
+            "tr": "inRow",
+            "tbody": "inTableBody",
+            "thead": "inTableBody",
+            "tfoot": "inTableBody",
+            "caption": "inCaption",
+            "colgroup": "inColumnGroup",
+            "table": "inTable",
+            "head": "inBody",
+            "body": "inBody",
+            "frameset": "inFrameset",
+            "html": "beforeHead"
         }
         for node in self.tree.openElements[::-1]:
             nodeName = node.name
@@ -415,16 +418,18 @@ class HTMLParser(object):
 
         self.phase = self.phases["text"]
 
+
 def getPhases(debug):
     def log(function):
         """Logger that records which phase processes each token"""
         type_names = dict((value, key) for key, value in
                           constants.tokenTypes.items())
+
         def wrapped(self, *args, **kwargs):
             if function.__name__.startswith("process") and len(args) > 0:
                 token = args[0]
                 try:
-                    info = {"type":type_names[token['type']]}
+                    info = {"type": type_names[token['type']]}
                 except:
                     raise
                 if token['type'] in constants.tagTokenTypes:
@@ -475,8 +480,8 @@ def getPhases(debug):
             return self.startTagHandler[token["name"]](token)
 
         def startTagHtml(self, token):
-            if self.parser.firstStartTag == False and token["name"] == "html":
-               self.parser.parseError("non-html-root")
+            if not self.parser.firstStartTag and token["name"] == "html":
+                self.parser.parseError("non-html-root")
             # XXX Need a check here to see if the first start tag token emitted is
             # this token... If it's not, invoke self.parser.parseError().
             for attr, value in token["data"].items():
@@ -500,8 +505,8 @@ def getPhases(debug):
             systemId = token["systemId"]
             correct = token["correct"]
 
-            if (name != "html" or publicId != None or
-                systemId != None and systemId != "about:legacy-compat"):
+            if (name != "html" or publicId is not None or
+                    systemId is not None and systemId != "about:legacy-compat"):
                 self.parser.parseError("unknown-doctype")
 
             if publicId is None:
@@ -576,8 +581,8 @@ def getPhases(debug):
                 or publicId.startswith(
                     ("-//w3c//dtd html 4.01 frameset//",
                      "-//w3c//dtd html 4.01 transitional//")) and
-                    systemId == None
-                or systemId and systemId.lower() == "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd"):
+                    systemId is None
+                    or systemId and systemId.lower() == "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd"):
                 self.parser.compatMode = "quirks"
             elif (publicId.startswith(
                     ("-//w3c//dtd xhtml 1.0 frameset//",
@@ -585,7 +590,7 @@ def getPhases(debug):
                   or publicId.startswith(
                       ("-//w3c//dtd html 4.01 frameset//",
                        "-//w3c//dtd html 4.01 transitional//")) and
-                      systemId != None):
+                  systemId is not None):
                 self.parser.compatMode = "limited quirks"
 
             self.parser.phase = self.parser.phases["beforeHtml"]
@@ -601,13 +606,13 @@ def getPhases(debug):
 
         def processStartTag(self, token):
             self.parser.parseError("expected-doctype-but-got-start-tag",
-              {"name": token["name"]})
+                                   {"name": token["name"]})
             self.anythingElse()
             return token
 
         def processEndTag(self, token):
             self.parser.parseError("expected-doctype-but-got-end-tag",
-              {"name": token["name"]})
+                                   {"name": token["name"]})
             self.anythingElse()
             return token
 
@@ -615,7 +620,6 @@ def getPhases(debug):
             self.parser.parseError("expected-doctype-but-got-eof")
             self.anythingElse()
             return True
-
 
     class BeforeHtmlPhase(Phase):
         # helper methods
@@ -647,11 +651,10 @@ def getPhases(debug):
         def processEndTag(self, token):
             if token["name"] not in ("head", "body", "html", "br"):
                 self.parser.parseError("unexpected-end-tag-before-html",
-                  {"name": token["name"]})
+                                       {"name": token["name"]})
             else:
                 self.insertHtmlElement()
                 return token
-
 
     class BeforeHeadPhase(Phase):
         def __init__(self, parser, tree):
@@ -697,13 +700,13 @@ def getPhases(debug):
 
         def endTagOther(self, token):
             self.parser.parseError("end-tag-after-implied-root",
-              {"name": token["name"]})
+                                   {"name": token["name"]})
 
     class InHeadPhase(Phase):
         def __init__(self, parser, tree):
             Phase.__init__(self, parser, tree)
 
-            self.startTagHandler =  utils.MethodDispatcher([
+            self.startTagHandler = utils.MethodDispatcher([
                 ("html", self.startTagHtml),
                 ("title", self.startTagTitle),
                 (("noscript", "noframes", "style"), self.startTagNoScriptNoFramesStyle),
@@ -722,7 +725,7 @@ def getPhases(debug):
             self.endTagHandler.default = self.endTagOther
 
         # the real thing
-        def processEOF (self):
+        def processEOF(self):
             self.anythingElse()
             return True
 
@@ -766,7 +769,7 @@ def getPhases(debug):
             self.parser.parseRCDataRawtext(token, "RCDATA")
 
         def startTagNoScriptNoFramesStyle(self, token):
-            #Need to decide whether to implement the scripting-disabled case
+            # Need to decide whether to implement the scripting-disabled case
             self.parser.parseRCDataRawtext(token, "RAWTEXT")
 
         def startTagScript(self, token):
@@ -781,7 +784,7 @@ def getPhases(debug):
 
         def endTagHead(self, token):
             node = self.parser.tree.openElements.pop()
-            assert node.name == "head", "Expected head got %s"%node.name
+            assert node.name == "head", "Expected head got %s" % node.name
             self.parser.phase = self.parser.phases["afterHead"]
 
         def endTagHtmlBodyBr(self, token):
@@ -794,12 +797,10 @@ def getPhases(debug):
         def anythingElse(self):
             self.endTagHead(impliedTagToken("head"))
 
-
     # XXX If we implement a parser for which scripting is disabled we need to
     # implement this phase.
     #
     # class InHeadNoScriptPhase(Phase):
-
     class AfterHeadPhase(Phase):
         def __init__(self, parser, tree):
             Phase.__init__(self, parser, tree)
@@ -810,7 +811,7 @@ def getPhases(debug):
                 ("frameset", self.startTagFrameset),
                 (("base", "basefont", "bgsound", "link", "meta", "noframes", "script",
                   "style", "title"),
-                  self.startTagFromHead),
+                 self.startTagFromHead),
                 ("head", self.startTagHead)
             ])
             self.startTagHandler.default = self.startTagOther
@@ -840,7 +841,7 @@ def getPhases(debug):
 
         def startTagFromHead(self, token):
             self.parser.parseError("unexpected-start-tag-out-of-my-head",
-              {"name": token["name"]})
+                                   {"name": token["name"]})
             self.tree.openElements.append(self.tree.headPointer)
             self.parser.phases["inHead"].processStartTag(token)
             for node in self.tree.openElements[::-1]:
@@ -849,7 +850,7 @@ def getPhases(debug):
                     break
 
         def startTagHead(self, token):
-            self.parser.parseError("unexpected-start-tag", {"name":token["name"]})
+            self.parser.parseError("unexpected-start-tag", {"name": token["name"]})
 
         def startTagOther(self, token):
             self.anythingElse()
@@ -860,13 +861,12 @@ def getPhases(debug):
             return token
 
         def endTagOther(self, token):
-            self.parser.parseError("unexpected-end-tag", {"name":token["name"]})
+            self.parser.parseError("unexpected-end-tag", {"name": token["name"]})
 
         def anythingElse(self):
             self.tree.insertElement(impliedTagToken("body", "StartTag"))
             self.parser.phase = self.parser.phases["inBody"]
             self.parser.framesetOK = True
-
 
     class InBodyPhase(Phase):
         # http://www.whatwg.org/specs/web-apps/current-work/#parsing-main-inbody
@@ -874,7 +874,7 @@ def getPhases(debug):
         def __init__(self, parser, tree):
             Phase.__init__(self, parser, tree)
 
-            #Keep a ref to this for special handling of whitespace in <pre>
+            # Keep a ref to this for special handling of whitespace in <pre>
             self.processSpaceCharactersNonPre = self.processSpaceCharacters
 
             self.startTagHandler = utils.MethodDispatcher([
@@ -888,15 +888,15 @@ def getPhases(debug):
                   "details", "dir", "div", "dl", "fieldset", "figcaption", "figure",
                   "footer", "header", "hgroup", "menu", "nav", "ol", "p",
                   "section", "summary", "ul"),
-                  self.startTagCloseP),
+                 self.startTagCloseP),
                 (headingElements, self.startTagHeading),
                 (("pre", "listing"), self.startTagPreListing),
                 ("form", self.startTagForm),
                 (("li", "dd", "dt"), self.startTagListItem),
-                ("plaintext",self.startTagPlaintext),
+                ("plaintext", self.startTagPlaintext),
                 ("a", self.startTagA),
                 (("b", "big", "code", "em", "font", "i", "s", "small", "strike",
-                  "strong", "tt", "u"),self.startTagFormatting),
+                  "strong", "tt", "u"), self.startTagFormatting),
                 ("nobr", self.startTagNobr),
                 ("button", self.startTagButton),
                 (("applet", "marquee", "object"), self.startTagAppletMarqueeObject),
@@ -924,21 +924,21 @@ def getPhases(debug):
             self.startTagHandler.default = self.startTagOther
 
             self.endTagHandler = utils.MethodDispatcher([
-                ("body",self.endTagBody),
-                ("html",self.endTagHtml),
+                ("body", self.endTagBody),
+                ("html", self.endTagHtml),
                 (("address", "article", "aside", "blockquote", "center",
                   "details", "dir", "div", "dl", "fieldset", "figcaption", "figure",
                   "footer", "header", "hgroup", "listing", "menu", "nav", "ol", "pre",
                   "section", "summary", "ul"), self.endTagBlock),
                 ("form", self.endTagForm),
-                ("p",self.endTagP),
+                ("p", self.endTagP),
                 (("dd", "dt", "li"), self.endTagListItem),
                 (headingElements, self.endTagHeading),
                 (("a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small",
                   "strike", "strong", "tt", "u"), self.endTagFormatting),
-                (("applet",  "marquee", "object"), self.endTagAppletMarqueeObject),
+                (("applet", "marquee", "object"), self.endTagAppletMarqueeObject),
                 ("br", self.endTagBr),
-                ])
+            ])
             self.endTagHandler.default = self.endTagOther
 
         def isMatchingFormattingElement(self, node1, node2):
@@ -980,7 +980,7 @@ def getPhases(debug):
                 if node.name not in allowed_elements:
                     self.parser.parseError("expected-closing-tag-but-got-eof")
                     break
-            #Stop parsing
+            # Stop parsing
 
         def processSpaceCharactersDropNewline(self, token):
             # Sometimes (start of <pre>, <listing>, and <textarea> blocks) we
@@ -989,7 +989,7 @@ def getPhases(debug):
             self.processSpaceCharacters = self.processSpaceCharactersNonPre
             if (data.startswith("\n") and
                 self.tree.openElements[-1].name in ("pre", "listing", "textarea")
-                and not self.tree.openElements[-1].hasContent()):
+                    and not self.tree.openElements[-1].hasContent()):
                 data = data[1:]
             if data:
                 self.tree.reconstructActiveFormattingElements()
@@ -997,11 +997,11 @@ def getPhases(debug):
 
         def processCharacters(self, token):
             if token["data"] == "\u0000":
-                #The tokenizer should always emit null on its own
+                # The tokenizer should always emit null on its own
                 return
             self.tree.reconstructActiveFormattingElements()
             self.tree.insertText(token["data"])
-            #This must be bad for performance
+            # This must be bad for performance
             if (self.parser.framesetOK and
                 any([char not in spaceCharacters
                      for char in token["data"]])):
@@ -1017,7 +1017,7 @@ def getPhases(debug):
         def startTagBody(self, token):
             self.parser.parseError("unexpected-start-tag", {"name": "body"})
             if (len(self.tree.openElements) == 1
-                or self.tree.openElements[1].name != "body"):
+                    or self.tree.openElements[1].name != "body"):
                 assert self.parser.innerHTML
             else:
                 self.parser.framesetOK = False
@@ -1063,9 +1063,9 @@ def getPhases(debug):
         def startTagListItem(self, token):
             self.parser.framesetOK = False
 
-            stopNamesMap = {"li":["li"],
-                            "dt":["dt", "dd"],
-                            "dd":["dt", "dd"]}
+            stopNamesMap = {"li": ["li"],
+                            "dt": ["dt", "dd"],
+                            "dd": ["dt", "dd"]}
             stopNames = stopNamesMap[token["name"]]
             for node in reversed(self.tree.openElements):
                 if node.name in stopNames:
@@ -1073,7 +1073,7 @@ def getPhases(debug):
                         impliedTagToken(node.name, "EndTag"))
                     break
                 if (node.nameTuple in specialElements and
-                    node.name not in ("address", "div", "p")):
+                        node.name not in ("address", "div", "p")):
                     break
 
             if self.tree.elementInScope("p", variant="button"):
@@ -1100,7 +1100,7 @@ def getPhases(debug):
             afeAElement = self.tree.elementInActiveFormattingElements("a")
             if afeAElement:
                 self.parser.parseError("unexpected-start-tag-implies-end-tag",
-                  {"startName": "a", "endName": "a"})
+                                       {"startName": "a", "endName": "a"})
                 self.endTagFormatting(impliedTagToken("a"))
                 if afeAElement in self.tree.openElements:
                     self.tree.openElements.remove(afeAElement)
@@ -1117,7 +1117,7 @@ def getPhases(debug):
             self.tree.reconstructActiveFormattingElements()
             if self.tree.elementInScope("nobr"):
                 self.parser.parseError("unexpected-start-tag-implies-end-tag",
-                  {"startName": "nobr", "endName": "nobr"})
+                                       {"startName": "nobr", "endName": "nobr"})
                 self.processEndTag(impliedTagToken("nobr"))
                 # XXX Need tests that trigger the following
                 self.tree.reconstructActiveFormattingElements()
@@ -1126,7 +1126,7 @@ def getPhases(debug):
         def startTagButton(self, token):
             if self.tree.elementInScope("button"):
                 self.parser.parseError("unexpected-start-tag-implies-end-tag",
-                  {"startName": "button", "endName": "button"})
+                                       {"startName": "button", "endName": "button"})
                 self.processEndTag(impliedTagToken("button"))
                 return token
             else:
@@ -1166,8 +1166,8 @@ def getPhases(debug):
             framesetOK = self.parser.framesetOK
             self.startTagVoidFormatting(token)
             if ("type" in token["data"] and
-                token["data"]["type"].translate(asciiUpper2Lower) == "hidden"):
-                #input type=hidden doesn't change framesetOK
+                    token["data"]["type"].translate(asciiUpper2Lower) == "hidden"):
+                # input type=hidden doesn't change framesetOK
                 self.parser.framesetOK = framesetOK
 
         def startTagParamSource(self, token):
@@ -1186,7 +1186,7 @@ def getPhases(debug):
         def startTagImage(self, token):
             # No really...
             self.parser.parseError("unexpected-start-tag-treated-as",
-              {"originalName": "image", "newName": "img"})
+                                   {"originalName": "image", "newName": "img"})
             self.processStartTag(impliedTagToken("img", "StartTag",
                                                  attributes=token["data"],
                                                  selfClosing=token["selfClosing"]))
@@ -1208,7 +1208,7 @@ def getPhases(debug):
             else:
                 prompt = "This is a searchable index. Enter search keywords: "
             self.processCharacters(
-                {"type":tokenTypes["Characters"], "data":prompt})
+                {"type": tokenTypes["Characters"], "data": prompt})
             attributes = token["data"].copy()
             if "action" in attributes:
                 del attributes["action"]
@@ -1216,8 +1216,8 @@ def getPhases(debug):
                 del attributes["prompt"]
             attributes["name"] = "isindex"
             self.processStartTag(impliedTagToken("input", "StartTag",
-                                                 attributes = attributes,
-                                                 selfClosing =
+                                                 attributes=attributes,
+                                                 selfClosing=
                                                  token["selfClosing"]))
             self.processEndTag(impliedTagToken("label"))
             self.processStartTag(impliedTagToken("hr", "StartTag"))
@@ -1270,8 +1270,8 @@ def getPhases(debug):
             self.parser.adjustForeignAttributes(token)
             token["namespace"] = namespaces["mathml"]
             self.tree.insertElement(token)
-            #Need to get the parse error right for the case where the token
-            #has a namespace not equal to the xmlns attribute
+            # Need to get the parse error right for the case where the token
+            # has a namespace not equal to the xmlns attribute
             if token["selfClosing"]:
                 self.tree.openElements.pop()
                 token["selfClosingAcknowledged"] = True
@@ -1282,8 +1282,8 @@ def getPhases(debug):
             self.parser.adjustForeignAttributes(token)
             token["namespace"] = namespaces["svg"]
             self.tree.insertElement(token)
-            #Need to get the parse error right for the case where the token
-            #has a namespace not equal to the xmlns attribute
+            # Need to get the parse error right for the case where the token
+            # has a namespace not equal to the xmlns attribute
             if token["selfClosing"]:
                 self.tree.openElements.pop()
                 token["selfClosingAcknowledged"] = True
@@ -1325,7 +1325,7 @@ def getPhases(debug):
                                                    "tbody", "td", "tfoot",
                                                    "th", "thead", "tr", "body",
                                                    "html")):
-                        #Not sure this is the correct name for the parse error
+                        # Not sure this is the correct name for the parse error
                         self.parser.parseError(
                             "expected-one-end-tag-but-got-another",
                             {"expectedName": "body", "gotName": node.name})
@@ -1333,20 +1333,20 @@ def getPhases(debug):
             self.parser.phase = self.parser.phases["afterBody"]
 
         def endTagHtml(self, token):
-            #We repeat the test for the body end tag token being ignored here
+            # We repeat the test for the body end tag token being ignored here
             if self.tree.elementInScope("body"):
                 self.endTagBody(impliedTagToken("body"))
                 return token
 
         def endTagBlock(self, token):
-            #Put us back in the right whitespace handling mode
+            # Put us back in the right whitespace handling mode
             if token["name"] == "pre":
                 self.processSpaceCharacters = self.processSpaceCharactersNonPre
             inScope = self.tree.elementInScope(token["name"])
             if inScope:
                 self.tree.generateImpliedEndTags()
             if self.tree.openElements[-1].name != token["name"]:
-                 self.parser.parseError("end-tag-too-early", {"name": token["name"]})
+                self.parser.parseError("end-tag-too-early", {"name": token["name"]})
             if inScope:
                 node = self.tree.openElements.pop()
                 while node.name != token["name"]:
@@ -1357,7 +1357,7 @@ def getPhases(debug):
             self.tree.formPointer = None
             if node is None or not self.tree.elementInScope(node):
                 self.parser.parseError("unexpected-end-tag",
-                                       {"name":"form"})
+                                       {"name": "form"})
             else:
                 self.tree.generateImpliedEndTags()
                 if self.tree.openElements[-1] != node:
@@ -1373,7 +1373,7 @@ def getPhases(debug):
             if not self.tree.elementInScope(token["name"], variant=variant):
                 self.parser.parseError("unexpected-end-tag", {"name": token["name"]})
             else:
-                self.tree.generateImpliedEndTags(exclude = token["name"])
+                self.tree.generateImpliedEndTags(exclude=token["name"])
                 if self.tree.openElements[-1].name != token["name"]:
                     self.parser.parseError(
                         "end-tag-too-early",
@@ -1439,7 +1439,6 @@ def getPhases(debug):
                     self.tree.activeFormattingElements.remove(formattingElement)
                     return
 
-
                 # Otherwise, if there is such a node, and that node is
                 # also in the stack of open elements, but the element
                 # is not in scope, then this is a parse error; ignore
@@ -1472,10 +1471,10 @@ def getPhases(debug):
                         element = self.tree.openElements.pop()
                     self.tree.activeFormattingElements.remove(element)
                     return
-                commonAncestor = self.tree.openElements[afeIndex-1]
+                commonAncestor = self.tree.openElements[afeIndex - 1]
 
                 # Step 5
-                #if furthestBlock.parent:
+                # if furthestBlock.parent:
                 #    furthestBlock.parent.removeChild(furthestBlock)
 
                 # Step 5
@@ -1506,7 +1505,7 @@ def getPhases(debug):
                         bookmark = (self.tree.activeFormattingElements.index(node)
                                     + 1)
                     # Step 6.5
-                    #cite = node.parent
+                    # cite = node.parent
                     clone = node.cloneNode()
                     # Replace node with clone
                     self.tree.activeFormattingElements[
@@ -1553,7 +1552,7 @@ def getPhases(debug):
                 # Step 12
                 self.tree.openElements.remove(formattingElement)
                 self.tree.openElements.insert(
-                  self.tree.openElements.index(furthestBlock) + 1, clone)
+                    self.tree.openElements.index(furthestBlock) + 1, clone)
 
         def endTagAppletMarqueeObject(self, token):
             if self.tree.elementInScope(token["name"]):
@@ -1569,7 +1568,7 @@ def getPhases(debug):
 
         def endTagBr(self, token):
             self.parser.parseError("unexpected-end-tag-treated-as",
-              {"originalName": "br", "newName": "br element"})
+                                   {"originalName": "br", "newName": "br element"})
             self.tree.reconstructActiveFormattingElements()
             self.tree.insertElement(impliedTagToken("br", "StartTag"))
             self.tree.openElements.pop()
@@ -1594,7 +1593,7 @@ def getPhases(debug):
             self.startTagHandler = utils.MethodDispatcher([])
             self.startTagHandler.default = self.startTagOther
             self.endTagHandler = utils.MethodDispatcher([
-                    ("script", self.endTagScript)])
+                ("script", self.endTagScript)])
             self.endTagHandler.default = self.endTagOther
 
         def processCharacters(self, token):
@@ -1602,20 +1601,20 @@ def getPhases(debug):
 
         def processEOF(self):
             self.parser.parseError("expected-named-closing-tag-but-got-eof",
-                                   {"name":self.tree.openElements[-1].name})
+                                   {"name": self.tree.openElements[-1].name})
             self.tree.openElements.pop()
             self.parser.phase = self.parser.originalPhase
             return True
 
         def startTagOther(self, token):
-            assert False, "Tried to process start tag %s in RCDATA/RAWTEXT mode"%token['name']
+            assert False, "Tried to process start tag %s in RCDATA/RAWTEXT mode" % token['name']
 
         def endTagScript(self, token):
             node = self.tree.openElements.pop()
             assert node.name == "script"
             self.parser.phase = self.parser.originalPhase
-            #The rest of this method is all stuff that only happens if
-            #document.write works
+            # The rest of this method is all stuff that only happens if
+            # document.write works
 
         def endTagOther(self, token):
             self.tree.openElements.pop()
@@ -1650,7 +1649,7 @@ def getPhases(debug):
         def clearStackToTableContext(self):
             # "clear the stack back to a table context"
             while self.tree.openElements[-1].name not in ("table", "html"):
-                #self.parser.parseError("unexpected-implied-end-tag-in-table",
+                # self.parser.parseError("unexpected-implied-end-tag-in-table",
                 #  {"name":  self.tree.openElements[-1].name})
                 self.tree.openElements.pop()
             # When the current node is <html> it's an innerHTML case
@@ -1661,7 +1660,7 @@ def getPhases(debug):
                 self.parser.parseError("eof-in-table")
             else:
                 assert self.parser.innerHTML
-            #Stop parsing
+            # Stop parsing
 
         def processSpaceCharacters(self, token):
             originalPhase = self.parser.phase
@@ -1676,7 +1675,7 @@ def getPhases(debug):
             self.parser.phase.processCharacters(token)
 
         def insertText(self, token):
-            #If we get here there must be at least one non-whitespace character
+            # If we get here there must be at least one non-whitespace character
             # Do the table magic!
             self.tree.insertFromTable = True
             self.parser.phases["inBody"].processCharacters(token)
@@ -1708,7 +1707,7 @@ def getPhases(debug):
 
         def startTagTable(self, token):
             self.parser.parseError("unexpected-start-tag-implies-end-tag",
-              {"startName": "table", "endName": "table"})
+                                   {"startName": "table", "endName": "table"})
             self.parser.phase.processEndTag(impliedTagToken("table"))
             if not self.parser.innerHTML:
                 return token
@@ -1718,7 +1717,7 @@ def getPhases(debug):
 
         def startTagInput(self, token):
             if ("type" in token["data"] and
-                token["data"]["type"].translate(asciiUpper2Lower) == "hidden"):
+                    token["data"]["type"].translate(asciiUpper2Lower) == "hidden"):
                 self.parser.parseError("unexpected-hidden-input-in-table")
                 self.tree.insertElement(token)
                 # XXX associate with form
@@ -1745,8 +1744,8 @@ def getPhases(debug):
                 self.tree.generateImpliedEndTags()
                 if self.tree.openElements[-1].name != "table":
                     self.parser.parseError("end-tag-too-early-named",
-                      {"gotName": "table",
-                       "expectedName": self.tree.openElements[-1].name})
+                                           {"gotName": "table",
+                                            "expectedName": self.tree.openElements[-1].name})
                 while self.tree.openElements[-1].name != "table":
                     self.tree.openElements.pop()
                 self.tree.openElements.pop()
@@ -1775,7 +1774,7 @@ def getPhases(debug):
         def flushCharacters(self):
             data = "".join([item["data"] for item in self.characterTokens])
             if any([item not in spaceCharacters for item in data]):
-                token = {"type":tokenTypes["Characters"], "data":data}
+                token = {"type": tokenTypes["Characters"], "data": data}
                 self.parser.phases["inTable"].insertText(token)
             elif data:
                 self.tree.insertText(data)
@@ -1797,7 +1796,7 @@ def getPhases(debug):
             self.characterTokens.append(token)
 
         def processSpaceCharacters(self, token):
-            #pretty sure we should never reach here
+            # pretty sure we should never reach here
             self.characterTokens.append(token)
     #        assert False
 
@@ -1810,7 +1809,6 @@ def getPhases(debug):
             self.flushCharacters()
             self.parser.phase = self.originalPhase
             return token
-
 
     class InCaptionPhase(Phase):
         # http://www.whatwg.org/specs/web-apps/current-work/#in-caption
@@ -1843,7 +1841,7 @@ def getPhases(debug):
 
         def startTagTableElement(self, token):
             self.parser.parseError()
-            #XXX Have to duplicate logic here to find out if the tag is ignored
+            # XXX Have to duplicate logic here to find out if the tag is ignored
             ignoreEndTag = self.ignoreEndTagCaption()
             self.parser.phase.processEndTag(impliedTagToken("caption"))
             if not ignoreEndTag:
@@ -1858,8 +1856,8 @@ def getPhases(debug):
                 self.tree.generateImpliedEndTags()
                 if self.tree.openElements[-1].name != "caption":
                     self.parser.parseError("expected-one-end-tag-but-got-another",
-                      {"gotName": "caption",
-                       "expectedName": self.tree.openElements[-1].name})
+                                           {"gotName": "caption",
+                                            "expectedName": self.tree.openElements[-1].name})
                 while self.tree.openElements[-1].name != "caption":
                     self.tree.openElements.pop()
                 self.tree.openElements.pop()
@@ -1882,7 +1880,6 @@ def getPhases(debug):
 
         def endTagOther(self, token):
             return self.parser.phases["inBody"].processEndTag(token)
-
 
     class InColumnGroupPhase(Phase):
         # http://www.whatwg.org/specs/web-apps/current-work/#in-column
@@ -1949,7 +1946,6 @@ def getPhases(debug):
             if not ignoreEndTag:
                 return token
 
-
     class InTableBodyPhase(Phase):
         # http://www.whatwg.org/specs/web-apps/current-work/#in-table0
         def __init__(self, parser, tree):
@@ -1974,8 +1970,8 @@ def getPhases(debug):
         # helper methods
         def clearStackToTableBodyContext(self):
             while self.tree.openElements[-1].name not in ("tbody", "tfoot",
-              "thead", "html"):
-                #self.parser.parseError("unexpected-implied-end-tag-in-table",
+                                                          "thead", "html"):
+                # self.parser.parseError("unexpected-implied-end-tag-in-table",
                 #  {"name": self.tree.openElements[-1].name})
                 self.tree.openElements.pop()
             if self.tree.openElements[-1].name == "html":
@@ -2006,7 +2002,7 @@ def getPhases(debug):
             # XXX AT Any ideas on how to share this with endTagTable?
             if (self.tree.elementInScope("tbody", variant="table") or
                 self.tree.elementInScope("thead", variant="table") or
-                self.tree.elementInScope("tfoot", variant="table")):
+                    self.tree.elementInScope("tfoot", variant="table")):
                 self.clearStackToTableBodyContext()
                 self.endTagTableRowGroup(
                     impliedTagToken(self.tree.openElements[-1].name))
@@ -2026,12 +2022,12 @@ def getPhases(debug):
                 self.parser.phase = self.parser.phases["inTable"]
             else:
                 self.parser.parseError("unexpected-end-tag-in-table-body",
-                  {"name": token["name"]})
+                                       {"name": token["name"]})
 
         def endTagTable(self, token):
             if (self.tree.elementInScope("tbody", variant="table") or
                 self.tree.elementInScope("thead", variant="table") or
-                self.tree.elementInScope("tfoot", variant="table")):
+                    self.tree.elementInScope("tfoot", variant="table")):
                 self.clearStackToTableBodyContext()
                 self.endTagTableRowGroup(
                     impliedTagToken(self.tree.openElements[-1].name))
@@ -2043,11 +2039,10 @@ def getPhases(debug):
 
         def endTagIgnore(self, token):
             self.parser.parseError("unexpected-end-tag-in-table-body",
-              {"name": token["name"]})
+                                   {"name": token["name"]})
 
         def endTagOther(self, token):
             return self.parser.phases["inTable"].processEndTag(token)
-
 
     class InRowPhase(Phase):
         # http://www.whatwg.org/specs/web-apps/current-work/#in-row
@@ -2066,7 +2061,7 @@ def getPhases(debug):
                 ("table", self.endTagTable),
                 (("tbody", "tfoot", "thead"), self.endTagTableRowGroup),
                 (("body", "caption", "col", "colgroup", "html", "td", "th"),
-                  self.endTagIgnore)
+                 self.endTagIgnore)
             ])
             self.endTagHandler.default = self.endTagOther
 
@@ -2074,7 +2069,7 @@ def getPhases(debug):
         def clearStackToTableRowContext(self):
             while self.tree.openElements[-1].name not in ("tr", "html"):
                 self.parser.parseError("unexpected-implied-end-tag-in-table-row",
-                  {"name": self.tree.openElements[-1].name})
+                                       {"name": self.tree.openElements[-1].name})
                 self.tree.openElements.pop()
 
         def ignoreEndTagTr(self):
@@ -2133,7 +2128,7 @@ def getPhases(debug):
 
         def endTagIgnore(self, token):
             self.parser.parseError("unexpected-end-tag-in-table-row",
-                {"name": token["name"]})
+                                   {"name": token["name"]})
 
         def endTagOther(self, token):
             return self.parser.phases["inTable"].processEndTag(token)
@@ -2172,7 +2167,7 @@ def getPhases(debug):
 
         def startTagTableOther(self, token):
             if (self.tree.elementInScope("td", variant="table") or
-                self.tree.elementInScope("th", variant="table")):
+                    self.tree.elementInScope("th", variant="table")):
                 self.closeCell()
                 return token
             else:
@@ -2188,7 +2183,7 @@ def getPhases(debug):
                 self.tree.generateImpliedEndTags(token["name"])
                 if self.tree.openElements[-1].name != token["name"]:
                     self.parser.parseError("unexpected-cell-end-tag",
-                      {"name": token["name"]})
+                                           {"name": token["name"]})
                     while True:
                         node = self.tree.openElements.pop()
                         if node.name == token["name"]:
@@ -2277,19 +2272,19 @@ def getPhases(debug):
 
         def startTagOther(self, token):
             self.parser.parseError("unexpected-start-tag-in-select",
-              {"name": token["name"]})
+                                   {"name": token["name"]})
 
         def endTagOption(self, token):
             if self.tree.openElements[-1].name == "option":
                 self.tree.openElements.pop()
             else:
                 self.parser.parseError("unexpected-end-tag-in-select",
-                  {"name": "option"})
+                                       {"name": "option"})
 
         def endTagOptgroup(self, token):
             # </optgroup> implicitly closes <option>
             if (self.tree.openElements[-1].name == "option" and
-                self.tree.openElements[-2].name == "optgroup"):
+                    self.tree.openElements[-2].name == "optgroup"):
                 self.tree.openElements.pop()
             # It also closes </optgroup>
             if self.tree.openElements[-1].name == "optgroup":
@@ -2297,7 +2292,7 @@ def getPhases(debug):
             # But nothing else
             else:
                 self.parser.parseError("unexpected-end-tag-in-select",
-                  {"name": "optgroup"})
+                                       {"name": "optgroup"})
 
         def endTagSelect(self, token):
             if self.tree.elementInScope("select", variant="select"):
@@ -2312,8 +2307,7 @@ def getPhases(debug):
 
         def endTagOther(self, token):
             self.parser.parseError("unexpected-end-tag-in-select",
-              {"name": token["name"]})
-
+                                   {"name": token["name"]})
 
     class InSelectInTablePhase(Phase):
         def __init__(self, parser, tree):
@@ -2354,56 +2348,56 @@ def getPhases(debug):
         def endTagOther(self, token):
             return self.parser.phases["inSelect"].processEndTag(token)
 
-
     class InForeignContentPhase(Phase):
         breakoutElements = frozenset(["b", "big", "blockquote", "body", "br",
                                       "center", "code", "dd", "div", "dl", "dt",
                                       "em", "embed", "h1", "h2", "h3",
                                       "h4", "h5", "h6", "head", "hr", "i", "img",
                                       "li", "listing", "menu", "meta", "nobr",
-                                      "ol", "p", "pre", "ruby", "s",  "small",
-                                      "span", "strong", "strike",  "sub", "sup",
+                                      "ol", "p", "pre", "ruby", "s", "small",
+                                      "span", "strong", "strike", "sub", "sup",
                                       "table", "tt", "u", "ul", "var"])
+
         def __init__(self, parser, tree):
             Phase.__init__(self, parser, tree)
 
         def adjustSVGTagNames(self, token):
-            replacements = {"altglyph":"altGlyph",
-                            "altglyphdef":"altGlyphDef",
-                            "altglyphitem":"altGlyphItem",
-                            "animatecolor":"animateColor",
-                            "animatemotion":"animateMotion",
-                            "animatetransform":"animateTransform",
-                            "clippath":"clipPath",
-                            "feblend":"feBlend",
-                            "fecolormatrix":"feColorMatrix",
-                            "fecomponenttransfer":"feComponentTransfer",
-                            "fecomposite":"feComposite",
-                            "feconvolvematrix":"feConvolveMatrix",
-                            "fediffuselighting":"feDiffuseLighting",
-                            "fedisplacementmap":"feDisplacementMap",
-                            "fedistantlight":"feDistantLight",
-                            "feflood":"feFlood",
-                            "fefunca":"feFuncA",
-                            "fefuncb":"feFuncB",
-                            "fefuncg":"feFuncG",
-                            "fefuncr":"feFuncR",
-                            "fegaussianblur":"feGaussianBlur",
-                            "feimage":"feImage",
-                            "femerge":"feMerge",
-                            "femergenode":"feMergeNode",
-                            "femorphology":"feMorphology",
-                            "feoffset":"feOffset",
-                            "fepointlight":"fePointLight",
-                            "fespecularlighting":"feSpecularLighting",
-                            "fespotlight":"feSpotLight",
-                            "fetile":"feTile",
-                            "feturbulence":"feTurbulence",
-                            "foreignobject":"foreignObject",
-                            "glyphref":"glyphRef",
-                            "lineargradient":"linearGradient",
-                            "radialgradient":"radialGradient",
-                            "textpath":"textPath"}
+            replacements = {"altglyph": "altGlyph",
+                            "altglyphdef": "altGlyphDef",
+                            "altglyphitem": "altGlyphItem",
+                            "animatecolor": "animateColor",
+                            "animatemotion": "animateMotion",
+                            "animatetransform": "animateTransform",
+                            "clippath": "clipPath",
+                            "feblend": "feBlend",
+                            "fecolormatrix": "feColorMatrix",
+                            "fecomponenttransfer": "feComponentTransfer",
+                            "fecomposite": "feComposite",
+                            "feconvolvematrix": "feConvolveMatrix",
+                            "fediffuselighting": "feDiffuseLighting",
+                            "fedisplacementmap": "feDisplacementMap",
+                            "fedistantlight": "feDistantLight",
+                            "feflood": "feFlood",
+                            "fefunca": "feFuncA",
+                            "fefuncb": "feFuncB",
+                            "fefuncg": "feFuncG",
+                            "fefuncr": "feFuncR",
+                            "fegaussianblur": "feGaussianBlur",
+                            "feimage": "feImage",
+                            "femerge": "feMerge",
+                            "femergenode": "feMergeNode",
+                            "femorphology": "feMorphology",
+                            "feoffset": "feOffset",
+                            "fepointlight": "fePointLight",
+                            "fespecularlighting": "feSpecularLighting",
+                            "fespotlight": "feSpotLight",
+                            "fetile": "feTile",
+                            "feturbulence": "feTurbulence",
+                            "foreignobject": "foreignObject",
+                            "glyphref": "glyphRef",
+                            "lineargradient": "linearGradient",
+                            "radialgradient": "radialGradient",
+                            "textpath": "textPath"}
 
             if token["name"] in replacements:
                 token["name"] = replacements[token["name"]]
@@ -2451,7 +2445,7 @@ def getPhases(debug):
 
             while True:
                 if node.name.translate(asciiUpper2Lower) == token["name"]:
-                    #XXX this isn't in the spec but it seems necessary
+                    # XXX this isn't in the spec but it seems necessary
                     if self.parser.phase == self.parser.phases["inTableText"]:
                         self.parser.phase.flushCharacters()
                         self.parser.phase = self.parser.phase.originalPhase
@@ -2469,21 +2463,20 @@ def getPhases(debug):
                     break
             return new_token
 
-
     class AfterBodyPhase(Phase):
         def __init__(self, parser, tree):
             Phase.__init__(self, parser, tree)
 
             self.startTagHandler = utils.MethodDispatcher([
-                    ("html", self.startTagHtml)
-                    ])
+                ("html", self.startTagHtml)
+            ])
             self.startTagHandler.default = self.startTagOther
 
             self.endTagHandler = utils.MethodDispatcher([("html", self.endTagHtml)])
             self.endTagHandler.default = self.endTagOther
 
         def processEOF(self):
-            #Stop parsing
+            # Stop parsing
             pass
 
         def processComment(self, token):
@@ -2501,11 +2494,11 @@ def getPhases(debug):
 
         def startTagOther(self, token):
             self.parser.parseError("unexpected-start-tag-after-body",
-              {"name": token["name"]})
+                                   {"name": token["name"]})
             self.parser.phase = self.parser.phases["inBody"]
             return token
 
-        def endTagHtml(self,name):
+        def endTagHtml(self, name):
             if self.parser.innerHTML:
                 self.parser.parseError("unexpected-end-tag-after-body-innerhtml")
             else:
@@ -2513,7 +2506,7 @@ def getPhases(debug):
 
         def endTagOther(self, token):
             self.parser.parseError("unexpected-end-tag-after-body",
-              {"name": token["name"]})
+                                   {"name": token["name"]})
             self.parser.phase = self.parser.phases["inBody"]
             return token
 
@@ -2556,7 +2549,7 @@ def getPhases(debug):
 
         def startTagOther(self, token):
             self.parser.parseError("unexpected-start-tag-in-frameset",
-              {"name": token["name"]})
+                                   {"name": token["name"]})
 
         def endTagFrameset(self, token):
             if self.tree.openElements[-1].name == "html":
@@ -2565,15 +2558,14 @@ def getPhases(debug):
             else:
                 self.tree.openElements.pop()
             if (not self.parser.innerHTML and
-                self.tree.openElements[-1].name != "frameset"):
+                    self.tree.openElements[-1].name != "frameset"):
                 # If we're not in innerHTML mode and the the current node is not a
                 # "frameset" element (anymore) then switch.
                 self.parser.phase = self.parser.phases["afterFrameset"]
 
         def endTagOther(self, token):
             self.parser.parseError("unexpected-end-tag-in-frameset",
-              {"name": token["name"]})
-
+                                   {"name": token["name"]})
 
     class AfterFramesetPhase(Phase):
         # http://www.whatwg.org/specs/web-apps/current-work/#after3
@@ -2592,7 +2584,7 @@ def getPhases(debug):
             self.endTagHandler.default = self.endTagOther
 
         def processEOF(self):
-            #Stop parsing
+            # Stop parsing
             pass
 
         def processCharacters(self, token):
@@ -2603,15 +2595,14 @@ def getPhases(debug):
 
         def startTagOther(self, token):
             self.parser.parseError("unexpected-start-tag-after-frameset",
-              {"name": token["name"]})
+                                   {"name": token["name"]})
 
         def endTagHtml(self, token):
             self.parser.phase = self.parser.phases["afterAfterFrameset"]
 
         def endTagOther(self, token):
             self.parser.parseError("unexpected-end-tag-after-frameset",
-              {"name": token["name"]})
-
+                                   {"name": token["name"]})
 
     class AfterAfterBodyPhase(Phase):
         def __init__(self, parser, tree):
@@ -2641,13 +2632,13 @@ def getPhases(debug):
 
         def startTagOther(self, token):
             self.parser.parseError("expected-eof-but-got-start-tag",
-              {"name": token["name"]})
+                                   {"name": token["name"]})
             self.parser.phase = self.parser.phases["inBody"]
             return token
 
         def processEndTag(self, token):
             self.parser.parseError("expected-eof-but-got-end-tag",
-              {"name": token["name"]})
+                                   {"name": token["name"]})
             self.parser.phase = self.parser.phases["inBody"]
             return token
 
@@ -2681,12 +2672,11 @@ def getPhases(debug):
 
         def startTagOther(self, token):
             self.parser.parseError("expected-eof-but-got-start-tag",
-              {"name": token["name"]})
+                                   {"name": token["name"]})
 
         def processEndTag(self, token):
             self.parser.parseError("expected-eof-but-got-end-tag",
-              {"name": token["name"]})
-
+                                   {"name": token["name"]})
 
     return {
         "initial": InitialPhase,
@@ -2713,14 +2703,16 @@ def getPhases(debug):
         "afterAfterBody": AfterAfterBodyPhase,
         "afterAfterFrameset": AfterAfterFramesetPhase,
         # XXX after after frameset
-        }
+    }
 
-def impliedTagToken(name, type="EndTag", attributes = None,
-                    selfClosing = False):
+
+def impliedTagToken(name, type="EndTag", attributes=None,
+                    selfClosing=False):
     if attributes is None:
         attributes = {}
-    return {"type":tokenTypes[type], "name":name, "data":attributes,
-            "selfClosing":selfClosing}
+    return {"type": tokenTypes[type], "name": name, "data": attributes,
+            "selfClosing": selfClosing}
+
 
 class ParseError(Exception):
     """Error in parsed document"""
