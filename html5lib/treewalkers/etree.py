@@ -3,12 +3,10 @@ from __future__ import absolute_import, division, unicode_literals
 import gettext
 _ = gettext.gettext
 
-import copy
 import re
 
 from . import _base
-from html5lib.constants import voidElements
-from html5lib.utils import moduleFactorFactory
+from ..utils import moduleFactoryFactory
 
 tag_regexp = re.compile("{([^}]*)}(.*)")
 

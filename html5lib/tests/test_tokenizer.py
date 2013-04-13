@@ -2,9 +2,6 @@ from __future__ import absolute_import, division, unicode_literals
 
 
 
-import sys
-import os
-import io
 import warnings
 import re
 
@@ -176,7 +173,6 @@ def testTokenizer():
     for filename in get_data_files('tokenizer', '*.test'):
         with open(filename) as fp:
             tests = json.load(fp)
-            testName = os.path.basename(filename).replace(".test","")
             if 'tests' in tests:
                 for index,test in enumerate(tests['tests']):
                     if 'initialStates' not in test:

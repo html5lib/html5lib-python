@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, unicode_literals
 import os
 import sys
 import traceback
-import io
 import warnings
 import re
 
@@ -11,8 +10,7 @@ warnings.simplefilter("error")
 
 from .support import get_data_files
 from .support import TestData, convert, convertExpected, treeTypes
-import html5lib
-from html5lib import html5parser, treebuilders, constants
+from html5lib import html5parser, constants
 
 #Run the parse error checks
 checkParseErrors = False

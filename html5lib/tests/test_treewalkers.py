@@ -14,7 +14,6 @@ except AttributeError:
 from .support import get_data_files, TestData, convertExpected
 
 from html5lib import html5parser, treewalkers, treebuilders, constants
-from html5lib.filters.lint import Filter as LintFilter, LintError
 
 def PullDOMAdapter(node):
     from xml.dom import Node
@@ -58,42 +57,35 @@ treeTypes = {
 #"supposed" to work
 try:
     import xml.etree.ElementTree as ElementTree
+except ImportError:
+    pass
+else:
     treeTypes['ElementTree'] = \
         {"builder": treebuilders.getTreeBuilder("etree", ElementTree),
          "walker":  treewalkers.getTreeWalker("etree", ElementTree)}
-except ImportError:
-    try:
-        import elementtree.ElementTree as ElementTree
-        treeTypes['ElementTree'] = \
-            {"builder": treebuilders.getTreeBuilder("etree", ElementTree),
-             "walker":  treewalkers.getTreeWalker("etree", ElementTree)}
-    except ImportError:
-        pass
 
 try:
     import xml.etree.cElementTree as ElementTree
+except ImportError:
+    pass
+else:
     treeTypes['cElementTree'] = \
         {"builder": treebuilders.getTreeBuilder("etree", ElementTree),
          "walker":  treewalkers.getTreeWalker("etree", ElementTree)}
-except ImportError:
-    try:
-        import cElementTree as ElementTree
-        treeTypes['cElementTree'] = \
-            {"builder": treebuilders.getTreeBuilder("etree", ElementTree),
-             "walker":  treewalkers.getTreeWalker("etree", ElementTree)}
-    except ImportError:
-        pass
+
 
 try:
-    import lxml.etree as ElementTree
+    import lxml.etree as ElementTree # flake8: noqa
+except ImportError:
+    pass
+else:
 #    treeTypes['lxml_as_etree'] = \
 #        {"builder": treebuilders.getTreeBuilder("etree", ElementTree),
 #         "walker":  treewalkers.getTreeWalker("etree", ElementTree)}
     treeTypes['lxml_native'] = \
         {"builder": treebuilders.getTreeBuilder("lxml"),
          "walker":  treewalkers.getTreeWalker("lxml")}
-except ImportError:
-    pass
+
 
 #Try whatever etree implementations are available from a list that are
 #"supposed" to work

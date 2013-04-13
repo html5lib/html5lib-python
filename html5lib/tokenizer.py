@@ -8,8 +8,8 @@ except NameError:
 from collections import deque
 
 from .constants import spaceCharacters
-from .constants import entitiesWindows1252, entities
-from .constants import asciiLowercase, asciiLetters, asciiUpper2Lower
+from .constants import entities
+from .constants import asciiLetters, asciiUpper2Lower
 from .constants import digits, hexDigits, EOF
 from .constants import tokenTypes, tagTokenTypes
 from .constants import replacementCharacters
@@ -798,7 +798,7 @@ class HTMLTokenizer(object):
             self.state = self.scriptDataDoubleEscapedState
         return True
 
-    def scriptDataDoubleEscapedDashState(self):
+    def scriptDataDoubleEscapedDashDashState(self):
         data = self.stream.char()
         if data == "-":
             self.tokenQueue.append({"type": tokenTypes["Characters"], "data": "-"})

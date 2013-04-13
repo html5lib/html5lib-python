@@ -95,7 +95,7 @@ class TreeWalker(object):
 
 class RecursiveTreeWalker(TreeWalker):
     def walkChildren(self, node):
-        raise NodeImplementedError
+        raise NotImplementedError
 
     def element(self, node, namespace, name, attrs, hasChildren):
         if name in voidElements:
@@ -137,7 +137,6 @@ class NonRecursiveTreeWalker(TreeWalker):
             details = self.getNodeDetails(currentNode)
             type, details = details[0], details[1:]
             hasChildren = False
-            endTag = None
 
             if type == DOCTYPE:
                 yield self.doctype(*details)
@@ -154,7 +153,6 @@ class NonRecursiveTreeWalker(TreeWalker):
                         yield token
                     hasChildren = False
                 else:
-                    endTag = name
                     yield self.startTag(namespace, name, attributes)
 
             elif type == COMMENT:

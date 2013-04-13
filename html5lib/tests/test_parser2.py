@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, unicode_literals
 
 import io
 
-from . import support
+from . import support # flake8: noqa
 from html5lib import html5parser
 from html5lib.constants import namespaces
 from html5lib.treebuilders import dom

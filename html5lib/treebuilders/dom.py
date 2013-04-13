@@ -2,11 +2,10 @@ from __future__ import absolute_import, division, unicode_literals
 
 
 from xml.dom import minidom, Node, XML_NAMESPACE, XMLNS_NAMESPACE
-import re
 import weakref
 
 from . import _base
-from html5lib import constants, ihatexml
+from html5lib import constants
 from html5lib.constants import namespaces
 from html5lib.utils import moduleFactoryFactory
 

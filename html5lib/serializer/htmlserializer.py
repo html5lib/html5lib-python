@@ -24,8 +24,6 @@ except ImportError:
 else:
     unicode_encode_errors = "htmlentityreplace"
 
-    from html5lib.constants import entities
-
     encode_entity_map = {}
     is_ucs4 = len("\U0010FFFF") == 1
     for k, v in list(entities.items()):
@@ -228,7 +226,6 @@ class HTMLSerializer(object):
                     in_cdata = True
                 elif in_cdata:
                     self.serializeError(_("Unexpected child element of a CDATA element"))
-                attributes = []
                 for (attr_namespace,attr_name),attr_value in sorted(token["data"].items()):
                     #TODO: Add namespace support here
                     k = attr_name
