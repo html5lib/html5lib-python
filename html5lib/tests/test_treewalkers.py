@@ -286,7 +286,7 @@ def runTreewalkerTest(innerHTML, input, expected, errors, treeClass):
         output = attrlist.sub(sortattrs, output)
         expected = attrlist.sub(sortattrs, convertExpected(expected))
         diff = "".join(unified_diff([line + "\n" for line in expected.splitlines()],
-                                    [line + "\n" for line in output.splitlines()]
+                                    [line + "\n" for line in output.splitlines()],
                                     "Expected", "Received"))
         assert expected == output, "\n".join([
                 "", "Input:", input,
