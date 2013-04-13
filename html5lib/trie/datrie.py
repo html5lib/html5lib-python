@@ -5,6 +5,7 @@ from six import text_type
 
 from ._base import Trie as ABCTrie
 
+
 class Trie(ABCTrie):
     def __init__(self, data):
         chars = set()

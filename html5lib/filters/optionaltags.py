@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, unicode_literals
 
 from . import _base
 
+
 class Filter(_base.Filter):
     def slider(self):
         previous1 = previous2 = None
@@ -17,7 +18,7 @@ class Filter(_base.Filter):
             type = token["type"]
             if type == "StartTag":
                 if (token["data"] or
-                    not self.is_optional_start(token["name"], previous, next)):
+                        not self.is_optional_start(token["name"], previous, next)):
                     yield token
             elif type == "EndTag":
                 if not self.is_optional_end(token["name"], next):
@@ -75,7 +76,7 @@ class Filter(_base.Filter):
                 # omit the thead and tfoot elements' end tag when they are
                 # immediately followed by a tbody element. See is_optional_end.
                 if previous and previous['type'] == 'EndTag' and \
-                  previous['name'] in ('tbody','thead','tfoot'):
+                        previous['name'] in ('tbody', 'thead', 'tfoot'):
                     return False
                 return next["name"] == 'tr'
             else:

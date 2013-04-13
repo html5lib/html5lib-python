@@ -7,6 +7,7 @@ _ = gettext.gettext
 from html5lib.constants import voidElements, spaceCharacters
 spaceCharacters = "".join(spaceCharacters)
 
+
 class TreeWalker(object):
     def __init__(self, tree):
         self.tree = tree
@@ -21,12 +22,12 @@ class TreeWalker(object):
         assert namespace is None or isinstance(namespace, text_type), type(namespace)
         assert isinstance(name, text_type), type(name)
         assert all((namespace is None or isinstance(namespace, text_type)) and
-                                isinstance(name, text_type) and
-                                isinstance(value, text_type)
-                                for (namespace, name), value in attrs.items())
+                   isinstance(name, text_type) and
+                   isinstance(value, text_type)
+                   for (namespace, name), value in attrs.items())
 
         yield {"type": "EmptyTag", "name": name,
-               "namespace":namespace,
+               "namespace": namespace,
                "data": attrs}
         if hasChildren:
             yield self.error(_("Void element has children"))
@@ -35,13 +36,13 @@ class TreeWalker(object):
         assert namespace is None or isinstance(namespace, text_type), type(namespace)
         assert isinstance(name, text_type), type(name)
         assert all((namespace is None or isinstance(namespace, text_type)) and
-                                isinstance(name, text_type) and
-                                isinstance(value, text_type)
-                                for (namespace, name), value in attrs.items())
+                   isinstance(name, text_type) and
+                   isinstance(value, text_type)
+                   for (namespace, name), value in attrs.items())
 
         return {"type": "StartTag",
                 "name": name,
-                "namespace":namespace,
+                "namespace": namespace,
                 "data": attrs}
 
     def endTag(self, namespace, name):
@@ -50,7 +51,7 @@ class TreeWalker(object):
 
         return {"type": "EndTag",
                 "name": name,
-                "namespace":namespace,
+                "namespace": namespace,
                 "data": {}}
 
     def text(self, data):
@@ -58,7 +59,7 @@ class TreeWalker(object):
 
         data = data
         middle = data.lstrip(spaceCharacters)
-        left = data[:len(data)-len(middle)]
+        left = data[:len(data) - len(middle)]
         if left:
             yield {"type": "SpaceCharacters", "data": left}
         data = middle
@@ -93,6 +94,7 @@ class TreeWalker(object):
     def unknown(self, nodeType):
         return self.error(_("Unknown node type: ") + nodeType)
 
+
 class RecursiveTreeWalker(TreeWalker):
     def walkChildren(self, node):
         raise NotImplementedError
@@ -117,6 +119,7 @@ ELEMENT = Node.ELEMENT_NODE
 COMMENT = Node.COMMENT_NODE
 ENTITY = Node.ENTITY_NODE
 UNKNOWN = "<#UNKNOWN#>"
+
 
 class NonRecursiveTreeWalker(TreeWalker):
     def getNodeDetails(self, node):

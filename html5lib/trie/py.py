@@ -5,6 +5,7 @@ from bisect import bisect_left
 
 from ._base import Trie as ABCTrie
 
+
 class Trie(ABCTrie):
     def __init__(self, data):
         if not all(isinstance(x, text_type) for x in data.keys()):

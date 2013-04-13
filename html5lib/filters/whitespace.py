@@ -8,6 +8,7 @@ spaceCharacters = "".join(spaceCharacters)
 
 SPACES_REGEX = re.compile("[%s]+" % spaceCharacters)
 
+
 class Filter(_base.Filter):
 
     spacePreserveElements = frozenset(["pre", "textarea"] + list(rcdataElements))
@@ -17,7 +18,7 @@ class Filter(_base.Filter):
         for token in _base.Filter.__iter__(self):
             type = token["type"]
             if type == "StartTag" \
-              and (preserve or token["name"] in self.spacePreserveElements):
+                    and (preserve or token["name"] in self.spacePreserveElements):
                 preserve += 1
 
             elif type == "EndTag" and preserve:
@@ -32,6 +33,6 @@ class Filter(_base.Filter):
 
             yield token
 
+
 def collapse_spaces(text):
     return SPACES_REGEX.sub(' ', text)
-

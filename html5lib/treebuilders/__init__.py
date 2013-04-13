@@ -34,6 +34,7 @@ from __future__ import absolute_import, division, unicode_literals
 
 treeBuilderCache = {}
 
+
 def getTreeBuilder(treeType, implementation=None, **kwargs):
     """Get a TreeBuilder class for various types of tree with built-in support
 
@@ -59,7 +60,7 @@ def getTreeBuilder(treeType, implementation=None, **kwargs):
         if treeType == "dom":
             from . import dom
             # XXX: Keep backwards compatibility by using minidom if no implementation is given
-            if implementation == None:
+            if implementation is None:
                 from xml.dom import minidom
                 implementation = minidom
             # XXX: NEVER cache here, caching is done in the dom submodule
@@ -72,7 +73,7 @@ def getTreeBuilder(treeType, implementation=None, **kwargs):
             treeBuilderCache[treeType] = etree_lxml.TreeBuilder
         elif treeType == "etree":
             # Come up with a sane default
-            if implementation == None:
+            if implementation is None:
                 try:
                     import xml.etree.cElementTree as ET
                 except ImportError:
@@ -88,5 +89,5 @@ def getTreeBuilder(treeType, implementation=None, **kwargs):
             # NEVER cache here, caching is done in the etree submodule
             return etree.getETreeModule(implementation, **kwargs).TreeBuilder
         else:
-            raise ValueError("""Unrecognised treebuilder "%s" """%treeType)
+            raise ValueError("""Unrecognised treebuilder "%s" """ % treeType)
     return treeBuilderCache.get(treeType)

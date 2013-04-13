@@ -31,7 +31,8 @@ install:
 
 script:
   - nosetests
-  - if [[ $FLAKE == "true" ]]; then flake8 --exclude=E,W html5lib; fi
+  - if [[ $FLAKE == "true" ]]; then find html5lib/ -name '*.py' -and -not -name 'constants.py' -print0 | xargs -0 flake8 --ignore=E501; fi
+  - if [[ $FLAKE == "true" ]]; then flake8 --max-line-length=99 --ignore=E126 html5lib/constants.py; fi
 
 after_script:
   - python debug-info.py

@@ -4,11 +4,12 @@ import sys
 import os
 
 if __name__ == '__main__':
-    #Allow us to import from the src directory
+    # Allow us to import from the src directory
     os.chdir(os.path.split(os.path.abspath(__file__))[0])
     sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, "src")))
 
 from tokenizer import HTMLTokenizer
+
 
 class HTMLParser(object):
     """ Fake parser to test tokenizer output """
@@ -22,7 +23,8 @@ if __name__ == "__main__":
     x = HTMLParser()
     if len(sys.argv) > 1:
         if len(sys.argv) > 2:
-            import hotshot, hotshot.stats
+            import hotshot
+            import hotshot.stats
             prof = hotshot.Profile('stats.prof')
             prof.runcall(x.parse, sys.argv[1], False)
             prof.close()

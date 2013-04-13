@@ -22,7 +22,7 @@ except ImportError:
     class BufferedIOBase(object):
         pass
 
-#Non-unicode versions of constants for use in the pre-parser
+# Non-unicode versions of constants for use in the pre-parser
 spaceCharactersBytes = frozenset([item.encode("ascii") for item in spaceCharacters])
 asciiLettersBytes = frozenset([item.encode("ascii") for item in asciiLetters])
 asciiUppercaseBytes = frozenset([item.encode("ascii") for item in asciiUppercase])
@@ -43,6 +43,7 @@ ascii_punctuation_re = re.compile("[\u0009-\u000D\u0020-\u002F\u003A-\u0040\u005
 # Cache for charsUntil()
 charsUntilRegEx = {}
 
+
 class BufferedStream:
     """Buffering for streams that do not have buffering of their own
 
@@ -53,7 +54,7 @@ class BufferedStream:
     def __init__(self, stream):
         self.stream = stream
         self.buffer = []
-        self.position = [-1,0] #chunk number, offset
+        self.position = [-1, 0]  # chunk number, offset
 
     def tell(self):
         pos = 0
@@ -159,7 +160,7 @@ class HTMLUnicodeInputStream:
 
         """
 
-        #Craziness
+        # Craziness
         if len("\U0010FFFF") == 1:
             self.reportCharacterErrors = self.characterErrorsUCS4
             self.replaceCharactersRegexp = re.compile("[\uD800-\uDFFF]")
@@ -186,7 +187,7 @@ class HTMLUnicodeInputStream:
         # number of columns in the last line of the previous chunk
         self.prevNumCols = 0
 
-        #Deal with CR LF and surrogates split over chunk boundaries
+        # Deal with CR LF and surrogates split over chunk boundaries
         self._bufferedCharacter = None
 
     def openStream(self, source):
@@ -201,10 +202,10 @@ class HTMLUnicodeInputStream:
         else:
             stream = StringIO(source)
 
-        if (#not isinstance(stream, BufferedIOBase) and
+        if (  # not isinstance(stream, BufferedIOBase) and
             not(hasattr(stream, "tell") and
                 hasattr(stream, "seek")) or
-            stream is sys.stdin):
+                stream is sys.stdin):
             stream = BufferedStream(stream)
 
         return stream
@@ -223,7 +224,7 @@ class HTMLUnicodeInputStream:
     def position(self):
         """Returns (line, col) of the current position in the stream."""
         line, col = self._position(self.chunkOffset)
-        return (line+1, col)
+        return (line + 1, col)
 
     def char(self):
         """ Read one character from the stream or queue if available. Return
@@ -252,7 +253,7 @@ class HTMLUnicodeInputStream:
 
         data = self.dataStream.read(chunkSize)
 
-        #Deal with CR LF and surrogates broken across chunks
+        # Deal with CR LF and surrogates broken across chunks
         if self._bufferedCharacter:
             data = self._bufferedCharacter + data
             self._bufferedCharacter = None
@@ -285,18 +286,18 @@ class HTMLUnicodeInputStream:
             self.errors.append("invalid-codepoint")
 
     def characterErrorsUCS2(self, data):
-        #Someone picked the wrong compile option
-        #You lose
+        # Someone picked the wrong compile option
+        # You lose
         skip = False
         for match in invalid_unicode_re.finditer(data):
             if skip:
                 continue
             codepoint = ord(match.group())
             pos = match.start()
-            #Pretty sure there should be endianness issues here
-            if utils.isSurrogatePair(data[pos:pos+2]):
-                #We have a surrogate pair!
-                char_val = utils.surrogatePairToCodepoint(data[pos:pos+2])
+            # Pretty sure there should be endianness issues here
+            if utils.isSurrogatePair(data[pos:pos + 2]):
+                # We have a surrogate pair!
+                char_val = utils.surrogatePairToCodepoint(data[pos:pos + 2])
                 if char_val in non_bmp_invalid_codepoints:
                     self.errors.append("invalid-codepoint")
                 skip = True
@@ -307,7 +308,7 @@ class HTMLUnicodeInputStream:
                 skip = False
                 self.errors.append("invalid-codepoint")
 
-    def charsUntil(self, characters, opposite = False):
+    def charsUntil(self, characters, opposite=False):
         """ Returns a string of characters from the stream up to but not
         including any character in 'characters' or EOF. 'characters' must be
         a container that supports the 'in' method and iteration over its
@@ -370,6 +371,7 @@ class HTMLUnicodeInputStream:
                 self.chunkOffset -= 1
                 assert self.chunk[self.chunkOffset] == char
 
+
 class HTMLBinaryInputStream(HTMLUnicodeInputStream):
     """Provides a unicode stream of characters to the HTMLTokenizer.
 
@@ -403,19 +405,19 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
         self.charEncoding = (codecName(encoding), "certain")
 
         # Encoding Information
-        #Number of bytes to use when looking for a meta element with
-        #encoding information
+        # Number of bytes to use when looking for a meta element with
+        # encoding information
         self.numBytesMeta = 512
-        #Number of bytes to use when using detecting encoding using chardet
+        # Number of bytes to use when using detecting encoding using chardet
         self.numBytesChardet = 100
-        #Encoding to use if no other information can be found
+        # Encoding to use if no other information can be found
         self.defaultEncoding = "windows-1252"
 
-        #Detect encoding iff no explicit "transport level" encoding is supplied
+        # Detect encoding iff no explicit "transport level" encoding is supplied
         if (self.charEncoding[0] is None):
             self.charEncoding = self.detectEncoding(parseMeta, chardet)
 
-        #Call superclass
+        # Call superclass
         self.reset()
 
     def reset(self):
@@ -436,22 +438,22 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
             stream = BytesIO(source)
 
         if (not(hasattr(stream, "tell") and hasattr(stream, "seek")) or
-            stream is sys.stdin):
+                stream is sys.stdin):
             stream = BufferedStream(stream)
 
         return stream
 
     def detectEncoding(self, parseMeta=True, chardet=True):
-        #First look for a BOM
-        #This will also read past the BOM if present
+        # First look for a BOM
+        # This will also read past the BOM if present
         encoding = self.detectBOM()
         confidence = "certain"
-        #If there is no BOM need to look for meta elements with encoding
-        #information
+        # If there is no BOM need to look for meta elements with encoding
+        # information
         if encoding is None and parseMeta:
             encoding = self.detectEncodingMeta()
             confidence = "tentative"
-        #Guess with chardet, if avaliable
+        # Guess with chardet, if avaliable
         if encoding is None and chardet:
             confidence = "tentative"
             try:
@@ -472,11 +474,11 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
                 pass
         # If all else fails use the default encoding
         if encoding is None:
-            confidence="tentative"
+            confidence = "tentative"
             encoding = self.defaultEncoding
 
-        #Substitute for equivalent encodings:
-        encodingSub = {"iso-8859-1":"windows-1252"}
+        # Substitute for equivalent encodings:
+        encodingSub = {"iso-8859-1": "windows-1252"}
 
         if encoding.lower() in encodingSub:
             encoding = encodingSub[encoding.lower()]
@@ -496,7 +498,7 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
             self.rawStream.seek(0)
             self.reset()
             self.charEncoding = (newEncoding, "certain")
-            raise ReparseException("Encoding changed from %s to %s"%(self.charEncoding[0], newEncoding))
+            raise ReparseException("Encoding changed from %s to %s" % (self.charEncoding[0], newEncoding))
 
     def detectBOM(self):
         """Attempts to detect at BOM at the start of the stream. If
@@ -520,7 +522,7 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
             encoding = bomDict.get(string)         # UTF-32
             seek = 4
             if not encoding:
-                encoding = bomDict.get(string[:2]) # UTF-16
+                encoding = bomDict.get(string[:2])  # UTF-16
                 seek = 2
 
         # Set the read position past the BOM if one was found, otherwise
@@ -543,6 +545,7 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
 
         return encoding
 
+
 class EncodingBytes(bytes):
     """String-like object with an associated position and various extra methods
     If the position is ever greater than the string length then an exception is
@@ -552,7 +555,7 @@ class EncodingBytes(bytes):
         return bytes.__new__(self, value.lower())
 
     def __init__(self, value):
-        self._position=-1
+        self._position = -1
 
     def __iter__(self):
         return self
@@ -563,7 +566,7 @@ class EncodingBytes(bytes):
             raise StopIteration
         elif p < 0:
             raise TypeError
-        return self[p:p+1]
+        return self[p:p + 1]
 
     def next(self):
         # Py2 compat
@@ -576,7 +579,7 @@ class EncodingBytes(bytes):
         elif p < 0:
             raise TypeError
         self._position = p = p - 1
-        return self[p:p+1]
+        return self[p:p + 1]
 
     def setPosition(self, position):
         if self._position >= len(self):
@@ -594,7 +597,7 @@ class EncodingBytes(bytes):
     position = property(getPosition, setPosition)
 
     def getCurrentByte(self):
-        return self[self.position:self.position+1]
+        return self[self.position:self.position + 1]
 
     currentByte = property(getCurrentByte)
 
@@ -602,7 +605,7 @@ class EncodingBytes(bytes):
         """Skip past a list of characters"""
         p = self.position               # use property for the error-checking
         while p < len(self):
-            c = self[p:p+1]
+            c = self[p:p + 1]
             if c not in chars:
                 self._position = p
                 return c
@@ -613,7 +616,7 @@ class EncodingBytes(bytes):
     def skipUntil(self, chars):
         p = self.position
         while p < len(self):
-            c = self[p:p+1]
+            c = self[p:p + 1]
             if c in chars:
                 self._position = p
                 return c
@@ -626,7 +629,7 @@ class EncodingBytes(bytes):
         are found return True and advance the position to the byte after the
         match. Otherwise return False and leave the position alone"""
         p = self.position
-        data = self[p:p+len(bytes)]
+        data = self[p:p + len(bytes)]
         rv = data.startswith(bytes)
         if rv:
             self.position += len(bytes)
@@ -640,7 +643,7 @@ class EncodingBytes(bytes):
             # XXX: This is ugly, but I can't see a nicer way to fix this.
             if self._position == -1:
                 self._position = 0
-            self._position += (newPosition + len(bytes)-1)
+            self._position += (newPosition + len(bytes) - 1)
             return True
         else:
             raise StopIteration
@@ -656,12 +659,12 @@ class EncodingParser(object):
 
     def getEncoding(self):
         methodDispatch = (
-            (b"<!--",self.handleComment),
-            (b"<meta",self.handleMeta),
-            (b"</",self.handlePossibleEndTag),
-            (b"<!",self.handleOther),
-            (b"<?",self.handleOther),
-            (b"<",self.handlePossibleStartTag))
+            (b"<!--", self.handleComment),
+            (b"<meta", self.handleMeta),
+            (b"</", self.handlePossibleEndTag),
+            (b"<!", self.handleOther),
+            (b"<?", self.handleOther),
+            (b"<", self.handlePossibleStartTag))
         for byte in self.data:
             keepParsing = True
             for key, method in methodDispatch:
@@ -670,7 +673,7 @@ class EncodingParser(object):
                         keepParsing = method()
                         break
                     except StopIteration:
-                        keepParsing=False
+                        keepParsing = False
                         break
             if not keepParsing:
                 break
@@ -683,13 +686,13 @@ class EncodingParser(object):
 
     def handleMeta(self):
         if self.data.currentByte not in spaceCharactersBytes:
-            #if we have <meta not followed by a space so just keep going
+            # if we have <meta not followed by a space so just keep going
             return True
-        #We have a valid meta element we want to search for attributes
+        # We have a valid meta element we want to search for attributes
         hasPragma = False
         pendingEncoding = None
         while True:
-            #Try to find the next attribute after the current position
+            # Try to find the next attribute after the current position
             attr = self.getAttribute()
             if attr is None:
                 return True
@@ -727,9 +730,9 @@ class EncodingParser(object):
     def handlePossibleTag(self, endTag):
         data = self.data
         if data.currentByte not in asciiLettersBytes:
-            #If the next byte is not an ascii letter either ignore this
-            #fragment (possible start tag case) or treat it according to
-            #handleOther
+            # If the next byte is not an ascii letter either ignore this
+            # fragment (possible start tag case) or treat it according to
+            # handleOther
             if endTag:
                 data.previous()
                 self.handleOther()
@@ -737,11 +740,11 @@ class EncodingParser(object):
 
         c = data.skipUntil(spacesAngleBrackets)
         if c == b"<":
-            #return to the first step in the overall "two step" algorithm
-            #reprocessing the < byte
+            # return to the first step in the overall "two step" algorithm
+            # reprocessing the < byte
             data.previous()
         else:
-            #Read all attributes
+            # Read all attributes
             attr = self.getAttribute()
             while attr is not None:
                 attr = self.getAttribute()
@@ -763,47 +766,47 @@ class EncodingParser(object):
         # Step 3
         attrName = []
         attrValue = []
-        #Step 4 attribute name
+        # Step 4 attribute name
         while True:
             if c == b"=" and attrName:
                 break
             elif c in spaceCharactersBytes:
-                #Step 6!
+                # Step 6!
                 c = data.skip()
                 break
             elif c in (b"/", b">"):
                 return b"".join(attrName), b""
             elif c in asciiUppercaseBytes:
                 attrName.append(c.lower())
-            elif c == None:
+            elif c is None:
                 return None
             else:
                 attrName.append(c)
-            #Step 5
+            # Step 5
             c = next(data)
-        #Step 7
+        # Step 7
         if c != b"=":
             data.previous()
             return b"".join(attrName), b""
-        #Step 8
+        # Step 8
         next(data)
-        #Step 9
+        # Step 9
         c = data.skip()
-        #Step 10
+        # Step 10
         if c in (b"'", b'"'):
-            #10.1
+            # 10.1
             quoteChar = c
             while True:
-                #10.2
+                # 10.2
                 c = next(data)
-                #10.3
+                # 10.3
                 if c == quoteChar:
                     next(data)
                     return b"".join(attrName), b"".join(attrValue)
-                #10.4
+                # 10.4
                 elif c in asciiUppercaseBytes:
                     attrValue.append(c.lower())
-                #10.5
+                # 10.5
                 else:
                     attrValue.append(c)
         elif c == b">":
@@ -831,19 +834,20 @@ class ContentAttrParser(object):
     def __init__(self, data):
         assert isinstance(data, bytes)
         self.data = data
+
     def parse(self):
         try:
-            #Check if the attr name is charset
-            #otherwise return
+            # Check if the attr name is charset
+            # otherwise return
             self.data.jumpTo(b"charset")
             self.data.position += 1
             self.data.skip()
             if not self.data.currentByte == b"=":
-                #If there is no = sign keep looking for attrs
+                # If there is no = sign keep looking for attrs
                 return None
             self.data.position += 1
             self.data.skip()
-            #Look for an encoding between matching quote marks
+            # Look for an encoding between matching quote marks
             if self.data.currentByte in (b'"', b"'"):
                 quoteMark = self.data.currentByte
                 self.data.position += 1
@@ -853,13 +857,13 @@ class ContentAttrParser(object):
                 else:
                     return None
             else:
-                #Unquoted value
+                # Unquoted value
                 oldPosition = self.data.position
                 try:
                     self.data.skipUntil(spaceCharactersBytes)
                     return self.data[oldPosition:self.data.position]
                 except StopIteration:
-                    #Return the whole remaining value
+                    # Return the whole remaining value
                     return self.data[oldPosition:]
         except StopIteration:
             return None
