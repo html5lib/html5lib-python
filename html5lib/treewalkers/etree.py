@@ -15,6 +15,7 @@ tag_regexp = re.compile("{([^}]*)}(.*)")
 
 def getETreeBuilder(ElementTreeImplementation):
     ElementTree = ElementTreeImplementation
+    ElementTreeCommentType = ElementTree.Comment("asd").tag
 
     class TreeWalker(_base.NonRecursiveTreeWalker):
         """Given the particular ElementTree representation, this implementation,
@@ -48,7 +49,7 @@ def getETreeBuilder(ElementTreeImplementation):
                 return (_base.DOCTYPE, node.text,
                         node.get("publicId"), node.get("systemId"))
 
-            elif node.tag == ElementTree.Comment:
+            elif node.tag == ElementTreeCommentType:
                 return _base.COMMENT, node.text
 
             else:
