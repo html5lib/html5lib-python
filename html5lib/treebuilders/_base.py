@@ -15,7 +15,7 @@ listElementsMap = {
                                    (namespaces["html"], "ul")])), False),
     "table":(frozenset([(namespaces["html"], "html"),
                   (namespaces["html"], "table")]), False),
-    "select":(frozenset([(namespaces["html"], "optgroup"), 
+    "select":(frozenset([(namespaces["html"], "optgroup"),
                    (namespaces["html"], "option")]), True)
     }
 
@@ -25,10 +25,10 @@ class Node(object):
         """Node representing an item in the tree.
         name - The tag name associated with the node
         parent - The parent of the current node (or None for the document node)
-        value - The value of the current node (applies to text nodes and 
+        value - The value of the current node (applies to text nodes and
         comments
         attributes - a dict holding name, value pairs for attributes of the node
-        childNodes - a list of child nodes of the current node. This must 
+        childNodes - a list of child nodes of the current node. This must
         include all elements but not necessarily other node types
         _flags - A list of miscellaneous flags that can be set on the node
         """
@@ -40,8 +40,8 @@ class Node(object):
         self._flags = []
 
     def __str__(self):
-        attributesStr =  " ".join(["%s=\"%s\""%(name, value) 
-                                   for name, value in 
+        attributesStr =  " ".join(["%s=\"%s\""%(name, value)
+                                   for name, value in
                                    self.attributes.items()])
         if attributesStr:
             return "<%s %s>"%(self.name,attributesStr)
@@ -57,14 +57,14 @@ class Node(object):
         raise NotImplementedError
 
     def insertText(self, data, insertBefore=None):
-        """Insert data as text in the current node, positioned before the 
+        """Insert data as text in the current node, positioned before the
         start of node insertBefore or to the end of the node's text.
         """
         raise NotImplementedError
 
     def insertBefore(self, node, refNode):
-        """Insert node as a child of the current node, before refNode in the 
-        list of child nodes. Raises ValueError if refNode is not a child of 
+        """Insert node as a child of the current node, before refNode in the
+        list of child nodes. Raises ValueError if refNode is not a child of
         the current node"""
         raise NotImplementedError
 
@@ -74,8 +74,8 @@ class Node(object):
         raise NotImplementedError
 
     def reparentChildren(self, newParent):
-        """Move all the children of the current node to newParent. 
-        This is needed so that trees that don't store text as nodes move the 
+        """Move all the children of the current node to newParent.
+        This is needed so that trees that don't store text as nodes move the
         text in the correct way
         """
         #XXX - should this method be made more general?
@@ -112,10 +112,10 @@ class ActiveFormattingElements(list):
     def nodesEqual(self, node1, node2):
         if not node1.nameTuple == node2.nameTuple:
             return False
-        
+
         if not node1.attributes == node2.attributes:
             return False
-        
+
         return True
 
 class TreeBuilder(object):
@@ -137,7 +137,7 @@ class TreeBuilder(object):
 
     #The class to use for creating doctypes
     doctypeClass = None
-    
+
     #Fragment class
     fragmentClass = None
 
@@ -147,7 +147,7 @@ class TreeBuilder(object):
         else:
             self.defaultNamespace = None
         self.reset()
-    
+
     def reset(self):
         self.openElements = []
         self.activeFormattingElements = ActiveFormattingElements()
@@ -172,7 +172,7 @@ class TreeBuilder(object):
             if (node.name == target and not exactNode or
                 node == target and exactNode):
                 return True
-            elif (invert ^ (node.nameTuple in listElements)):                
+            elif (invert ^ (node.nameTuple in listElements)):
                 return False
 
         assert False # We should never reach this point
@@ -211,9 +211,9 @@ class TreeBuilder(object):
             clone = entry.cloneNode() #Mainly to get a new copy of the attributes
 
             # Step 9
-            element = self.insertElement({"type":"StartTag", 
-                                          "name":clone.name, 
-                                          "namespace":clone.namespace, 
+            element = self.insertElement({"type":"StartTag",
+                                          "name":clone.name,
+                                          "namespace":clone.namespace,
                                           "data":clone.attributes})
 
             # Step 10
@@ -259,7 +259,7 @@ class TreeBuilder(object):
         if parent is None:
             parent = self.openElements[-1]
         parent.appendChild(self.commentClass(token["data"]))
-                           
+
     def createElement(self, token):
         """Create an element but don't insert it anywhere"""
         name = token["name"]
@@ -281,7 +281,7 @@ class TreeBuilder(object):
             self.insertElement = self.insertElementNormal
 
     insertFromTable = property(_getInsertFromTable, _setInsertFromTable)
-        
+
     def insertElementNormal(self, token):
         name = token["name"]
         assert isinstance(name, text_type), "Element %s not unicode"%name
@@ -293,7 +293,7 @@ class TreeBuilder(object):
         return element
 
     def insertElementTable(self, token):
-        """Create an element and insert it into the tree""" 
+        """Create an element and insert it into the tree"""
         element = self.createElement(token)
         if self.openElements[-1].name not in tableInsertModeElements:
             return self.insertElementNormal(token)
@@ -314,7 +314,7 @@ class TreeBuilder(object):
             parent = self.openElements[-1]
 
         if (not self.insertFromTable or (self.insertFromTable and
-                                         self.openElements[-1].name 
+                                         self.openElements[-1].name
                                          not in tableInsertModeElements)):
             parent.insertText(data)
         else:
@@ -322,7 +322,7 @@ class TreeBuilder(object):
             # special magic element rearranging
             parent, insertBefore = self.getTableMisnestedNodePosition()
             parent.insertText(data, insertBefore)
-            
+
     def getTableMisnestedNodePosition(self):
         """Get the foster parent element, and sibling to insert before
         (or None) when inserting a misnested table node"""
@@ -362,7 +362,7 @@ class TreeBuilder(object):
     def getDocument(self):
         "Return the final tree"
         return self.document
-    
+
     def getFragment(self):
         "Return the final fragment"
         #assert self.innerHTML

@@ -8,7 +8,7 @@ from .htmlserializer import HTMLSerializer
 def serialize(input, tree="simpletree", format="html", encoding=None,
               **serializer_opts):
     # XXX: Should we cache this?
-    walker = treewalkers.getTreeWalker(tree) 
+    walker = treewalkers.getTreeWalker(tree)
     if format == "html":
         s = HTMLSerializer(**serializer_opts)
     else:

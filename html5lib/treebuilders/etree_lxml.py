@@ -32,7 +32,7 @@ tag_regexp = re.compile("{([^}]*)}(.*)")
 
 class DocumentType(object):
     def __init__(self, name, publicId, systemId):
-        self.name = name         
+        self.name = name
         self.publicId = publicId
         self.systemId = systemId
 
@@ -46,7 +46,7 @@ class Document(object):
 
     def _getChildNodes(self):
         return self._childNodes
-    
+
     childNodes = property(_getChildNodes)
 
 def testSerializer(element):
@@ -59,12 +59,12 @@ def testSerializer(element):
                 #Full tree case
                 rv.append("#document")
                 if element.docinfo.internalDTD:
-                    if not (element.docinfo.public_id or 
+                    if not (element.docinfo.public_id or
                             element.docinfo.system_url):
                         dtd_str = "<!DOCTYPE %s>"%element.docinfo.root_name
                     else:
                         dtd_str = """<!DOCTYPE %s "%s" "%s">"""%(
-                            element.docinfo.root_name, 
+                            element.docinfo.root_name,
                             element.docinfo.public_id,
                             element.docinfo.system_url)
                     rv.append("|%s%s"%(' '*(indent+2), dtd_str))
@@ -143,16 +143,16 @@ def tostring(element):
                     dtd_str = "<!DOCTYPE %s>"%element.docinfo.root_name
                 rv.append(dtd_str)
             serializeElement(element.getroot())
-            
+
         elif type(element.tag) == type(etree.Comment):
             rv.append("<!--%s-->"%(element.text,))
-        
+
         else:
             #This is assumed to be an ordinary element
             if not element.attrib:
                 rv.append("<%s>"%(element.tag,))
             else:
-                attr = " ".join(["%s=\"%s\""%(name, value) 
+                attr = " ".join(["%s=\"%s\""%(name, value)
                                  for name, value in element.attrib.items()])
                 rv.append("<%s %s>"%(element.tag, attr))
             if element.text:
@@ -172,14 +172,14 @@ def tostring(element):
         rv.append("%s\""%(' '*2, finalText))
 
     return "".join(rv)
-        
+
 
 class TreeBuilder(_base.TreeBuilder):
     documentClass = Document
     doctypeClass = DocumentType
     elementClass = None
     commentClass = None
-    fragmentClass = Document    
+    fragmentClass = Document
 
     def __init__(self, namespaceHTMLElements, fullTree = False):
         builder = etree_builders.getETreeModule(etree, fullTree=fullTree)
@@ -215,10 +215,10 @@ class TreeBuilder(_base.TreeBuilder):
                 self._name = infosetFilter.coerceElement(name)
                 self._element.tag = self._getETreeTag(
                     self._name, self._namespace)
-        
+
             def _getName(self):
                 return infosetFilter.fromXmlName(self._name)
-        
+
             name = property(_getName, _setName)
 
             def _getAttributes(self):
@@ -226,7 +226,7 @@ class TreeBuilder(_base.TreeBuilder):
 
             def _setAttributes(self, attributes):
                 self._attributes = Attributes(self, attributes)
-    
+
             attributes = property(_getAttributes, _setAttributes)
 
             def insertText(self, data, insertBefore=None):
@@ -235,7 +235,7 @@ class TreeBuilder(_base.TreeBuilder):
 
             def appendChild(self, child):
                 builder.Element.appendChild(self, child)
-                
+
 
         class Comment(builder.Comment):
             def __init__(self, data):
@@ -255,7 +255,7 @@ class TreeBuilder(_base.TreeBuilder):
         self.commentClass = builder.Comment
         #self.fragmentClass = builder.DocumentFragment
         _base.TreeBuilder.__init__(self, namespaceHTMLElements)
-    
+
     def reset(self):
         _base.TreeBuilder.reset(self)
         self.insertComment = self.insertCommentInitial
@@ -270,7 +270,7 @@ class TreeBuilder(_base.TreeBuilder):
             return self.document._elementTree
         else:
             return self.document._elementTree.getroot()
-    
+
     def getFragment(self):
         fragment = []
         element = self.openElements[0]._element
@@ -291,7 +291,7 @@ class TreeBuilder(_base.TreeBuilder):
 
         doctype = self.doctypeClass(name, publicId, systemId)
         self.doctype = doctype
-    
+
     def insertCommentInitial(self, data, parent=None):
         self.initial_comments.append(data)
 
@@ -300,17 +300,17 @@ class TreeBuilder(_base.TreeBuilder):
             type(self.document._elementTree.getroot()[-1].tag) == type(etree.Comment)):
                 warnings.warn("lxml cannot represent adjacent comments beyond the root elements", DataLossWarning)
         super(TreeBuilder, self).insertComment(data, parent)
-    
+
     def insertRoot(self, token):
         """Create the document root"""
         #Because of the way libxml2 works, it doesn't seem to be possible to
-        #alter information like the doctype after the tree has been parsed. 
-        #Therefore we need to use the built-in parser to create our iniial 
+        #alter information like the doctype after the tree has been parsed.
+        #Therefore we need to use the built-in parser to create our iniial
         #tree, after which we can add elements like normal
         docStr = ""
         if self.doctype and self.doctype.name and not self.doctype.name.startswith('"'):
             docStr += "<!DOCTYPE %s"%self.doctype.name
-            if (self.doctype.publicId is not None or 
+            if (self.doctype.publicId is not None or
                 self.doctype.systemId is not None):
                 docStr += ' PUBLIC "%s" "%s"'%(self.doctype.publicId or "",
                                                self.doctype.systemId or "")
@@ -318,21 +318,21 @@ class TreeBuilder(_base.TreeBuilder):
             if self.doctype.name != token["name"]:
                 warnings.warn("lxml cannot represent doctype with a different name to the root element", DataLossWarning)
         docStr += "<THIS_SHOULD_NEVER_APPEAR_PUBLICLY/>"
-        
+
         try:
             root = etree.fromstring(docStr)
         except etree.XMLSyntaxError:
             print(docStr)
             raise
-        
+
         #Append the initial comments:
         for comment_token in self.initial_comments:
             root.addprevious(etree.Comment(comment_token["data"]))
-        
+
         #Create the root document and add the ElementTree to it
         self.document = self.documentClass()
         self.document._elementTree = root.getroottree()
-        
+
         # Give the root element the right name
         name = token["name"]
         namespace = token.get("namespace", self.defaultNamespace)
@@ -341,12 +341,12 @@ class TreeBuilder(_base.TreeBuilder):
         else:
             etree_tag = "{%s}%s"%(namespace, name)
         root.tag = etree_tag
-        
+
         #Add the root element to the internal child/open data structures
         root_element = self.elementClass(name, namespace)
         root_element._element = root
         self.document._childNodes.append(root_element)
         self.openElements.append(root_element)
-    
+
         #Reset to the default insert comment function
         self.insertComment = self.insertCommentMain

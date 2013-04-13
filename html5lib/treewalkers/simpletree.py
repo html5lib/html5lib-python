@@ -40,7 +40,7 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
                     attrs[(name[2],name[1])] = value
                 else:
                     attrs[(None,name)] = value
-            return (_base.ELEMENT, node.namespace, node.name, 
+            return (_base.ELEMENT, node.namespace, node.name,
                     attrs, node.hasContent())
 
         elif node.type == 6: # CommentNode

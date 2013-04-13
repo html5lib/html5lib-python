@@ -30,7 +30,7 @@ def parse():
                 if contentType:
                     (mediaType, params) = cgi.parse_header(contentType)
                     encoding = params.get('charset')
-            except: 
+            except:
                 pass
         elif f == '-':
             f = sys.stdin
@@ -88,7 +88,7 @@ def run(parseMethod, f, encoding):
         document = parseMethod(f, encoding=encoding)
     except:
         document = None
-        traceback.print_exc()    
+        traceback.print_exc()
     return document
 
 def printOutput(parser, document, opts):
@@ -102,7 +102,7 @@ def printOutput(parser, document, opts):
         if opts.xml:
             sys.stdout.write(document.toxml("utf-8"))
         elif opts.tree:
-            if not hasattr(document,'__getitem__'): 
+            if not hasattr(document,'__getitem__'):
                 document = [document]
             for fragment in document:
                 print(parser.tree.testSerializer(fragment))
@@ -115,7 +115,7 @@ def printOutput(parser, document, opts):
                     kwargs[opt] = getattr(opts,opt)
                 except:
                     pass
-            if not kwargs['quote_char']: 
+            if not kwargs['quote_char']:
                 del kwargs['quote_char']
 
             tokens = treewalkers.getTreeWalker(opts.treebuilder)(document)
@@ -134,11 +134,11 @@ def getOptParser():
     parser.add_option("-p", "--profile", action="store_true", default=False,
                       dest="profile", help="Use the hotshot profiler to "
                       "produce a detailed log of the run")
-    
+
     parser.add_option("-t", "--time",
                       action="store_true", default=False, dest="time",
                       help="Time the run using time.time (may not be accurate on all platforms, especially for short runs)")
-    
+
     parser.add_option("-b", "--treebuilder", action="store", type="string",
                       dest="treebuilder", default="simpleTree")
 
@@ -150,16 +150,16 @@ def getOptParser():
 
     parser.add_option("", "--tree", action="store_true", default=False,
                       dest="tree", help="Output as debug tree")
-    
+
     parser.add_option("-x", "--xml", action="store_true", default=False,
                       dest="xml", help="Output as xml")
-    
+
     parser.add_option("", "--no-html", action="store_false", default=True,
                       dest="html", help="Don't output html")
-    
+
     parser.add_option("", "--hilite", action="store_true", default=False,
                       dest="hilite", help="Output as formatted highlighted code.")
-    
+
     parser.add_option("-c", "--encoding", action="store_true", default=False,
                       dest="encoding", help="Print character encoding used")
 

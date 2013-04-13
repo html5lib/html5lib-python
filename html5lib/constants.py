@@ -6,9 +6,9 @@ _ = gettext.gettext
 EOF = None
 
 E = {
-    "null-character": 
+    "null-character":
        _("Null character in input stream, replaced with U+FFFD."),
-    "invalid-codepoint": 
+    "invalid-codepoint":
        _("Invalid codepoint in stream."),
     "incorrectly-placed-solidus":
        _("Solidus (/) incorrectly placed in tag."),
@@ -378,7 +378,7 @@ specialElements = frozenset((
     (namespaces["html"], "iframe"),
     # Note that image is commented out in the spec as "this isn't an
     # element that can end up on the stack, so it doesn't matter,"
-    (namespaces["html"], "image"), 
+    (namespaces["html"], "image"),
     (namespaces["html"], "img"),
     (namespaces["html"], "input"),
     (namespaces["html"], "isindex"),
@@ -3069,7 +3069,7 @@ tokenTypes = {
     "ParseError":7
 }
 
-tagTokenTypes = frozenset((tokenTypes["StartTag"], tokenTypes["EndTag"], 
+tagTokenTypes = frozenset((tokenTypes["StartTag"], tokenTypes["EndTag"],
                            tokenTypes["EmptyTag"]))
 
 

@@ -22,20 +22,20 @@ class HTMLSanitizerMixin(object):
         'small', 'sound', 'source', 'spacer', 'span', 'strike', 'strong',
         'sub', 'sup', 'table', 'tbody', 'td', 'textarea', 'time', 'tfoot',
         'th', 'thead', 'tr', 'tt', 'u', 'ul', 'var', 'video']
-      
+
     mathml_elements = ['maction', 'math', 'merror', 'mfrac', 'mi',
         'mmultiscripts', 'mn', 'mo', 'mover', 'mpadded', 'mphantom',
         'mprescripts', 'mroot', 'mrow', 'mspace', 'msqrt', 'mstyle', 'msub',
         'msubsup', 'msup', 'mtable', 'mtd', 'mtext', 'mtr', 'munder',
         'munderover', 'none']
-      
+
     svg_elements = ['a', 'animate', 'animateColor', 'animateMotion',
         'animateTransform', 'clipPath', 'circle', 'defs', 'desc', 'ellipse',
         'font-face', 'font-face-name', 'font-face-src', 'g', 'glyph', 'hkern',
         'linearGradient', 'line', 'marker', 'metadata', 'missing-glyph',
         'mpath', 'path', 'polygon', 'polyline', 'radialGradient', 'rect',
         'set', 'stop', 'svg', 'switch', 'text', 'title', 'tspan', 'use']
-        
+
     acceptable_attributes = ['abbr', 'accept', 'accept-charset', 'accesskey',
         'action', 'align', 'alt', 'autocomplete', 'autofocus', 'axis',
         'background', 'balance', 'bgcolor', 'bgproperties', 'border',
@@ -69,7 +69,7 @@ class HTMLSanitizerMixin(object):
         'rowspacing', 'rowspan', 'rspace', 'scriptlevel', 'selection',
         'separator', 'stretchy', 'width', 'width', 'xlink:href', 'xlink:show',
         'xlink:type', 'xmlns', 'xmlns:xlink']
-  
+
     svg_attributes = ['accent-height', 'accumulate', 'additive', 'alphabetic',
         'arabic-form', 'ascent', 'attributeName', 'attributeType',
         'baseProfile', 'bbox', 'begin', 'by', 'calcMode', 'cap-height',
@@ -110,7 +110,7 @@ class HTMLSanitizerMixin(object):
         'animateMotion', 'animateTransform', 'cursor', 'feImage', 'filter',
         'linearGradient', 'pattern', 'radialGradient', 'textpath', 'tref',
         'set', 'use']
-  
+
     acceptable_css_properties = ['azimuth', 'background-color',
         'border-bottom-color', 'border-collapse', 'border-color',
         'border-left-color', 'border-right-color', 'border-top-color', 'clear',
@@ -122,23 +122,23 @@ class HTMLSanitizerMixin(object):
         'speech-rate', 'stress', 'text-align', 'text-decoration', 'text-indent',
         'unicode-bidi', 'vertical-align', 'voice-family', 'volume',
         'white-space', 'width']
-  
+
     acceptable_css_keywords = ['auto', 'aqua', 'black', 'block', 'blue',
         'bold', 'both', 'bottom', 'brown', 'center', 'collapse', 'dashed',
         'dotted', 'fuchsia', 'gray', 'green', '!important', 'italic', 'left',
         'lime', 'maroon', 'medium', 'none', 'navy', 'normal', 'nowrap', 'olive',
         'pointer', 'purple', 'red', 'right', 'solid', 'silver', 'teal', 'top',
         'transparent', 'underline', 'white', 'yellow']
-  
+
     acceptable_svg_properties = [ 'fill', 'fill-opacity', 'fill-rule',
         'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin',
         'stroke-opacity']
-  
+
     acceptable_protocols = [ 'ed2k', 'ftp', 'http', 'https', 'irc',
         'mailto', 'news', 'gopher', 'nntp', 'telnet', 'webcal',
         'xmpp', 'callto', 'feed', 'urn', 'aim', 'rsync', 'tag',
         'ssh', 'sftp', 'rtsp', 'afs' ]
-  
+
     # subclasses may define their own versions of these constants
     allowed_elements = acceptable_elements + mathml_elements + svg_elements
     allowed_attributes = acceptable_attributes + mathml_attributes + svg_attributes
@@ -165,12 +165,12 @@ class HTMLSanitizerMixin(object):
         if token_type in list(tokenTypes.keys()):
           token_type = tokenTypes[token_type]
 
-        if token_type in (tokenTypes["StartTag"], tokenTypes["EndTag"], 
+        if token_type in (tokenTypes["StartTag"], tokenTypes["EndTag"],
                              tokenTypes["EmptyTag"]):
             if token["name"] in self.allowed_elements:
                 if "data" in token:
                     attrs = dict([(name,val) for name,val in
-                                  token["data"][::-1] 
+                                  token["data"][::-1]
                                   if name in self.allowed_attributes])
                     for attr in self.attr_val_is_uri:
                         if attr not in attrs:
@@ -180,7 +180,7 @@ class HTMLSanitizerMixin(object):
                         #remove replacement characters from unescaped characters
                         val_unescaped = val_unescaped.replace("\ufffd", "")
                         if (re.match("^[a-z0-9][-+.a-z0-9]*:",val_unescaped) and
-                            (val_unescaped.split(':')[0] not in 
+                            (val_unescaped.split(':')[0] not in
                              self.allowed_protocols)):
                             del attrs[attr]
                     for attr in self.svg_attr_val_allows_ref:

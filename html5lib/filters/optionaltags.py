@@ -16,7 +16,7 @@ class Filter(_base.Filter):
         for previous, token, next in self.slider():
             type = token["type"]
             if type == "StartTag":
-                if (token["data"] or 
+                if (token["data"] or
                     not self.is_optional_start(token["name"], previous, next)):
                     yield token
             elif type == "EndTag":
@@ -123,10 +123,10 @@ class Filter(_base.Filter):
             # there is no more content in the parent element.
             if type in ("StartTag", "EmptyTag"):
                 return next["name"] in ('address', 'article', 'aside',
-                                        'blockquote', 'datagrid', 'dialog', 
+                                        'blockquote', 'datagrid', 'dialog',
                                         'dir', 'div', 'dl', 'fieldset', 'footer',
                                         'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-                                        'header', 'hr', 'menu', 'nav', 'ol', 
+                                        'header', 'hr', 'menu', 'nav', 'ol',
                                         'p', 'pre', 'section', 'table', 'ul')
             else:
                 return type == "EndTag" or type is None

@@ -34,7 +34,7 @@ def getDomBuilder(DomImplementation):
                 raise NotImplementedError
             else:
                 return self.element.hasAttribute(name)
-    
+
     class NodeBuilder(_base.Node):
         def __init__(self, element):
             _base.Node.__init__(self, element.nodeName)
@@ -46,33 +46,33 @@ def getDomBuilder(DomImplementation):
         def appendChild(self, node):
             node.parent = self
             self.element.appendChild(node.element)
-    
+
         def insertText(self, data, insertBefore=None):
             text = self.element.ownerDocument.createTextNode(data)
             if insertBefore:
                 self.element.insertBefore(text, insertBefore.element)
             else:
                 self.element.appendChild(text)
-    
+
         def insertBefore(self, node, refNode):
             self.element.insertBefore(node.element, refNode.element)
             node.parent = self
-    
+
         def removeChild(self, node):
             if node.element.parentNode == self.element:
                 self.element.removeChild(node.element)
             node.parent = None
-    
+
         def reparentChildren(self, newParent):
             while self.element.hasChildNodes():
                 child = self.element.firstChild
                 self.element.removeChild(child)
                 newParent.element.appendChild(child)
             self.childNodes = []
-    
+
         def getAttributes(self):
             return AttrList(self.element)
-    
+
         def setAttributes(self, attributes):
             if attributes:
                 for name, value in list(attributes.items()):
@@ -81,16 +81,16 @@ def getDomBuilder(DomImplementation):
                             qualifiedName = (name[0] + ":" + name[1])
                         else:
                             qualifiedName = name[1]
-                        self.element.setAttributeNS(name[2], qualifiedName, 
+                        self.element.setAttributeNS(name[2], qualifiedName,
                                                     value)
                     else:
                         self.element.setAttribute(
                             name, value)
         attributes = property(getAttributes, setAttributes)
-    
+
         def cloneNode(self):
             return NodeBuilder(self.element.cloneNode(False))
-    
+
         def hasContent(self):
             return self.element.hasChildNodes()
 
@@ -106,7 +106,7 @@ def getDomBuilder(DomImplementation):
         def documentClass(self):
             self.dom = Dom.getDOMImplementation().createDocument(None,None,None)
             return weakref.proxy(self)
-    
+
         def insertDoctype(self, token):
             name = token["name"]
             publicId = token["publicId"]
@@ -117,7 +117,7 @@ def getDomBuilder(DomImplementation):
             self.document.appendChild(NodeBuilder(doctype))
             if Dom == minidom:
                 doctype.ownerDocument = self.dom
-    
+
         def elementClass(self, name, namespace=None):
             if namespace is None and self.defaultNamespace is None:
                 node = self.dom.createElement(name)
@@ -125,25 +125,25 @@ def getDomBuilder(DomImplementation):
                 node = self.dom.createElementNS(namespace, name)
 
             return NodeBuilder(node)
-            
+
         def commentClass(self, data):
             return NodeBuilder(self.dom.createComment(data))
-        
+
         def fragmentClass(self):
             return NodeBuilder(self.dom.createDocumentFragment())
-    
+
         def appendChild(self, node):
             self.dom.appendChild(node.element)
-    
+
         def testSerializer(self, element):
             return testSerializer(element)
-    
+
         def getDocument(self):
             return self.dom
-        
+
         def getFragment(self):
             return _base.TreeBuilder.getFragment(self).element
-    
+
         def insertText(self, data, parent=None):
             data=data
             if parent != self:
@@ -155,9 +155,9 @@ def getDomBuilder(DomImplementation):
                         self.dom._child_node_types=list(self.dom._child_node_types)
                         self.dom._child_node_types.append(Node.TEXT_NODE)
                 self.dom.appendChild(self.dom.createTextNode(data))
-    
+
         name = None
-    
+
     def testSerializer(element):
         element.normalize()
         rv = []
@@ -208,9 +208,9 @@ def getDomBuilder(DomImplementation):
             for child in element.childNodes:
                 serializeElement(child, indent)
         serializeElement(element, 0)
-    
+
         return "\n".join(rv)
-    
+
     def dom2sax(node, handler, nsmap={'xml':XML_NAMESPACE}):
       if node.nodeType == Node.ELEMENT_NODE:
         if not nsmap:
@@ -218,8 +218,8 @@ def getDomBuilder(DomImplementation):
           for child in node.childNodes: dom2sax(child, handler, nsmap)
           handler.endElement(node.nodeName)
         else:
-          attributes = dict(node.attributes.itemsNS()) 
-    
+          attributes = dict(node.attributes.itemsNS())
+
           # gather namespace declarations
           prefixes = []
           for attrname in list(node.attributes.keys()):
@@ -232,7 +232,7 @@ def getDomBuilder(DomImplementation):
               nsmap = nsmap.copy()
               nsmap[prefix] = attr.nodeValue
               del attributes[(attr.namespaceURI, attr.nodeName)]
-    
+
           # apply namespace declarations
           for attrname in list(node.attributes.keys()):
             attr = node.getAttributeNode(attrname)
@@ -241,25 +241,25 @@ def getDomBuilder(DomImplementation):
               if prefix in nsmap:
                 del attributes[(attr.namespaceURI, attr.nodeName)]
                 attributes[(nsmap[prefix],attr.nodeName)]=attr.nodeValue
-    
+
           # SAX events
           ns = node.namespaceURI or nsmap.get(None,None)
           handler.startElementNS((ns,node.nodeName), node.nodeName, attributes)
           for child in node.childNodes: dom2sax(child, handler, nsmap)
           handler.endElementNS((ns, node.nodeName), node.nodeName)
           for prefix in prefixes: handler.endPrefixMapping(prefix)
-    
+
       elif node.nodeType in [Node.TEXT_NODE, Node.CDATA_SECTION_NODE]:
         handler.characters(node.nodeValue)
-    
+
       elif node.nodeType == Node.DOCUMENT_NODE:
         handler.startDocument()
         for child in node.childNodes: dom2sax(child, handler, nsmap)
         handler.endDocument()
-    
+
       elif node.nodeType == Node.DOCUMENT_FRAGMENT_NODE:
         for child in node.childNodes: dom2sax(child, handler, nsmap)
-    
+
       else:
         # ATTRIBUTE_NODE
         # ENTITY_NODE
@@ -268,7 +268,7 @@ def getDomBuilder(DomImplementation):
         # DOCUMENT_TYPE_NODE
         # NOTATION_NODE
         pass
-        
+
     return locals()
 
 
@@ -276,7 +276,7 @@ def getDomBuilder(DomImplementation):
 getDomModule = moduleFactoryFactory(getDomBuilder)
 
 
-# Keep backwards compatibility with things that directly load 
+# Keep backwards compatibility with things that directly load
 # classes/functions from this module
 for key, value in list(getDomModule(minidom).__dict__.items()):
 	globals()[key] = value

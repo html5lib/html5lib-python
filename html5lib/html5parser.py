@@ -27,7 +27,7 @@ def parse(doc, treebuilder="simpletree", encoding=None,
     p = HTMLParser(tb, namespaceHTMLElements=namespaceHTMLElements)
     return p.parse(doc, encoding=encoding)
 
-def parseFragment(doc, container="div", treebuilder="simpletree", encoding=None, 
+def parseFragment(doc, container="div", treebuilder="simpletree", encoding=None,
                   namespaceHTMLElements=True):
     tb = treebuilders.getTreeBuilder(treebuilder)
     p = HTMLParser(tb, namespaceHTMLElements=namespaceHTMLElements)
@@ -57,7 +57,7 @@ class HTMLParser(object):
         tree - a treebuilder class controlling the type of tree that will be
         returned. Built in treebuilders can be accessed through
         html5lib.treebuilders.getTreeBuilder(treeType)
-        
+
         tokenizer - a class that provides a stream of tokens to the treebuilder.
         This may be replaced for e.g. a sanitizer which converts some tags to
         text
@@ -80,7 +80,7 @@ class HTMLParser(object):
         self.container = container
         self.tokenizer = self.tokenizer_class(stream, encoding=encoding,
                                               parseMeta=parseMeta,
-                                              useChardet=useChardet, 
+                                              useChardet=useChardet,
                                               parser=self, **kwargs)
         self.reset()
 
@@ -126,18 +126,18 @@ class HTMLParser(object):
         self.framesetOK = True
 
     def isHTMLIntegrationPoint(self, element):
-        if (element.name == "annotation-xml" and 
+        if (element.name == "annotation-xml" and
             element.namespace == namespaces["mathml"]):
             return ("encoding" in element.attributes and
                     element.attributes["encoding"].translate(
-                        asciiUpper2Lower) in 
+                        asciiUpper2Lower) in
                     ("text/html", "application/xhtml+xml"))
         else:
             return (element.namespace, element.name) in htmlIntegrationPointElements
 
     def isMathMLTextIntegrationPoint(self, element):
         return (element.namespace, element.name) in mathmlTextIntegrationPointElements
-        
+
     def mainLoop(self):
         CharactersToken = tokenTypes["Characters"]
         SpaceCharactersToken = tokenTypes["SpaceCharacters"]
@@ -146,7 +146,7 @@ class HTMLParser(object):
         CommentToken = tokenTypes["Comment"]
         DoctypeToken = tokenTypes["Doctype"]
         ParseErrorToken = tokenTypes["ParseError"]
-        
+
         for token in self.normalizedTokens():
             new_token = token
             while new_token is not None:
@@ -155,7 +155,7 @@ class HTMLParser(object):
                 currentNodeName = currentNode.name if currentNode else None
 
                 type = new_token["type"]
-                
+
                 if type == ParseErrorToken:
                     self.parseError(new_token["data"], new_token.get("datavars", {}))
                     new_token = None
@@ -217,14 +217,14 @@ class HTMLParser(object):
         regardless of any BOM or later declaration (such as in a meta
         element)
         """
-        self._parse(stream, innerHTML=False, encoding=encoding, 
+        self._parse(stream, innerHTML=False, encoding=encoding,
                     parseMeta=parseMeta, useChardet=useChardet)
         return self.tree.getDocument()
-    
+
     def parseFragment(self, stream, container="div", encoding=None,
                       parseMeta=False, useChardet=True):
         """Parse a HTML fragment into a well-formed tree fragment
-        
+
         container - name of the element we're setting the innerHTML property
         if set to None, default to 'div'
 
@@ -404,9 +404,9 @@ class HTMLParser(object):
         contentType - RCDATA or RAWTEXT
         """
         assert contentType in ("RAWTEXT", "RCDATA")
-        
+
         element = self.tree.insertElement(token)
-        
+
         if contentType == "RAWTEXT":
             self.tokenizer.state = self.tokenizer.rawtextState
         else:
@@ -419,7 +419,7 @@ class HTMLParser(object):
 def getPhases(debug):
     def log(function):
         """Logger that records which phase processes each token"""
-        type_names = dict((value, key) for key, value in 
+        type_names = dict((value, key) for key, value in
                           constants.tokenTypes.items())
         def wrapped(self, *args, **kwargs):
             if function.__name__.startswith("process") and len(args) > 0:
@@ -432,9 +432,9 @@ def getPhases(debug):
                     info["name"] = token['name']
 
                 self.parser.log.append((self.parser.tokenizer.state.__name__,
-                                        self.parser.phase.__class__.__name__, 
-                                        self.__class__.__name__, 
-                                        function.__name__, 
+                                        self.parser.phase.__class__.__name__,
+                                        self.__class__.__name__,
+                                        function.__name__,
                                         info))
                 return function(self, *args, **kwargs)
             else:
@@ -576,7 +576,7 @@ def getPhases(debug):
                      "html")
                 or publicId.startswith(
                     ("-//w3c//dtd html 4.01 frameset//",
-                     "-//w3c//dtd html 4.01 transitional//")) and 
+                     "-//w3c//dtd html 4.01 transitional//")) and
                     systemId == None
                 or systemId and systemId.lower() == "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd"):
                 self.parser.compatMode = "quirks"
@@ -585,7 +585,7 @@ def getPhases(debug):
                      "-//w3c//dtd xhtml 1.0 transitional//"))
                   or publicId.startswith(
                       ("-//w3c//dtd html 4.01 frameset//",
-                       "-//w3c//dtd html 4.01 transitional//")) and 
+                       "-//w3c//dtd html 4.01 transitional//")) and
                       systemId != None):
                 self.parser.compatMode = "limited quirks"
 
@@ -709,7 +709,7 @@ def getPhases(debug):
                 ("title", self.startTagTitle),
                 (("noscript", "noframes", "style"), self.startTagNoScriptNoFramesStyle),
                 ("script", self.startTagScript),
-                (("base", "basefont", "bgsound", "command", "link"), 
+                (("base", "basefont", "bgsound", "command", "link"),
                  self.startTagBaseLinkCommand),
                 ("meta", self.startTagMeta),
                 ("head", self.startTagHead)
@@ -809,13 +809,13 @@ def getPhases(debug):
                 ("html", self.startTagHtml),
                 ("body", self.startTagBody),
                 ("frameset", self.startTagFrameset),
-                (("base", "basefont", "bgsound", "link", "meta", "noframes", "script", 
+                (("base", "basefont", "bgsound", "link", "meta", "noframes", "script",
                   "style", "title"),
                   self.startTagFromHead),
                 ("head", self.startTagHead)
             ])
             self.startTagHandler.default = self.startTagOther
-            self.endTagHandler = utils.MethodDispatcher([(("body", "html", "br"), 
+            self.endTagHandler = utils.MethodDispatcher([(("body", "html", "br"),
                                                           self.endTagHtmlBodyBr)])
             self.endTagHandler.default = self.endTagOther
 
@@ -880,8 +880,8 @@ def getPhases(debug):
 
             self.startTagHandler = utils.MethodDispatcher([
                 ("html", self.startTagHtml),
-                (("base", "basefont", "bgsound", "command", "link", "meta", 
-                  "noframes", "script", "style", "title"), 
+                (("base", "basefont", "bgsound", "command", "link", "meta",
+                  "noframes", "script", "style", "title"),
                  self.startTagProcessInHead),
                 ("body", self.startTagBody),
                 ("frameset", self.startTagFrameset),
@@ -896,7 +896,7 @@ def getPhases(debug):
                 (("li", "dd", "dt"), self.startTagListItem),
                 ("plaintext",self.startTagPlaintext),
                 ("a", self.startTagA),
-                (("b", "big", "code", "em", "font", "i", "s", "small", "strike", 
+                (("b", "big", "code", "em", "font", "i", "s", "small", "strike",
                   "strong", "tt", "u"),self.startTagFormatting),
                 ("nobr", self.startTagNobr),
                 ("button", self.startTagButton),
@@ -929,7 +929,7 @@ def getPhases(debug):
                 ("html",self.endTagHtml),
                 (("address", "article", "aside", "blockquote", "center",
                   "details", "dir", "div", "dl", "fieldset", "figcaption", "figure",
-                  "footer", "header", "hgroup", "listing", "menu", "nav", "ol", "pre", 
+                  "footer", "header", "hgroup", "listing", "menu", "nav", "ol", "pre",
                   "section", "summary", "ul"), self.endTagBlock),
                 ("form", self.endTagForm),
                 ("p",self.endTagP),
@@ -959,14 +959,14 @@ def getPhases(debug):
         def addFormattingElement(self, token):
             self.tree.insertElement(token)
             element = self.tree.openElements[-1]
-            
+
             matchingElements = []
             for node in self.tree.activeFormattingElements[::-1]:
                 if node is Marker:
                     break
                 elif self.isMatchingFormattingElement(node, element):
                     matchingElements.append(node)
-                    
+
             assert len(matchingElements) <= 3
             if len(matchingElements) == 3:
                 self.tree.activeFormattingElements.remove(matchingElements[-1])
@@ -1216,9 +1216,9 @@ def getPhases(debug):
             if "prompt" in attributes:
                 del attributes["prompt"]
             attributes["name"] = "isindex"
-            self.processStartTag(impliedTagToken("input", "StartTag", 
+            self.processStartTag(impliedTagToken("input", "StartTag",
                                                  attributes = attributes,
-                                                 selfClosing = 
+                                                 selfClosing =
                                                  token["selfClosing"]))
             self.processEndTag(impliedTagToken("label"))
             self.processStartTag(impliedTagToken("hr", "StartTag"))
@@ -1251,7 +1251,7 @@ def getPhases(debug):
             if self.parser.phase in (self.parser.phases["inTable"],
                                      self.parser.phases["inCaption"],
                                      self.parser.phases["inColumnGroup"],
-                                     self.parser.phases["inTableBody"], 
+                                     self.parser.phases["inTableBody"],
                                      self.parser.phases["inRow"],
                                      self.parser.phases["inCell"]):
                 self.parser.phase = self.parser.phases["inSelectInTable"]
@@ -1271,7 +1271,7 @@ def getPhases(debug):
             self.parser.adjustForeignAttributes(token)
             token["namespace"] = namespaces["mathml"]
             self.tree.insertElement(token)
-            #Need to get the parse error right for the case where the token 
+            #Need to get the parse error right for the case where the token
             #has a namespace not equal to the xmlns attribute
             if token["selfClosing"]:
                 self.tree.openElements.pop()
@@ -1283,7 +1283,7 @@ def getPhases(debug):
             self.parser.adjustForeignAttributes(token)
             token["namespace"] = namespaces["svg"]
             self.tree.insertElement(token)
-            #Need to get the parse error right for the case where the token 
+            #Need to get the parse error right for the case where the token
             #has a namespace not equal to the xmlns attribute
             if token["selfClosing"]:
                 self.tree.openElements.pop()
@@ -1423,7 +1423,7 @@ def getPhases(debug):
                 # - has the same tag name as the token.
                 formattingElement = self.tree.elementInActiveFormattingElements(
                     token["name"])
-                if (not formattingElement or 
+                if (not formattingElement or
                     (formattingElement in self.tree.openElements and
                      not self.tree.elementInScope(formattingElement.name))):
                     # If there is no such node, then abort these steps
@@ -1440,7 +1440,7 @@ def getPhases(debug):
                     self.parser.parseError("adoption-agency-1.2", {"name": token["name"]})
                     self.tree.activeFormattingElements.remove(formattingElement)
                     return
-                    
+
 
                 # Otherwise, if there is such a node, and that node is
                 # also in the stack of open elements, but the element
@@ -1490,7 +1490,7 @@ def getPhases(debug):
                 # Step 6
                 lastNode = node = furthestBlock
                 innerLoopCounter = 0
-                
+
                 index = self.tree.openElements.index(node)
                 while innerLoopCounter < 3:
                     innerLoopCounter += 1
@@ -1524,11 +1524,11 @@ def getPhases(debug):
                     node.appendChild(lastNode)
                     # Step 7.7
                     lastNode = node
-                    # End of inner loop 
+                    # End of inner loop
 
                 # Step 7
                 # Foster parent lastNode if commonAncestor is a
-                # table, tbody, tfoot, thead, or tr we need to foster parent the 
+                # table, tbody, tfoot, thead, or tr we need to foster parent the
                 # lastNode
                 if lastNode.parent:
                     lastNode.parent.removeChild(lastNode)
@@ -1603,7 +1603,7 @@ def getPhases(debug):
             self.tree.insertText(token["data"])
 
         def processEOF(self):
-            self.parser.parseError("expected-named-closing-tag-but-got-eof", 
+            self.parser.parseError("expected-named-closing-tag-but-got-eof",
                                    {"name":self.tree.openElements[-1].name})
             self.tree.openElements.pop()
             self.parser.phase = self.parser.originalPhase
@@ -1719,7 +1719,7 @@ def getPhases(debug):
             return self.parser.phases["inHead"].processStartTag(token)
 
         def startTagInput(self, token):
-            if ("type" in token["data"] and 
+            if ("type" in token["data"] and
                 token["data"]["type"].translate(asciiUpper2Lower) == "hidden"):
                 self.parser.parseError("unexpected-hidden-input-in-table")
                 self.tree.insertElement(token)
@@ -1999,7 +1999,7 @@ def getPhases(debug):
             self.parser.phase = self.parser.phases["inRow"]
 
         def startTagTableCell(self, token):
-            self.parser.parseError("unexpected-cell-in-table-body", 
+            self.parser.parseError("unexpected-cell-in-table-body",
                                    {"name": token["name"]})
             self.startTagTr(impliedTagToken("tr", "StartTag"))
             return token
@@ -2087,7 +2087,7 @@ def getPhases(debug):
             self.parser.phases["inTable"].processEOF()
 
         def processSpaceCharacters(self, token):
-            return self.parser.phases["inTable"].processSpaceCharacters(token)        
+            return self.parser.phases["inTable"].processSpaceCharacters(token)
 
         def processCharacters(self, token):
             return self.parser.phases["inTable"].processCharacters(token)
@@ -2358,13 +2358,13 @@ def getPhases(debug):
 
 
     class InForeignContentPhase(Phase):
-        breakoutElements = frozenset(["b", "big", "blockquote", "body", "br", 
+        breakoutElements = frozenset(["b", "big", "blockquote", "body", "br",
                                       "center", "code", "dd", "div", "dl", "dt",
-                                      "em", "embed", "h1", "h2", "h3", 
+                                      "em", "embed", "h1", "h2", "h3",
                                       "h4", "h5", "h6", "head", "hr", "i", "img",
-                                      "li", "listing", "menu", "meta", "nobr", 
-                                      "ol", "p", "pre", "ruby", "s",  "small", 
-                                      "span", "strong", "strike",  "sub", "sup", 
+                                      "li", "listing", "menu", "meta", "nobr",
+                                      "ol", "p", "pre", "ruby", "s",  "small",
+                                      "span", "strong", "strike",  "sub", "sup",
                                       "table", "tt", "u", "ul", "var"])
         def __init__(self, parser, tree):
             Phase.__init__(self, parser, tree)
@@ -2413,7 +2413,7 @@ def getPhases(debug):
         def processCharacters(self, token):
             if token["data"] == "\u0000":
                 token["data"] = "\uFFFD"
-            elif (self.parser.framesetOK and 
+            elif (self.parser.framesetOK and
                   any(char not in spaceCharacters for char in token["data"])):
                 self.parser.framesetOK = False
             Phase.processCharacters(self, token)
@@ -2426,7 +2426,7 @@ def getPhases(debug):
                 self.parser.parseError("unexpected-html-element-in-foreign-content",
                                        {"name": token["name"]})
                 while (self.tree.openElements[-1].namespace !=
-                       self.tree.defaultNamespace and 
+                       self.tree.defaultNamespace and
                        not self.parser.isHTMLIntegrationPoint(self.tree.openElements[-1]) and
                        not self.parser.isMathMLTextIntegrationPoint(self.tree.openElements[-1])):
                     self.tree.openElements.pop()
@@ -2717,7 +2717,7 @@ def getPhases(debug):
         # XXX after after frameset
         }
 
-def impliedTagToken(name, type="EndTag", attributes = None, 
+def impliedTagToken(name, type="EndTag", attributes = None,
                     selfClosing = False):
     if attributes is None:
         attributes = {}

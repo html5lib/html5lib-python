@@ -41,7 +41,7 @@ class Root(object):
 
         self.text = None
         self.tail = None
-    
+
     def __getitem__(self, key):
         return self.children[key]
 
@@ -57,7 +57,7 @@ class Doctype(object):
         self.name = name
         self.public_id = public_id
         self.system_id = system_id
-        
+
         self.text = None
         self.tail = None
 
@@ -88,10 +88,10 @@ class FragmentWrapper(object):
         # Support for bytes here is Py2
         if self.isstring:
             self.obj = ensure_str(self.obj)
-        
+
     def __getattr__(self, name):
         return getattr(self.obj, name)
-    
+
     def getnext(self):
         siblings = self.root_node.children
         idx = siblings.index(self)
@@ -118,7 +118,7 @@ class FragmentWrapper(object):
     def __len__(self):
         return len(self.obj)
 
-        
+
 class TreeWalker(_base.NonRecursiveTreeWalker):
     def __init__(self, tree):
         if hasattr(tree, "getroot"):
@@ -166,7 +166,7 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
                     attrs[(match.group(1),match.group(2))] = value
                 else:
                     attrs[(None,name)] = value
-            return (_base.ELEMENT, namespace, self.filter.fromXmlName(tag), 
+            return (_base.ELEMENT, namespace, self.filter.fromXmlName(tag),
                     attrs, len(node) > 0 or node.text)
 
     def getFirstChild(self, node):

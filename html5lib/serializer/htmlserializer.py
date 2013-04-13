@@ -196,12 +196,12 @@ class HTMLSerializer(object):
             type = token["type"]
             if type == "Doctype":
                 doctype = "<!DOCTYPE %s" % token["name"]
-                
+
                 if token["publicId"]:
                     doctype += ' PUBLIC "%s"' % token["publicId"]
                 elif token["systemId"]:
                     doctype += " SYSTEM"
-                if token["systemId"]:                
+                if token["systemId"]:
                     if token["systemId"].find('"') >= 0:
                         if token["systemId"].find("'") >= 0:
                             self.serializeError(_("System identifer contains both single and double quote characters"))
@@ -209,7 +209,7 @@ class HTMLSerializer(object):
                     else:
                         quote_char = '"'
                     doctype += " %s%s%s" % (quote_char, token["systemId"], quote_char)
-                
+
                 doctype += ">"
                 yield self.encodeStrict(doctype)
 

@@ -30,7 +30,7 @@ class Trie(ABCTrie):
     def keys(self, prefix=None):
         if prefix is None or prefix == "" or not self._keys:
             return set(self._keys)
-        
+
         if prefix.startswith(self._cachestr):
             lo, hi = self._cachepoints
             start = i = bisect_left(self._keys, prefix, lo, hi)
@@ -62,5 +62,5 @@ class Trie(ABCTrie):
 
         if i == len(self._keys):
             return False
-        
+
         return self._keys[i].startswith(prefix)

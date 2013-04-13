@@ -35,7 +35,7 @@ def run_file(filename, out_path):
         for test_data in tests_data['tests']:
             if 'initialStates' not in test_data:
                 test_data["initialStates"] = ["Data state"]
-                
+
             for initial_state in test_data["initialStates"]:
                 if initial_state != "Data state":
                     #don't support this yet

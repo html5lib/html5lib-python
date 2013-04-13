@@ -38,10 +38,10 @@ import sys
 
 def getTreeBuilder(treeType, implementation=None, **kwargs):
     """Get a TreeBuilder class for various types of tree with built-in support
-    
+
     treeType - the name of the tree type required (case-insensitive). Supported
                values are "simpletree", "dom", and "etree"
-               
+
                "simpletree" - a built-in DOM-ish tree type with support for some
                               more pythonic idioms.
                 "dom" - A generic builder for DOM implementations, defaulting to
@@ -51,11 +51,11 @@ def getTreeBuilder(treeType, implementation=None, **kwargs):
                 "etree" - A generic builder for tree implementations exposing an
                           elementtree-like interface (known to work with
                           ElementTree, cElementTree and lxml.etree).
-               
+
     implementation - (Currently applies to the "etree" and "dom" tree types). A
                       module implementing the tree type e.g.
                       xml.etree.ElementTree or lxml.etree."""
-    
+
     treeType = treeType.lower()
     if treeType not in treeBuilderCache:
         if treeType == "dom":

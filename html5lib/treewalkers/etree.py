@@ -21,11 +21,11 @@ def getETreeBuilder(ElementTreeImplementation):
         content:
 
         1. The current element
-        
+
         2. The index of the element relative to its parent
-        
+
         3. A stack of ancestor elements
-        
+
         4. A flag "text", "tail" or None to indicate if the current node is a
            text node; either the text or tail of the current element (1)
         """
@@ -44,7 +44,7 @@ def getETreeBuilder(ElementTreeImplementation):
                 return (_base.DOCUMENT,)
 
             elif node.tag == "<!DOCTYPE>":
-                return (_base.DOCTYPE, node.text, 
+                return (_base.DOCTYPE, node.text,
                         node.get("publicId"), node.get("systemId"))
 
             elif node.tag == ElementTree.Comment:
@@ -66,15 +66,15 @@ def getETreeBuilder(ElementTreeImplementation):
                         attrs[(match.group(1),match.group(2))] = value
                     else:
                         attrs[(None,name)] = value
-                return (_base.ELEMENT, namespace, tag, 
+                return (_base.ELEMENT, namespace, tag,
                         attrs, len(node) or node.text)
-    
+
         def getFirstChild(self, node):
             if isinstance(node, tuple):
                 element, key, parents, flag = node
             else:
                 element, key, parents, flag = node, None, [], None
-                
+
             if flag in ("text", "tail"):
                 return None
             else:
@@ -85,13 +85,13 @@ def getETreeBuilder(ElementTreeImplementation):
                     return element[0], 0, parents, None
                 else:
                     return None
-        
+
         def getNextSibling(self, node):
             if isinstance(node, tuple):
                 element, key, parents, flag = node
             else:
                 return None
-                
+
             if flag == "text":
                 if len(element):
                     parents.append(element)
@@ -105,13 +105,13 @@ def getETreeBuilder(ElementTreeImplementation):
                     return parents[-1][key+1], key+1, parents, None
                 else:
                     return None
-        
+
         def getParentNode(self, node):
             if isinstance(node, tuple):
                 element, key, parents, flag = node
             else:
                 return None
-            
+
             if flag == "text":
                 if not parents:
                     return element

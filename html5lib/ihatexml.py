@@ -17,8 +17,8 @@ extender = """#x00B7 | #x02D0 | #x02D1 | #x0387 | #x0640 | #x0E46 | #x0EC6 | #x3
 
 letter = " | ".join([baseChar, ideographic])
 
-#Without the 
-name = " | ".join([letter, digit, ".", "-", "_", combiningCharacter, 
+#Without the
+name = " | ".join([letter, digit, ".", "-", "_", combiningCharacter,
                        extender])
 nameFirst = " | ".join([letter, "_"])
 
@@ -40,7 +40,7 @@ def charStringToList(chars):
                 break
         if not foundMatch:
             assert len(item) == 1
-            
+
             rv.append([ord(item)] * 2)
     rv = normaliseCharList(rv)
     return rv
@@ -62,7 +62,7 @@ def normaliseCharList(charList):
 
 #We don't really support characters above the BMP :(
 max_unicode = int("FFFF", 16)
-    
+
 def missingRanges(charList):
     rv = []
     if charList[0] != 0:
@@ -103,8 +103,8 @@ nonXmlNameFirstBMPRegexp = re.compile('[\x00-@\\[-\\^`\\{-\xbf\xd7\xf7\u0132-\u0
 
 class InfosetFilter(object):
     replacementRegexp = re.compile(r"U[\dA-F]{5,5}")
-    def __init__(self, replaceChars = None,  
-                 dropXmlnsLocalName = False, 
+    def __init__(self, replaceChars = None,
+                 dropXmlnsLocalName = False,
                  dropXmlnsAttrNs = False,
                  preventDoubleDashComments = False,
                  preventDashAtCommentEnd = False,
@@ -124,7 +124,7 @@ class InfosetFilter(object):
         if self.dropXmlnsLocalName and name.startswith("xmlns:"):
             warnings.warn("Attributes cannot begin with xmlns", DataLossWarning)
             return None
-        elif (self.dropXmlnsAttrNs and 
+        elif (self.dropXmlnsAttrNs and
               namespace == "http://www.w3.org/2000/xmlns/"):
             warnings.warn("Attributes cannot be in the xml namespace", DataLossWarning)
             return None
@@ -140,7 +140,7 @@ class InfosetFilter(object):
                 warnings.warn("Comments cannot contain adjacent dashes", DataLossWarning)
                 data = data.replace("--", "- -")
         return data
-    
+
     def coerceCharacters(self, data):
         if self.replaceFormFeedCharacters:
             for i in range(data.count("\x0C")):
@@ -166,7 +166,7 @@ class InfosetFilter(object):
             replacement = self.getReplacementCharacter(char)
             nameRestOutput = nameRestOutput.replace(char, replacement)
         return nameFirstOutput + nameRestOutput
-    
+
     def getReplacementCharacter(self, char):
         if char in self.replaceCache:
             replacement = self.replaceCache[char]

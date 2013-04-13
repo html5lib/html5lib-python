@@ -9,7 +9,7 @@ import zipfile
 
 exclude = [".svn", "*.pyc", "*~", "*.orig", "*.patch", "__basedir__/utils",
            "__basedir__/setup_base.py", "*.prof", "#*", "__basedir__/build",
-           '__basedir__/tests', '*.out', '__basedir__/dist', 
+           '__basedir__/tests', '*.out', '__basedir__/dist',
            '__basedir__/html5lib.egg-info', '__basedir__/print-stats.py']
 
 class Package(object):
@@ -35,7 +35,7 @@ class Package(object):
         #if self.test():
         self.makeZipFile()
         self.cleanup()
-        
+
 
     def getExcludeList(self):
         rv = []
@@ -45,14 +45,14 @@ class Package(object):
 
     def copyTestData(self):
         outDir = os.path.join(self.inDir, "tests/testdata")
-        print() 
+        print()
         try:
             os.mkdir(outDir)
         except OSError:
             #the directory already exists
             if not os.path.exists(outDir):
                 raise
-            
+
         inBaseDir = os.path.abspath(os.path.join(self.inDir, "..", "testdata"))
         dirWalker = os.walk(inBaseDir)
         for (curDir, dirs, files) in dirWalker:
@@ -64,7 +64,7 @@ class Package(object):
                     try:
                         os.mkdir(os.path.join(outDir, dir))
                     except OSError:
-                        #the directory already exists    
+                        #the directory already exists
                         pass
             for fn in files[:]:
                 if not self.excludeItem(curDir, fn):
@@ -88,7 +88,7 @@ class Package(object):
                 else:
                     fileList.append(os.path.join(basePath, fn))
         return fileList
-    
+
     def excludeItem(self, baseName, filename):
         rv = False
         fn = os.path.join(baseName,filename)
@@ -102,7 +102,7 @@ class Package(object):
         return rv
 
     def makeSetupFile(self):
-        statusStrings = {"1":"1 - Planning",                 
+        statusStrings = {"1":"1 - Planning",
                         "2":"2 - Pre-Alpha",
                         "3":"3 - Alpha",
                         "4":"4 - Beta",
@@ -119,7 +119,7 @@ class Package(object):
     def makeInitFile(self):
         inFile = open(os.path.join(self.outDir, "src", "html5lib", "__init__.py"))
         text = "".join(inFile.readlines())
-        outFile = open(os.path.join(self.outDir, "src", "html5lib", "__init__.py"), 
+        outFile = open(os.path.join(self.outDir, "src", "html5lib", "__init__.py"),
                        "w")
         outFile.write(text%{"version":self.version})
 
@@ -138,7 +138,7 @@ class Package(object):
                     pass
             else:
                 shutil.copyfile(inPath, outPath)
-    
+
     def preprocess(self):
         p = Preprocessor()
         newOutFiles = []
@@ -146,7 +146,7 @@ class Package(object):
             if os.path.isfile(fn):
                 newOutFiles.append(p.process(fn, self.outDir))
         self.outFiles = newOutFiles
-    
+
     def test(self):
         dir = os.path.abspath(os.curdir)
         os.chdir(self.outDir)
@@ -159,7 +159,7 @@ class Package(object):
                                                            "runtests.py")))
         os.chdir(dir)
         return install==0 and test==0
-    
+
     def makeZipFile(self):
         z = zipfile.ZipFile(os.path.join(self.outDir,
                                          "html5lib-%s.zip"%self.version), 'w',
@@ -173,13 +173,13 @@ class Package(object):
         #Doesn't yet clean up everything
         for f in self.outFiles:
             os.remove(f)
-    
+
 class Preprocessor(object):
     def __init__(self):
         self.instructions = {"remove":self.remove,
                              "add":self.add,
                              "move":self.move}
-    
+
     def process(self, fn, inDir):
         self.inDir = inDir
         self.outPath = fn
@@ -224,7 +224,7 @@ class Preprocessor(object):
                 break
             else:
                 self.outData.append(data.strip("#"))
-    
+
     def move(self, line):
         self.outPath = os.path.abspath(os.path.join(self.inDir,
                                         line[line.find("move")+4:].strip(),
@@ -235,6 +235,6 @@ class Preprocessor(object):
             while not os.path.exists(dirName):
                 dirsToCreate.append(dirName)
                 dirName = os.path.dirname(dirName)
-            
+
             for item in dirsToCreate[::-1]:
                 os.mkdir(item)

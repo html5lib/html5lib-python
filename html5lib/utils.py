@@ -37,13 +37,13 @@ class MethodDispatcher(dict):
 #Some utility functions to dal with weirdness around UCS2 vs UCS4
 #python builds
 
-def isSurrogatePair(data):   
+def isSurrogatePair(data):
     return (len(data) == 2 and
             ord(data[0]) >= 0xD800 and ord(data[0]) <= 0xDBFF and
             ord(data[1]) >= 0xDC00 and ord(data[1]) <= 0xDFFF)
 
 def surrogatePairToCodepoint(data):
-    char_val = (0x10000 + (ord(data[0]) - 0xD800) * 0x400 + 
+    char_val = (0x10000 + (ord(data[0]) - 0xD800) * 0x400 +
                 (ord(data[1]) - 0xDC00))
     return char_val
 
@@ -64,7 +64,7 @@ def moduleFactoryFactory(factory):
             mod = ModuleType(name)
             objs = factory(baseModule, *args, **kwargs)
             mod.__dict__.update(objs)
-            moduleCache[name] = mod    
+            moduleCache[name] = mod
             return mod
 
     return moduleFactory

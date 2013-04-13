@@ -29,7 +29,7 @@ class TokenizerTestParser(object):
 
         tokenizer.state = getattr(tokenizer, self._state)
         if self._lastStartTag is not None:
-            tokenizer.currentToken = {"type": "startTag", 
+            tokenizer.currentToken = {"type": "startTag",
                                       "name":self._lastStartTag}
 
         types = dict((v,k) for k,v in constants.tokenTypes.items())
@@ -43,7 +43,7 @@ class TokenizerTestParser(object):
                                   token["systemId"], token["correct"]])
 
     def processStartTag(self, token):
-        self.outputTokens.append(["StartTag", token["name"], 
+        self.outputTokens.append(["StartTag", token["name"],
                                   dict(token["data"][::-1]), token["selfClosing"]])
 
     def processEmptyTag(self, token):
@@ -52,7 +52,7 @@ class TokenizerTestParser(object):
         self.outputTokens.append(["StartTag", token["name"], dict(token["data"][::-1])])
 
     def processEndTag(self, token):
-        self.outputTokens.append(["EndTag", token["name"], 
+        self.outputTokens.append(["EndTag", token["name"],
                                   token["selfClosing"]])
 
     def processComment(self, token):
@@ -145,10 +145,10 @@ def runTokenizerTest(test):
     warnings.resetwarnings()
     warnings.simplefilter("error")
 
-    expected = concatenateCharacterTokens(test['output'])            
+    expected = concatenateCharacterTokens(test['output'])
     if 'lastStartTag' not in test:
         test['lastStartTag'] = None
-    parser = TokenizerTestParser(test['initialState'], 
+    parser = TokenizerTestParser(test['initialState'],
                                  test['lastStartTag'])
     tokens = parser.parse(test['input'])
     tokens = concatenateCharacterTokens(tokens)

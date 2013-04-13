@@ -94,7 +94,7 @@ try:
          "walker":  treewalkers.getTreeWalker("lxml")}
 except ImportError:
     pass
-    
+
 #Try whatever etree implementations are available from a list that are
 #"supposed" to work
 try:
@@ -145,7 +145,7 @@ try:
                 yield COMMENT, token["data"], (None, -1, -1)
 
             elif type == "Doctype":
-                yield DOCTYPE, (token["name"], token["publicId"], 
+                yield DOCTYPE, (token["name"], token["publicId"],
                                 token["systemId"]), (None, -1, -1)
 
             else:
@@ -217,13 +217,13 @@ def convertTokens(tokens):
         elif type == "Doctype":
             if token["name"]:
                 if token["publicId"]:
-                    output.append("""%s<!DOCTYPE %s "%s" "%s">"""% 
-                                  (" "*indent, token["name"], 
+                    output.append("""%s<!DOCTYPE %s "%s" "%s">"""%
+                                  (" "*indent, token["name"],
                                    token["publicId"],
                                    token["systemId"] and token["systemId"] or ""))
                 elif token["systemId"]:
-                    output.append("""%s<!DOCTYPE %s "" "%s">"""% 
-                                  (" "*indent, token["name"], 
+                    output.append("""%s<!DOCTYPE %s "" "%s">"""%
+                                  (" "*indent, token["name"],
                                    token["systemId"]))
                 else:
                     output.append("%s<!DOCTYPE %s>"%(" "*indent,
@@ -296,7 +296,7 @@ def runTreewalkerTest(innerHTML, input, expected, errors, treeClass):
                 ])
     except NotImplementedError:
         pass # Amnesty for those that confess...
-            
+
 def test_treewalker():
     sys.stdout.write('Testing tree walkers '+ " ".join(list(treeTypes.keys())) + "\n")
 

@@ -103,7 +103,7 @@ class Document(Node):
         for child in self.childNodes:
             result += child.hilite()
         return result.encode(encoding) + "</pre>"
-    
+
     def printTree(self):
         tree = text_type(self)
         for child in self.childNodes:
@@ -134,13 +134,13 @@ class DocumentType(Node):
             systemId = self.systemId or ""
             return """<!DOCTYPE %s "%s" "%s">"""%(
                 self.name, publicId, systemId)
-                            
+
         else:
             return "<!DOCTYPE %s>" % self.name
-    
+
 
     toxml = __str__
-    
+
     def hilite(self):
         return '<code class="markup doctype">&lt;!DOCTYPE %s></code>' % self.name
 
@@ -158,7 +158,7 @@ class TextNode(Node):
 
     def toxml(self):
         return escape(self.value)
-    
+
     hilite = toxml
 
     def cloneNode(self):
@@ -191,7 +191,7 @@ class Element(Node):
         else:
             result += '/>'
         return result
-    
+
     def hilite(self):
         result = '&lt;<code class="markup element-name">%s</code>' % self.name
         if self.attributes:
@@ -231,7 +231,7 @@ class CommentNode(Node):
 
     def __str__(self):
         return "<!-- %s -->" % self.data
-    
+
     def toxml(self):
         return "<!--%s-->" % self.data
 
@@ -247,6 +247,6 @@ class TreeBuilder(_base.TreeBuilder):
     elementClass = Element
     commentClass = CommentNode
     fragmentClass = DocumentFragment
-    
+
     def testSerializer(self, node):
         return node.printTree()

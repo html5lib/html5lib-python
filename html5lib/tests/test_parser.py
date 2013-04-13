@@ -63,7 +63,7 @@ def runParserTest(innerHTML, input, expected, errors, treeClass,
     errStr = []
     for (line, col), errorcode, datavars in p.errors:
         assert isinstance(datavars, dict), "%s, %s" % (errorcode, repr(datavars))
-        errStr.append("Line: %i Col: %i %s" % (line, col, 
+        errStr.append("Line: %i Col: %i %s" % (line, col,
                                                constants.E[errorcode] % datavars))
 
     errorMsg2 = "\n".join(["\n\nInput:", input,
@@ -75,14 +75,14 @@ def runParserTest(innerHTML, input, expected, errors, treeClass,
 def test_parser():
     sys.stderr.write('Testing tree builders '+ " ".join(list(treeTypes.keys())) + "\n")
     files = get_data_files('tree-construction')
-    
+
     for filename in files:
         testName = os.path.basename(filename).replace(".dat","")
         if testName in ("main-element", "template"):
             continue
 
         tests = TestData(filename, "data")
-        
+
         for index, test in enumerate(tests):
             input, errors, innerHTML, expected = [test[key] for key in
                                                       ('data', 'errors',

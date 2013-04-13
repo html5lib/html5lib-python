@@ -22,12 +22,12 @@ class MoreParserTests(unittest.TestCase):
     parser = html5parser.HTMLParser(tree=dom.TreeBuilder)
     parser.parse("<pre>\nx\n&gt;\n</pre>")
 
-  def test_namespace_html_elements_0(self): 
+  def test_namespace_html_elements_0(self):
     parser = html5parser.HTMLParser(namespaceHTMLElements=True)
     doc = parser.parse("<html></html>")
     self.assert_(doc.childNodes[0].namespace == namespaces["html"])
 
-  def test_namespace_html_elements_1(self): 
+  def test_namespace_html_elements_1(self):
     parser = html5parser.HTMLParser(namespaceHTMLElements=False)
     doc = parser.parse("<html></html>")
     self.assert_(doc.childNodes[0].namespace == None)

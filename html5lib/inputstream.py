@@ -43,14 +43,14 @@ ascii_punctuation_re = re.compile("[\u0009-\u000D\u0020-\u002F\u003A-\u0040\u005
 
 # Cache for charsUntil()
 charsUntilRegEx = {}
-        
+
 class BufferedStream:
     """Buffering for streams that do not have buffering of their own
 
-    The buffer is implemented as a list of chunks on the assumption that 
+    The buffer is implemented as a list of chunks on the assumption that
     joining many strings will be slow since it is O(n**2)
     """
-    
+
     def __init__(self, stream):
         self.stream = stream
         self.buffer = []
@@ -80,7 +80,7 @@ class BufferedStream:
             return self._readStream(bytes)
         else:
             return self._readFromBuffer(bytes)
-    
+
     def _bufferedBytes(self):
         return sum([len(item) for item in self.buffer])
 
@@ -99,7 +99,7 @@ class BufferedStream:
         while bufferIndex < len(self.buffer) and remainingBytes != 0:
             assert remainingBytes > 0
             bufferedData = self.buffer[bufferIndex]
-            
+
             if remainingBytes <= len(bufferedData) - bufferOffset:
                 bytesToRead = remainingBytes
                 self.position = [bufferIndex, bufferOffset + bytesToRead]
@@ -107,7 +107,7 @@ class BufferedStream:
                 bytesToRead = len(bufferedData) - bufferOffset
                 self.position = [bufferIndex, len(bufferedData)]
                 bufferIndex += 1
-            data = rv.append(bufferedData[bufferOffset: 
+            data = rv.append(bufferedData[bufferOffset:
                                           bufferOffset + bytesToRead])
             remainingBytes -= bytesToRead
 
@@ -115,7 +115,7 @@ class BufferedStream:
 
         if remainingBytes:
             rv.append(self._readStream(remainingBytes))
-        
+
         return "".join(rv)
 
 
@@ -156,7 +156,7 @@ class HTMLUnicodeInputStream:
         the encoding.  If specified, that encoding will be used,
         regardless of any BOM or later declaration (such as in a meta
         element)
-        
+
         parseMeta - Look for a <meta> element containing encoding information
 
         """
@@ -187,7 +187,7 @@ class HTMLUnicodeInputStream:
         self.prevNumLines = 0
         # number of columns in the last line of the previous chunk
         self.prevNumCols = 0
-        
+
         #Deal with CR LF and surrogates split over chunk boundaries
         self._bufferedCharacter = None
 
@@ -253,7 +253,7 @@ class HTMLUnicodeInputStream:
         self.chunkOffset = 0
 
         data = self.dataStream.read(chunkSize)
-        
+
         #Deal with CR LF and surrogates broken across chunks
         if self._bufferedCharacter:
             data = self._bufferedCharacter + data
@@ -261,19 +261,19 @@ class HTMLUnicodeInputStream:
         elif not data:
             # We have no more data, bye-bye stream
             return False
-        
+
         if len(data) > 1:
             lastv = ord(data[-1])
             if lastv == 0x0D or 0xD800 <= lastv <= 0xDBFF:
                 self._bufferedCharacter = data[-1]
                 data = data[:-1]
-        
+
         self.reportCharacterErrors(data)
-        
+
         # Replace invalid characters
         # Note U+0000 is dealt with in the tokenizer
         data = self.replaceCharactersRegexp.sub("\ufffd", data)
-                    
+
         data = data.replace("\r\n", "\n")
         data = data.replace("\r", "\n")
 
@@ -322,7 +322,7 @@ class HTMLUnicodeInputStream:
             chars = charsUntilRegEx[(characters, opposite)]
         except KeyError:
             if __debug__:
-                for c in characters: 
+                for c in characters:
                     assert(ord(c) < 128)
             regex = "".join(["\\x%02x" % ord(c) for c in characters])
             if not opposite:
@@ -393,7 +393,7 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
         the encoding.  If specified, that encoding will be used,
         regardless of any BOM or later declaration (such as in a meta
         element)
-        
+
         parseMeta - Look for a <meta> element containing encoding information
 
         """
@@ -413,7 +413,7 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
         self.numBytesChardet = 100
         #Encoding to use if no other information can be found
         self.defaultEncoding = "windows-1252"
-        
+
         #Detect encoding iff no explicit "transport level" encoding is supplied
         if (self.charEncoding[0] is None):
             self.charEncoding = self.detectEncoding(parseMeta, chardet)
@@ -449,7 +449,7 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
         #This will also read past the BOM if present
         encoding = self.detectBOM()
         confidence = "certain"
-        #If there is no BOM need to look for meta elements with encoding 
+        #If there is no BOM need to look for meta elements with encoding
         #information
         if encoding is None and parseMeta:
             encoding = self.detectEncodingMeta()
@@ -477,7 +477,7 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
         if encoding is None:
             confidence="tentative"
             encoding = self.defaultEncoding
-        
+
         #Substitute for equivalent encodings:
         encodingSub = {"iso-8859-1":"windows-1252"}
 
@@ -500,7 +500,7 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
             self.reset()
             self.charEncoding = (newEncoding, "certain")
             raise ReparseException("Encoding changed from %s to %s"%(self.charEncoding[0], newEncoding))
-            
+
     def detectBOM(self):
         """Attempts to detect at BOM at the start of the stream. If
         an encoding can be determined from the BOM return the name of the
@@ -540,7 +540,7 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
         parser = EncodingParser(buffer)
         self.rawStream.seek(0)
         encoding = parser.getEncoding()
-        
+
         if encoding in ("utf-16", "utf-16-be", "utf-16-le"):
             encoding = "utf-8"
 
@@ -556,10 +556,10 @@ class EncodingBytes(bytes):
 
     def __init__(self, value):
         self._position=-1
-    
+
     def __iter__(self):
         return self
-    
+
     def __next__(self):
         p = self._position = self._position + 1
         if p >= len(self):
@@ -580,12 +580,12 @@ class EncodingBytes(bytes):
             raise TypeError
         self._position = p = p - 1
         return self[p:p+1]
-    
+
     def setPosition(self, position):
         if self._position >= len(self):
             raise StopIteration
         self._position = position
-    
+
     def getPosition(self):
         if self._position >= len(self):
             raise StopIteration
@@ -593,12 +593,12 @@ class EncodingBytes(bytes):
             return self._position
         else:
             return None
-    
+
     position = property(getPosition, setPosition)
 
     def getCurrentByte(self):
         return self[self.position:self.position+1]
-    
+
     currentByte = property(getCurrentByte)
 
     def skip(self, chars=spaceCharactersBytes):
@@ -625,8 +625,8 @@ class EncodingBytes(bytes):
         return None
 
     def matchBytes(self, bytes):
-        """Look for a sequence of bytes at the start of a string. If the bytes 
-        are found return True and advance the position to the byte after the 
+        """Look for a sequence of bytes at the start of a string. If the bytes
+        are found return True and advance the position to the byte after the
         match. Otherwise return False and leave the position alone"""
         p = self.position
         data = self[p:p+len(bytes)]
@@ -634,7 +634,7 @@ class EncodingBytes(bytes):
         if rv:
             self.position += len(bytes)
         return rv
-    
+
     def jumpTo(self, bytes):
         """Look for the next sequence of bytes matching a given sequence. If
         a match is found advance the position to the last byte of the match"""
@@ -670,7 +670,7 @@ class EncodingParser(object):
             for key, method in methodDispatch:
                 if self.data.matchBytes(key):
                     try:
-                        keepParsing = method()    
+                        keepParsing = method()
                         break
                     except StopIteration:
                         keepParsing=False
@@ -731,13 +731,13 @@ class EncodingParser(object):
         data = self.data
         if data.currentByte not in asciiLettersBytes:
             #If the next byte is not an ascii letter either ignore this
-            #fragment (possible start tag case) or treat it according to 
+            #fragment (possible start tag case) or treat it according to
             #handleOther
             if endTag:
                 data.previous()
                 self.handleOther()
             return True
-        
+
         c = data.skipUntil(spacesAngleBrackets)
         if c == b"<":
             #return to the first step in the overall "two step" algorithm
@@ -754,7 +754,7 @@ class EncodingParser(object):
         return self.data.jumpTo(b">")
 
     def getAttribute(self):
-        """Return a name,value pair for the next attribute in the stream, 
+        """Return a name,value pair for the next attribute in the stream,
         if one is found, or None"""
         data = self.data
         # Step 1 (skip chars)
@@ -768,7 +768,7 @@ class EncodingParser(object):
         attrValue = []
         #Step 4 attribute name
         while True:
-            if c == b"=" and attrName:   
+            if c == b"=" and attrName:
                 break
             elif c in spaceCharactersBytes:
                 #Step 6!
@@ -836,7 +836,7 @@ class ContentAttrParser(object):
         self.data = data
     def parse(self):
         try:
-            #Check if the attr name is charset 
+            #Check if the attr name is charset
             #otherwise return
             self.data.jumpTo(b"charset")
             self.data.position += 1

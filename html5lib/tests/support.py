@@ -8,7 +8,7 @@ import glob
 base_path = os.path.split(__file__)[0]
 
 test_dir = os.path.join(base_path, 'testdata')
-sys.path.insert(0, os.path.abspath(os.path.join(base_path, 
+sys.path.insert(0, os.path.abspath(os.path.join(base_path,
                                                 os.path.pardir,
                                                 os.path.pardir)))
 
@@ -41,7 +41,7 @@ except ImportError:
         treeTypes['cElementTree'] = treebuilders.getTreeBuilder("etree", cElementTree, fullTree=True)
     except ImportError:
         pass
-    
+
 try:
     import lxml.etree as lxml
     treeTypes['lxml'] = treebuilders.getTreeBuilder("lxml")
@@ -55,7 +55,7 @@ class DefaultDict(dict):
     def __init__(self, default, *args, **kwargs):
         self.default = default
         dict.__init__(self, *args, **kwargs)
-    
+
     def __getitem__(self, key):
         return dict.get(self, key, self.default)
 
@@ -70,7 +70,7 @@ class TestData(object):
 
     def __del__(self):
         self.f.close()
-    
+
     def __iter__(self):
         data = DefaultDict(None)
         key=None
@@ -88,7 +88,7 @@ class TestData(object):
                 data[key] += line
         if data:
             yield self.normaliseOutput(data)
-        
+
     def isSectionHeading(self, line):
         """If the current heading is a test section heading return the heading,
         otherwise return False"""
@@ -97,7 +97,7 @@ class TestData(object):
             return line[1:].strip()
         else:
             return False
-    
+
     def normaliseOutput(self, data):
         #Remove trailing newlines
         for key,value in data.items():

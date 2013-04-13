@@ -24,7 +24,7 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
                     attrs[(attr.namespaceURI,attr.localName)] = attr.value
                 else:
                     attrs[(None,attr.name)] = attr.value
-            return (_base.ELEMENT, node.namespaceURI, node.nodeName, 
+            return (_base.ELEMENT, node.namespaceURI, node.nodeName,
                     attrs, node.hasChildNodes())
 
         elif node.nodeType == Node.COMMENT_NODE:

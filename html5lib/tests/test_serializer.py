@@ -68,7 +68,7 @@ class JsonWalker(TreeWalker):
                     yield self.doctype(token[1])
             else:
                 raise ValueError("Unknown token type: " + type)
-    
+
     def _convertAttrib(self, attribs):
         """html5lib tree-walkers use a dict of (namespace, name): value for
         attributes, but JSON cannot represent this. Convert from the format
@@ -92,7 +92,7 @@ def runSerializerTest(input, expected, options):
     if encoding:
         encode = lambda x: x.encode(encoding)
         expected = list(map(encode, expected))
-    
+
     result = serialize_html(input, options)
     if len(expected) == 1:
         assert expected[0] == result, "Expected:\n%s\nActual:\n%s\nOptions:\n%s"%(expected[0], result, str(options))

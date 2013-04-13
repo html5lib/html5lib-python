@@ -25,7 +25,7 @@ class Spider(object):
         self.robotParser = urllib.robotparser.RobotFileParser()
         self.contentDigest = {}
         self.http = httplib2.Http(".cache")
-        
+
     def run(self, initialURL, maxURLs=1000):
         urlNumber = 0
         self.visitedURLs.add(initialURL)
@@ -50,7 +50,7 @@ class Spider(object):
         self.visitedURLs.add(self.currentURL)
         if not failed:
             self.updateURLs(tree)
-    
+
     def loadURL(self, url):
         resp, content = self.http.request(url, "GET")
         self.currentURL = url
@@ -65,7 +65,7 @@ class Spider(object):
             content = None
 
         return content
-    
+
     def updateURLs(self, tree):
         """Take all the links in the current document, extract the URLs and
         update the list of visited and unvisited URLs according to whether we
@@ -80,7 +80,7 @@ class Spider(object):
                         urls.add(url)
                 except KeyError:
                     pass
-        
+
         #Remove all non-http URLs and a dd a sutiable base URL where that is
         #missing
         newUrls = set()
@@ -92,7 +92,7 @@ class Spider(object):
                 splitURL[1] = urllib.parse.urlsplit(self.currentURL)[1]
             newUrls.add(urllib.parse.urlunsplit(splitURL))
         urls = newUrls
-        
+
         responseHeaders = {}
         #Now we want to find the content types of the links we haven't visited
         for url in urls:
@@ -102,8 +102,8 @@ class Spider(object):
             except AttributeError as KeyError:
                 #Don't know why this happens
                 pass
-            
-    
+
+
         #Remove links not of content-type html or pages not found
         #XXX - need to deal with other status codes?
         toVisit = set([url for url in urls if url in responseHeaders and
@@ -118,6 +118,6 @@ class Spider(object):
             self.robotParser.set_url(robotURL)
             if not self.robotParser.can_fetch("*", url):
                 toVisit.remove(url)
-    
+
         self.visitedURLs.update(urls)
         self.unvisitedURLs.update(toVisit)

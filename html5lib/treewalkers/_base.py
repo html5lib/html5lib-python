@@ -25,7 +25,7 @@ class TreeWalker(object):
                                 isinstance(value, text_type)
                                 for (namespace, name), value in attrs.items())
 
-        yield {"type": "EmptyTag", "name": name, 
+        yield {"type": "EmptyTag", "name": name,
                "namespace":namespace,
                "data": attrs}
         if hasChildren:
@@ -39,7 +39,7 @@ class TreeWalker(object):
                                 isinstance(value, text_type)
                                 for (namespace, name), value in attrs.items())
 
-        return {"type": "StartTag", 
+        return {"type": "StartTag",
                 "name": name,
                 "namespace":namespace,
                 "data": attrs}
@@ -48,7 +48,7 @@ class TreeWalker(object):
         assert namespace is None or isinstance(namespace, text_type), type(namespace)
         assert isinstance(name, text_type), type(namespace)
 
-        return {"type": "EndTag", 
+        return {"type": "EndTag",
                 "name": name,
                 "namespace":namespace,
                 "data": {}}
@@ -121,13 +121,13 @@ UNKNOWN = "<#UNKNOWN#>"
 class NonRecursiveTreeWalker(TreeWalker):
     def getNodeDetails(self, node):
         raise NotImplementedError
-    
+
     def getFirstChild(self, node):
         raise NotImplementedError
-    
+
     def getNextSibling(self, node):
         raise NotImplementedError
-    
+
     def getParentNode(self, node):
         raise NotImplementedError
 
@@ -149,7 +149,7 @@ class NonRecursiveTreeWalker(TreeWalker):
             elif type == ELEMENT:
                 namespace, name, attributes, hasChildren = details
                 if name in voidElements:
-                    for token in self.emptyTag(namespace, name, attributes, 
+                    for token in self.emptyTag(namespace, name, attributes,
                                                hasChildren):
                         yield token
                     hasChildren = False
@@ -168,12 +168,12 @@ class NonRecursiveTreeWalker(TreeWalker):
 
             else:
                 yield self.unknown(details[0])
-            
+
             if hasChildren:
                 firstChild = self.getFirstChild(currentNode)
             else:
                 firstChild = None
-            
+
             if firstChild is not None:
                 currentNode = firstChild
             else:
