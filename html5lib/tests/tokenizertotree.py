@@ -25,7 +25,7 @@ def main(out_path):
 
 def run_file(filename, out_path):
     try:
-        tests_data = json.load(file(filename))
+        tests_data = json.load(open(filename, "r"))
     except ValueError:
         sys.stderr.write("Failed to load %s\n" % filename)
         return

@@ -86,7 +86,7 @@ def testSerializer(element):
                 rv.append("#document-fragment")
                 for next_element in element:
                     serializeElement(next_element, indent + 2)
-        elif type(element.tag) == type(etree.Comment):
+        elif isinstance(element.tag, etree.Comment):
             rv.append("|%s<!-- %s -->" % (' ' * indent, element.text))
             if hasattr(element, "tail") and element.tail:
                 rv.append("|%s\"%s\"" % (' ' * indent, element.tail))
@@ -149,7 +149,7 @@ def tostring(element):
                 rv.append(dtd_str)
             serializeElement(element.getroot())
 
-        elif type(element.tag) == type(etree.Comment):
+        elif isinstance(element.tag, etree.Comment):
             rv.append("<!--%s-->" % (element.text,))
 
         else:
@@ -301,7 +301,7 @@ class TreeBuilder(_base.TreeBuilder):
 
     def insertCommentMain(self, data, parent=None):
         if (parent == self.document and
-                type(self.document._elementTree.getroot()[-1].tag) == type(etree.Comment)):
+                isinstance(self.document._elementTree.getroot()[-1].tag, etree.Comment)):
                 warnings.warn("lxml cannot represent adjacent comments beyond the root elements", DataLossWarning)
         super(TreeBuilder, self).insertComment(data, parent)
 
