@@ -12,8 +12,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(base_path,
                                                 os.path.pardir,
                                                 os.path.pardir)))
 
-import html5lib
-from html5lib import html5parser, treebuilders
+from html5lib import treebuilders
 del base_path
 
 #Build a dict of avaliable trees
@@ -43,10 +42,11 @@ except ImportError:
         pass
 
 try:
-    import lxml.etree as lxml
-    treeTypes['lxml'] = treebuilders.getTreeBuilder("lxml")
+    import lxml.etree as lxml # flake8: noqa
 except ImportError:
     pass
+else:
+    treeTypes['lxml'] = treebuilders.getTreeBuilder("lxml")
 
 def get_data_files(subdirectory, files='*.dat'):
     return glob.glob(os.path.join(test_dir,subdirectory,files))

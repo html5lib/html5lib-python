@@ -47,7 +47,7 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             return _base.COMMENT, node.data
 
         else:
-            return _node.UNKNOWN, node.type
+            return _base.UNKNOWN, node.type
 
     def getFirstChild(self, node):
         if isinstance(node, tuple): # It might be the root Node

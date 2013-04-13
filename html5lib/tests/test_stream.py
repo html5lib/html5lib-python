@@ -1,6 +1,6 @@
 from __future__ import absolute_import, division, unicode_literals
 
-from . import support
+from . import support # flake8: noqa
 import unittest, codecs
 
 from html5lib.inputstream import HTMLInputStream, HTMLUnicodeInputStream, HTMLBinaryInputStream

@@ -7,7 +7,6 @@ import re
 
 import html5lib
 from . import support
-from . import test_parser
 from . import test_tokenizer
 
 p = html5lib.HTMLParser()

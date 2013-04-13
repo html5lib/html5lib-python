@@ -3,7 +3,6 @@ from six import text_type
 
 import codecs
 import re
-import types
 import sys
 
 from .constants import EOF, spaceCharacters, asciiLetters, asciiUppercase
@@ -107,8 +106,7 @@ class BufferedStream:
                 bytesToRead = len(bufferedData) - bufferOffset
                 self.position = [bufferIndex, len(bufferedData)]
                 bufferIndex += 1
-            data = rv.append(bufferedData[bufferOffset:
-                                          bufferOffset + bytesToRead])
+            rv.append(bufferedData[bufferOffset:bufferOffset + bytesToRead])
             remainingBytes -= bytesToRead
 
             bufferOffset = 0
@@ -290,7 +288,6 @@ class HTMLUnicodeInputStream:
         #Someone picked the wrong compile option
         #You lose
         skip = False
-        import sys
         for match in invalid_unicode_re.finditer(data):
             if skip:
                 continue

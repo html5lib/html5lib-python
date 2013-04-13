@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, unicode_literals
 
-import os
 import unittest
 from .support import get_data_files
 
@@ -15,7 +14,7 @@ except AttributeError:
     unittest.TestCase.assertEqual = unittest.TestCase.assertEquals
 
 import html5lib
-from html5lib import html5parser, serializer, constants
+from html5lib import serializer, constants
 from html5lib.treewalkers._base import TreeWalker
 
 optionals_loaded = []
@@ -172,6 +171,5 @@ def test_serializer():
     for filename in get_data_files('serializer', '*.test'):
         with open(filename) as fp:
             tests = json.load(fp)
-            test_name = os.path.basename(filename).replace('.test','')
             for index, test in enumerate(tests['tests']):
                 yield runSerializerTest, test["input"], test["expected"], test.get("options", {})

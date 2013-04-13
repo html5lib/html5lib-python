@@ -5,12 +5,10 @@ from lxml import etree
 from html5lib.treebuilders.etree import tag_regexp
 
 from gettext import gettext
-import sys
 _ = gettext
 
 from . import _base
 
-from html5lib.constants import voidElements
 from html5lib import ihatexml
 
 def ensure_str(s):

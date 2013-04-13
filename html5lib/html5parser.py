@@ -1,7 +1,6 @@
 from __future__ import absolute_import, division, unicode_literals
 from six import with_metaclass
 
-import sys
 import types
 
 from . import inputstream
@@ -14,10 +13,10 @@ from .treebuilders import simpletree
 from . import utils
 from . import constants
 from .constants import spaceCharacters, asciiUpper2Lower
-from .constants import formattingElements, specialElements
-from .constants import headingElements, tableInsertModeElements
-from .constants import cdataElements, rcdataElements, voidElements
-from .constants import tokenTypes, ReparseException, namespaces, spaceCharacters
+from .constants import specialElements
+from .constants import headingElements
+from .constants import cdataElements, rcdataElements
+from .constants import tokenTypes, ReparseException, namespaces
 from .constants import htmlIntegrationPointElements, mathmlTextIntegrationPointElements
 
 def parse(doc, treebuilder="simpletree", encoding=None,
@@ -88,7 +87,7 @@ class HTMLParser(object):
             try:
                 self.mainLoop()
                 break
-            except ReparseException as e:
+            except ReparseException:
                 self.reset()
 
     def reset(self):
@@ -405,7 +404,7 @@ class HTMLParser(object):
         """
         assert contentType in ("RAWTEXT", "RCDATA")
 
-        element = self.tree.insertElement(token)
+        self.tree.insertElement(token)
 
         if contentType == "RAWTEXT":
             self.tokenizer.state = self.tokenizer.rawtextState
@@ -1402,7 +1401,6 @@ def getPhases(debug):
             """The much-feared adoption agency algorithm"""
             # http://www.whatwg.org/specs/web-apps/current-work/#adoptionAgency
             # XXX Better parseError messages appreciated.
-            name = token["name"]
 
             # Step 1
             outerLoopCounter = 0
@@ -1620,7 +1618,7 @@ def getPhases(debug):
             #document.write works
 
         def endTagOther(self, token):
-            node = self.tree.openElements.pop()
+            self.tree.openElements.pop()
             self.parser.phase = self.parser.originalPhase
 
     class InTablePhase(Phase):

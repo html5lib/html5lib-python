@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, unicode_literals
 
-from sys import version_info
 from types import ModuleType
 
 class MethodDispatcher(dict):

@@ -190,7 +190,6 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
 
     def testSerializer(element):
         rv = []
-        finalText = None
         def serializeElement(element, indent=0):
             if not(hasattr(element, "tag")):
                 element = element.getroot()
@@ -204,10 +203,12 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                     rv.append("<!DOCTYPE %s>"%(element.text,))
             elif element.tag == "DOCUMENT_ROOT":
                 rv.append("#document")
-                if element.text:
-                    rv.append("|%s\"%s\""%(' '*(indent+2), element.text))
-                if element.tail:
-                    finalText = element.tail
+                if element.text is not None:
+                    rv.append("|%s\"%s\"" % (' ' * (indent + 2), element.text))
+                if element.tail is not None:
+                    raise TypeError("Document node cannot have tail")
+                if hasattr(element, "attrib") and len(element.attrib):
+                    raise TypeError("Document node cannot have attributes")
             elif element.tag == ElementTreeCommentType:
                 rv.append("|%s<!-- %s -->"%(' '*indent, element.text))
             else:
@@ -245,15 +246,11 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                 rv.append("|%s\"%s\"" %(' '*(indent-2), element.tail))
         serializeElement(element, 0)
 
-        if finalText is not None:
-            rv.append("|%s\"%s\""%(' '*2, finalText))
-
         return "\n".join(rv)
 
     def tostring(element):
         """Serialize an element and its child nodes to a string"""
         rv = []
-        finalText = None
         filter = ihatexml.InfosetFilter()
         def serializeElement(element):
             if type(element) == type(ElementTree.ElementTree):
@@ -268,10 +265,12 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                 else:
                     rv.append("<!DOCTYPE %s>"%(element.text,))
             elif element.tag == "DOCUMENT_ROOT":
-                if element.text:
+                if element.text is not None:
                     rv.append(element.text)
-                if element.tail:
-                    finalText = element.tail
+                if element.tail is not None:
+                    raise TypeError("Document node cannot have tail")
+                if hasattr(element, "attrib") and len(element.attrib):
+                    raise TypeError("Document node cannot have attributes")
 
                 for child in element:
                     serializeElement(child)
@@ -299,9 +298,6 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                 rv.append(element.tail)
 
         serializeElement(element)
-
-        if finalText is not None:
-            rv.append("%s\""%(' '*2, finalText))
 
         return "".join(rv)
 

@@ -34,8 +34,6 @@ from __future__ import absolute_import, division, unicode_literals
 
 treeBuilderCache = {}
 
-import sys
-
 def getTreeBuilder(treeType, implementation=None, **kwargs):
     """Get a TreeBuilder class for various types of tree with built-in support
 

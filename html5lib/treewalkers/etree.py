@@ -3,17 +3,18 @@ from __future__ import absolute_import, division, unicode_literals
 import gettext
 _ = gettext.gettext
 
-import copy
 import re
 
+from six import text_type
+
 from . import _base
-from html5lib.constants import voidElements
-from html5lib.utils import moduleFactorFactory
+from ..utils import moduleFactoryFactory
 
 tag_regexp = re.compile("{([^}]*)}(.*)")
 
 def getETreeBuilder(ElementTreeImplementation):
     ElementTree = ElementTreeImplementation
+    ElementTreeCommentType = ElementTree.Comment("asd").tag
 
     class TreeWalker(_base.NonRecursiveTreeWalker):
         """Given the particular ElementTree representation, this implementation,
@@ -47,11 +48,11 @@ def getETreeBuilder(ElementTreeImplementation):
                 return (_base.DOCTYPE, node.text,
                         node.get("publicId"), node.get("systemId"))
 
-            elif node.tag == ElementTree.Comment:
+            elif node.tag == ElementTreeCommentType:
                 return _base.COMMENT, node.text
 
             else:
-                assert type(node.tag) in (str, str), type(node.tag)
+                assert type(node.tag) == text_type, type(node.tag)
                 #This is assumed to be an ordinary element
                 match = tag_regexp.match(node.tag)
                 if match:
