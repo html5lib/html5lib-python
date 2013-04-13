@@ -1,10 +1,10 @@
 from __future__ import absolute_import, division, unicode_literals
 
-from difflib import unified_diff
 import os
 import sys
 import unittest
 import warnings
+from difflib import unified_diff
 
 try:
     unittest.TestCase.assertEqual
