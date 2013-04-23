@@ -80,9 +80,6 @@ try:
 except ImportError:
     pass
 else:
-#    treeTypes['lxml_as_etree'] = \
-#        {"builder": treebuilders.getTreeBuilder("etree", ElementTree),
-#         "walker":  treewalkers.getTreeWalker("etree", ElementTree)}
     treeTypes['lxml_native'] = \
         {"builder": treebuilders.getTreeBuilder("lxml"),
          "walker": treewalkers.getTreeWalker("lxml")}
