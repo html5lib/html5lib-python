@@ -98,7 +98,9 @@ except ImportError:
 try:
     from genshi.core import QName, Attrs
     from genshi.core import START, END, TEXT, COMMENT, DOCTYPE
-
+except ImportError:
+    pass
+else:
     def GenshiAdapter(tree):
         text = None
         for token in treewalkers.getTreeWalker("simpletree")(tree):
@@ -148,8 +150,6 @@ try:
         {"builder": treebuilders.getTreeBuilder("simpletree"),
          "adapter": GenshiAdapter,
          "walker": treewalkers.getTreeWalker("genshi")}
-except ImportError:
-    pass
 
 
 def concatenateCharacterTokens(tokens):
