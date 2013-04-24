@@ -168,56 +168,62 @@ class HTMLSanitizerMixin(object):
         if token_type in (tokenTypes["StartTag"], tokenTypes["EndTag"],
                              tokenTypes["EmptyTag"]):
             if token["name"] in self.allowed_elements:
-                if "data" in token:
-                    attrs = dict([(name,val) for name,val in
-                                  token["data"][::-1]
-                                  if name in self.allowed_attributes])
-                    for attr in self.attr_val_is_uri:
-                        if attr not in attrs:
-                            continue
-                        val_unescaped = re.sub("[`\000-\040\177-\240\s]+", '',
-                                               unescape(attrs[attr])).lower()
-                        #remove replacement characters from unescaped characters
-                        val_unescaped = val_unescaped.replace("\ufffd", "")
-                        if (re.match("^[a-z0-9][-+.a-z0-9]*:",val_unescaped) and
-                            (val_unescaped.split(':')[0] not in
-                             self.allowed_protocols)):
-                            del attrs[attr]
-                    for attr in self.svg_attr_val_allows_ref:
-                        if attr in attrs:
-                            attrs[attr] = re.sub(r'url\s*\(\s*[^#\s][^)]+?\)',
-                                                 ' ',
-                                                 unescape(attrs[attr]))
-                    if (token["name"] in self.svg_allow_local_href and
-                        'xlink:href' in attrs and re.search('^\s*[^#\s].*',
-                                                            attrs['xlink:href'])):
-                        del attrs['xlink:href']
-                    if 'style' in attrs:
-                        attrs['style'] = self.sanitize_css(attrs['style'])
-                    token["data"] = [[name,val] for name,val in list(attrs.items())]
-                return token
+                return self.allowed_token(token)
             else:
-                if token_type == tokenTypes["EndTag"]:
-                    token["data"] = "</%s>" % token["name"]
-                elif token["data"]:
-                    attrs = ''.join([' %s="%s"' % (k,escape(v)) for k,v in token["data"]])
-                    token["data"] = "<%s%s>" % (token["name"],attrs)
-                else:
-                    token["data"] = "<%s>" % token["name"]
-                if token.get("selfClosing"):
-                    token["data"]=token["data"][:-1] + "/>"
-
-                if token["type"] in list(tokenTypes.keys()):
-                    token["type"] = "Characters"
-                else:
-                    token["type"] = tokenTypes["Characters"]
-
-                del token["name"]
-                return token
+                return self.unallowed_token(token)
         elif token_type == tokenTypes["Comment"]:
             pass
         else:
             return token
+
+    def allowed_token(self, token):
+        if "data" in token:
+            attrs = dict([(name,val) for name,val in
+                          token["data"][::-1]
+                          if name in self.allowed_attributes])
+            for attr in self.attr_val_is_uri:
+                if attr not in attrs:
+                    continue
+                val_unescaped = re.sub("[`\000-\040\177-\240\s]+", '',
+                                       unescape(attrs[attr])).lower()
+                #remove replacement characters from unescaped characters
+                val_unescaped = val_unescaped.replace("\ufffd", "")
+                if (re.match("^[a-z0-9][-+.a-z0-9]*:",val_unescaped) and
+                    (val_unescaped.split(':')[0] not in
+                     self.allowed_protocols)):
+                    del attrs[attr]
+            for attr in self.svg_attr_val_allows_ref:
+                if attr in attrs:
+                    attrs[attr] = re.sub(r'url\s*\(\s*[^#\s][^)]+?\)',
+                                         ' ',
+                                         unescape(attrs[attr]))
+            if (token["name"] in self.svg_allow_local_href and
+                'xlink:href' in attrs and re.search('^\s*[^#\s].*',
+                                                    attrs['xlink:href'])):
+                del attrs['xlink:href']
+            if 'style' in attrs:
+                attrs['style'] = self.sanitize_css(attrs['style'])
+            token["data"] = [[name,val] for name,val in list(attrs.items())]
+        return token
+
+    def unallowed_token(self, token):
+        if token_type == tokenTypes["EndTag"]:
+            token["data"] = "</%s>" % token["name"]
+        elif token["data"]:
+            attrs = ''.join([' %s="%s"' % (k,escape(v)) for k,v in token["data"]])
+            token["data"] = "<%s%s>" % (token["name"],attrs)
+        else:
+            token["data"] = "<%s>" % token["name"]
+        if token.get("selfClosing"):
+            token["data"]=token["data"][:-1] + "/>"
+
+        if token["type"] in list(tokenTypes.keys()):
+            token["type"] = "Characters"
+        else:
+            token["type"] = tokenTypes["Characters"]
+
+        del token["name"]
+        return token
 
     def sanitize_css(self, style):
         # disallow urls
