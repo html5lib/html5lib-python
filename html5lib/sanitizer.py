@@ -168,15 +168,15 @@ class HTMLSanitizerMixin(object):
         if token_type in (tokenTypes["StartTag"], tokenTypes["EndTag"],
                              tokenTypes["EmptyTag"]):
             if token["name"] in self.allowed_elements:
-                return self.allowed_token(token)
+                return self.allowed_token(token, token_type)
             else:
-                return self.unallowed_token(token)
+                return self.unallowed_token(token, token_type)
         elif token_type == tokenTypes["Comment"]:
             pass
         else:
             return token
 
-    def allowed_token(self, token):
+    def allowed_token(self, token, token_type):
         if "data" in token:
             attrs = dict([(name,val) for name,val in
                           token["data"][::-1]
@@ -206,7 +206,7 @@ class HTMLSanitizerMixin(object):
             token["data"] = [[name,val] for name,val in list(attrs.items())]
         return token
 
-    def unallowed_token(self, token):
+    def unallowed_token(self, token, token_type):
         if token_type == tokenTypes["EndTag"]:
             token["data"] = "</%s>" % token["name"]
         elif token["data"]:
