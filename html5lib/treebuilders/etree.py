@@ -208,7 +208,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             elif element.tag == "DOCUMENT_ROOT":
                 rv.append("#document")
                 if element.text is not None:
-                    rv.append("|%s\"%s\""%(' '*(indent+2), element.text))
+                    rv.append("|%s\"%s\"" % (' ' * (indent + 2), element.text))
                 if element.tail is not None:
                     raise TypeError("Document node cannot have tail")
                 if hasattr(element, "attrib") and len(element.attrib):
