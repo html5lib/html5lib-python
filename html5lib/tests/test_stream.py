@@ -1,15 +1,19 @@
 from __future__ import absolute_import, division, unicode_literals
 
-from . import support
-import unittest, codecs
+from . import support  # flake8: noqa
+import unittest
+import codecs
 
 from html5lib.inputstream import HTMLInputStream, HTMLUnicodeInputStream, HTMLBinaryInputStream
+
 
 class HTMLUnicodeInputStreamShortChunk(HTMLUnicodeInputStream):
     _defaultChunkSize = 2
 
+
 class HTMLBinaryInputStreamShortChunk(HTMLBinaryInputStream):
     _defaultChunkSize = 2
+
 
 class HTMLInputStreamTest(unittest.TestCase):
 
@@ -36,7 +40,7 @@ class HTMLInputStreamTest(unittest.TestCase):
         self.assertEquals(stream.char(), "'")
 
     def test_utf_16(self):
-        stream = HTMLInputStream((' '*1025).encode('utf-16'))
+        stream = HTMLInputStream((' ' * 1025).encode('utf-16'))
         self.assert_(stream.charEncoding[0] in ['utf-16-le', 'utf-16-be'], stream.charEncoding)
         self.assertEquals(len(stream.charsUntil(' ', True)), 1025)
 
@@ -87,8 +91,10 @@ class HTMLInputStreamTest(unittest.TestCase):
         self.assertEquals(stream.char(), "d")
         self.assertEquals(stream.position(), (2, 1))
 
+
 def buildTestSuite():
     return unittest.defaultTestLoader.loadTestsFromName(__name__)
+
 
 def main():
     buildTestSuite()

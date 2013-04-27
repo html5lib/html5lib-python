@@ -9,15 +9,15 @@ from html5lib.constants import scopingElements, tableInsertModeElements, namespa
 Marker = None
 
 listElementsMap = {
-    None:(frozenset(scopingElements), False),
-    "button":(frozenset(scopingElements | set([(namespaces["html"], "button")])), False),
-    "list":(frozenset(scopingElements | set([(namespaces["html"], "ol"),
-                                   (namespaces["html"], "ul")])), False),
-    "table":(frozenset([(namespaces["html"], "html"),
-                  (namespaces["html"], "table")]), False),
-    "select":(frozenset([(namespaces["html"], "optgroup"),
-                   (namespaces["html"], "option")]), True)
-    }
+    None: (frozenset(scopingElements), False),
+    "button": (frozenset(scopingElements | set([(namespaces["html"], "button")])), False),
+    "list": (frozenset(scopingElements | set([(namespaces["html"], "ol"),
+                                              (namespaces["html"], "ul")])), False),
+    "table": (frozenset([(namespaces["html"], "html"),
+                         (namespaces["html"], "table")]), False),
+    "select": (frozenset([(namespaces["html"], "optgroup"),
+                          (namespaces["html"], "option")]), True)
+}
 
 
 class Node(object):
@@ -40,13 +40,13 @@ class Node(object):
         self._flags = []
 
     def __str__(self):
-        attributesStr =  " ".join(["%s=\"%s\""%(name, value)
-                                   for name, value in
-                                   self.attributes.items()])
+        attributesStr = " ".join(["%s=\"%s\"" % (name, value)
+                                  for name, value in
+                                  self.attributes.items()])
         if attributesStr:
-            return "<%s %s>"%(self.name,attributesStr)
+            return "<%s %s>" % (self.name, attributesStr)
         else:
-            return "<%s>"%(self.name)
+            return "<%s>" % (self.name)
 
     def __repr__(self):
         return "<%s>" % (self.name)
@@ -78,7 +78,7 @@ class Node(object):
         This is needed so that trees that don't store text as nodes move the
         text in the correct way
         """
-        #XXX - should this method be made more general?
+        # XXX - should this method be made more general?
         for child in self.childNodes:
             newParent.appendChild(child)
         self.childNodes = []
@@ -89,11 +89,11 @@ class Node(object):
         """
         raise NotImplementedError
 
-
     def hasContent(self):
         """Return true if the node has children or text, false otherwise
         """
         raise NotImplementedError
+
 
 class ActiveFormattingElements(list):
     def append(self, node):
@@ -118,6 +118,7 @@ class ActiveFormattingElements(list):
 
         return True
 
+
 class TreeBuilder(object):
     """Base treebuilder implementation
     documentClass - the class to use for the bottommost node of a document
@@ -126,19 +127,19 @@ class TreeBuilder(object):
     doctypeClass - the class to use for doctypes
     """
 
-    #Document class
+    # Document class
     documentClass = None
 
-    #The class to use for creating a node
+    # The class to use for creating a node
     elementClass = None
 
-    #The class to use for creating comments
+    # The class to use for creating comments
     commentClass = None
 
-    #The class to use for creating doctypes
+    # The class to use for creating doctypes
     doctypeClass = None
 
-    #Fragment class
+    # Fragment class
     fragmentClass = None
 
     def __init__(self, namespaceHTMLElements):
@@ -152,7 +153,7 @@ class TreeBuilder(object):
         self.openElements = []
         self.activeFormattingElements = ActiveFormattingElements()
 
-        #XXX - rename these to headElement, formElement
+        # XXX - rename these to headElement, formElement
         self.headPointer = None
         self.formPointer = None
 
@@ -162,20 +163,20 @@ class TreeBuilder(object):
 
     def elementInScope(self, target, variant=None):
 
-        #If we pass a node in we match that. if we pass a string
-        #match any node with that name
+        # If we pass a node in we match that. if we pass a string
+        # match any node with that name
         exactNode = hasattr(target, "nameTuple")
 
         listElements, invert = listElementsMap[variant]
 
         for node in reversed(self.openElements):
             if (node.name == target and not exactNode or
-                node == target and exactNode):
+                    node == target and exactNode):
                 return True
             elif (invert ^ (node.nameTuple in listElements)):
                 return False
 
-        assert False # We should never reach this point
+        assert False  # We should never reach this point
 
     def reconstructActiveFormattingElements(self):
         # Within this algorithm the order of steps described in the
@@ -195,7 +196,7 @@ class TreeBuilder(object):
         # Step 6
         while entry != Marker and entry not in self.openElements:
             if i == 0:
-                #This will be reset to 0 below
+                # This will be reset to 0 below
                 i = -1
                 break
             i -= 1
@@ -208,13 +209,13 @@ class TreeBuilder(object):
 
             # Step 8
             entry = self.activeFormattingElements[i]
-            clone = entry.cloneNode() #Mainly to get a new copy of the attributes
+            clone = entry.cloneNode()  # Mainly to get a new copy of the attributes
 
             # Step 9
-            element = self.insertElement({"type":"StartTag",
-                                          "name":clone.name,
-                                          "namespace":clone.namespace,
-                                          "data":clone.attributes})
+            element = self.insertElement({"type": "StartTag",
+                                          "name": clone.name,
+                                          "namespace": clone.namespace,
+                                          "data": clone.attributes})
 
             # Step 10
             self.activeFormattingElements[i] = element
@@ -284,7 +285,7 @@ class TreeBuilder(object):
 
     def insertElementNormal(self, token):
         name = token["name"]
-        assert isinstance(name, text_type), "Element %s not unicode"%name
+        assert isinstance(name, text_type), "Element %s not unicode" % name
         namespace = token.get("namespace", self.defaultNamespace)
         element = self.elementClass(name, namespace)
         element.attributes = token["data"]
@@ -298,8 +299,8 @@ class TreeBuilder(object):
         if self.openElements[-1].name not in tableInsertModeElements:
             return self.insertElementNormal(token)
         else:
-            #We should be in the InTable mode. This means we want to do
-            #special magic element rearranging
+            # We should be in the InTable mode. This means we want to do
+            # special magic element rearranging
             parent, insertBefore = self.getTableMisnestedNodePosition()
             if insertBefore is None:
                 parent.appendChild(element)
@@ -329,7 +330,7 @@ class TreeBuilder(object):
         # The foster parent element is the one which comes before the most
         # recently opened table element
         # XXX - this is really inelegant
-        lastTable=None
+        lastTable = None
         fosterParent = None
         insertBefore = None
         for elm in self.openElements[::-1]:
@@ -353,7 +354,7 @@ class TreeBuilder(object):
         name = self.openElements[-1].name
         # XXX td, th and tr are not actually needed
         if (name in frozenset(("dd", "dt", "li", "option", "optgroup", "p", "rp", "rt"))
-            and name != exclude):
+                and name != exclude):
             self.openElements.pop()
             # XXX This is not entirely what the specification says. We should
             # investigate it more closely.
@@ -365,7 +366,7 @@ class TreeBuilder(object):
 
     def getFragment(self):
         "Return the final fragment"
-        #assert self.innerHTML
+        # assert self.innerHTML
         fragment = self.fragmentClass()
         self.openElements[0].reparentChildren(fragment)
         return fragment

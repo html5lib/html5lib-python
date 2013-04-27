@@ -10,6 +10,18 @@ env:
   - USE_OPTIONAL=true
   - USE_OPTIONAL=false
 
+matrix:
+  exclude:
+    - python: "2.7"
+      env: USE_OPTIONAL=false
+    - python: "3.3"
+      env: USE_OPTIONAL=false
+  include:
+    - python: "2.7"
+      env: USE_OPTIONAL=false FLAKE=true
+    - python: "3.3"
+      env: USE_OPTIONAL=false FLAKE=true
+
 before_install:
   - git submodule update --init --recursive
 
@@ -19,9 +31,12 @@ install:
   - if [[ $TRAVIS_PYTHON_VERSION != 3.* && $USE_OPTIONAL == "true" ]]; then pip install -r requirements-optional-2.txt --use-mirrors; fi
   - if [[ $TRAVIS_PYTHON_VERSION == 3.* && $USE_OPTIONAL == "true" ]]; then pip install -r requirements-optional-3.txt --use-mirrors; fi
   - if [[ $TRAVIS_PYTHON_VERSION != "pypy" && $USE_OPTIONAL == "true" ]]; then pip install -r requirements-optional-cpython.txt --use-mirrors; fi
+  - if [[ $FLAKE == "true" ]]; then pip install --use-mirrors flake8; fi
 
 script:
   - nosetests
+  - if [[ $FLAKE == "true" ]]; then find html5lib/ -name '*.py' -and -not -name 'constants.py' -print0 | xargs -0 flake8 --ignore=E501; fi
+  - if [[ $FLAKE == "true" ]]; then flake8 --max-line-length=99 --ignore=E126 html5lib/constants.py; fi
 
 after_script:
   - python debug-info.py

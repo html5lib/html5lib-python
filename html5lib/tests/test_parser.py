@@ -3,7 +3,6 @@ from __future__ import absolute_import, division, unicode_literals
 import os
 import sys
 import traceback
-import io
 import warnings
 import re
 
@@ -11,14 +10,15 @@ warnings.simplefilter("error")
 
 from .support import get_data_files
 from .support import TestData, convert, convertExpected, treeTypes
-import html5lib
-from html5lib import html5parser, treebuilders, constants
+from html5lib import html5parser, constants
 
-#Run the parse error checks
+# Run the parse error checks
 checkParseErrors = False
 
-#XXX - There should just be one function here but for some reason the testcase
-#format differs from the treedump format by a single space character
+# XXX - There should just be one function here but for some reason the testcase
+# format differs from the treedump format by a single space character
+
+
 def convertTreeDump(data):
     return "\n".join(convert(3)(data).split("\n")[1:])
 
@@ -29,10 +29,10 @@ def runParserTest(innerHTML, input, expected, errors, treeClass,
                   namespaceHTMLElements):
     warnings.resetwarnings()
     warnings.simplefilter("error")
-    #XXX - move this out into the setup function
-    #concatenate all consecutive character tokens into a single token
+    # XXX - move this out into the setup function
+    # concatenate all consecutive character tokens into a single token
     try:
-        p = html5parser.HTMLParser(tree = treeClass,
+        p = html5parser.HTMLParser(tree=treeClass,
                                    namespaceHTMLElements=namespaceHTMLElements)
     except constants.DataLossWarning:
         return
@@ -47,7 +47,7 @@ def runParserTest(innerHTML, input, expected, errors, treeClass,
                 return
     except:
         errorMsg = "\n".join(["\n\nInput:", input, "\nExpected:", expected,
-                               "\nTraceback:", traceback.format_exc()])
+                              "\nTraceback:", traceback.format_exc()])
         assert False, errorMsg
 
     output = convertTreeDump(p.tree.testSerializer(document))
@@ -57,7 +57,7 @@ def runParserTest(innerHTML, input, expected, errors, treeClass,
         expected = namespaceExpected(r"\1<html \2>", expected)
 
     errorMsg = "\n".join(["\n\nInput:", input, "\nExpected:", expected,
-                           "\nReceived:", output])
+                          "\nReceived:", output])
     assert expected == output, errorMsg
 
     errStr = []
@@ -67,17 +67,18 @@ def runParserTest(innerHTML, input, expected, errors, treeClass,
                                                constants.E[errorcode] % datavars))
 
     errorMsg2 = "\n".join(["\n\nInput:", input,
-                            "\nExpected errors (" + str(len(errors)) + "):\n" + "\n".join(errors),
-                            "\nActual errors (" + str(len(p.errors)) + "):\n" + "\n".join(errStr)])
+                           "\nExpected errors (" + str(len(errors)) + "):\n" + "\n".join(errors),
+                           "\nActual errors (" + str(len(p.errors)) + "):\n" + "\n".join(errStr)])
     if checkParseErrors:
             assert len(p.errors) == len(errors), errorMsg2
 
+
 def test_parser():
-    sys.stderr.write('Testing tree builders '+ " ".join(list(treeTypes.keys())) + "\n")
+    sys.stderr.write('Testing tree builders ' + " ".join(list(treeTypes.keys())) + "\n")
     files = get_data_files('tree-construction')
 
     for filename in files:
-        testName = os.path.basename(filename).replace(".dat","")
+        testName = os.path.basename(filename).replace(".dat", "")
         if testName in ("main-element", "template"):
             continue
 
@@ -85,9 +86,9 @@ def test_parser():
 
         for index, test in enumerate(tests):
             input, errors, innerHTML, expected = [test[key] for key in
-                                                      ('data', 'errors',
-                                                      'document-fragment',
-                                                      'document')]
+                                                  ('data', 'errors',
+                                                   'document-fragment',
+                                                   'document')]
             if errors:
                 errors = errors.split("\n")
 

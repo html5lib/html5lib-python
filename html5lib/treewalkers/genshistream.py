@@ -2,12 +2,12 @@ from __future__ import absolute_import, division, unicode_literals
 
 from genshi.core import QName
 from genshi.core import START, END, XML_NAMESPACE, DOCTYPE, TEXT
-from genshi.core  import  START_NS, END_NS, START_CDATA, END_CDATA, PI, COMMENT
-from genshi.output import NamespaceFlattener
+from genshi.core import START_NS, END_NS, START_CDATA, END_CDATA, PI, COMMENT
 
 from . import _base
 
 from html5lib.constants import voidElements, namespaces
+
 
 class TreeWalker(_base.TreeWalker):
     def __iter__(self):
@@ -61,8 +61,8 @@ class TreeWalker(_base.TreeWalker):
         elif kind == DOCTYPE:
             yield self.doctype(*data)
 
-        elif kind in (XML_NAMESPACE, DOCTYPE, START_NS, END_NS, \
-          START_CDATA, END_CDATA, PI):
+        elif kind in (XML_NAMESPACE, DOCTYPE, START_NS, END_NS,
+                      START_CDATA, END_CDATA, PI):
             pass
 
         else:

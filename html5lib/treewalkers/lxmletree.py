@@ -5,13 +5,12 @@ from lxml import etree
 from html5lib.treebuilders.etree import tag_regexp
 
 from gettext import gettext
-import sys
 _ = gettext
 
 from . import _base
 
-from html5lib.constants import voidElements
 from html5lib import ihatexml
+
 
 def ensure_str(s):
     if s is None:
@@ -20,6 +19,7 @@ def ensure_str(s):
         return s
     else:
         return s.decode("utf-8", "strict")
+
 
 class Root(object):
     def __init__(self, et):
@@ -51,6 +51,7 @@ class Root(object):
     def __len__(self):
         return 1
 
+
 class Doctype(object):
     def __init__(self, root_node, name, public_id, system_id):
         self.root_node = root_node
@@ -64,6 +65,7 @@ class Doctype(object):
     def getnext(self):
         return self.root_node.children[1]
 
+
 class FragmentRoot(Root):
     def __init__(self, children):
         self.children = [FragmentWrapper(self, child) for child in children]
@@ -71,6 +73,7 @@ class FragmentRoot(Root):
 
     def getnext(self):
         return None
+
 
 class FragmentWrapper(object):
     def __init__(self, fragment_root, obj):
@@ -129,7 +132,7 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
         self.filter = ihatexml.InfosetFilter()
 
     def getNodeDetails(self, node):
-        if isinstance(node, tuple): # Text node
+        if isinstance(node, tuple):  # Text node
             node, key = node
             assert key in ("text", "tail"), _("Text nodes are text or tail, found %s") % key
             return _base.TEXT, ensure_str(getattr(node, key))
@@ -147,10 +150,10 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             return _base.COMMENT, ensure_str(node.text)
 
         elif node.tag == etree.Entity:
-            return _base.ENTITY, ensure_str(node.text)[1:-1] # strip &;
+            return _base.ENTITY, ensure_str(node.text)[1:-1]  # strip &;
 
         else:
-            #This is assumed to be an ordinary element
+            # This is assumed to be an ordinary element
             match = tag_regexp.match(ensure_str(node.tag))
             if match:
                 namespace, tag = match.groups()
@@ -163,9 +166,9 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
                 value = ensure_str(value)
                 match = tag_regexp.match(name)
                 if match:
-                    attrs[(match.group(1),match.group(2))] = value
+                    attrs[(match.group(1), match.group(2))] = value
                 else:
-                    attrs[(None,name)] = value
+                    attrs[(None, name)] = value
             return (_base.ELEMENT, namespace, self.filter.fromXmlName(tag),
                     attrs, len(node) > 0 or node.text)
 
@@ -179,7 +182,7 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             return node[0]
 
     def getNextSibling(self, node):
-        if isinstance(node, tuple): # Text node
+        if isinstance(node, tuple):  # Text node
             node, key = node
             assert key in ("text", "tail"), _("Text nodes are text or tail, found %s") % key
             if key == "text":
@@ -189,13 +192,13 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
                     return node[0]
                 else:
                     return None
-            else: # tail
+            else:  # tail
                 return node.getnext()
 
         return (node, "tail") if node.tail else node.getnext()
 
     def getParentNode(self, node):
-        if isinstance(node, tuple): # Text node
+        if isinstance(node, tuple):  # Text node
             node, key = node
             assert key in ("text", "tail"), _("Text nodes are text or tail, found %s") % key
             if key == "text":

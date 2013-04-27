@@ -1,10 +1,6 @@
 from __future__ import absolute_import, division, unicode_literals
 
 
-
-import sys
-import os
-import io
 import warnings
 import re
 
@@ -16,6 +12,7 @@ except ImportError:
 from .support import get_data_files
 from html5lib.tokenizer import HTMLTokenizer
 from html5lib import constants
+
 
 class TokenizerTestParser(object):
     def __init__(self, initialState, lastStartTag=None):
@@ -30,9 +27,9 @@ class TokenizerTestParser(object):
         tokenizer.state = getattr(tokenizer, self._state)
         if self._lastStartTag is not None:
             tokenizer.currentToken = {"type": "startTag",
-                                      "name":self._lastStartTag}
+                                      "name": self._lastStartTag}
 
-        types = dict((v,k) for k,v in constants.tokenTypes.items())
+        types = dict((v, k) for k, v in constants.tokenTypes.items())
         for token in tokenizer:
             getattr(self, 'process%s' % types[token["type"]])(token)
 
@@ -71,18 +68,20 @@ class TokenizerTestParser(object):
     def processParseError(self, token):
         self.outputTokens.append(["ParseError", token["data"]])
 
+
 def concatenateCharacterTokens(tokens):
     outputTokens = []
     for token in tokens:
         if not "ParseError" in token and token[0] == "Character":
             if (outputTokens and not "ParseError" in outputTokens[-1] and
-                outputTokens[-1][0] == "Character"):
+                    outputTokens[-1][0] == "Character"):
                 outputTokens[-1][1] += token[1]
             else:
                 outputTokens.append(token)
         else:
             outputTokens.append(token)
     return outputTokens
+
 
 def normalizeTokens(tokens):
     # TODO: convert tests to reflect arrays
@@ -91,6 +90,7 @@ def normalizeTokens(tokens):
             tokens[i] = token[0]
     return tokens
 
+
 def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder,
                 ignoreErrors=False):
     """Test whether the test has passed or failed
@@ -98,10 +98,10 @@ def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder,
     If the ignoreErrorOrder flag is set to true we don't test the relative
     positions of parse errors and non parse errors
     """
-    checkSelfClosing= False
+    checkSelfClosing = False
     for token in expectedTokens:
         if (token[0] == "StartTag" and len(token) == 4
-            or token[0] == "EndTag" and len(token) == 3):
+                or token[0] == "EndTag" and len(token) == 3):
             checkSelfClosing = True
             break
 
@@ -113,10 +113,10 @@ def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder,
     if not ignoreErrorOrder and not ignoreErrors:
         return expectedTokens == receivedTokens
     else:
-        #Sort the tokens into two groups; non-parse errors and parse errors
-        tokens = {"expected":[[],[]], "received":[[],[]]}
+        # Sort the tokens into two groups; non-parse errors and parse errors
+        tokens = {"expected": [[], []], "received": [[], []]}
         for tokenType, tokenList in zip(list(tokens.keys()),
-                                         (expectedTokens, receivedTokens)):
+                                       (expectedTokens, receivedTokens)):
             for token in tokenList:
                 if token != "ParseError":
                     tokens[tokenType][0].append(token)
@@ -124,6 +124,7 @@ def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder,
                     if not ignoreErrors:
                         tokens[tokenType][1].append(token)
         return tokens["expected"] == tokens["received"]
+
 
 def unescape(test):
     def decode(inp):
@@ -141,6 +142,7 @@ def unescape(test):
                     token[2][decode(key)] = decode(value)
     return test
 
+
 def runTokenizerTest(test):
     warnings.resetwarnings()
     warnings.simplefilter("error")
@@ -154,7 +156,7 @@ def runTokenizerTest(test):
     tokens = concatenateCharacterTokens(tokens)
     received = normalizeTokens(tokens)
     errorMsg = "\n".join(["\n\nInitial state:",
-                          test['initialState'] ,
+                          test['initialState'],
                           "\nInput:", test['input'],
                           "\nExpected:", repr(expected),
                           "\nreceived:", repr(tokens)])
@@ -162,23 +164,25 @@ def runTokenizerTest(test):
     ignoreErrorOrder = test.get('ignoreErrorOrder', False)
     assert tokensMatch(expected, received, ignoreErrorOrder, True), errorMsg
 
+
 def _doCapitalize(match):
     return match.group(1).upper()
 
 _capitalizeRe = re.compile(r"\W+(\w)").sub
+
 
 def capitalize(s):
     s = s.lower()
     s = _capitalizeRe(_doCapitalize, s)
     return s
 
+
 def testTokenizer():
     for filename in get_data_files('tokenizer', '*.test'):
         with open(filename) as fp:
             tests = json.load(fp)
-            testName = os.path.basename(filename).replace(".test","")
             if 'tests' in tests:
-                for index,test in enumerate(tests['tests']):
+                for index, test in enumerate(tests['tests']):
                     if 'initialStates' not in test:
                         test["initialStates"] = ["Data state"]
                     if 'doubleEscaped' in test:

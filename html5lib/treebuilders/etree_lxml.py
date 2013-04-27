@@ -29,12 +29,15 @@ except ImportError:
 fullTree = True
 tag_regexp = re.compile("{([^}]*)}(.*)")
 
+comment_type = etree.Comment("asd").tag
+
 
 class DocumentType(object):
     def __init__(self, name, publicId, systemId):
         self.name = name
         self.publicId = publicId
         self.systemId = systemId
+
 
 class Document(object):
     def __init__(self):
@@ -49,44 +52,46 @@ class Document(object):
 
     childNodes = property(_getChildNodes)
 
+
 def testSerializer(element):
     rv = []
     finalText = None
     infosetFilter = ihatexml.InfosetFilter()
+
     def serializeElement(element, indent=0):
         if not hasattr(element, "tag"):
-            if  hasattr(element, "getroot"):
-                #Full tree case
+            if hasattr(element, "getroot"):
+                # Full tree case
                 rv.append("#document")
                 if element.docinfo.internalDTD:
                     if not (element.docinfo.public_id or
                             element.docinfo.system_url):
-                        dtd_str = "<!DOCTYPE %s>"%element.docinfo.root_name
+                        dtd_str = "<!DOCTYPE %s>" % element.docinfo.root_name
                     else:
-                        dtd_str = """<!DOCTYPE %s "%s" "%s">"""%(
+                        dtd_str = """<!DOCTYPE %s "%s" "%s">""" % (
                             element.docinfo.root_name,
                             element.docinfo.public_id,
                             element.docinfo.system_url)
-                    rv.append("|%s%s"%(' '*(indent+2), dtd_str))
+                    rv.append("|%s%s" % (' ' * (indent + 2), dtd_str))
                 next_element = element.getroot()
                 while next_element.getprevious() is not None:
                     next_element = next_element.getprevious()
                 while next_element is not None:
-                    serializeElement(next_element, indent+2)
+                    serializeElement(next_element, indent + 2)
                     next_element = next_element.getnext()
             elif isinstance(element, str) or isinstance(element, bytes):
-                #Text in a fragment
+                # Text in a fragment
                 assert isinstance(element, str) or sys.version_info.major == 2
-                rv.append("|%s\"%s\""%(' '*indent, element))
+                rv.append("|%s\"%s\"" % (' ' * indent, element))
             else:
-                #Fragment case
+                # Fragment case
                 rv.append("#document-fragment")
                 for next_element in element:
-                    serializeElement(next_element, indent+2)
-        elif type(element.tag) == type(etree.Comment):
-            rv.append("|%s<!-- %s -->"%(' '*indent, element.text))
+                    serializeElement(next_element, indent + 2)
+        elif element.tag == comment_type:
+            rv.append("|%s<!-- %s -->" % (' ' * indent, element.text))
             if hasattr(element, "tail") and element.tail:
-                rv.append("|%s\"%s\"" %(' '*indent, element.tail))
+                rv.append("|%s\"%s\"" % (' ' * indent, element.tail))
         else:
             assert isinstance(element, etree._Element)
             nsmatch = etree_builders.tag_regexp.match(element.tag)
@@ -94,11 +99,11 @@ def testSerializer(element):
                 ns = nsmatch.group(1)
                 tag = nsmatch.group(2)
                 prefix = constants.prefixes[ns]
-                rv.append("|%s<%s %s>"%(' '*indent, prefix,
-                                        infosetFilter.fromXmlName(tag)))
+                rv.append("|%s<%s %s>" % (' ' * indent, prefix,
+                                          infosetFilter.fromXmlName(tag)))
             else:
-                rv.append("|%s<%s>"%(' '*indent,
-                                     infosetFilter.fromXmlName(element.tag)))
+                rv.append("|%s<%s>" % (' ' * indent,
+                                       infosetFilter.fromXmlName(element.tag)))
 
             if hasattr(element, "attrib"):
                 attributes = []
@@ -108,60 +113,62 @@ def testSerializer(element):
                         ns, name = nsmatch.groups()
                         name = infosetFilter.fromXmlName(name)
                         prefix = constants.prefixes[ns]
-                        attr_string = "%s %s"%(prefix, name)
+                        attr_string = "%s %s" % (prefix, name)
                     else:
                         attr_string = infosetFilter.fromXmlName(name)
                     attributes.append((attr_string, value))
 
                 for name, value in sorted(attributes):
-                    rv.append('|%s%s="%s"' % (' '*(indent+2), name, value))
+                    rv.append('|%s%s="%s"' % (' ' * (indent + 2), name, value))
 
             if element.text:
-                rv.append("|%s\"%s\"" %(' '*(indent+2), element.text))
+                rv.append("|%s\"%s\"" % (' ' * (indent + 2), element.text))
             indent += 2
             for child in element.getchildren():
                 serializeElement(child, indent)
             if hasattr(element, "tail") and element.tail:
-                rv.append("|%s\"%s\"" %(' '*(indent-2), element.tail))
+                rv.append("|%s\"%s\"" % (' ' * (indent - 2), element.tail))
     serializeElement(element, 0)
 
     if finalText is not None:
-        rv.append("|%s\"%s\""%(' '*2, finalText))
+        rv.append("|%s\"%s\"" % (' ' * 2, finalText))
 
     return "\n".join(rv)
+
 
 def tostring(element):
     """Serialize an element and its child nodes to a string"""
     rv = []
     finalText = None
+
     def serializeElement(element):
         if not hasattr(element, "tag"):
             if element.docinfo.internalDTD:
                 if element.docinfo.doctype:
                     dtd_str = element.docinfo.doctype
                 else:
-                    dtd_str = "<!DOCTYPE %s>"%element.docinfo.root_name
+                    dtd_str = "<!DOCTYPE %s>" % element.docinfo.root_name
                 rv.append(dtd_str)
             serializeElement(element.getroot())
 
-        elif type(element.tag) == type(etree.Comment):
-            rv.append("<!--%s-->"%(element.text,))
+        elif element.tag == comment_type:
+            rv.append("<!--%s-->" % (element.text,))
 
         else:
-            #This is assumed to be an ordinary element
+            # This is assumed to be an ordinary element
             if not element.attrib:
-                rv.append("<%s>"%(element.tag,))
+                rv.append("<%s>" % (element.tag,))
             else:
-                attr = " ".join(["%s=\"%s\""%(name, value)
+                attr = " ".join(["%s=\"%s\"" % (name, value)
                                  for name, value in element.attrib.items()])
-                rv.append("<%s %s>"%(element.tag, attr))
+                rv.append("<%s %s>" % (element.tag, attr))
             if element.text:
                 rv.append(element.text)
 
             for child in element.getchildren():
                 serializeElement(child)
 
-            rv.append("</%s>"%(element.tag,))
+            rv.append("</%s>" % (element.tag,))
 
         if hasattr(element, "tail") and element.tail:
             rv.append(element.tail)
@@ -169,7 +176,7 @@ def tostring(element):
     serializeElement(element)
 
     if finalText is not None:
-        rv.append("%s\""%(' '*2, finalText))
+        rv.append("%s\"" % (' ' * 2, finalText))
 
     return "".join(rv)
 
@@ -181,7 +188,7 @@ class TreeBuilder(_base.TreeBuilder):
     commentClass = None
     fragmentClass = Document
 
-    def __init__(self, namespaceHTMLElements, fullTree = False):
+    def __init__(self, namespaceHTMLElements, fullTree=False):
         builder = etree_builders.getETreeModule(etree, fullTree=fullTree)
         infosetFilter = self.infosetFilter = ihatexml.InfosetFilter()
         self.namespaceHTMLElements = namespaceHTMLElements
@@ -192,7 +199,7 @@ class TreeBuilder(_base.TreeBuilder):
                 dict.__init__(self, value)
                 for key, value in self.items():
                     if isinstance(key, tuple):
-                        name = "{%s}%s"%(key[2], infosetFilter.coerceAttribute(key[1]))
+                        name = "{%s}%s" % (key[2], infosetFilter.coerceAttribute(key[1]))
                     else:
                         name = infosetFilter.coerceAttribute(key)
                     self._element._element.attrib[name] = value
@@ -200,7 +207,7 @@ class TreeBuilder(_base.TreeBuilder):
             def __setitem__(self, key, value):
                 dict.__setitem__(self, key, value)
                 if isinstance(key, tuple):
-                    name = "{%s}%s"%(key[2], infosetFilter.coerceAttribute(key[1]))
+                    name = "{%s}%s" % (key[2], infosetFilter.coerceAttribute(key[1]))
                 else:
                     name = infosetFilter.coerceAttribute(key)
                 self._element._element.attrib[name] = value
@@ -236,7 +243,6 @@ class TreeBuilder(_base.TreeBuilder):
             def appendChild(self, child):
                 builder.Element.appendChild(self, child)
 
-
         class Comment(builder.Comment):
             def __init__(self, data):
                 data = infosetFilter.coerceComment(data)
@@ -253,7 +259,7 @@ class TreeBuilder(_base.TreeBuilder):
 
         self.elementClass = Element
         self.commentClass = builder.Comment
-        #self.fragmentClass = builder.DocumentFragment
+        # self.fragmentClass = builder.DocumentFragment
         _base.TreeBuilder.__init__(self, namespaceHTMLElements)
 
     def reset(self):
@@ -297,23 +303,23 @@ class TreeBuilder(_base.TreeBuilder):
 
     def insertCommentMain(self, data, parent=None):
         if (parent == self.document and
-            type(self.document._elementTree.getroot()[-1].tag) == type(etree.Comment)):
+                self.document._elementTree.getroot()[-1].tag == comment_type):
                 warnings.warn("lxml cannot represent adjacent comments beyond the root elements", DataLossWarning)
         super(TreeBuilder, self).insertComment(data, parent)
 
     def insertRoot(self, token):
         """Create the document root"""
-        #Because of the way libxml2 works, it doesn't seem to be possible to
-        #alter information like the doctype after the tree has been parsed.
-        #Therefore we need to use the built-in parser to create our iniial
-        #tree, after which we can add elements like normal
+        # Because of the way libxml2 works, it doesn't seem to be possible to
+        # alter information like the doctype after the tree has been parsed.
+        # Therefore we need to use the built-in parser to create our iniial
+        # tree, after which we can add elements like normal
         docStr = ""
         if self.doctype and self.doctype.name and not self.doctype.name.startswith('"'):
-            docStr += "<!DOCTYPE %s"%self.doctype.name
+            docStr += "<!DOCTYPE %s" % self.doctype.name
             if (self.doctype.publicId is not None or
-                self.doctype.systemId is not None):
-                docStr += ' PUBLIC "%s" "%s"'%(self.doctype.publicId or "",
-                                               self.doctype.systemId or "")
+                    self.doctype.systemId is not None):
+                docStr += ' PUBLIC "%s" "%s"' % (self.doctype.publicId or "",
+                                                 self.doctype.systemId or "")
             docStr += ">"
             if self.doctype.name != token["name"]:
                 warnings.warn("lxml cannot represent doctype with a different name to the root element", DataLossWarning)
@@ -325,11 +331,11 @@ class TreeBuilder(_base.TreeBuilder):
             print(docStr)
             raise
 
-        #Append the initial comments:
+        # Append the initial comments:
         for comment_token in self.initial_comments:
             root.addprevious(etree.Comment(comment_token["data"]))
 
-        #Create the root document and add the ElementTree to it
+        # Create the root document and add the ElementTree to it
         self.document = self.documentClass()
         self.document._elementTree = root.getroottree()
 
@@ -339,14 +345,14 @@ class TreeBuilder(_base.TreeBuilder):
         if namespace is None:
             etree_tag = name
         else:
-            etree_tag = "{%s}%s"%(namespace, name)
+            etree_tag = "{%s}%s" % (namespace, name)
         root.tag = etree_tag
 
-        #Add the root element to the internal child/open data structures
+        # Add the root element to the internal child/open data structures
         root_element = self.elementClass(name, namespace)
         root_element._element = root
         self.document._childNodes.append(root_element)
         self.openElements.append(root_element)
 
-        #Reset to the default insert comment function
+        # Reset to the default insert comment function
         self.insertComment = self.insertCommentMain

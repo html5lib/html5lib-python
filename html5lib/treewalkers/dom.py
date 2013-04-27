@@ -6,7 +6,7 @@ import gettext
 _ = gettext.gettext
 
 from . import _base
-from html5lib.constants import voidElements
+
 
 class TreeWalker(_base.NonRecursiveTreeWalker):
     def getNodeDetails(self, node):
@@ -21,9 +21,9 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             for attr in list(node.attributes.keys()):
                 attr = node.getAttributeNode(attr)
                 if attr.namespaceURI:
-                    attrs[(attr.namespaceURI,attr.localName)] = attr.value
+                    attrs[(attr.namespaceURI, attr.localName)] = attr.value
                 else:
-                    attrs[(None,attr.name)] = attr.value
+                    attrs[(None, attr.name)] = attr.value
             return (_base.ELEMENT, node.namespaceURI, node.nodeName,
                     attrs, node.hasChildNodes())
 

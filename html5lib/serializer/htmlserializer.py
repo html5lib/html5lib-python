@@ -6,7 +6,7 @@ _ = gettext.gettext
 
 try:
     from functools import reduce
-    pass # no-op statement to avoid 3to2 introducing parse error
+    pass  # no-op statement to avoid 3to2 introducing parse error
 except ImportError:
     pass
 
@@ -24,14 +24,12 @@ except ImportError:
 else:
     unicode_encode_errors = "htmlentityreplace"
 
-    from html5lib.constants import entities
-
     encode_entity_map = {}
     is_ucs4 = len("\U0010FFFF") == 1
     for k, v in list(entities.items()):
-        #skip multi-character entities
+        # skip multi-character entities
         if ((is_ucs4 and len(v) > 1) or
-            (not is_ucs4 and len(v) > 2)):
+                (not is_ucs4 and len(v) > 2)):
             continue
         if v != "&":
             if len(v) == 2:
@@ -56,8 +54,8 @@ else:
                     skip = False
                     continue
                 index = i + exc.start
-                if utils.isSurrogatePair(exc.object[index:min([exc.end, index+2])]):
-                    codepoint = utils.surrogatePairToCodepoint(exc.object[index:index+2])
+                if utils.isSurrogatePair(exc.object[index:min([exc.end, index + 2])]):
+                    codepoint = utils.surrogatePairToCodepoint(exc.object[index:index + 2])
                     skip = True
                 else:
                     codepoint = ord(c)
@@ -70,7 +68,7 @@ else:
                     if not e.endswith(";"):
                         res.append(";")
                 else:
-                    res.append("&#x%s;"%(hex(cp)[2:]))
+                    res.append("&#x%s;" % (hex(cp)[2:]))
             return ("".join(res), exc.end)
         else:
             return xmlcharrefreplace_errors(exc)
@@ -104,10 +102,10 @@ class HTMLSerializer(object):
     sanitize = False
 
     options = ("quote_attr_values", "quote_char", "use_best_quote_char",
-          "minimize_boolean_attributes", "use_trailing_solidus",
-          "space_before_trailing_solidus", "omit_optional_tags",
-          "strip_whitespace", "inject_meta_charset", "escape_lt_in_attrs",
-          "escape_rcdata", "resolve_entities", "sanitize")
+               "minimize_boolean_attributes", "use_trailing_solidus",
+               "space_before_trailing_solidus", "omit_optional_tags",
+               "strip_whitespace", "inject_meta_charset", "escape_lt_in_attrs",
+               "escape_rcdata", "resolve_entities", "sanitize")
 
     def __init__(self, **kwargs):
         """Initialize HTMLSerializer.
@@ -228,25 +226,25 @@ class HTMLSerializer(object):
                     in_cdata = True
                 elif in_cdata:
                     self.serializeError(_("Unexpected child element of a CDATA element"))
-                attributes = []
-                for (attr_namespace,attr_name),attr_value in sorted(token["data"].items()):
-                    #TODO: Add namespace support here
+                for (attr_namespace, attr_name), attr_value in sorted(token["data"].items()):
+                    # TODO: Add namespace support here
                     k = attr_name
                     v = attr_value
                     yield self.encodeStrict(' ')
 
                     yield self.encodeStrict(k)
                     if not self.minimize_boolean_attributes or \
-                      (k not in booleanAttributes.get(name, tuple()) \
-                      and k not in booleanAttributes.get("", tuple())):
+                        (k not in booleanAttributes.get(name, tuple())
+                         and k not in booleanAttributes.get("", tuple())):
                         yield self.encodeStrict("=")
                         if self.quote_attr_values or not v:
                             quote_attr = True
                         else:
-                            quote_attr = reduce(lambda x,y: x or (y in v),
-                                spaceCharacters + ">\"'=", False)
+                            quote_attr = reduce(lambda x, y: x or (y in v),
+                                                spaceCharacters + ">\"'=", False)
                         v = v.replace("&", "&amp;")
-                        if self.escape_lt_in_attrs: v = v.replace("<", "&lt;")
+                        if self.escape_lt_in_attrs:
+                            v = v.replace("<", "&lt;")
                         if quote_attr:
                             quote_char = self.quote_char
                             if self.use_best_quote_char:
@@ -309,6 +307,7 @@ class HTMLSerializer(object):
         self.errors.append(data)
         if self.strict:
             raise SerializeError
+
 
 def SerializeError(Exception):
     """Error in serialized tree"""

@@ -6,8 +6,11 @@ from html5lib.constants import voidElements, namespaces, prefixes
 from xml.sax.saxutils import escape
 
 # Really crappy basic implementation of a DOM-core like thing
+
+
 class Node(_base.Node):
     type = -1
+
     def __init__(self, name):
         self.name = name
         self.parent = None
@@ -28,7 +31,7 @@ class Node(_base.Node):
         raise NotImplementedError
 
     def printTree(self, indent=0):
-        tree = '\n|%s%s' % (' '* indent, text_type(self))
+        tree = '\n|%s%s' % (' ' * indent, text_type(self))
         for child in self.childNodes:
             tree += child.printTree(indent + 2)
         return tree
@@ -36,14 +39,14 @@ class Node(_base.Node):
     def appendChild(self, node):
         assert isinstance(node, Node)
         if (isinstance(node, TextNode) and self.childNodes and
-          isinstance(self.childNodes[-1], TextNode)):
+           isinstance(self.childNodes[-1], TextNode)):
             self.childNodes[-1].value += node.value
         else:
             self.childNodes.append(node)
         node.parent = self
 
     def insertText(self, data, insertBefore=None):
-        assert isinstance(data, text_type), "data %s is of type %s expected unicode"%(repr(data), type(data))
+        assert isinstance(data, text_type), "data %s is of type %s expected unicode" % (repr(data), type(data))
         if insertBefore is None:
             self.appendChild(TextNode(data))
         else:
@@ -52,7 +55,7 @@ class Node(_base.Node):
     def insertBefore(self, node, refNode):
         index = self.childNodes.index(refNode)
         if (isinstance(node, TextNode) and index > 0 and
-          isinstance(self.childNodes[index - 1], TextNode)):
+           isinstance(self.childNodes[index - 1], TextNode)):
             self.childNodes[index - 1].value += node.value
         else:
             self.childNodes.insert(index, node)
@@ -74,15 +77,17 @@ class Node(_base.Node):
         return bool(self.childNodes)
 
     def getNameTuple(self):
-        if self.namespace == None:
+        if self.namespace is None:
             return namespaces["html"], self.name
         else:
             return self.namespace, self.name
 
     nameTuple = property(getNameTuple)
 
+
 class Document(Node):
     type = 1
+
     def __init__(self):
         Node.__init__(self, None)
 
@@ -113,16 +118,20 @@ class Document(Node):
     def cloneNode(self):
         return Document()
 
+
 class DocumentFragment(Document):
     type = 2
+
     def __str__(self):
         return "#document-fragment"
 
     def cloneNode(self):
         return DocumentFragment()
 
+
 class DocumentType(Node):
     type = 3
+
     def __init__(self, name, publicId, systemId):
         Node.__init__(self, name)
         self.publicId = publicId
@@ -132,12 +141,11 @@ class DocumentType(Node):
         if self.publicId or self.systemId:
             publicId = self.publicId or ""
             systemId = self.systemId or ""
-            return """<!DOCTYPE %s "%s" "%s">"""%(
+            return """<!DOCTYPE %s "%s" "%s">""" % (
                 self.name, publicId, systemId)
 
         else:
             return "<!DOCTYPE %s>" % self.name
-
 
     toxml = __str__
 
@@ -147,8 +155,10 @@ class DocumentType(Node):
     def cloneNode(self):
         return DocumentType(self.name, self.publicId, self.systemId)
 
+
 class TextNode(Node):
     type = 4
+
     def __init__(self, value):
         Node.__init__(self, None)
         self.value = value
@@ -165,24 +175,26 @@ class TextNode(Node):
         assert isinstance(self.value, str)
         return TextNode(self.value)
 
+
 class Element(Node):
     type = 5
+
     def __init__(self, name, namespace=None):
         Node.__init__(self, name)
         self.namespace = namespace
         self.attributes = {}
 
     def __str__(self):
-        if self.namespace == None:
+        if self.namespace is None:
             return "<%s>" % self.name
         else:
-            return "<%s %s>"%(prefixes[self.namespace], self.name)
+            return "<%s %s>" % (prefixes[self.namespace], self.name)
 
     def toxml(self):
         result = '<' + self.name
         if self.attributes:
-            for name,value in self.attributes.items():
-                result += ' %s="%s"' % (name, escape(value,{'"':'&quot;'}))
+            for name, value in self.attributes.items():
+                result += ' %s="%s"' % (name, escape(value, {'"': '&quot;'}))
         if self.childNodes:
             result += '>'
             for child in self.childNodes:
@@ -196,7 +208,7 @@ class Element(Node):
         result = '&lt;<code class="markup element-name">%s</code>' % self.name
         if self.attributes:
             for name, value in self.attributes.items():
-                result += ' <code class="markup attribute-name">%s</code>=<code class="markup attribute-value">"%s"</code>' % (name, escape(value, {'"':'&quot;'}))
+                result += ' <code class="markup attribute-name">%s</code>=<code class="markup attribute-value">"%s"</code>' % (name, escape(value, {'"': '&quot;'}))
         if self.childNodes:
             result += ">"
             for child in self.childNodes:
@@ -206,12 +218,12 @@ class Element(Node):
         return result + '&lt;/<code class="markup element-name">%s</code>>' % self.name
 
     def printTree(self, indent):
-        tree = '\n|%s%s' % (' '*indent, text_type(self))
+        tree = '\n|%s%s' % (' ' * indent, text_type(self))
         indent += 2
         if self.attributes:
             for name, value in sorted(self.attributes.items()):
                 if isinstance(name, tuple):
-                    name = "%s %s"%(name[0], name[1])
+                    name = "%s %s" % (name[0], name[1])
                 tree += '\n|%s%s="%s"' % (' ' * indent, name, value)
         for child in self.childNodes:
             tree += child.printTree(indent)
@@ -223,8 +235,10 @@ class Element(Node):
             newNode.attributes[attr] = value
         return newNode
 
+
 class CommentNode(Node):
     type = 6
+
     def __init__(self, data):
         Node.__init__(self, None)
         self.data = data
@@ -240,6 +254,7 @@ class CommentNode(Node):
 
     def cloneNode(self):
         return CommentNode(self.data)
+
 
 class TreeBuilder(_base.TreeBuilder):
     documentClass = Document

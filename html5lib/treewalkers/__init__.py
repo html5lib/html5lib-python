@@ -14,6 +14,7 @@ import sys
 
 treeWalkerCache = {}
 
+
 def getTreeWalker(treeType, implementation=None, **kwargs):
     """Get a TreeWalker class for various types of tree with built-in support
 

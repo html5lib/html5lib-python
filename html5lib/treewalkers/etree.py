@@ -3,17 +3,19 @@ from __future__ import absolute_import, division, unicode_literals
 import gettext
 _ = gettext.gettext
 
-import copy
 import re
 
+from six import text_type
+
 from . import _base
-from html5lib.constants import voidElements
-from html5lib.utils import moduleFactorFactory
+from ..utils import moduleFactoryFactory
 
 tag_regexp = re.compile("{([^}]*)}(.*)")
 
+
 def getETreeBuilder(ElementTreeImplementation):
     ElementTree = ElementTreeImplementation
+    ElementTreeCommentType = ElementTree.Comment("asd").tag
 
     class TreeWalker(_base.NonRecursiveTreeWalker):
         """Given the particular ElementTree representation, this implementation,
@@ -30,7 +32,7 @@ def getETreeBuilder(ElementTreeImplementation):
            text node; either the text or tail of the current element (1)
         """
         def getNodeDetails(self, node):
-            if isinstance(node, tuple): # It might be the root Element
+            if isinstance(node, tuple):  # It might be the root Element
                 elt, key, parents, flag = node
                 if flag in ("text", "tail"):
                     return _base.TEXT, getattr(elt, flag)
@@ -47,12 +49,12 @@ def getETreeBuilder(ElementTreeImplementation):
                 return (_base.DOCTYPE, node.text,
                         node.get("publicId"), node.get("systemId"))
 
-            elif node.tag == ElementTree.Comment:
+            elif node.tag == ElementTreeCommentType:
                 return _base.COMMENT, node.text
 
             else:
-                assert type(node.tag) in (str, str), type(node.tag)
-                #This is assumed to be an ordinary element
+                assert type(node.tag) == text_type, type(node.tag)
+                # This is assumed to be an ordinary element
                 match = tag_regexp.match(node.tag)
                 if match:
                     namespace, tag = match.groups()
@@ -63,9 +65,9 @@ def getETreeBuilder(ElementTreeImplementation):
                 for name, value in list(node.attrib.items()):
                     match = tag_regexp.match(name)
                     if match:
-                        attrs[(match.group(1),match.group(2))] = value
+                        attrs[(match.group(1), match.group(2))] = value
                     else:
-                        attrs[(None,name)] = value
+                        attrs[(None, name)] = value
                 return (_base.ELEMENT, namespace, tag,
                         attrs, len(node) or node.text)
 
@@ -102,7 +104,7 @@ def getETreeBuilder(ElementTreeImplementation):
                 if element.tail and flag != "tail":
                     return element, key, parents, "tail"
                 elif key < len(parents[-1]) - 1:
-                    return parents[-1][key+1], key+1, parents, None
+                    return parents[-1][key + 1], key + 1, parents, None
                 else:
                     return None
 

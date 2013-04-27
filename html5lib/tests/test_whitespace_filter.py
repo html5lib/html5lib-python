@@ -11,6 +11,7 @@ try:
 except AttributeError:
     unittest.TestCase.assertEqual = unittest.TestCase.assertEquals
 
+
 class TestCase(unittest.TestCase):
     def runTest(self, input, expected):
         output = list(Filter(input))
@@ -24,19 +25,19 @@ class TestCase(unittest.TestCase):
 
     def testPhrasingElements(self):
         self.runTestUnmodifiedOutput(
-            [{"type": "Characters", "data": "This is a " },
-             {"type": "StartTag", "name": "span", "data": [] },
-             {"type": "Characters", "data": "phrase" },
+            [{"type": "Characters", "data": "This is a "},
+             {"type": "StartTag", "name": "span", "data": []},
+             {"type": "Characters", "data": "phrase"},
              {"type": "EndTag", "name": "span", "data": []},
-             {"type": "SpaceCharacters", "data": " " },
-             {"type": "Characters", "data": "with" },
-             {"type": "SpaceCharacters", "data": " " },
-             {"type": "StartTag", "name": "em", "data": [] },
-             {"type": "Characters", "data": "emphasised text" },
+             {"type": "SpaceCharacters", "data": " "},
+             {"type": "Characters", "data": "with"},
+             {"type": "SpaceCharacters", "data": " "},
+             {"type": "StartTag", "name": "em", "data": []},
+             {"type": "Characters", "data": "emphasised text"},
              {"type": "EndTag", "name": "em", "data": []},
-             {"type": "Characters", "data": " and an " },
-             {"type": "StartTag", "name": "img", "data": [["alt", "image"]] },
-             {"type": "Characters", "data": "." }])
+             {"type": "Characters", "data": " and an "},
+             {"type": "StartTag", "name": "img", "data": [["alt", "image"]]},
+             {"type": "Characters", "data": "."}])
 
     def testLeadingWhitespace(self):
         self.runTest(
@@ -119,8 +120,10 @@ class TestCase(unittest.TestCase):
              {"type": "Characters", "data": "foo" + spaceCharacters + "bar"},
              {"type": "EndTag", "name": "pre", "data": []}])
 
+
 def buildTestSuite():
     return unittest.defaultTestLoader.loadTestsFromName(__name__)
+
 
 def main():
     buildTestSuite()

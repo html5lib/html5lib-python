@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, unicode_literals
 
-from sys import version_info
 from types import ModuleType
+
 
 class MethodDispatcher(dict):
     """Dict with 2 special properties:
@@ -21,7 +21,7 @@ class MethodDispatcher(dict):
         # twice as fast. Please do careful performance testing before changing
         # anything here.
         _dictEntries = []
-        for name,value in items:
+        for name, value in items:
             if type(name) in (list, tuple, frozenset, set):
                 for item in name:
                     _dictEntries.append((item, value))
@@ -34,13 +34,14 @@ class MethodDispatcher(dict):
         return dict.get(self, key, self.default)
 
 
-#Some utility functions to dal with weirdness around UCS2 vs UCS4
-#python builds
+# Some utility functions to dal with weirdness around UCS2 vs UCS4
+# python builds
 
 def isSurrogatePair(data):
     return (len(data) == 2 and
             ord(data[0]) >= 0xD800 and ord(data[0]) <= 0xDBFF and
             ord(data[1]) >= 0xDC00 and ord(data[1]) <= 0xDFFF)
+
 
 def surrogatePairToCodepoint(data):
     char_val = (0x10000 + (ord(data[0]) - 0xD800) * 0x400 +
@@ -50,10 +51,12 @@ def surrogatePairToCodepoint(data):
 # Module Factory Factory (no, this isn't Java, I know)
 # Here to stop this being duplicated all over the place.
 
+
 def moduleFactoryFactory(factory):
     moduleCache = {}
+
     def moduleFactory(baseModule, *args, **kwargs):
-        if type(ModuleType.__name__) is type(""):
+        if isinstance(ModuleType.__name__, type("")):
             name = "_%s_factory" % baseModule.__name__
         else:
             name = b"_%s_factory" % baseModule.__name__
