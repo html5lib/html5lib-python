@@ -207,8 +207,12 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                     rv.append("<!DOCTYPE %s>" % (element.text,))
             elif element.tag == "DOCUMENT_ROOT":
                 rv.append("#document")
-                assert element.text is None
-                assert element.tail is None
+                if element.text is not None:
+                    raise TypeError("Document node cannot have text")
+                if element.tail is not None:
+                    raise TypeError("Document node cannot have tail")
+                if hasattr(element, "attrib") and len(element.attrib):
+                    raise TypeError("Document node cannot have attributes")
             elif element.tag == ElementTreeCommentType:
                 rv.append("|%s<!-- %s -->" % (' ' * indent, element.text))
             else:
