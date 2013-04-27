@@ -4,10 +4,10 @@ from six import text_type
 import re
 
 from . import _base
-from html5lib import ihatexml
-from html5lib import constants
-from html5lib.constants import namespaces
-from html5lib.utils import moduleFactoryFactory
+from .. import ihatexml
+from .. import constants
+from ..constants import namespaces
+from ..utils import moduleFactoryFactory
 
 tag_regexp = re.compile("{([^}]*)}(.*)")
 

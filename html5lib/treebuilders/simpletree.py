@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, unicode_literals
 from six import text_type
 
 from . import _base
-from html5lib.constants import voidElements, namespaces, prefixes
+from ..constants import voidElements, namespaces, prefixes
 from xml.sax.saxutils import escape
 
 # Really crappy basic implementation of a DOM-core like thing

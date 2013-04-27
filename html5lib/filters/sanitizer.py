@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, unicode_literals
 
 from . import _base
-from html5lib.sanitizer import HTMLSanitizerMixin
+from ..sanitizer import HTMLSanitizerMixin
 
 
 class Filter(_base.Filter, HTMLSanitizerMixin):

@@ -2,14 +2,14 @@ from __future__ import absolute_import, division, unicode_literals
 from six import text_type
 
 from lxml import etree
-from html5lib.treebuilders.etree import tag_regexp
+from ..treebuilders.etree import tag_regexp
 
 from gettext import gettext
 _ = gettext
 
 from . import _base
 
-from html5lib import ihatexml
+from .. import ihatexml
 
 
 def ensure_str(s):

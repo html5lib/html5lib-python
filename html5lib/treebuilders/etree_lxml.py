@@ -16,15 +16,13 @@ import re
 import sys
 
 from . import _base
-from html5lib.constants import DataLossWarning
-import html5lib.constants as constants
+from ..constants import DataLossWarning
+from .. import constants
 from . import etree as etree_builders
-from html5lib import ihatexml
+from .. import ihatexml
 
-try:
-    import lxml.etree as etree
-except ImportError:
-    pass
+import lxml.etree as etree
+
 
 fullTree = True
 tag_regexp = re.compile("{([^}]*)}(.*)")
