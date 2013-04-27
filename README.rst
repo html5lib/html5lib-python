@@ -22,19 +22,19 @@ packaged in PyPi.
 
 Optionally:
 
- - ``datrie`` can be used to improve parsing performance (though in
-   almost all cases the improvement is trivial);
+- ``datrie`` can be used to improve parsing performance (though in
+  almost all cases the improvement is trivial);
 
- - ``lxml`` is supported as a tree format (for both building and
-   walking) under CPython (but *not* PyPy where it is known to cause
-   segfaults);
+- ``lxml`` is supported as a tree format (for both building and
+  walking) under CPython (but *not* PyPy where it is known to cause
+  segfaults);
 
- - ``genshi`` has a treewalker (but not builder); and
+- ``genshi`` has a treewalker (but not builder); and
 
- - ``chardet`` (note currently this is only packaged on PyPi for
-   Python 2, though several package managers include unofficial ports
-   to Python 3) can be used as a fallback when character encoding
-   cannot be determined.
+- ``chardet`` (note currently this is only packaged on PyPi for
+  Python 2, though several package managers include unofficial ports
+  to Python 3) can be used as a fallback when character encoding
+  cannot be determined.
 
 
 Installation
@@ -89,14 +89,14 @@ Contributing
 Pull requests are more than welcome — both to the library and to the
 documentation. Some useful information:
 
- - We aim to follow PEP 8 in the library, but ignoring the
-   79-character-per-line limit, instead following a soft limit of 99,
-   but allowing lines over this where it is the readable thing to do.
+- We aim to follow PEP 8 in the library, but ignoring the
+  79-character-per-line limit, instead following a soft limit of 99,
+  but allowing lines over this where it is the readable thing to do.
 
- - We keep pyflakes reporting no errors or warnings at all times.
+- We keep pyflakes reporting no errors or warnings at all times.
 
- - We keep the master branch passing all tests at all times on all
-   supported versions.
+- We keep the master branch passing all tests at all times on all
+  supported versions.
 
 Travis CI is run against all pull requests and should enforce all of
 the above.
