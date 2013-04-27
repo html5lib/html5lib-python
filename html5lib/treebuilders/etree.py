@@ -208,7 +208,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             elif element.tag == "DOCUMENT_ROOT":
                 rv.append("#document")
                 if element.text is not None:
-                    raise TypeError("Document node cannot have text")
+                    rv.append("|%s\"%s\""%(' '*(indent+2), element.text))
                 if element.tail is not None:
                     raise TypeError("Document node cannot have tail")
                 if hasattr(element, "attrib") and len(element.attrib):
@@ -271,8 +271,12 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                 else:
                     rv.append("<!DOCTYPE %s>" % (element.text,))
             elif element.tag == "DOCUMENT_ROOT":
-                assert element.text is None
-                assert element.tail is None
+                if element.text is not None:
+                    rv.append(element.text)
+                if element.tail is not None:
+                    raise TypeError("Document node cannot have tail")
+                if hasattr(element, "attrib") and len(element.attrib):
+                    raise TypeError("Document node cannot have attributes")
 
                 for child in element:
                     serializeElement(child)
