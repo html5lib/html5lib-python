@@ -4,9 +4,9 @@ from gettext import gettext
 _ = gettext
 
 from . import _base
-from html5lib.constants import cdataElements, rcdataElements, voidElements
+from ..constants import cdataElements, rcdataElements, voidElements
 
-from html5lib.constants import spaceCharacters
+from ..constants import spaceCharacters
 spaceCharacters = "".join(spaceCharacters)
 
 

@@ -4,7 +4,7 @@ from six import text_type
 import gettext
 _ = gettext.gettext
 
-from html5lib.constants import voidElements, spaceCharacters
+from ..constants import voidElements, spaceCharacters
 spaceCharacters = "".join(spaceCharacters)
 
 

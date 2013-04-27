@@ -38,7 +38,7 @@ def getTreeWalker(treeType, implementation=None, **kwargs):
     treeType = treeType.lower()
     if treeType not in treeWalkerCache:
         if treeType in ("dom", "pulldom", "simpletree"):
-            name = "html5lib.treewalkers." + treeType
+            name = "%s.%s" % (__name__, treeType)
             __import__(name)
             mod = sys.modules[name]
             treeWalkerCache[treeType] = mod.TreeWalker

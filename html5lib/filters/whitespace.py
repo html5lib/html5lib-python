@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, unicode_literals
 import re
 
 from . import _base
-from html5lib.constants import rcdataElements, spaceCharacters
+from ..constants import rcdataElements, spaceCharacters
 spaceCharacters = "".join(spaceCharacters)
 
 SPACES_REGEX = re.compile("[%s]+" % spaceCharacters)

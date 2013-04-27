@@ -5,9 +5,9 @@ from xml.dom import minidom, Node, XML_NAMESPACE, XMLNS_NAMESPACE
 import weakref
 
 from . import _base
-from html5lib import constants
-from html5lib.constants import namespaces
-from html5lib.utils import moduleFactoryFactory
+from .. import constants
+from ..constants import namespaces
+from ..utils import moduleFactoryFactory
 
 
 def getDomBuilder(DomImplementation):

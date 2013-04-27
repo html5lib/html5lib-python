@@ -10,9 +10,9 @@ try:
 except ImportError:
     pass
 
-from html5lib.constants import voidElements, booleanAttributes, spaceCharacters
-from html5lib.constants import rcdataElements, entities, xmlEntities
-from html5lib import utils
+from ..constants import voidElements, booleanAttributes, spaceCharacters
+from ..constants import rcdataElements, entities, xmlEntities
+from .. import utils
 from xml.sax.saxutils import escape
 
 spaceCharacters = "".join(spaceCharacters)
@@ -177,18 +177,18 @@ class HTMLSerializer(object):
         in_cdata = False
         self.errors = []
         if encoding and self.inject_meta_charset:
-            from html5lib.filters.inject_meta_charset import Filter
+            from ..filters.inject_meta_charset import Filter
             treewalker = Filter(treewalker, encoding)
         # XXX: WhitespaceFilter should be used before OptionalTagFilter
         # for maximum efficiently of this latter filter
         if self.strip_whitespace:
-            from html5lib.filters.whitespace import Filter
+            from ..filters.whitespace import Filter
             treewalker = Filter(treewalker)
         if self.sanitize:
-            from html5lib.filters.sanitizer import Filter
+            from ..filters.sanitizer import Filter
             treewalker = Filter(treewalker)
         if self.omit_optional_tags:
-            from html5lib.filters.optionaltags import Filter
+            from ..filters.optionaltags import Filter
             treewalker = Filter(treewalker)
         for token in treewalker:
             type = token["type"]
