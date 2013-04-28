@@ -34,11 +34,15 @@ def parse():
                 pass
         elif f == '-':
             f = sys.stdin
+            if sys.version_info[0] >= 3:
+                encoding = None
         else:
             try:
                 # Try opening from file system
-                f = open(f)
-            except IOError: pass
+                f = open(f, "rb")
+            except IOError as e:                
+                sys.stderr.write("Unable to open file: %s\n" % e)
+                sys.exit(1)
     except IndexError:
         sys.stderr.write("No filename provided. Use -h for help\n")
         sys.exit(1)
@@ -76,12 +80,16 @@ def parse():
         t0 = time.time()
         document = run(parseMethod, f, encoding)
         t1 = time.time()
-        printOutput(p, document, opts)
-        t2 = time.time()
-        sys.stderr.write("\n\nRun took: %fs (plus %fs to print the output)"%(t1-t0, t2-t1))
+        if document:
+            printOutput(p, document, opts)
+            t2 = time.time()
+            sys.stderr.write("\n\nRun took: %fs (plus %fs to print the output)"%(t1-t0, t2-t1))
+        else:
+            sys.stderr.write("\n\nRun took: %fs"%(t1-t0))
     else:
         document = run(parseMethod, f, encoding)
-        printOutput(p, document, opts)
+        if document:
+            printOutput(p, document, opts)
 
 def run(parseMethod, f, encoding):
     try:
@@ -119,7 +127,11 @@ def printOutput(parser, document, opts):
                 del kwargs['quote_char']
 
             tokens = treewalkers.getTreeWalker(opts.treebuilder)(document)
-            for text in serializer.HTMLSerializer(**kwargs).serialize(tokens, encoding='utf-8'):
+            if sys.version_info[0] >= 3:
+                encoding = None
+            else:
+                encoding = "utf-8"
+            for text in serializer.HTMLSerializer(**kwargs).serialize(tokens, encoding=encoding):
                 sys.stdout.write(text)
             if not text.endswith('\n'): sys.stdout.write('\n')
     if opts.error:
