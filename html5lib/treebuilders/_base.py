@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, unicode_literals
 from six import text_type
 
-from html5lib.constants import scopingElements, tableInsertModeElements, namespaces
+from ..constants import scopingElements, tableInsertModeElements, namespaces
 
 # The scope markers are inserted when entering object elements,
 # marquees, table cells, and table captions, and are used to prevent formatting

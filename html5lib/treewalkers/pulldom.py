@@ -5,7 +5,7 @@ from xml.dom.pulldom import START_ELEMENT, END_ELEMENT, \
 
 from . import _base
 
-from html5lib.constants import voidElements
+from ..constants import voidElements
 
 
 class TreeWalker(_base.TreeWalker):

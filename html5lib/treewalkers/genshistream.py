@@ -6,7 +6,7 @@ from genshi.core import START_NS, END_NS, START_CDATA, END_CDATA, PI, COMMENT
 
 from . import _base
 
-from html5lib.constants import voidElements, namespaces
+from ..constants import voidElements, namespaces
 
 
 class TreeWalker(_base.TreeWalker):
