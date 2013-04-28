@@ -17,7 +17,7 @@ class MoreParserTests(unittest.TestCase):
     def test_assertDoctypeCloneable(self):
         parser = html5parser.HTMLParser(tree=dom.TreeBuilder)
         doc = parser.parse('<!DOCTYPE HTML>')
-        self.assert_(doc.cloneNode(True))
+        self.assertTrue(doc.cloneNode(True))
 
     def test_line_counter(self):
         # http://groups.google.com/group/html5lib-discuss/browse_frm/thread/f4f00e4a2f26d5c0
@@ -27,12 +27,12 @@ class MoreParserTests(unittest.TestCase):
     def test_namespace_html_elements_0(self):
         parser = html5parser.HTMLParser(namespaceHTMLElements=True)
         doc = parser.parse("<html></html>")
-        self.assert_(doc.childNodes[0].namespace == namespaces["html"])
+        self.assertTrue(doc.childNodes[0].namespace == namespaces["html"])
 
     def test_namespace_html_elements_1(self):
         parser = html5parser.HTMLParser(namespaceHTMLElements=False)
         doc = parser.parse("<html></html>")
-        self.assert_(doc.childNodes[0].namespace == None)
+        self.assertTrue(doc.childNodes[0].namespace == None)
 
     def test_unicode_file(self):
         parser = html5parser.HTMLParser()
