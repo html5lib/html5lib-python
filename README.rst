@@ -2,20 +2,19 @@ html5lib
 ========
 
 html5lib is a pure-python library for parsing HTML. It is designed to
-conform to the HTML specification, which has formalized the error
-handling algorithms of legacy web browsers, and is now implemented by
-all major web browsers.
+conform to the HTML specification, as is implemented by all major web
+browsers.
 
 
 Requirements
 ------------
 
-Python 2.6 and above (including 3) are supported. Implementations
-known to work are CPython (as the reference implementation) and
-PyPy. Jython is known *not* to work due to various bugs in its
-implementation of the language. Others such as IronPython may or may
-not work; if you wish to try, you are strongly recommended to run the
-testsuite and report back!
+Python 2.6 and above as well as Python 3.0 and above are
+supported. Implementations known to work are CPython (as the reference
+implementation) and PyPy. Jython is known *not* to work due to various
+bugs in its implementation of the language. Others such as IronPython
+may or may not work; if you wish to try, you are strongly encouraged
+to run the testsuite and report back!
 
 The only required library dependency is ``six``, this can be found
 packaged in PyPi.
@@ -23,7 +22,7 @@ packaged in PyPi.
 Optionally:
 
 - ``datrie`` can be used to improve parsing performance (though in
-  almost all cases the improvement is trivial);
+  almost all cases the improvement is marginal);
 
 - ``lxml`` is supported as a tree format (for both building and
   walking) under CPython (but *not* PyPy where it is known to cause
@@ -31,10 +30,10 @@ Optionally:
 
 - ``genshi`` has a treewalker (but not builder); and
 
-- ``chardet`` (note currently this is only packaged on PyPi for
+- ``chardet`` can be used as a fallback when character encoding cannot
+  be determined (note currently this is only packaged on PyPi for
   Python 2, though several package managers include unofficial ports
-  to Python 3) can be used as a fallback when character encoding
-  cannot be determined.
+  to Python 3).
 
 
 Installation
@@ -72,15 +71,15 @@ Please report any bugs on the `issue tracker
 Tests
 -----
 
-These are nowadays contained in the html5lib-tests repository and
-included as a submodule, thus for git checkouts they must be
-initialized (for release tarballs this is unneeded)::
+These are contained in the html5lib-tests repository and included as a
+submodule, thus for git checkouts they must be initialized (for
+release tarballs this is unneeded)::
 
   $ git submodule init
   $ git submodule update
 
-And then they can be run once ``nose`` has been installed with
-``nosetests``. All should pass.
+And then they can be run, with ``nose`` installed, using the
+``nosetests`` command in the root directory. All should pass.
 
 
 Contributing
