@@ -926,8 +926,8 @@ def getPhases(debug):
             self.endTagHandler = utils.MethodDispatcher([
                 ("body", self.endTagBody),
                 ("html", self.endTagHtml),
-                (("address", "article", "aside", "blockquote", "center",
-                  "details", "dir", "div", "dl", "fieldset", "figcaption", "figure",
+                (("address", "article", "aside", "blockquote", "button", "center",
+                  "details", "dialog", "dir", "div", "dl", "fieldset", "figcaption", "figure",
                   "footer", "header", "hgroup", "listing", "menu", "nav", "ol", "pre",
                   "section", "summary", "ul"), self.endTagBlock),
                 ("form", self.endTagForm),
