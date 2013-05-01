@@ -79,7 +79,7 @@ def test_parser():
 
     for filename in files:
         testName = os.path.basename(filename).replace(".dat", "")
-        if testName in ("main-element", "template"):
+        if testName in ("template",):
             continue
 
         tests = TestData(filename, "data")
