@@ -306,7 +306,7 @@ class HTMLTokenizer(object):
             # have already been appended to lastFourChars and will have broken
             # any <!-- or --> sequences
         else:
-            chars = self.stream.charsUntil(("&", "<"))
+            chars = self.stream.charsUntil(("&", "<", "\u0000"))
             self.tokenQueue.append({"type": tokenTypes["Characters"], "data":
                                     data + chars})
         return True
@@ -1016,7 +1016,7 @@ class HTMLTokenizer(object):
             self.state = self.dataState
         else:
             self.currentToken["data"][-1][1] += data +\
-                self.stream.charsUntil(("\"", "&"))
+                self.stream.charsUntil(("\"", "&", "\u0000"))
         return True
 
     def attributeValueSingleQuotedState(self):
@@ -1035,7 +1035,7 @@ class HTMLTokenizer(object):
             self.state = self.dataState
         else:
             self.currentToken["data"][-1][1] += data +\
-                self.stream.charsUntil(("'", "&"))
+                self.stream.charsUntil(("'", "&", "\u0000"))
         return True
 
     def attributeValueUnQuotedState(self):
@@ -1060,7 +1060,7 @@ class HTMLTokenizer(object):
             self.state = self.dataState
         else:
             self.currentToken["data"][-1][1] += data + self.stream.charsUntil(
-                frozenset(("&", ">", '"', "'", "=", "<", "`")) | spaceCharacters)
+                frozenset(("&", ">", '"', "'", "=", "<", "`", "\u0000")) | spaceCharacters)
         return True
 
     def afterAttributeValueState(self):
