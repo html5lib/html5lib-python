@@ -3,7 +3,6 @@ from six import text_type
 
 import codecs
 import re
-import sys
 
 from .constants import EOF, spaceCharacters, asciiLetters, asciiUppercase
 from .constants import encodings, ReparseException
