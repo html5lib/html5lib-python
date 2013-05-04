@@ -6,12 +6,19 @@ import unittest
 from .support import get_data_files
 
 try:
+    from collections import OrderedDict
+except ImportError:
+    # Python 2.6 support
+    from ordereddict import OrderedDict
+
+try:
     unittest.TestCase.assertEqual
 except AttributeError:
     unittest.TestCase.assertEqual = unittest.TestCase.assertEquals
 
 import html5lib
 from html5lib import serializer, constants
+from html5lib.filters.alphabeticalattributes import Filter as AlphabeticalAttributesFilter
 from html5lib.treewalkers._base import TreeWalker
 
 optionals_loaded = []
@@ -81,7 +88,8 @@ class JsonWalker(TreeWalker):
 
 def serialize_html(input, options):
     options = dict([(str(k), v) for k, v in options.items()])
-    return serializer.HTMLSerializer(**options).render(JsonWalker(input), options.get("encoding", None))
+    stream = AlphabeticalAttributesFilter(JsonWalker(input))
+    return serializer.HTMLSerializer(**options).render(stream, options.get("encoding", None))
 
 
 def runSerializerTest(input, expected, options):
