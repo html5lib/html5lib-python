@@ -35,5 +35,8 @@ setup(name='html5lib',
       classifiers=classifiers,
       maintainer='James Graham',
       maintainer_email='james@hoppipolla.co.uk',
-      packages=packages
+      packages=packages,
+      install_requires=[
+          'six',
+      ],
       )
