@@ -201,11 +201,6 @@ class HTMLUnicodeInputStream:
         else:
             stream = StringIO(source)
 
-        try:
-            stream.seek(stream.tell())
-        except:
-            stream = BufferedStream(stream)
-
         return stream
 
     def _position(self, offset):
