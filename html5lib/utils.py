@@ -2,6 +2,8 @@ from __future__ import absolute_import, division, unicode_literals
 
 from types import ModuleType
 
+from six import text_type
+
 from .constants import invisibleChars
 
 
@@ -87,11 +89,11 @@ def escapeInvisible(text, useNamedEntities=False):
         if ord(c) in invisibleChars:
             escapable.add(c)
     if useNamedEntities:
+        # for c in escapable:
+        #     name = codepoint2name.get(ord(c))
+        #     escape = "&%s;" % name if name else "&#x%X;" % ord(c)
+        #     text = text.replace(c, escape)
         raise NotImplementedError("This doesn't work on Python 3")
-        for c in escapable:
-            name = codepoint2name.get(ord(c))
-            escape = "&%s;" % name if name else "&#x%X;" % ord(c)
-            text = text.replace(c, escape)
     else:
         for c in escapable:
             text = text.replace(c, "&#x%X;" % ord(c))

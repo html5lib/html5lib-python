@@ -167,7 +167,7 @@ class HTMLSerializer(object):
     def encode(self, string):
         assert(isinstance(string, text_type))
         if self.escape_invisible:
-            text = utils.escapeInvisible(text, self.escape_invisible == 'named')
+            string = utils.escapeInvisible(string, self.escape_invisible == 'named')
         if self.encoding:
             return string.encode(self.encoding, unicode_encode_errors)
         else:
