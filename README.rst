@@ -5,10 +5,6 @@ html5lib is a pure-python library for parsing HTML. It is designed to
 conform to the WHATWG HTML specification, as is implemented by all major
 web browsers.
 
-Output is to a tree structure; the current release supports output to
-DOM, ElementTree, and lxml tree formats as well as a simple custom
-format.
-
 
 Requirements
 ------------
