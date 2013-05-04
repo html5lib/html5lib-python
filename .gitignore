@@ -1,4 +1,5 @@
 # Because we never want compiled Python
+__pycache__/
 *.pyc
 
 # Ignore stuff produced by distutils
@@ -11,3 +12,6 @@ stats.prof
 
 # From cover (esp. in combination with nose)
 .coverage
+
+# Because tox's data is inherently local
+/.tox/
