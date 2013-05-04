@@ -2,9 +2,12 @@ html5lib
 ========
 
 html5lib is a pure-python library for parsing HTML. It is designed to
-conform to the HTML specification, as is implemented by all major web
-browsers.
+conform to the WHATWG HTML specification, as is implemented by all major
+web browsers.
 
+Output is to a tree structure; the current release supports output to
+DOM, ElementTree, and lxml tree formats as well as a simple custom
+format.
 
 Requirements
 ------------
@@ -17,7 +20,7 @@ may or may not work; if you wish to try, you are strongly encouraged
 to run the testsuite and report back!
 
 The only required library dependency is ``six``, this can be found
-packaged in PyPi.
+packaged in PyPI.
 
 Optionally:
 
@@ -31,7 +34,7 @@ Optionally:
 - ``genshi`` has a treewalker (but not builder); and
 
 - ``chardet`` can be used as a fallback when character encoding cannot
-  be determined (note currently this is only packaged on PyPi for
+  be determined (note currently this is only packaged on PyPI for
   Python 2, though several package managers include unofficial ports
   to Python 3).
 

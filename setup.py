@@ -1,14 +1,6 @@
 from distutils.core import setup
 import os
-
-long_description="""HTML parser designed to follow the WHATWG HTML
-specification. The parser is designed to handle all flavours of HTML and
-parses invalid documents using well-defined error handling rules compatible
-with the behaviour of major desktop web browsers.
-
-Output is to a tree structure; the current release supports output to
-DOM, ElementTree, and lxml tree formats as well as a
-simple custom format"""
+import codecs
 
 classifiers=[
     'Development Status :: 5 - Production/Stable',
@@ -27,6 +19,9 @@ packages = ['html5lib'] + ['html5lib.'+name
                            for name in os.listdir(os.path.join('html5lib'))
                            if os.path.isdir(os.path.join('html5lib', name)) and
                            not name.startswith('.') and name != 'tests']
+
+with codecs.open(os.path.join(os.path.dirname(__file__), 'README.rst'), 'r', 'utf8') as ld_file:
+    long_description = ld_file.read()
 
 setup(name='html5lib',
       version='1.0b1',
