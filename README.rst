@@ -31,7 +31,8 @@ Optionally:
 - ``genshi`` has a treewalker (but not builder); and
 
 - ``charade`` can be used as a fallback when character encoding cannot
-  be determined.
+  be determined; ``chardet``, from which it was forked, can also be used
+  on Python 2.
 
 
 Installation
