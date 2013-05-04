@@ -80,6 +80,19 @@ release tarballs this is unneeded)::
 And then they can be run, with ``nose`` installed, using the
 ``nosetests`` command in the root directory. All should pass.
 
+If you have all compatible Python implementations available on your
+system, you can run tests on all of them by using tox::
+
+  $ pip install tox
+  $ tox
+  ...
+  _______________________ summary ______________________
+    py26: commands succeeded
+    py27: commands succeeded
+    py32: commands succeeded
+    py33: commands succeeded
+    congratulations :)
+
 
 Contributing
 ------------
