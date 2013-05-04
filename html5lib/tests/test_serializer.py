@@ -4,6 +4,12 @@ import unittest
 from .support import get_data_files
 
 try:
+    from collections import OrderedDict
+except ImportError:
+    # Python 2.6 support
+    from ordereddict import OrderedDict
+
+try:
     import json
 except ImportError:
     import simplejson as json
@@ -73,9 +79,11 @@ class JsonWalker(TreeWalker):
         """html5lib tree-walkers use a dict of (namespace, name): value for
         attributes, but JSON cannot represent this. Convert from the format
         in the serializer tests (a list of dicts with "namespace", "name",
-        and "value" as keys) to html5lib's tree-walker format."""
-        attrs = {}
-        for attrib in attribs:
+        and "value" as keys) to html5lib's tree-walker format. Tests expect
+        attributes to be ordered alphabetically, so use an OrderedDict to
+        ensure this."""
+        attrs = OrderedDict()
+        for attrib in sorted(attribs, key=lambda x: (x["namespace"], x["name"])):
             name = (attrib["namespace"], attrib["name"])
             assert(name not in attrs)
             attrs[name] = attrib["value"]
