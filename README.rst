@@ -33,10 +33,8 @@ Optionally:
 
 - ``genshi`` has a treewalker (but not builder); and
 
-- ``chardet`` can be used as a fallback when character encoding cannot
-  be determined (note currently this is only packaged on PyPI for
-  Python 2, though several package managers include unofficial ports
-  to Python 3).
+- ``charade`` can be used as a fallback when character encoding cannot
+  be determined.
 
 
 Installation

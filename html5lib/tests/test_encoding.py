@@ -53,9 +53,12 @@ def test_encoding():
             yield (runPreScanEncodingTest, test[b'data'], test[b'encoding'])
 
 try:
-    import chardet  # flake8: noqa
+    try:
+        import charade  # flake8: noqa
+    except ImportError:
+        import chardet  # flake8: noqa
 except ImportError:
-    print("chardet not found, skipping chardet tests")
+    print("charade/chardet not found, skipping chardet tests")
 else:
     def test_chardet():
         with open(os.path.join(test_dir, "encoding" , "chardet", "test_big5.txt"), "rb") as fp:

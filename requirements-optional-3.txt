@@ -1,6 +1,0 @@
-# chardet can be used as a fallback in case we are unable to determine
-# the encoding of a document.
-# And yes, I know it's evil hardcoding the Debian URL here. But alas,
-# there has never been a formal release supporting Python 3, though
-# several distros provide packages for it that support Python 3.
-http://ftp.us.debian.org/debian/pool/main/p/python3-chardet/python3-chardet_2.0.1.orig.tar.gz
