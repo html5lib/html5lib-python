@@ -4,6 +4,7 @@ import os
 import sys
 import codecs
 import glob
+import xml.sax.handler
 
 base_path = os.path.split(__file__)[0]
 
@@ -131,3 +132,45 @@ def errorMessage(input, expected, actual):
     if sys.version_info.major == 2:
         msg = msg.encode("ascii", "backslashreplace")
     return msg
+
+
+class TracingSaxHandler(xml.sax.handler.ContentHandler):
+    def __init__(self):
+        xml.sax.handler.ContentHandler.__init__(self)
+        self.visited = []
+
+    def startDocument(self):
+        self.visited.append('startDocument')
+
+    def endDocument(self):
+        self.visited.append('endDocument')
+
+    def startPrefixMapping(self, prefix, uri):
+        self.visited.append(('prefix', prefix, uri))
+
+    def endPrefixMapping(self, prefix):
+        self.visited.append(('endPrefixMapping', prefix))
+
+    def startElement(self, name, attrs):
+        self.visited.append(('startElement', name, attrs))
+
+    def endElement(self, name):
+        self.visited.append(('endElement', name))
+
+    def startElementNS(self, name, qname, attrs):
+        self.visited.append(('startElementNS', name, qname, attrs))
+
+    def endElementNS(self, name, qname):
+        self.visited.append(('endElementNS', name, qname))
+
+    def characters(self, content):
+        self.visited.append(('characters', content))
+
+    def ignorableWhitespace(self, whitespace):
+        self.visited.append(('ignorableWhitespace', whitespace))
+
+    def processingInstruction(self, target, data):
+        self.visited.append(('processingInstruction', target, data))
+
+    def skippedEntity(self, name):
+        self.visited.append(('skippedEntity', name))

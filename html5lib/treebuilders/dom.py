@@ -246,10 +246,15 @@ def getDomBuilder(DomImplementation):
                 for attrname in list(node.attributes.keys()):
                     attr = node.getAttributeNode(attrname)
                     if attr.namespaceURI is None and ':' in attr.nodeName:
-                        prefix = attr.nodeName.split(':')[0]
+                        prefix, localName = attr.nodeName.split(':', 1)
                         if prefix in nsmap:
-                            del attributes[(attr.namespaceURI, attr.nodeName)]
-                            attributes[(nsmap[prefix], attr.nodeName)] = attr.nodeValue
+                            try:
+                                del attributes[(attr.namespaceURI, attr.nodeName)]
+                            except KeyError:
+                                del attributes[(attr.namespaceURI, localName)]
+                            else:
+                                localName = attr.nodeName
+                            attributes[(nsmap[prefix], localName)] = attr.nodeValue
 
                 # SAX events
                 ns = node.namespaceURI or nsmap.get(None, None)
