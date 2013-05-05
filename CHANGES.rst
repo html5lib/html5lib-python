@@ -6,6 +6,10 @@ Change Log
 
 Released on XXX, 2013
 
+* Removed ``dom2sax`` from DOM treebuilders. It has been replaced by
+  ``treeadapters.sax.to_sax`` which is generic and supports any
+  treewalker; it also resolves all known bugs with ``dom2sax``.
+
 
 1.0b1
 ~~~~~
