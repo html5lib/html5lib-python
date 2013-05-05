@@ -36,7 +36,7 @@ class MoreParserTests(unittest.TestCase):
 
     def test_unicode_file(self):
         parser = html5parser.HTMLParser()
-        doc = parser.parse(io.StringIO("a"))
+        parser.parse(io.StringIO("a"))
 
 
 def buildTestSuite():
