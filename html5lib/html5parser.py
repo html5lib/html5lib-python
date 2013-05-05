@@ -1399,7 +1399,7 @@ def getPhases(debug):
 
         def endTagFormatting(self, token):
             """The much-feared adoption agency algorithm"""
-            # http://www.whatwg.org/specs/web-apps/current-work/#adoptionAgency
+            # http://svn.whatwg.org/webapps/complete.html#adoptionAgency revision 7867
             # XXX Better parseError messages appreciated.
 
             # Step 1
@@ -1456,35 +1456,45 @@ def getPhases(debug):
                     if formattingElement != self.tree.openElements[-1]:
                         self.parser.parseError("adoption-agency-1.3", {"name": token["name"]})
 
-                # Step 2
-                # Start of the adoption agency algorithm proper
+                # Step 5:
+
+                # Let the furthest block be the topmost node in the
+                # stack of open elements that is lower in the stack
+                # than the formatting element, and is an element in
+                # the special category. There might not be one.
                 afeIndex = self.tree.openElements.index(formattingElement)
                 furthestBlock = None
                 for element in self.tree.openElements[afeIndex:]:
                     if element.nameTuple in specialElements:
                         furthestBlock = element
                         break
-                # Step 3
+
+                # Step 6:
+
+                # If there is no furthest block, then the UA must
+                # first pop all the nodes from the bottom of the stack
+                # of open elements, from the current node up to and
+                # including the formatting element, then remove the
+                # formatting element from the list of active
+                # formatting elements, and finally abort these steps.
                 if furthestBlock is None:
                     element = self.tree.openElements.pop()
                     while element != formattingElement:
                         element = self.tree.openElements.pop()
                     self.tree.activeFormattingElements.remove(element)
                     return
+
+                # Step 7
                 commonAncestor = self.tree.openElements[afeIndex - 1]
 
-                # Step 5
-                # if furthestBlock.parent:
-                #    furthestBlock.parent.removeChild(furthestBlock)
-
-                # Step 5
+                # Step 8:
                 # The bookmark is supposed to help us identify where to reinsert
-                # nodes in step 12. We have to ensure that we reinsert nodes after
+                # nodes in step 15. We have to ensure that we reinsert nodes after
                 # the node before the active formatting element. Note the bookmark
-                # can move in step 7.4
+                # can move in step 9.7
                 bookmark = self.tree.activeFormattingElements.index(formattingElement)
 
-                # Step 6
+                # Step 9
                 lastNode = node = furthestBlock
                 innerLoopCounter = 0
 
@@ -1497,15 +1507,13 @@ def getPhases(debug):
                     if node not in self.tree.activeFormattingElements:
                         self.tree.openElements.remove(node)
                         continue
-                    # Step 6.3
+                    # Step 9.6
                     if node == formattingElement:
                         break
-                    # Step 6.4
+                    # Step 9.7
                     if lastNode == furthestBlock:
-                        bookmark = (self.tree.activeFormattingElements.index(node)
-                                    + 1)
-                    # Step 6.5
-                    # cite = node.parent
+                        bookmark = self.tree.activeFormattingElements.index(node) + 1
+                    # Step 9.8
                     clone = node.cloneNode()
                     # Replace node with clone
                     self.tree.activeFormattingElements[
@@ -1513,20 +1521,18 @@ def getPhases(debug):
                     self.tree.openElements[
                         self.tree.openElements.index(node)] = clone
                     node = clone
-
-                    # Step 6.6
+                    # Step 9.9
                     # Remove lastNode from its parents, if any
                     if lastNode.parent:
                         lastNode.parent.removeChild(lastNode)
                     node.appendChild(lastNode)
-                    # Step 7.7
+                    # Step 9.10
                     lastNode = node
-                    # End of inner loop
 
-                # Step 7
+                # Step 10
                 # Foster parent lastNode if commonAncestor is a
-                # table, tbody, tfoot, thead, or tr we need to foster parent the
-                # lastNode
+                # table, tbody, tfoot, thead, or tr we need to foster
+                # parent the lastNode
                 if lastNode.parent:
                     lastNode.parent.removeChild(lastNode)
 
@@ -1536,20 +1542,20 @@ def getPhases(debug):
                 else:
                     commonAncestor.appendChild(lastNode)
 
-                # Step 8
+                # Step 11
                 clone = formattingElement.cloneNode()
 
-                # Step 9
+                # Step 12
                 furthestBlock.reparentChildren(clone)
 
-                # Step 10
+                # Step 13
                 furthestBlock.appendChild(clone)
 
-                # Step 11
+                # Step 14
                 self.tree.activeFormattingElements.remove(formattingElement)
                 self.tree.activeFormattingElements.insert(bookmark, clone)
 
-                # Step 12
+                # Step 15
                 self.tree.openElements.remove(formattingElement)
                 self.tree.openElements.insert(
                     self.tree.openElements.index(furthestBlock) + 1, clone)
