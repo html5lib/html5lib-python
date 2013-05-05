@@ -34,6 +34,10 @@ Optionally:
   be determined; ``chardet``, from which it was forked, can also be used
   on Python 2.
 
+- ``ordereddict`` can be used under Python 2.6
+  (``collections.OrderedDict`` is used instead on later versions) to
+  serialize attributes in alphabetical order.
+
 
 Installation
 ------------
@@ -78,7 +82,9 @@ release tarballs this is unneeded)::
   $ git submodule update
 
 And then they can be run, with ``nose`` installed, using the
-``nosetests`` command in the root directory. All should pass.
+``nosetests`` command in the root directory. Note that ``ordereddict``
+is required for the serializer tests under Python 2.6. All should
+pass.
 
 If you have all compatible Python implementations available on your
 system, you can run tests on all of them by using tox::

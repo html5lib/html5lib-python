@@ -4,12 +4,6 @@ import unittest
 from .support import get_data_files
 
 try:
-    from collections import OrderedDict
-except ImportError:
-    # Python 2.6 support
-    from ordereddict import OrderedDict
-
-try:
     import json
 except ImportError:
     import simplejson as json
@@ -21,6 +15,7 @@ except AttributeError:
 
 import html5lib
 from html5lib import serializer, constants
+from html5lib.filters.alphabeticalattributes import Filter as AlphabeticalAttributesFilter
 from html5lib.treewalkers._base import TreeWalker
 
 optionals_loaded = []
@@ -79,11 +74,9 @@ class JsonWalker(TreeWalker):
         """html5lib tree-walkers use a dict of (namespace, name): value for
         attributes, but JSON cannot represent this. Convert from the format
         in the serializer tests (a list of dicts with "namespace", "name",
-        and "value" as keys) to html5lib's tree-walker format. Tests expect
-        attributes to be ordered alphabetically, so use an OrderedDict to
-        ensure this."""
-        attrs = OrderedDict()
-        for attrib in sorted(attribs, key=lambda x: (x["namespace"], x["name"])):
+        and "value" as keys) to html5lib's tree-walker format."""
+        attrs = {}
+        for attrib in attribs:
             name = (attrib["namespace"], attrib["name"])
             assert(name not in attrs)
             attrs[name] = attrib["value"]
@@ -92,7 +85,8 @@ class JsonWalker(TreeWalker):
 
 def serialize_html(input, options):
     options = dict([(str(k), v) for k, v in options.items()])
-    return serializer.HTMLSerializer(**options).render(JsonWalker(input), options.get("encoding", None))
+    stream = AlphabeticalAttributesFilter(JsonWalker(input))
+    return serializer.HTMLSerializer(**options).render(stream, options.get("encoding", None))
 
 
 def runSerializerTest(input, expected, options):
