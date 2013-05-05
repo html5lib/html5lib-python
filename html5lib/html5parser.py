@@ -17,6 +17,7 @@ from .constants import headingElements
 from .constants import cdataElements, rcdataElements
 from .constants import tokenTypes, ReparseException, namespaces
 from .constants import htmlIntegrationPointElements, mathmlTextIntegrationPointElements
+from .constants import adjustForeignAttributes as adjustForeignAttributesMap
 
 
 def parse(doc, treebuilder="etree", encoding=None,
@@ -333,20 +334,7 @@ class HTMLParser(object):
                 del token["data"][originalName]
 
     def adjustForeignAttributes(self, token):
-        replacements = {
-            "xlink:actuate": ("xlink", "actuate", namespaces["xlink"]),
-            "xlink:arcrole": ("xlink", "arcrole", namespaces["xlink"]),
-            "xlink:href": ("xlink", "href", namespaces["xlink"]),
-            "xlink:role": ("xlink", "role", namespaces["xlink"]),
-            "xlink:show": ("xlink", "show", namespaces["xlink"]),
-            "xlink:title": ("xlink", "title", namespaces["xlink"]),
-            "xlink:type": ("xlink", "type", namespaces["xlink"]),
-            "xml:base": ("xml", "base", namespaces["xml"]),
-            "xml:lang": ("xml", "lang", namespaces["xml"]),
-            "xml:space": ("xml", "space", namespaces["xml"]),
-            "xmlns": (None, "xmlns", namespaces["xmlns"]),
-            "xmlns:xlink": ("xmlns", "xlink", namespaces["xmlns"])
-        }
+        replacements = adjustForeignAttributesMap
 
         for originalName in token["data"].keys():
             if originalName in replacements:
