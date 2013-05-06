@@ -24,15 +24,25 @@ class MoreParserTests(unittest.TestCase):
         parser = html5parser.HTMLParser(tree=dom.TreeBuilder)
         parser.parse("<pre>\nx\n&gt;\n</pre>")
 
-    def test_namespace_html_elements_0(self):
-        parser = html5parser.HTMLParser(namespaceHTMLElements=True)
+    def test_namespace_html_elements_0_dom(self):
+        parser = html5parser.HTMLParser(tree=dom.TreeBuilder, namespaceHTMLElements=True)
         doc = parser.parse("<html></html>")
         self.assertTrue(doc.childNodes[0].namespaceURI == namespaces["html"])
 
-    def test_namespace_html_elements_1(self):
-        parser = html5parser.HTMLParser(namespaceHTMLElements=False)
+    def test_namespace_html_elements_1_dom(self):
+        parser = html5parser.HTMLParser(tree=dom.TreeBuilder, namespaceHTMLElements=False)
         doc = parser.parse("<html></html>")
         self.assertTrue(doc.childNodes[0].namespaceURI is None)
+
+    def test_namespace_html_elements_0_etree(self):
+        parser = html5parser.HTMLParser(namespaceHTMLElements=True)
+        doc = parser.parse("<html></html>")
+        self.assertTrue(doc.getchildren()[0].tag.startswith("{" + namespaces["html"] + "}"))
+
+    def test_namespace_html_elements_1_etree(self):
+        parser = html5parser.HTMLParser(namespaceHTMLElements=False)
+        doc = parser.parse("<html></html>")
+        self.assertTrue(doc.getchildren()[0][:1] != "{")
 
     def test_unicode_file(self):
         parser = html5parser.HTMLParser()

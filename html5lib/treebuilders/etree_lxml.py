@@ -185,6 +185,7 @@ class TreeBuilder(_base.TreeBuilder):
     elementClass = None
     commentClass = None
     fragmentClass = Document
+    implementation = etree
 
     def __init__(self, namespaceHTMLElements, fullTree=False):
         builder = etree_builders.getETreeModule(etree, fullTree=fullTree)

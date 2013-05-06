@@ -163,6 +163,7 @@ def getDomBuilder(DomImplementation):
                         self.dom._child_node_types.append(Node.TEXT_NODE)
                 self.dom.appendChild(self.dom.createTextNode(data))
 
+        implementation = DomImplementation
         name = None
 
     def testSerializer(element):

@@ -7,7 +7,7 @@ Change Log
 Released on XXX, 2013
 
 * Removed ``simpletree`` from the package. The default tree builder is now
-  ``dom`` (using the ``xml.dom.minidom`` implementation).
+  ``etree`` (using the ``xml.etree`` implementation).
 
 
 0.95
