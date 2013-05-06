@@ -37,12 +37,12 @@ class MoreParserTests(unittest.TestCase):
     def test_namespace_html_elements_0_etree(self):
         parser = html5parser.HTMLParser(namespaceHTMLElements=True)
         doc = parser.parse("<html></html>")
-        self.assertTrue(doc.getchildren()[0].tag.startswith("{" + namespaces["html"] + "}"))
+        self.assertTrue(list(doc)[0].tag.startswith("{" + namespaces["html"] + "}"))
 
     def test_namespace_html_elements_1_etree(self):
         parser = html5parser.HTMLParser(namespaceHTMLElements=False)
         doc = parser.parse("<html></html>")
-        self.assertTrue(doc.getchildren()[0][:1] != "{")
+        self.assertTrue(list(doc)[0][:1] != "{")
 
     def test_unicode_file(self):
         parser = html5parser.HTMLParser()

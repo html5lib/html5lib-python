@@ -23,7 +23,7 @@ def runSanitizerTest(name, expected, input, toxml=None):
     if toxml is None:
         toxml = toxmlFactory()
     expected = ''.join([toxml(token) for token in html5parser.HTMLParser().
-                        parseFragment(expected).getchildren()])
+                        parseFragment(expected)])
     expected = json.loads(json.dumps(expected))
     assert expected == sanitize_html(input)
 
@@ -33,7 +33,7 @@ def sanitize_html(stream, toxml=None):
         toxml = toxmlFactory()
     return ''.join([toxml(token) for token in
                     html5parser.HTMLParser(tokenizer=sanitizer.HTMLSanitizer).
-                    parseFragment(stream).getchildren()])
+                    parseFragment(stream)])
 
 
 def test_should_handle_astral_plane_characters():
