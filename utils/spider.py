@@ -8,7 +8,6 @@ s.spider("http://www.google.com", maxURLs=100)
 """
 
 import urllib.request, urllib.error, urllib.parse
-import urllib.parse
 import urllib.robotparser
 import md5
 
@@ -30,7 +29,7 @@ class Spider(object):
         urlNumber = 0
         self.visitedURLs.add(initialURL)
         content = self.loadURL(initialURL)
-        while maxURLs == None or urlNumber < maxURLs:
+        while maxURLs is None or urlNumber < maxURLs:
             if content is not None:
                 self.parse(content)
                 urlNumber += 1

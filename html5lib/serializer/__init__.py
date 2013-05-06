@@ -5,7 +5,7 @@ from .. import treewalkers
 from .htmlserializer import HTMLSerializer
 
 
-def serialize(input, tree="simpletree", format="html", encoding=None,
+def serialize(input, tree="etree", format="html", encoding=None,
               **serializer_opts):
     # XXX: Should we cache this?
     walker = treewalkers.getTreeWalker(tree)

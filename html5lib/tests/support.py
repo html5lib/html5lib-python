@@ -16,8 +16,7 @@ from html5lib import treebuilders
 del base_path
 
 # Build a dict of avaliable trees
-treeTypes = {"simpletree": treebuilders.getTreeBuilder("simpletree"),
-             "DOM": treebuilders.getTreeBuilder("dom")}
+treeTypes = {"DOM": treebuilders.getTreeBuilder("dom")}
 
 # Try whatever etree implementations are avaliable from a list that are
 #"supposed" to work
@@ -64,7 +63,7 @@ class DefaultDict(dict):
 
 class TestData(object):
     def __init__(self, filename, newTestHeading="data", encoding="utf8"):
-        if encoding == None:
+        if encoding is None:
             self.f = open(filename, mode="rb")
         else:
             self.f = codecs.open(filename, encoding=encoding)
