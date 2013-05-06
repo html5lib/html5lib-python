@@ -23,8 +23,10 @@ packages = ['html5lib'] + ['html5lib.'+name
                            if os.path.isdir(os.path.join('html5lib', name)) and
                            not name.startswith('.') and name != 'tests']
 
-with codecs.open(os.path.join(os.path.dirname(__file__), 'README.rst'), 'r', 'utf8') as ld_file:
-    long_description = ld_file.read()
+current_dir = os.path.dirname(__file__)
+with codecs.open(os.path.join(current_dir, 'README.rst'), 'r', 'utf8') as readme_file:
+    with codecs.open(os.path.join(current_dir, 'CHANGES.rst'), 'r', 'utf8') as changes_file:
+        long_description = readme_file.read() + '\n' + changes_file.read()
 
 setup(name='html5lib',
       version='1.0b1',
