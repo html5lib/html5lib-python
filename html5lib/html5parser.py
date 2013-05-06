@@ -8,7 +8,7 @@ from . import tokenizer
 
 from . import treebuilders
 from .treebuilders._base import Marker
-from .treebuilders import simpletree
+from .treebuilders import dom
 
 from . import utils
 from . import constants
@@ -20,7 +20,7 @@ from .constants import tokenTypes, ReparseException, namespaces
 from .constants import htmlIntegrationPointElements, mathmlTextIntegrationPointElements
 
 
-def parse(doc, treebuilder="simpletree", encoding=None,
+def parse(doc, treebuilder="dom", encoding=None,
           namespaceHTMLElements=True):
     """Parse a string or file-like object into a tree"""
     tb = treebuilders.getTreeBuilder(treebuilder)
@@ -28,7 +28,7 @@ def parse(doc, treebuilder="simpletree", encoding=None,
     return p.parse(doc, encoding=encoding)
 
 
-def parseFragment(doc, container="div", treebuilder="simpletree", encoding=None,
+def parseFragment(doc, container="div", treebuilder="dom", encoding=None,
                   namespaceHTMLElements=True):
     tb = treebuilders.getTreeBuilder(treebuilder)
     p = HTMLParser(tb, namespaceHTMLElements=namespaceHTMLElements)
@@ -51,7 +51,7 @@ class HTMLParser(object):
     """HTML parser. Generates a tree structure from a stream of (possibly
         malformed) HTML"""
 
-    def __init__(self, tree=simpletree.TreeBuilder,
+    def __init__(self, tree=dom.TreeBuilder,
                  tokenizer=tokenizer.HTMLTokenizer, strict=False,
                  namespaceHTMLElements=True, debug=False):
         """

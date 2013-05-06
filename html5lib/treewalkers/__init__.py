@@ -19,10 +19,8 @@ def getTreeWalker(treeType, implementation=None, **kwargs):
     """Get a TreeWalker class for various types of tree with built-in support
 
     treeType - the name of the tree type required (case-insensitive). Supported
-               values are "simpletree", "dom", and "etree"
+               values are:
 
-               "simpletree" - a built-in DOM-ish tree type with support for some
-                              more pythonic idioms.
                 "dom" - The xml.dom.minidom DOM implementation
                 "pulldom" - The xml.dom.pulldom event stream
                 "etree" - A generic walker for tree implementations exposing an
@@ -37,7 +35,7 @@ def getTreeWalker(treeType, implementation=None, **kwargs):
 
     treeType = treeType.lower()
     if treeType not in treeWalkerCache:
-        if treeType in ("dom", "pulldom", "simpletree"):
+        if treeType in ("dom", "pulldom"):
             name = "%s.%s" % (__name__, treeType)
             __import__(name)
             mod = sys.modules[name]

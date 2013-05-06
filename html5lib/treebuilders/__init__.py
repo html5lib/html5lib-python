@@ -7,7 +7,7 @@ implement several things:
 1) A set of classes for various types of elements: Document, Doctype,
 Comment, Element. These must implement the interface of
 _base.treebuilders.Node (although comment nodes have a different
-signature for their constructor, see treebuilders.simpletree.Comment)
+signature for their constructor, see treebuilders.etree.Comment)
 Textual content may also be implemented as another node type, or not, as
 your tree implementation requires.
 
@@ -24,10 +24,6 @@ getDocument - Returns the root node of the complete document tree
 testSerializer method on your treebuilder which accepts a node and
 returns a string containing Node and its children serialized according
 to the format used in the unittests
-
-The supplied simpletree module provides a python-only implementation
-of a full treebuilder and is a useful reference for the semantics of
-the various methods.
 """
 
 from __future__ import absolute_import, division, unicode_literals
@@ -39,10 +35,8 @@ def getTreeBuilder(treeType, implementation=None, **kwargs):
     """Get a TreeBuilder class for various types of tree with built-in support
 
     treeType - the name of the tree type required (case-insensitive). Supported
-               values are "simpletree", "dom", and "etree"
+               values are:
 
-               "simpletree" - a built-in DOM-ish tree type with support for some
-                              more pythonic idioms.
                 "dom" - A generic builder for DOM implementations, defaulting to
                         a xml.dom.minidom based implementation for the sake of
                         backwards compatibility (as releases up until 0.10 had a
@@ -65,9 +59,6 @@ def getTreeBuilder(treeType, implementation=None, **kwargs):
                 implementation = minidom
             # XXX: NEVER cache here, caching is done in the dom submodule
             return dom.getDomModule(implementation, **kwargs).TreeBuilder
-        elif treeType == "simpletree":
-            from . import simpletree
-            treeBuilderCache[treeType] = simpletree.TreeBuilder
         elif treeType == "lxml":
             from . import etree_lxml
             treeBuilderCache[treeType] = etree_lxml.TreeBuilder

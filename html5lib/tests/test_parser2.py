@@ -27,16 +27,16 @@ class MoreParserTests(unittest.TestCase):
     def test_namespace_html_elements_0(self):
         parser = html5parser.HTMLParser(namespaceHTMLElements=True)
         doc = parser.parse("<html></html>")
-        self.assertTrue(doc.childNodes[0].namespace == namespaces["html"])
+        self.assertTrue(doc.childNodes[0].namespaceURI == namespaces["html"])
 
     def test_namespace_html_elements_1(self):
         parser = html5parser.HTMLParser(namespaceHTMLElements=False)
         doc = parser.parse("<html></html>")
-        self.assertTrue(doc.childNodes[0].namespace == None)
+        self.assertTrue(doc.childNodes[0].namespaceURI is None)
 
     def test_unicode_file(self):
         parser = html5parser.HTMLParser()
-        doc = parser.parse(io.StringIO("a"))
+        parser.parse(io.StringIO("a"))
 
 
 def buildTestSuite():
