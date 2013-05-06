@@ -10,10 +10,12 @@ from html5lib import html5parser, sanitizer, constants, treebuilders
 
 def toxmlFactory():
     tree = treebuilders.getTreeBuilder("etree")
+
     def toxml(element):
         # encode/decode roundtrip required for Python 2.6 compatibility
         result_bytes = tree.implementation.tostring(element, encoding="utf-8")
         return result_bytes.decode("utf-8")
+
     return toxml
 
 
