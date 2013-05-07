@@ -6,7 +6,6 @@ _ = gettext.gettext
 
 try:
     from functools import reduce
-    pass  # no-op statement to avoid 3to2 introducing parse error
 except ImportError:
     pass
 
@@ -35,11 +34,7 @@ else:
             if len(v) == 2:
                 v = utils.surrogatePairToCodepoint(v)
             else:
-                try:
-                    v = ord(v)
-                except:
-                    print(v)
-                    raise
+                v = ord(v)
             if not v in encode_entity_map or k.islower():
                 # prefer &lt; over &LT; and similarly for &amp;, &gt;, etc.
                 encode_entity_map[v] = k
