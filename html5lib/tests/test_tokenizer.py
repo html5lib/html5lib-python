@@ -1,15 +1,11 @@
 from __future__ import absolute_import, division, unicode_literals
 
-
+import json
 import warnings
 import re
 
-try:
-    import json
-except ImportError:
-    import simplejson as json
-
 from .support import get_data_files
+
 from html5lib.tokenizer import HTMLTokenizer
 from html5lib import constants
 
