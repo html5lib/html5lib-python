@@ -323,12 +323,7 @@ class TreeBuilder(_base.TreeBuilder):
             if self.doctype.name != token["name"]:
                 warnings.warn("lxml cannot represent doctype with a different name to the root element", DataLossWarning)
         docStr += "<THIS_SHOULD_NEVER_APPEAR_PUBLICLY/>"
-
-        try:
-            root = etree.fromstring(docStr)
-        except etree.XMLSyntaxError:
-            print(docStr)
-            raise
+        root = etree.fromstring(docStr)
 
         # Append the initial comments:
         for comment_token in self.initial_comments:

@@ -171,8 +171,6 @@ def escapeRegexp(string):
                          "[", "]", "|", "(", ")", "-")
     for char in specialCharacters:
         string = string.replace(char, "\\" + char)
-        if char in string:
-            print(string)
 
     return string
 
