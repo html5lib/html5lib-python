@@ -287,9 +287,3 @@ def getDomBuilder(DomImplementation):
 
 # The actual means to get a module!
 getDomModule = moduleFactoryFactory(getDomBuilder)
-
-
-# Keep backwards compatibility with things that directly load
-# classes/functions from this module
-for key, value in list(getDomModule(minidom).__dict__.items()):
-    globals()[key] = value
