@@ -313,6 +313,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
         elementClass = Element
         commentClass = Comment
         fragmentClass = DocumentFragment
+        implementation = ElementTreeImplementation
 
         def testSerializer(self, element):
             return testSerializer(element)

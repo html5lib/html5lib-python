@@ -122,7 +122,7 @@ def testSerializer(element):
             if element.text:
                 rv.append("|%s\"%s\"" % (' ' * (indent + 2), element.text))
             indent += 2
-            for child in element.getchildren():
+            for child in element:
                 serializeElement(child, indent)
             if hasattr(element, "tail") and element.tail:
                 rv.append("|%s\"%s\"" % (' ' * (indent - 2), element.tail))
@@ -163,7 +163,7 @@ def tostring(element):
             if element.text:
                 rv.append(element.text)
 
-            for child in element.getchildren():
+            for child in element:
                 serializeElement(child)
 
             rv.append("</%s>" % (element.tag,))
@@ -185,6 +185,7 @@ class TreeBuilder(_base.TreeBuilder):
     elementClass = None
     commentClass = None
     fragmentClass = Document
+    implementation = etree
 
     def __init__(self, namespaceHTMLElements, fullTree=False):
         builder = etree_builders.getETreeModule(etree, fullTree=fullTree)
@@ -280,7 +281,7 @@ class TreeBuilder(_base.TreeBuilder):
         element = self.openElements[0]._element
         if element.text:
             fragment.append(element.text)
-        fragment.extend(element.getchildren())
+        fragment.extend(list(element))
         if element.tail:
             fragment.append(element.tail)
         return fragment

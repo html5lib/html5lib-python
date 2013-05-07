@@ -45,13 +45,11 @@ def PullDOMAdapter(node):
         raise NotImplementedError("Node type not supported: " + str(node.nodeType))
 
 treeTypes = {
-    "simpletree": {"builder": treebuilders.getTreeBuilder("simpletree"),
-                   "walker": treewalkers.getTreeWalker("simpletree")},
-"DOM": {"builder": treebuilders.getTreeBuilder("dom"),
-        "walker": treewalkers.getTreeWalker("dom")},
-"PullDOM": {"builder": treebuilders.getTreeBuilder("dom"),
-            "adapter": PullDOMAdapter,
-            "walker": treewalkers.getTreeWalker("pulldom")},
+    "DOM": {"builder": treebuilders.getTreeBuilder("dom"),
+            "walker": treewalkers.getTreeWalker("dom")},
+    "PullDOM": {"builder": treebuilders.getTreeBuilder("dom"),
+                "adapter": PullDOMAdapter,
+                "walker": treewalkers.getTreeWalker("pulldom")},
 }
 
 # Try whatever etree implementations are available from a list that are
@@ -103,7 +101,7 @@ except ImportError:
 else:
     def GenshiAdapter(tree):
         text = None
-        for token in treewalkers.getTreeWalker("simpletree")(tree):
+        for token in treewalkers.getTreeWalker("dom")(tree):
             type = token["type"]
             if type in ("Characters", "SpaceCharacters"):
                 if text is None:
@@ -147,7 +145,7 @@ else:
             yield TEXT, text, (None, -1, -1)
 
     treeTypes["genshi"] = \
-        {"builder": treebuilders.getTreeBuilder("simpletree"),
+        {"builder": treebuilders.getTreeBuilder("dom"),
          "adapter": GenshiAdapter,
          "walker": treewalkers.getTreeWalker("genshi")}
 
