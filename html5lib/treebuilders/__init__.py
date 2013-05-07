@@ -41,7 +41,8 @@ def getTreeBuilder(treeType, implementation=None, **kwargs):
                        a xml.dom.minidom based implementation.
                "etree" - A generic builder for tree implementations exposing an
                          ElementTree-like interface, defaulting to
-                         xml.etree.ElementTree/cElementTree.
+                         xml.etree.cElementTree if available and
+                         xml.etree.ElementTree if not.
                "lxml" - A etree-based builder for lxml.etree, handling
                         limitations of lxml's implementation.
 
