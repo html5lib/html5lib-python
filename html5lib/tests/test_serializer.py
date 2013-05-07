@@ -1,12 +1,9 @@
 from __future__ import absolute_import, division, unicode_literals
 
+import json
 import unittest
-from .support import get_data_files
 
-try:
-    import json
-except ImportError:
-    import simplejson as json
+from .support import get_data_files
 
 try:
     unittest.TestCase.assertEqual
