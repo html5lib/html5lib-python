@@ -6,8 +6,9 @@ Change Log
 
 Released on XXX, 2013
 
-* Removed ``simpletree`` from the package. The default tree builder is now
-  ``etree`` (using the ``xml.etree`` implementation).
+* Removed ``simpletree`` from the package. The default tree builder is
+  now ``etree`` (using the ``xml.etree.ElementTree/cElementTree``
+  implementation).
 
 
 0.95
