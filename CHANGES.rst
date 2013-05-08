@@ -6,33 +6,30 @@ Change Log
 
 Released on XXX, 2013
 
+* Implementation updated to implement the `HTML specification
+  <http://www.whatwg.org/specs/web-apps/current-work/>`_ as of 5th May
+  2013 (`SVN <http://svn.whatwg.org/webapps/>`_ revision r7867).
+
 * Python 3.2+ supported in a single codebase using the ``six`` library.
 
 * Removed support for Python 2.5 and older.
 
 * Removed the deprecated Beautiful Soup 3 treebuilder.
-  ``beautifulsoup4`` can use ``html5lib`` as a parser instead.
+  ``beautifulsoup4`` can use ``html5lib`` as a parser instead. Note that
+  since it doesn't support namespaces, foreign content like SVG and
+  MathML is parsed incorrectly.
 
 * Removed ``simpletree`` from the package. The default tree builder is
-  now ``etree`` (using the ``xml.etree.ElementTree/cElementTree``
-  implementation).
+  now ``etree`` (using the ``xml.etree.cElementTree`` implementation if
+  available, and ``xml.etree.ElementTree`` otherwise).
 
-* Removed the ``XHTMLSerializer`` which never actually guaranteed its
+* Removed the ``XHTMLSerializer`` as it never actually guaranteed its
   output was well-formed XML, and hence provided little of use.
 
 * Optional heuristic character encoding detection now based on
   ``charade`` for Python 2.6 - 3.3 compatibility.
 
 * Optional ``Genshi`` treewalker support fixed.
-
-* Implementation of the `adoption agency algorithm
-  <http://www.whatwg.org/specs/web-apps/current-work/#adoptionAgency>`_
-  updated to `SVN <http://svn.whatwg.org/webapps/>`_ revision r7867.
-
-* Removed the "seeding a form with initial values" algorithm
-  implementation as it was removed from the spec.
-
-* ``<main>`` tag supported.
 
 * Many bugfixes, including:
 
@@ -56,7 +53,7 @@ Released on XXX, 2013
     <http://code.google.com/p/html5lib/issues/detail?id=202>`_: Unicode
     file breaks InputStream.
 
-* Source code is now mostly PEP8 compliant.
+* Source code is now mostly PEP 8 compliant.
 
 * Test harness has been improved and now depends on ``nose``.
 

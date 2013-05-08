@@ -9,7 +9,7 @@ web browsers.
 Requirements
 ------------
 
-Python 2.6 and above as well as Python 3.0 and above are
+Python 2.6 and above as well as Python 3.2 and above are
 supported. Implementations known to work are CPython (as the reference
 implementation) and PyPy. Jython is known *not* to work due to various
 bugs in its implementation of the language. Others such as IronPython
@@ -17,7 +17,7 @@ may or may not work; if you wish to try, you are strongly encouraged
 to run the testsuite and report back!
 
 The only required library dependency is ``six``, this can be found
-packaged in PyPI.
+packaged on PyPI.
 
 Optionally:
 
