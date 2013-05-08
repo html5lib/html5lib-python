@@ -17,7 +17,7 @@ Simple usage follows this pattern:
 .. code-block:: python
 
   import html5lib
-  with open("mydocument.html", "r") as f:
+  with open("mydocument.html", "rb") as f:
       document = html5lib.parse(f)
 
 or:
@@ -27,26 +27,34 @@ or:
   import html5lib
   document = html5lib.parse("<p>Hello World!")
 
-To have more control over the parser, create a parser object explicitly:
+By default, the ``document`` will be an ``xml.etree`` element instance.
+Whenever possible, html5lib chooses the accelerated ``ElementTree``
+implementation (available as ``xml.etree.cElementTree`` on Python
+2.x).
+
+Two other tree types are supported: ``xml.dom.minidom`` and
+``lxml.etree``. To use an alternative format, specify the name of
+a treebuilder:
 
 .. code-block:: python
 
   import html5lib
-  with open("mydocument.html", "r") as f:
+  with open("mydocument.html", "rb") as f:
+      lxml_etree_document = html5lib.parse(f, treebuilder="lxml")
+
+To have more control over the parser, create a parser object explicitly.
+For instance, to make the parser raise exceptions on parse errors, use:
+
+.. code-block:: python
+
+  import html5lib
+  with open("mydocument.html", "rb") as f:
       parser = html5lib.HTMLParser(strict=True)
       document = parser.parse(f)
 
-By default, the ``document`` will be an ``xml.etree.ElementTree``
-object. To use an alternative format, specify the name of a treebuilder:
-
-.. code-block:: python
-
-  import html5lib
-  with open("mydocument.html", "r") as f:
-      lxml_etree_document = html5lib.parse(f, treebuilder="lxml")
-
 When you're instantiating parser objects explicitly, pass a treebuilder
-class as the ``tree`` keyword argument:
+class as the ``tree`` keyword argument to use an alternative document
+format:
 
 .. code-block:: python
 
@@ -54,7 +62,7 @@ class as the ``tree`` keyword argument:
   parser = html5lib.HTMLParser(tree=html5lib.getTreeBuilder("dom"))
   minidom_document = parser.parse("<p>Hello World!")
 
-More documentation is available at http://html5lib.readthedocs.org/. 
+More documentation is available at http://html5lib.readthedocs.org/.
 
 
 Installation
@@ -71,7 +79,7 @@ use:
 Optional Dependencies
 ---------------------
 
-The following third-party libraries might be used for additional
+The following third-party libraries may be used for additional
 functionality:
 
 - ``datrie`` can be used to improve parsing performance (though in
@@ -106,8 +114,8 @@ Test data are contained in a separate `html5lib-tests
 as a submodule, thus for git checkouts they must be initialized::
 
   $ git submodule init
-  $ git submodule update 
-  
+  $ git submodule update
+
 This is unneeded for release tarballs.
 
 If you have all compatible Python implementations available on your
@@ -144,4 +152,3 @@ There's a mailing list available for support on Google Groups,
 `html5lib-discuss <http://groups.google.com/group/html5lib-discuss>`_,
 though you may get a quicker response asking on IRC in #whatwg on
 irc.freenode.net.
-
