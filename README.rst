@@ -29,8 +29,7 @@ or:
 
 By default, the ``document`` will be an ``xml.etree`` element instance.
 Whenever possible, html5lib chooses the accelerated ``ElementTree``
-implementation (available as ``xml.etree.cElementTree`` on Python
-2.x).
+implementation (i.e. ``xml.etree.cElementTree`` on Python 2.x).
 
 Two other tree types are supported: ``xml.dom.minidom`` and
 ``lxml.etree``. To use an alternative format, specify the name of
