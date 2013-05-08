@@ -42,7 +42,7 @@ Released on XXX, 2013
     detect seekable streams;
 
   * `Google Code 206
-    <http://code.google.com/p/html5lib/issues/detail?id=206`_: add
+    <http://code.google.com/p/html5lib/issues/detail?id=206>`_: add
     support for <video preload=...>, <audio preload=...>;
 
   * `Google Code 205
