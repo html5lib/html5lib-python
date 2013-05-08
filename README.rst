@@ -1,25 +1,78 @@
 html5lib
 ========
 
+.. image:: https://travis-ci.org/html5lib/html5lib-python.png?branch=master
+  :target: https://travis-ci.org/html5lib/html5lib-python
+
 html5lib is a pure-python library for parsing HTML. It is designed to
 conform to the WHATWG HTML specification, as is implemented by all major
 web browsers.
 
 
-Requirements
+Usage
+-----
+
+Simple usage follows this pattern:
+
+.. code-block:: python
+
+  import html5lib
+  with open("mydocument.html", "r") as f:
+      document = html5lib.parse(f)
+
+or:
+
+.. code-block:: python
+
+  import html5lib
+  document = html5lib.parse("<p>Hello World!")
+
+To have more control over the parser, create a parser object explicitly:
+
+.. code-block:: python
+
+  import html5lib
+  with open("mydocument.html", "r") as f:
+      parser = html5lib.HTMLParser(strict=True)
+      document = parser.parse(f)
+
+By default, the ``document`` will be an ``xml.etree.ElementTree``
+object. To use an alternative format, specify the name of a treebuilder:
+
+.. code-block:: python
+
+  import html5lib
+  with open("mydocument.html", "r") as f:
+      lxml_etree_document = html5lib.parse(f, treebuilder="lxml")
+
+When you're instantiating parser objects explicitly, pass a treebuilder
+class as the ``tree`` keyword argument:
+
+.. code-block:: python
+
+  import html5lib
+  parser = html5lib.HTMLParser(tree=html5lib.getTreeBuilder("dom"))
+  minidom_document = parser.parse("<p>Hello World!")
+
+More documentation is available at http://html5lib.readthedocs.org/. 
+
+
+Installation
 ------------
 
-Python 2.6 and above as well as Python 3.2 and above are
-supported. Implementations known to work are CPython (as the reference
-implementation) and PyPy. Jython is known *not* to work due to various
-bugs in its implementation of the language. Others such as IronPython
-may or may not work; if you wish to try, you are strongly encouraged
-to run the testsuite and report back!
+html5lib works on CPython 2.6+, CPython 3.2+ and PyPy.  To install it,
+use:
 
-The only required library dependency is ``six``, this can be found
-packaged on PyPI.
+.. code-block:: bash
 
-Optionally:
+    $ pip install html5lib
+
+
+Optional Dependencies
+---------------------
+
+The following third-party libraries might be used for additional
+functionality:
 
 - ``datrie`` can be used to improve parsing performance (though in
   almost all cases the improvement is marginal);
@@ -35,31 +88,6 @@ Optionally:
   on Python 2.
 
 
-Installation
-------------
-
-html5lib is packaged with distutils. To install it use::
-
-  $ python setup.py install
-
-
-Usage
------
-
-Simple usage follows this pattern::
-
-  import html5lib
-  with open("mydocument.html", "r") as fp:
-      document = html5lib.parse(f)
-
-or::
-
-  import html5lib
-  document = html5lib.parse("<p>Hello World!")
-
-More documentation is available in the docstrings.
-
-
 Bugs
 ----
 
@@ -70,28 +98,21 @@ Please report any bugs on the `issue tracker
 Tests
 -----
 
-These are contained in the html5lib-tests repository and included as a
-submodule, thus for git checkouts they must be initialized (for
-release tarballs this is unneeded)::
-
-  $ git submodule init
-  $ git submodule update
-
-And then they can be run, with ``nose`` installed, using the
+Unit tests require the ``nose`` library and can be run using the
 ``nosetests`` command in the root directory. All should pass.
 
-If you have all compatible Python implementations available on your
-system, you can run tests on all of them by using tox::
+Test data are contained in a separate `html5lib-tests
+<https://github.com/html5lib/html5lib-tests>`_ repository and included
+as a submodule, thus for git checkouts they must be initialized::
 
-  $ pip install tox
-  $ tox
-  ...
-  _______________________ summary ______________________
-    py26: commands succeeded
-    py27: commands succeeded
-    py32: commands succeeded
-    py33: commands succeeded
-    congratulations :)
+  $ git submodule init
+  $ git submodule update 
+  
+This is unneeded for release tarballs.
+
+If you have all compatible Python implementations available on your
+system, you can run tests on all of them using the ``tox`` utility,
+which can be found on PyPI.
 
 
 Contributing
@@ -121,5 +142,6 @@ Questions?
 
 There's a mailing list available for support on Google Groups,
 `html5lib-discuss <http://groups.google.com/group/html5lib-discuss>`_,
-though you may have more success (and get a far quicker response)
-asking on IRC in #whatwg on irc.freenode.net.
+though you may get a quicker response asking on IRC in #whatwg on
+irc.freenode.net.
+
