@@ -23,6 +23,7 @@ We use `Opera Critic <https://critic.hoppipolla.co.uk/>`_ as an external
 code-review tool, which uses your GitHub login to authenticate.  You'll
 get email notifications for issues raised in the review.
 
+
 Patch submission guidelines
 ---------------------------
 
@@ -40,7 +41,7 @@ Patch submission guidelines
   if necessary, update the Sphinx documentation in ``doc/``.
 
 - **Add a changelog entry** at the top of ``CHANGES.rst`` following
-  existing entries' styles. Don't forget to attribute yourself.
+  existing entries' styles.
 
 - **Run tests with tox** if possible, to make sure your changes are
   compatible with all supported Python versions.
@@ -55,3 +56,5 @@ Patch submission guidelines
   squash and rebase your pull request while accepting it. Even though
   GitHub won't recognize the pull request as accepted, the squashed
   commits will properly specify you as the author.
+
+- **Attribute yourself** in ``AUTHORS.rst``.
