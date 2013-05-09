@@ -61,6 +61,8 @@ Released on XXX, 2013
 
 * Test harness has been improved and now depends on ``nose``.
 
+* Documentation updated and moved to http://html5lib.readthedocs.org/.
+
 
 0.95
 ~~~~

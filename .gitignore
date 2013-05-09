@@ -15,3 +15,6 @@ stats.prof
 
 # Because tox's data is inherently local
 /.tox/
+
+# We have no interest in built Sphinx files
+/doc/_build
