@@ -122,32 +122,10 @@ system, you can run tests on all of them using the ``tox`` utility,
 which can be found on PyPI.
 
 
-Contributing
-------------
-
-Pull requests are more than welcome — both to the library and to the
-documentation. Some useful information:
-
-- We aim to follow PEP 8 in the library, but ignoring the
-  79-character-per-line limit, instead following a soft limit of 99,
-  but allowing lines over this where it is the readable thing to do.
-
-- We keep pyflakes reporting no errors or warnings at all times.
-
-- We keep the master branch passing all tests at all times on all
-  supported versions.
-
-Travis CI is run against all pull requests and should enforce all of
-the above.
-
-We also use an external code-review tool, which uses your GitHub login
-to authenticate. You'll get emails for changes on the review.
-
-
 Questions?
 ----------
 
 There's a mailing list available for support on Google Groups,
 `html5lib-discuss <http://groups.google.com/group/html5lib-discuss>`_,
-though you may get a quicker response asking on IRC in #whatwg on
-irc.freenode.net.
+though you may get a quicker response asking on IRC in `#whatwg on
+irc.freenode.net <http://wiki.whatwg.org/wiki/IRC>`_.
