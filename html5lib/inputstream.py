@@ -3,7 +3,6 @@ from six import text_type
 
 import codecs
 import re
-import sys
 
 from .constants import EOF, spaceCharacters, asciiLetters, asciiUppercase
 from .constants import encodings, ReparseException
@@ -201,12 +200,6 @@ class HTMLUnicodeInputStream:
             stream = source
         else:
             stream = StringIO(source)
-
-        if (  # not isinstance(stream, BufferedIOBase) and
-            not(hasattr(stream, "tell") and
-                hasattr(stream, "seek")) or
-                stream is sys.stdin):
-            stream = BufferedStream(stream)
 
         return stream
 
@@ -437,8 +430,9 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
         else:
             stream = BytesIO(source)
 
-        if (not(hasattr(stream, "tell") and hasattr(stream, "seek")) or
-                stream is sys.stdin):
+        try:
+            stream.seek(stream.tell())
+        except:
             stream = BufferedStream(stream)
 
         return stream
