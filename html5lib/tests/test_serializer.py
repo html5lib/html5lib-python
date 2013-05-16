@@ -6,12 +6,6 @@ import unittest
 from .support import get_data_files
 
 try:
-    from collections import OrderedDict
-except ImportError:
-    # Python 2.6 support
-    from ordereddict import OrderedDict
-
-try:
     unittest.TestCase.assertEqual
 except AttributeError:
     unittest.TestCase.assertEqual = unittest.TestCase.assertEquals
