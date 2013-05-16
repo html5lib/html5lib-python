@@ -1,10 +1,11 @@
 from __future__ import absolute_import, division, unicode_literals
 
 import io
+import warnings
 
 from . import support  # flake8: noqa
 from html5lib import html5parser
-from html5lib.constants import namespaces
+from html5lib.constants import namespaces, DataLossWarning
 from html5lib import treebuilders
 
 import unittest
@@ -35,7 +36,13 @@ class MoreParserTests(unittest.TestCase):
         if not self.lxml_tree:
             return
         parser = html5parser.HTMLParser(tree=self.lxml_tree)
-        parser.parse(b'<p xml:lang="pl">Witam wszystkich')
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+
+            parser.parse(b'<p xml:lang="pl">Witam wszystkich')
+
+            self.assertEqual(len(w), 1)
+            self.assertTrue(issubclass(w[-1].category, DataLossWarning))
 
     def test_namespace_html_elements_0_dom(self):
         parser = html5parser.HTMLParser(tree=self.dom_tree, namespaceHTMLElements=True)
