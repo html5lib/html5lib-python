@@ -16,6 +16,10 @@ class MoreParserTests(unittest.TestCase):
 
     def setUp(self):
         self.dom_tree = treebuilders.getTreeBuilder("dom")
+        try:
+            self.lxml_tree = treebuilders.getTreeBuilder("lxml")
+        except ImportError:
+            self.lxml_tree = None
 
     def test_assertDoctypeCloneable(self):
         parser = html5parser.HTMLParser(tree=self.dom_tree)
@@ -26,6 +30,12 @@ class MoreParserTests(unittest.TestCase):
         # http://groups.google.com/group/html5lib-discuss/browse_frm/thread/f4f00e4a2f26d5c0
         parser = html5parser.HTMLParser(tree=self.dom_tree)
         parser.parse("<pre>\nx\n&gt;\n</pre>")
+
+    def test_ihatexml(self):
+        if not self.lxml_tree:
+            return
+        parser = html5parser.HTMLParser(tree=self.lxml_tree)
+        parser.parse(b'<p xml:lang="pl">Witam wszystkich')
 
     def test_namespace_html_elements_0_dom(self):
         parser = html5parser.HTMLParser(tree=self.dom_tree, namespaceHTMLElements=True)
