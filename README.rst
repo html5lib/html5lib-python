@@ -63,6 +63,10 @@ format:
 
 More documentation is available at http://html5lib.readthedocs.org/.
 
+- ``ordereddict`` can be used under Python 2.6
+  (``collections.OrderedDict`` is used instead on later versions) to
+  serialize attributes in alphabetical order.
+
 
 Installation
 ------------
@@ -106,7 +110,8 @@ Tests
 -----
 
 Unit tests require the ``nose`` library and can be run using the
-``nosetests`` command in the root directory. All should pass.
+``nosetests`` command in the root directory; ``ordereddict`` is
+required under Python 2.6. All should pass.
 
 Test data are contained in a separate `html5lib-tests
 <https://github.com/html5lib/html5lib-tests>`_ repository and included
@@ -114,8 +119,6 @@ as a submodule, thus for git checkouts they must be initialized::
 
   $ git submodule init
   $ git submodule update
-
-This is unneeded for release tarballs.
 
 If you have all compatible Python implementations available on your
 system, you can run tests on all of them using the ``tox`` utility,
