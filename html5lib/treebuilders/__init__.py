@@ -28,6 +28,8 @@ to the format used in the unittests
 
 from __future__ import absolute_import, division, unicode_literals
 
+from ..utils import default_etree
+
 treeBuilderCache = {}
 
 
@@ -64,14 +66,9 @@ def getTreeBuilder(treeType, implementation=None, **kwargs):
             from . import etree_lxml
             treeBuilderCache[treeType] = etree_lxml.TreeBuilder
         elif treeType == "etree":
-            # Come up with a sane default (pref. from the stdlib)
-            if implementation is None:
-                try:
-                    import xml.etree.cElementTree as ET
-                except ImportError:
-                    import xml.etree.ElementTree as ET
-                implementation = ET
             from . import etree
+            if implementation is None:
+                implementation = default_etree
             # NEVER cache here, caching is done in the etree submodule
             return etree.getETreeModule(implementation, **kwargs).TreeBuilder
         else:

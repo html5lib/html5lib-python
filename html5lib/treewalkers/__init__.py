@@ -12,6 +12,8 @@ from __future__ import absolute_import, division, unicode_literals
 
 import sys
 
+from ..utils import default_etree
+
 treeWalkerCache = {}
 
 
@@ -48,6 +50,8 @@ def getTreeWalker(treeType, implementation=None, **kwargs):
             treeWalkerCache[treeType] = lxmletree.TreeWalker
         elif treeType == "etree":
             from . import etree
+            if implementation is None:
+                implementation = default_etree
             # XXX: NEVER cache here, caching is done in the etree submodule
             return etree.getETreeModule(implementation, **kwargs).TreeWalker
     return treeWalkerCache.get(treeType)

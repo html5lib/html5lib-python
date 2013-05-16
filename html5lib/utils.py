@@ -2,6 +2,11 @@ from __future__ import absolute_import, division, unicode_literals
 
 from types import ModuleType
 
+try:
+    import xml.etree.cElementTree as default_etree
+except ImportError:
+    import xml.etree.ElementTree as default_etree
+
 
 class MethodDispatcher(dict):
     """Dict with 2 special properties:
