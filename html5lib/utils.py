@@ -71,3 +71,11 @@ def moduleFactoryFactory(factory):
             return mod
 
     return moduleFactory
+
+
+def getDefaultEtreeImpl():
+    try:
+        import xml.etree.cElementTree as ET
+    except ImportError:
+        import xml.etree.ElementTree as ET
+    return ET
