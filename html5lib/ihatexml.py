@@ -260,7 +260,7 @@ class InfosetFilter(object):
         return name
 
     def escapeChar(self, char):
-        replacement = "U%05X" % (ord(char),)
+        replacement = "U%05X" % ord(char)
         self.replaceCache[char] = replacement
         return replacement
 
