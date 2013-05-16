@@ -27,28 +27,25 @@ namespaceExpected = re.compile(r"^(\s*)<(\S+)>", re.M).sub
 
 def runParserTest(innerHTML, input, expected, errors, treeClass,
                   namespaceHTMLElements):
-    warnings.resetwarnings()
-    warnings.simplefilter("error")
-    # XXX - move this out into the setup function
-    # concatenate all consecutive character tokens into a single token
-    try:
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
         p = html5parser.HTMLParser(tree=treeClass,
                                    namespaceHTMLElements=namespaceHTMLElements)
-    except constants.DataLossWarning:
-        return
 
-    try:
-        if innerHTML:
-            document = p.parseFragment(input, innerHTML)
-        else:
-            try:
+        try:
+            if innerHTML:
+                document = p.parseFragment(input, innerHTML)
+            else:
                 document = p.parse(input)
-            except constants.DataLossWarning:
-                return
-    except:
-        errorMsg = "\n".join(["\n\nInput:", input, "\nExpected:", expected,
-                              "\nTraceback:", traceback.format_exc()])
-        assert False, errorMsg
+        except:
+            errorMsg = "\n".join(["\n\nInput:", input, "\nExpected:", expected,
+                                  "\nTraceback:", traceback.format_exc()])
+            assert False, errorMsg
+
+    otherW = [x for x in w if not issubclass(x.category, constants.DataLossWarning)]
+    assert len(otherW) == 0, [(x.category, x.message) for x in otherW]
+    if len(w):
+        return
 
     output = convertTreeDump(p.tree.testSerializer(document))
 
