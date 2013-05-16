@@ -4,6 +4,9 @@ import string
 import gettext
 _ = gettext.gettext
 
+from itertools import chain
+
+
 EOF = None
 
 E = {
@@ -3076,6 +3079,19 @@ tagTokenTypes = frozenset((tokenTypes["StartTag"], tokenTypes["EndTag"],
 
 prefixes = dict([(v, k) for k, v in namespaces.items()])
 prefixes["http://www.w3.org/1998/Math/MathML"] = "math"
+
+
+invisibleChars = frozenset(chain(
+    # ASCII control chars
+    range(0x0, 0x9), range(0xB, 0xD), range(0xE, 0x20),
+    # Other control chars
+    # fixed-width spaces, zero-width marks, bidi marks
+    range(0x2000, 0x2010),
+    # LS, PS, bidi control codes
+    range(0x2028, 0x2030),
+    # nbsp, mathsp, ideosp, WJ, interlinear
+    [0x00A0, 0x205F, 0x3000, 0x2060, 0xFFF9, 0xFFFA, 0xFFFB]
+))
 
 
 class DataLossWarning(UserWarning):
