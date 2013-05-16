@@ -26,6 +26,10 @@ Released on XXX, 2013
 * Removed the ``XHTMLSerializer`` as it never actually guaranteed its
   output was well-formed XML, and hence provided little of use.
 
+* Removed default DOM treebuilder, so ``html5lib.treebuilders.dom`` is no
+  longer supported. ``html5lib.treebuilders.getTreeBuilder("dom")`` will
+  return the default DOM treebuilder, which uses ``xml.dom.minidom``.
+
 * Optional heuristic character encoding detection now based on
   ``charade`` for Python 2.6 - 3.3 compatibility.
 

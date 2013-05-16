@@ -37,44 +37,39 @@ def getTreeBuilder(treeType, implementation=None, **kwargs):
     treeType - the name of the tree type required (case-insensitive). Supported
                values are:
 
-                "dom" - A generic builder for DOM implementations, defaulting to
-                        a xml.dom.minidom based implementation for the sake of
-                        backwards compatibility (as releases up until 0.10 had a
-                        builder called "dom" that was a minidom implemenation).
-                "etree" - A generic builder for tree implementations exposing an
-                          elementtree-like interface (known to work with
-                          ElementTree, cElementTree and lxml.etree).
+               "dom" - A generic builder for DOM implementations, defaulting to
+                       a xml.dom.minidom based implementation.
+               "etree" - A generic builder for tree implementations exposing an
+                         ElementTree-like interface, defaulting to
+                         xml.etree.cElementTree if available and
+                         xml.etree.ElementTree if not.
+               "lxml" - A etree-based builder for lxml.etree, handling
+                        limitations of lxml's implementation.
 
     implementation - (Currently applies to the "etree" and "dom" tree types). A
                       module implementing the tree type e.g.
-                      xml.etree.ElementTree or lxml.etree."""
+                      xml.etree.ElementTree or xml.etree.cElementTree."""
 
     treeType = treeType.lower()
     if treeType not in treeBuilderCache:
         if treeType == "dom":
             from . import dom
-            # XXX: Keep backwards compatibility by using minidom if no implementation is given
+            # Come up with a sane default (pref. from the stdlib)
             if implementation is None:
                 from xml.dom import minidom
                 implementation = minidom
-            # XXX: NEVER cache here, caching is done in the dom submodule
+            # NEVER cache here, caching is done in the dom submodule
             return dom.getDomModule(implementation, **kwargs).TreeBuilder
         elif treeType == "lxml":
             from . import etree_lxml
             treeBuilderCache[treeType] = etree_lxml.TreeBuilder
         elif treeType == "etree":
-            # Come up with a sane default
+            # Come up with a sane default (pref. from the stdlib)
             if implementation is None:
                 try:
                     import xml.etree.cElementTree as ET
                 except ImportError:
-                    try:
-                        import xml.etree.ElementTree as ET
-                    except ImportError:
-                        try:
-                            import cElementTree as ET
-                        except ImportError:
-                            import elementtree.ElementTree as ET
+                    import xml.etree.ElementTree as ET
                 implementation = ET
             from . import etree
             # NEVER cache here, caching is done in the etree submodule
