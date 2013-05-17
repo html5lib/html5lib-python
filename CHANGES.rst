@@ -4,7 +4,7 @@ Change Log
 1.0
 ~~~
 
-Released on XXX, 2013
+Released on May 17, 2013
 
 * Implementation updated to implement the `HTML specification
   <http://www.whatwg.org/specs/web-apps/current-work/>`_ as of 5th May
