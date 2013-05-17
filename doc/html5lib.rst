@@ -72,8 +72,6 @@ Subpackages
 
     html5lib.filters
     html5lib.serializer
-    html5lib.tests
     html5lib.treebuilders
     html5lib.treewalkers
-    html5lib.trie
 

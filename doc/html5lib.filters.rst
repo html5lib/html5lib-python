@@ -10,7 +10,7 @@ filters Package
     :show-inheritance:
 
 :mod:`alphabeticalattributes` Module
----------------------------------
+------------------------------------
 
 .. automodule:: html5lib.filters.alphabeticalattributes
     :members:

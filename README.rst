@@ -63,10 +63,6 @@ format:
 
 More documentation is available at http://html5lib.readthedocs.org/.
 
-- ``ordereddict`` can be used under Python 2.6
-  (``collections.OrderedDict`` is used instead on later versions) to
-  serialize attributes in alphabetical order.
-
 
 Installation
 ------------
@@ -97,6 +93,10 @@ functionality:
 - ``charade`` can be used as a fallback when character encoding cannot
   be determined; ``chardet``, from which it was forked, can also be used
   on Python 2.
+
+- ``ordereddict`` can be used under Python 2.6
+  (``collections.OrderedDict`` is used instead on later versions) to
+  serialize attributes in alphabetical order.
 
 
 Bugs
