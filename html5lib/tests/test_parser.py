@@ -27,7 +27,7 @@ namespaceExpected = re.compile(r"^(\s*)<(\S+)>", re.M).sub
 
 def runParserTest(innerHTML, input, expected, errors, treeClass,
                   namespaceHTMLElements):
-    with warnings.catch_warnings(record=True) as w:
+    with warnings.catch_warnings(record=True) as caughtWarnings:
         warnings.simplefilter("always")
         p = html5parser.HTMLParser(tree=treeClass,
                                    namespaceHTMLElements=namespaceHTMLElements)
@@ -42,9 +42,10 @@ def runParserTest(innerHTML, input, expected, errors, treeClass,
                                   "\nTraceback:", traceback.format_exc()])
             assert False, errorMsg
 
-    otherW = [x for x in w if not issubclass(x.category, constants.DataLossWarning)]
-    assert len(otherW) == 0, [(x.category, x.message) for x in otherW]
-    if len(w):
+    otherWarnings = [x for x in caughtWarnings
+                     if not issubclass(x.category, constants.DataLossWarning)]
+    assert len(otherWarnings) == 0, [(x.category, x.message) for x in otherWarnings]
+    if len(caughtWarnings):
         return
 
     output = convertTreeDump(p.tree.testSerializer(document))
