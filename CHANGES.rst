@@ -1,8 +1,8 @@
 Change Log
 ----------
 
-1.0
-~~~
+1.0b1
+~~~~~
 
 Released on May 17, 2013
 
