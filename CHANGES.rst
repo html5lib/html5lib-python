@@ -1,6 +1,12 @@
 Change Log
 ----------
 
+1.0b2
+~~~~~
+
+Released on XXX, 2013
+
+
 1.0b1
 ~~~~~
 
