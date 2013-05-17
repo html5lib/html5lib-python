@@ -1,2 +1,4 @@
+-r requirements.txt
+
 nose
 ordereddict # Python 2.6
