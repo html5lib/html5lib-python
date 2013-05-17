@@ -1,10 +1,11 @@
 from __future__ import absolute_import, division, unicode_literals
 
 import io
+import warnings
 
 from . import support  # flake8: noqa
 from html5lib import html5parser
-from html5lib.constants import namespaces
+from html5lib.constants import namespaces, DataLossWarning
 from html5lib import treebuilders
 
 import unittest
@@ -16,6 +17,10 @@ class MoreParserTests(unittest.TestCase):
 
     def setUp(self):
         self.dom_tree = treebuilders.getTreeBuilder("dom")
+        try:
+            self.lxml_tree = treebuilders.getTreeBuilder("lxml")
+        except ImportError:
+            self.lxml_tree = None
 
     def test_assertDoctypeCloneable(self):
         parser = html5parser.HTMLParser(tree=self.dom_tree)
@@ -26,6 +31,18 @@ class MoreParserTests(unittest.TestCase):
         # http://groups.google.com/group/html5lib-discuss/browse_frm/thread/f4f00e4a2f26d5c0
         parser = html5parser.HTMLParser(tree=self.dom_tree)
         parser.parse("<pre>\nx\n&gt;\n</pre>")
+
+    def test_ihatexml(self):
+        if not self.lxml_tree:
+            return
+        parser = html5parser.HTMLParser(tree=self.lxml_tree)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+
+            parser.parse(b'<p xml:lang="pl">Witam wszystkich')
+
+            self.assertEqual(len(w), 1)
+            self.assertTrue(issubclass(w[-1].category, DataLossWarning))
 
     def test_namespace_html_elements_0_dom(self):
         parser = html5parser.HTMLParser(tree=self.dom_tree, namespaceHTMLElements=True)
