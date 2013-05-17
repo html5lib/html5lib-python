@@ -249,3 +249,32 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+class CExtMock(object):
+    """Required for autodoc on readthedocs.org where you cannot build C extensions."""
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __call__(self, *args, **kwargs):
+        return CExtMock()
+
+    @classmethod
+    def __getattr__(cls, name):
+        if name in ('__file__', '__path__'):
+            return '/dev/null'
+        else:
+            return CExtMock()
+
+try:
+    import lxml   # flake8: noqa
+except ImportError:
+    sys.modules['lxml'] = CExtMock()
+    sys.modules['lxml.etree'] = CExtMock()
+    print("warning: lxml modules mocked.")
+
+try:
+    import genshi   # flake8: noqa
+except ImportError:
+    sys.modules['genshi'] = CExtMock()
+    sys.modules['genshi.core'] = CExtMock()
+    print("warning: genshi modules mocked.")
