@@ -28,6 +28,8 @@ to the format used in the unittests
 
 from __future__ import absolute_import, division, unicode_literals
 
+from html5lib.utils import getDefaultEtreeImpl
+
 treeBuilderCache = {}
 
 
@@ -66,11 +68,7 @@ def getTreeBuilder(treeType, implementation=None, **kwargs):
         elif treeType == "etree":
             # Come up with a sane default (pref. from the stdlib)
             if implementation is None:
-                try:
-                    import xml.etree.cElementTree as ET
-                except ImportError:
-                    import xml.etree.ElementTree as ET
-                implementation = ET
+                implementation = getDefaultEtreeImpl()
             from . import etree
             # NEVER cache here, caching is done in the etree submodule
             return etree.getETreeModule(implementation, **kwargs).TreeBuilder

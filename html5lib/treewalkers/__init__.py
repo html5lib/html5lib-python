@@ -12,6 +12,8 @@ from __future__ import absolute_import, division, unicode_literals
 
 import sys
 
+from html5lib.utils import getDefaultEtreeImpl
+
 treeWalkerCache = {}
 
 
@@ -47,6 +49,8 @@ def getTreeWalker(treeType, implementation=None, **kwargs):
             from . import lxmletree
             treeWalkerCache[treeType] = lxmletree.TreeWalker
         elif treeType == "etree":
+            if implementation is None:
+                implementation = getDefaultEtreeImpl()
             from . import etree
             # XXX: NEVER cache here, caching is done in the etree submodule
             return etree.getETreeModule(implementation, **kwargs).TreeWalker
