@@ -1,5 +1,5 @@
 from __future__ import absolute_import, division, unicode_literals
-from six import text_type, string_types
+from six import string_types
 
 import gettext
 _ = gettext.gettext

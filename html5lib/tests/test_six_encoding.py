@@ -2,9 +2,10 @@
 from html5lib import html5parser, treewalkers, serializer
 from nose.tools import eq_
 
+
 def test_treewalker6():
     """Str/Unicode mix. If str attrs added to tree"""
-    
+
     text = '<a href="http://example.com">Example</a>'
     end_text = '<a href="http://example.com" class="test123">Example</a>'
     parser = html5parser.HTMLParser()
