@@ -179,10 +179,11 @@ class HTMLSerializer(object):
         self.encoding = encoding
         in_cdata = False
         self.errors = []
+
         if encoding and self.inject_meta_charset:
             from ..filters.inject_meta_charset import Filter
             treewalker = Filter(treewalker, encoding)
-        # XXX: WhitespaceFilter should be used before OptionalTagFilter
+        # WhitespaceFilter should be used before OptionalTagFilter
         # for maximum efficiently of this latter filter
         if self.strip_whitespace:
             from ..filters.whitespace import Filter
