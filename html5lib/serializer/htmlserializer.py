@@ -92,11 +92,12 @@ class HTMLSerializer(object):
     resolve_entities = True
 
     # miscellaneous options
+    alphabetical_attributes = False
     inject_meta_charset = True
     strip_whitespace = False
     sanitize = False
 
-    options = (# attribute quoting options,
+    options = (# attribute quoting options
                "quote_attr_values", "quote_char", "use_best_quote_char",
                # tag syntax options
                "omit_optional_tags", "minimize_boolean_attributes",
@@ -104,7 +105,8 @@ class HTMLSerializer(object):
                # escaping options
                "escape_lt_in_attrs", "escape_rcdata", "resolve_entities",
                # miscellaneous options
-               "inject_meta_charset", "strip_whitespace", "sanitize")
+               "alphabetical_attributes", "inject_meta_charset",
+               "strip_whitespace", "sanitize")
 
     def __init__(self, **kwargs):
         """Initialize HTMLSerializer.
@@ -147,6 +149,8 @@ class HTMLSerializer(object):
           See `html5lib user documentation`_
         omit_optional_tags=True|False
           Omit start/end tags that are optional.
+        alphabetical_attributes=False|True
+          Reorder attributes to be in alphabetical order.
 
         .. _html5lib user documentation: http://code.google.com/p/html5lib/wiki/UserDocumentation
         """
@@ -189,6 +193,12 @@ class HTMLSerializer(object):
         if self.omit_optional_tags:
             from ..filters.optionaltags import Filter
             treewalker = Filter(treewalker)
+        # Alphabetical attributes must be last, as other filters
+        # could add attributes and alter the order
+        if self.alphabetical_attributes:
+            from ..filters.alphabeticalattributes import Filter
+            treewalker = Filter(treewalker)
+
         for token in treewalker:
             type = token["type"]
             if type == "Doctype":
