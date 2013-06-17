@@ -97,10 +97,10 @@ class HTMLSerializer(object):
     sanitize = False
 
     options = ("quote_attr_values", "quote_char", "use_best_quote_char",
-               "minimize_boolean_attributes", "use_trailing_solidus",
-               "space_before_trailing_solidus", "omit_optional_tags",
-               "strip_whitespace", "inject_meta_charset", "escape_lt_in_attrs",
-               "escape_rcdata", "resolve_entities", "sanitize")
+               "omit_optional_tags", "minimize_boolean_attributes",
+               "use_trailing_solidus", "space_before_trailing_solidus",
+               "escape_lt_in_attrs", "escape_rcdata", "resolve_entities",
+               "inject_meta_charset", "strip_whitespace", "sanitize")
 
     def __init__(self, **kwargs):
         """Initialize HTMLSerializer.
