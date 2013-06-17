@@ -97,7 +97,8 @@ class HTMLSerializer(object):
     strip_whitespace = False
     sanitize = False
 
-    options = (# attribute quoting options
+    options = (
+               # attribute quoting options
                "quote_attr_values", "quote_char", "use_best_quote_char",
                # tag syntax options
                "omit_optional_tags", "minimize_boolean_attributes",
