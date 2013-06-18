@@ -310,3 +310,41 @@ def test_treewalker():
                                                                "document")]
                 errors = errors.split("\n")
                 yield runTreewalkerTest, innerHTML, input, expected, errors, treeCls
+
+
+def set_attribute_on_first_child(docfrag, name, value, treeName):
+    """naively sets an attribute on the first child of the document
+    fragment passed in"""
+    setter = {'ElementTree': lambda d: d[0].set,
+              'DOM': lambda d: d.firstChild.setAttribute}
+    setter['PullDOM'] = setter['DOM']
+    try:
+        setter.get(treeName, setter['ElementTree'])(docfrag)(name, value)
+    except TypeError:
+        setter['DOM'](docfrag)(name, value)
+
+
+def runTreewalkerEditTest(intext, expected, attrs_to_add, tree):
+    """tests what happens when we add attributes to the intext"""
+    treeName, treeClass = tree
+    parser = html5parser.HTMLParser(tree=treeClass["builder"])
+    document = parser.parseFragment(intext)
+    for nom, val in attrs_to_add:
+        set_attribute_on_first_child(document, nom, val, treeName)
+
+    document = treeClass.get("adapter", lambda x: x)(document)
+    output = convertTokens(treeClass["walker"](document))
+    output = attrlist.sub(sortattrs, output)
+    if not output in expected:
+        raise AssertionError('%r not in %r' % (output, expected))
+
+
+def test_treewalker_six_mix():
+    """Str/Unicode mix. If str attrs added to tree"""
+
+    intext = '<a href="http://example.com">Example</a>'
+    expected = '<a>\n  class="test123"\n  href="http://example.com"\n  "Example"'
+    attrs = [('class', 'test123')]
+
+    for tree in treeTypes.items():
+        yield runTreewalkerEditTest, intext, expected, attrs, tree

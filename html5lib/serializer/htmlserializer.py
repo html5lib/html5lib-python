@@ -1,5 +1,5 @@
 from __future__ import absolute_import, division, unicode_literals
-from six import string_types
+from six import text_type
 
 import gettext
 _ = gettext.gettext
@@ -154,14 +154,14 @@ class HTMLSerializer(object):
         self.strict = False
 
     def encode(self, string):
-        assert(isinstance(string, string_types))
+        assert(isinstance(string, text_type))
         if self.encoding:
             return string.encode(self.encoding, unicode_encode_errors)
         else:
             return string
 
     def encodeStrict(self, string):
-        assert(isinstance(string, string_types))
+        assert(isinstance(string, text_type))
         if self.encoding:
             return string.encode(self.encoding, "strict")
         else:
