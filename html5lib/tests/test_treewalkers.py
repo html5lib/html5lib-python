@@ -317,11 +317,11 @@ def set_attribute_on_first_child(docfrag, name, value, treeName):
     fragment passed in"""
     setter = {'ElementTree': lambda d: d[0].set,
               'DOM': lambda d: d.firstChild.setAttribute}
-    setter['PullDOM'] = setter['DOM']
+    setter['cElementTree'] = setter['ElementTree']
     try:
-        setter.get(treeName, setter['ElementTree'])(docfrag)(name, value)
-    except TypeError:
-        setter['DOM'](docfrag)(name, value)
+        setter.get(treeName, setter['DOM'])(docfrag)(name, value)
+    except AttributeError:
+        setter['ElementTree'](docfrag)(name, value)
 
 
 def runTreewalkerEditTest(intext, expected, attrs_to_add, tree):
@@ -336,15 +336,23 @@ def runTreewalkerEditTest(intext, expected, attrs_to_add, tree):
     output = convertTokens(treeClass["walker"](document))
     output = attrlist.sub(sortattrs, output)
     if not output in expected:
-        raise AssertionError('%r not in %r' % (output, expected))
+        raise AssertionError("TreewalkerEditTest: %s\nExpected:\n%s\nReceived:\n%s" % (treeName, expected, output))
 
 
 def test_treewalker_six_mix():
     """Str/Unicode mix. If str attrs added to tree"""
 
-    intext = '<a href="http://example.com">Example</a>'
-    expected = '<a>\n  class="test123"\n  href="http://example.com"\n  "Example"'
-    attrs = [('class', 'test123')]
+    # ToDo: Find a better way to specify that the attribute value is a bytestring
+    sm_tests = [
+        ('<a href="http://example.com">Example</a>',
+         [(str('class'), str('test123'))],
+         '<a>\n  class="test123"\n  href="http://example.com"\n  "Example"'),
+
+        ('<link href="http://example.com/cow">',
+         [(str('rel'), str('alternate'))],
+         '<link>\n  href="http://example.com/cow"\n  rel="alternate"\n  "Example"')
+    ]
 
     for tree in treeTypes.items():
-        yield runTreewalkerEditTest, intext, expected, attrs, tree
+        for intext, attrs, expected in sm_tests:
+            yield runTreewalkerEditTest, intext, expected, attrs, tree
