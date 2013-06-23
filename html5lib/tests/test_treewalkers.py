@@ -342,7 +342,12 @@ def runTreewalkerEditTest(intext, expected, attrs_to_add, tree):
 def test_treewalker_six_mix():
     """Str/Unicode mix. If str attrs added to tree"""
 
-    # ToDo: Find a better way to specify that the attribute value is a bytestring
+    # On Python 2.x string literals are of type str. Unless, like this
+    # file, the programmer imports unicode_literals from __future__.
+    # In that case, string literals become objects of type unicode.
+
+    # This test simulates a Py2 user, modifying attributes on a document
+    # fragment but not using the u'' syntax nor importing unicode_literals
     sm_tests = [
         ('<a href="http://example.com">Example</a>',
          [(str('class'), str('test123'))],
