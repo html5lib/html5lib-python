@@ -61,9 +61,9 @@ class TreeWalker(object):
         return {"type": "StartTag",
                 "name": text_type(name),
                 "namespace": to_text(namespace),
-                "data": dict(((to_text(ns), to_text(na, False)),
-                              to_text(va, False))
-                             for (ns, na), va in attrs.items())}
+                "data": dict(((to_text(namespace, False), to_text(name)),
+                              to_text(value, False))
+                             for (namespace, name), value in attrs.items())}
 
     def endTag(self, namespace, name):
         assert namespace is None or isinstance(namespace, string_types), type(namespace)
