@@ -63,7 +63,7 @@ class BufferedStream(object):
         return pos
 
     def seek(self, pos):
-        assert pos < self._bufferedBytes()
+        assert pos <= self._bufferedBytes()
         offset = pos
         i = 0
         while len(self.buffer[i]) < offset:
