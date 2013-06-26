@@ -40,6 +40,10 @@ Released on May 17, 2013
   longer supported. ``html5lib.treebuilders.getTreeBuilder("dom")`` will
   return the default DOM treebuilder, which uses ``xml.dom.minidom``.
 
+* Removed ``dom2sax`` from DOM treebuilders. It has been replaced by
+  ``treeadapters.sax.to_sax`` which is generic and supports any
+  treewalker; it also resolves all known bugs with ``dom2sax``.
+
 * Optional heuristic character encoding detection now based on
   ``charade`` for Python 2.6 - 3.3 compatibility.
 
