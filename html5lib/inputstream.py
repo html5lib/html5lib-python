@@ -67,7 +67,7 @@ class BufferedStream(object):
         offset = pos
         i = 0
         while len(self.buffer[i]) < offset:
-            offset -= pos
+            offset -= len(self.buffer[i])
             i += 1
         self.position = [i, offset]
 
