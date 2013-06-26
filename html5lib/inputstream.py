@@ -114,7 +114,7 @@ class BufferedStream(object):
         if remainingBytes:
             rv.append(self._readStream(remainingBytes))
 
-        return "".join(rv)
+        return b"".join(rv)
 
 
 def HTMLInputStream(source, encoding=None, parseMeta=True, chardet=True):
