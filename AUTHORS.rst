@@ -3,28 +3,31 @@ Credits
 
 ``html5lib`` is written and maintained by:
 
-- James Graham
 - Geoffrey Sneddon
+- James Graham
 - Łukasz Langa
 
 
 Patches and suggestions
 -----------------------
 
+- Andreas Madsack
+- Andy Wingo
 - Anne van Kesteren
+- Edward Z. Yang
+- fantasai
+- Juan Carlos Garcia Segovia
+- Karim Valiev
 - Lachlan Hunt
 - lantis63
-- Sam Ruby
-- Tim Fletcher
-- Thomas Broyer
+- Marc DM
 - Mark Pilgrim
+- Mike West
+- Mohammad Taha Jahangir
+- Ms2ger
+- Philip Jägenstedt
 - Philip Taylor
 - Ryan King
-- Edward Z. Yang
-- Philip Jägenstedt
-- Ms2ger
-- Andy Wingo
-- Andreas Madsack
-- Karim Valiev
-- Mohammad Taha Jahangir
-- Juan Carlos Garcia Segovia
+- Sam Ruby
+- Thomas Broyer
+- Tim Fletcher
