@@ -10,6 +10,7 @@ Credits
 
 Patches and suggestions
 -----------------------
+(In chronological order, by first commit:)
 
 - Anne van Kesteren
 - Lachlan Hunt
@@ -21,6 +22,7 @@ Patches and suggestions
 - Philip Taylor
 - Ryan King
 - Edward Z. Yang
+- fantasai
 - Philip Jägenstedt
 - Ms2ger
 - Andy Wingo
@@ -28,3 +30,5 @@ Patches and suggestions
 - Karim Valiev
 - Mohammad Taha Jahangir
 - Juan Carlos Garcia Segovia
+- Mike West
+- Marc DM
