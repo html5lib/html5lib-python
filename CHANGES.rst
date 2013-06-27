@@ -4,11 +4,21 @@ Change Log
 1.0b2
 ~~~~~
 
-Released on XXX, 2013
+Released on June 27, 2013
+
+* Removed reordering of attributes within the serializer. There is now
+  an ``alphabetical_attributes`` option which preserves the previous
+  behaviour through a new filter. This allows attribute order to be
+  preserved through html5lib if the tree builder preserves order.
 
 * Removed ``dom2sax`` from DOM treebuilders. It has been replaced by
   ``treeadapters.sax.to_sax`` which is generic and supports any
   treewalker; it also resolves all known bugs with ``dom2sax``.
+
+* Fix treewalker assertions on hitting bytes strings on
+  Python 2. Previous to 1.0b1, treewalkers coped with mixed
+  bytes/unicode data on Python 2; this reintroduces this prior
+  behaviour on Python 2. Behaviour is unchanged on Python 3.
 
 
 1.0b1
