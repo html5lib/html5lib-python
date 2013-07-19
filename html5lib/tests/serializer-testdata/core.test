@@ -42,7 +42,7 @@
         },
         {
             "expected": [
-                "<span title=foo<bar>"
+                "<span title=\"foo<bar\">"
             ],
             "input": [
                 [

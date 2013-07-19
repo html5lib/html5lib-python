@@ -1,10 +1,7 @@
 from __future__ import absolute_import, division, unicode_literals
 from six import text_type
 
-try:
-    from functools import reduce
-except ImportError:
-    pass
+import re
 
 from ..constants import voidElements, booleanAttributes, spaceCharacters
 from ..constants import rcdataElements, entities, xmlEntities
@@ -12,6 +9,8 @@ from .. import utils
 from xml.sax.saxutils import escape
 
 spaceCharacters = "".join(spaceCharacters)
+
+quoteAttributeSpec = re.compile("[" + spaceCharacters + "\"'=<>`]")
 
 try:
     from codecs import register_error, xmlcharrefreplace_errors
@@ -240,11 +239,10 @@ class HTMLSerializer(object):
                         (k not in booleanAttributes.get(name, tuple()) and
                          k not in booleanAttributes.get("", tuple())):
                         yield self.encodeStrict("=")
-                        if self.quote_attr_values or not v:
+                        if self.quote_attr_values:
                             quote_attr = True
                         else:
-                            quote_attr = reduce(lambda x, y: x or (y in v),
-                                                spaceCharacters + ">\"'=", False)
+                            quote_attr = len(v) == 0 or quoteAttributeSpec.search(v)
                         v = v.replace("&", "&amp;")
                         if self.escape_lt_in_attrs:
                             v = v.replace("<", "&lt;")
