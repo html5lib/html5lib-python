@@ -146,6 +146,37 @@ def testComment():
     throwsWithLatin1([["Comment", "\u0101"]])
 
 
+@pytest.mark.parametrize("c", list("\t\n\u000C\x20\r\"'=<>`"))
+def testSpecQuoteAttribute(c):
+    input_ = [["StartTag", "http://www.w3.org/1999/xhtml", "span",
+               [{"namespace": None, "name": "foo", "value": c}]]]
+    if c == '"':
+        output_ = ["<span foo='%s'>" % c]
+    else:
+        output_ = ['<span foo="%s">' % c]
+    options_ = {"quote_attr_values": "spec"}
+    runSerializerTest(input_, output_, options_)
+
+
+@pytest.mark.parametrize("c", list("\t\n\u000C\x20\r\"'=<>`"
+                                   "\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n"
+                                   "\x0b\x0c\r\x0e\x0f\x10\x11\x12\x13\x14\x15"
+                                   "\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f"
+                                   "\x20\x2f\x60\xa0\u1680\u180e\u180f\u2000"
+                                   "\u2001\u2002\u2003\u2004\u2005\u2006\u2007"
+                                   "\u2008\u2009\u200a\u2028\u2029\u202f\u205f"
+                                   "\u3000"))
+def testLegacyQuoteAttribute(c):
+    input_ = [["StartTag", "http://www.w3.org/1999/xhtml", "span",
+               [{"namespace": None, "name": "foo", "value": c}]]]
+    if c == '"':
+        output_ = ["<span foo='%s'>" % c]
+    else:
+        output_ = ['<span foo="%s">' % c]
+    options_ = {"quote_attr_values": "legacy"}
+    runSerializerTest(input_, output_, options_)
+
+
 @pytest.fixture
 def lxml_parser():
     return etree.XMLParser(resolve_entities=False)

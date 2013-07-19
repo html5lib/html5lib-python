@@ -41,9 +41,9 @@
                     ]
                 ]
             ],
-            "description": "quote_attr_values=true",
+            "description": "quote_attr_values='always'",
             "options": {
-                "quote_attr_values": true
+                "quote_attr_values": "always"
             }
         },
         {
@@ -64,9 +64,78 @@
                     ]
                 ]
             ],
-            "description": "quote_attr_values=true with irrelevant",
+            "description": "quote_attr_values='always' with irrelevant",
             "options": {
-                "quote_attr_values": true
+                "quote_attr_values": "always"
+            }
+        },
+        {
+            "expected": [
+                "<div class=\"foo\">"
+            ],
+            "input": [
+                [
+                    "StartTag",
+                    "http://www.w3.org/1999/xhtml",
+                    "div",
+                    [
+                        {
+                            "namespace": null,
+                            "name": "class",
+                            "value": "foo"
+                        }
+                    ]
+                ]
+            ],
+            "description": "non-minimized quote_attr_values='always'",
+            "options": {
+                "quote_attr_values": "always"
+            }
+        },
+        {
+            "expected": [
+                "<div class=foo>"
+            ],
+            "input": [
+                [
+                    "StartTag",
+                    "http://www.w3.org/1999/xhtml",
+                    "div",
+                    [
+                        {
+                            "namespace": null,
+                            "name": "class",
+                            "value": "foo"
+                        }
+                    ]
+                ]
+            ],
+            "description": "non-minimized quote_attr_values='legacy'",
+            "options": {
+                "quote_attr_values": "legacy"
+            }
+        },
+        {
+            "expected": [
+                "<div class=foo>"
+            ],
+            "input": [
+                [
+                    "StartTag",
+                    "http://www.w3.org/1999/xhtml",
+                    "div",
+                    [
+                        {
+                            "namespace": null,
+                            "name": "class",
+                            "value": "foo"
+                        }
+                    ]
+                ]
+            ],
+            "description": "non-minimized quote_attr_values='spec'",
+            "options": {
+                "quote_attr_values": "spec"
             }
         },
         {

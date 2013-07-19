@@ -33,6 +33,13 @@ Released on XXX
 * **Use scripting disabled by default (as we don't implement
   scripting).**
 
+* **Fix #11, avoiding the XSS bug potentially caused by serializer
+  allowing attribute values to be escaped out of in old browser versions,
+  changing the quote_attr_values option on serializer to take one of
+  three values, "always" (the old True value), "legacy" (the new option,
+  and the new default), and "spec" (the old False value, and the old
+  default).**
+
 
 0.9999999/1.0b8
 ~~~~~~~~~~~~~~~

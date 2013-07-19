@@ -242,7 +242,7 @@
         },
         {
             "expected": [
-                "<span title=foo\u000bbar>"
+                "<span title=\"foo\u000bbar\">"
             ],
             "input": [
                 [
