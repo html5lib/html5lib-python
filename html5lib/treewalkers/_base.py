@@ -115,21 +115,6 @@ class TreeWalker(object):
         return self.error(_("Unknown node type: ") + nodeType)
 
 
-class RecursiveTreeWalker(TreeWalker):
-    def walkChildren(self, node):
-        raise NotImplementedError
-
-    def element(self, node, namespace, name, attrs, hasChildren):
-        if name in voidElements:
-            for token in self.emptyTag(namespace, name, attrs, hasChildren):
-                yield token
-        else:
-            yield self.startTag(name, attrs)
-            if hasChildren:
-                for token in self.walkChildren(node):
-                    yield token
-            yield self.endTag(name)
-
 from xml.dom import Node
 
 DOCUMENT = Node.DOCUMENT_NODE
