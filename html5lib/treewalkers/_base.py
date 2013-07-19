@@ -4,6 +4,16 @@ from six import text_type, string_types
 import gettext
 _ = gettext.gettext
 
+from xml.dom import Node
+
+DOCUMENT = Node.DOCUMENT_NODE
+DOCTYPE = Node.DOCUMENT_TYPE_NODE
+TEXT = Node.TEXT_NODE
+ELEMENT = Node.ELEMENT_NODE
+COMMENT = Node.COMMENT_NODE
+ENTITY = Node.ENTITY_NODE
+UNKNOWN = "<#UNKNOWN#>"
+
 from ..constants import voidElements, spaceCharacters
 spaceCharacters = "".join(spaceCharacters)
 
@@ -113,32 +123,6 @@ class TreeWalker(object):
 
     def unknown(self, nodeType):
         return self.error(_("Unknown node type: ") + nodeType)
-
-
-class RecursiveTreeWalker(TreeWalker):
-    def walkChildren(self, node):
-        raise NotImplementedError
-
-    def element(self, node, namespace, name, attrs, hasChildren):
-        if name in voidElements:
-            for token in self.emptyTag(namespace, name, attrs, hasChildren):
-                yield token
-        else:
-            yield self.startTag(name, attrs)
-            if hasChildren:
-                for token in self.walkChildren(node):
-                    yield token
-            yield self.endTag(name)
-
-from xml.dom import Node
-
-DOCUMENT = Node.DOCUMENT_NODE
-DOCTYPE = Node.DOCUMENT_TYPE_NODE
-TEXT = Node.TEXT_NODE
-ELEMENT = Node.ELEMENT_NODE
-COMMENT = Node.COMMENT_NODE
-ENTITY = Node.ENTITY_NODE
-UNKNOWN = "<#UNKNOWN#>"
 
 
 class NonRecursiveTreeWalker(TreeWalker):
