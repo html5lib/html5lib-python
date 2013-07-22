@@ -1,6 +1,21 @@
 Change Log
 ----------
 
+1.0b3
+~~~~~
+
+Released on July 24, 2013
+
+* Removed ``RecursiveTreeWalker`` from ``treewalkers._base``. Any
+  implementation using it should be moved to
+  ``NonRecursiveTreeWalker``, as everything bundled with html5lib has
+  for years.
+
+* Fix #67 so that ``BufferedStream`` to correctly returns a bytes
+  object, thereby fixing any case where html5lib is passed a
+  non-seekable RawIOBase-like object.
+
+
 1.0b2
 ~~~~~
 
