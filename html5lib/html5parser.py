@@ -649,8 +649,8 @@ def getPhases(debug):
             Phase.__init__(self, parser, tree)
 
             self.startTagHandler = utils.MethodDispatcher([
-                ("html", self.startTagHtml),
-                ("head", self.startTagHead)
+                (("html",), self.startTagHtml),
+                (("head",), self.startTagHead)
             ])
             self.startTagHandler.default = self.startTagOther
 
@@ -695,19 +695,19 @@ def getPhases(debug):
             Phase.__init__(self, parser, tree)
 
             self.startTagHandler = utils.MethodDispatcher([
-                ("html", self.startTagHtml),
-                ("title", self.startTagTitle),
+                (("html",), self.startTagHtml),
+                (("title",), self.startTagTitle),
                 (("noscript", "noframes", "style"), self.startTagNoScriptNoFramesStyle),
-                ("script", self.startTagScript),
+                (("script",), self.startTagScript),
                 (("base", "basefont", "bgsound", "command", "link"),
                  self.startTagBaseLinkCommand),
-                ("meta", self.startTagMeta),
-                ("head", self.startTagHead)
+                (("meta",), self.startTagMeta),
+                (("head",), self.startTagHead)
             ])
             self.startTagHandler.default = self.startTagOther
 
             self. endTagHandler = utils.MethodDispatcher([
-                ("head", self.endTagHead),
+                (("head",), self.endTagHead),
                 (("br", "html", "body"), self.endTagHtmlBodyBr)
             ])
             self.endTagHandler.default = self.endTagOther
@@ -794,13 +794,13 @@ def getPhases(debug):
             Phase.__init__(self, parser, tree)
 
             self.startTagHandler = utils.MethodDispatcher([
-                ("html", self.startTagHtml),
-                ("body", self.startTagBody),
-                ("frameset", self.startTagFrameset),
+                (("html",), self.startTagHtml),
+                (("body",), self.startTagBody),
+                (("frameset",), self.startTagFrameset),
                 (("base", "basefont", "bgsound", "link", "meta", "noframes", "script",
                   "style", "title"),
                  self.startTagFromHead),
-                ("head", self.startTagHead)
+                (("head",), self.startTagHead)
             ])
             self.startTagHandler.default = self.startTagOther
             self.endTagHandler = utils.MethodDispatcher([(("body", "html", "br"),
@@ -866,45 +866,45 @@ def getPhases(debug):
             self.processSpaceCharactersNonPre = self.processSpaceCharacters
 
             self.startTagHandler = utils.MethodDispatcher([
-                ("html", self.startTagHtml),
+                (("html",), self.startTagHtml),
                 (("base", "basefont", "bgsound", "command", "link", "meta",
                   "noframes", "script", "style", "title"),
                  self.startTagProcessInHead),
-                ("body", self.startTagBody),
-                ("frameset", self.startTagFrameset),
+                (("body",), self.startTagBody),
+                (("frameset",), self.startTagFrameset),
                 (("address", "article", "aside", "blockquote", "center", "details",
-                  "details", "dir", "div", "dl", "fieldset", "figcaption", "figure",
-                  "footer", "header", "hgroup", "main", "menu", "nav", "ol", "p",
-                  "section", "summary", "ul"),
+                  "dir", "div", "dl", "fieldset", "figcaption", "figure", "footer",
+                  "header", "hgroup", "main", "menu", "nav", "ol", "p", "section",
+                  "summary", "ul"),
                  self.startTagCloseP),
                 (headingElements, self.startTagHeading),
                 (("pre", "listing"), self.startTagPreListing),
-                ("form", self.startTagForm),
+                (("form",), self.startTagForm),
                 (("li", "dd", "dt"), self.startTagListItem),
-                ("plaintext", self.startTagPlaintext),
-                ("a", self.startTagA),
+                (("plaintext",), self.startTagPlaintext),
+                (("a",), self.startTagA),
                 (("b", "big", "code", "em", "font", "i", "s", "small", "strike",
                   "strong", "tt", "u"), self.startTagFormatting),
-                ("nobr", self.startTagNobr),
-                ("button", self.startTagButton),
+                (("nobr",), self.startTagNobr),
+                (("button",), self.startTagButton),
                 (("applet", "marquee", "object"), self.startTagAppletMarqueeObject),
-                ("xmp", self.startTagXmp),
-                ("table", self.startTagTable),
+                (("xmp",), self.startTagXmp),
+                (("table",), self.startTagTable),
                 (("area", "br", "embed", "img", "keygen", "wbr"),
                  self.startTagVoidFormatting),
                 (("param", "source", "track"), self.startTagParamSource),
-                ("input", self.startTagInput),
-                ("hr", self.startTagHr),
-                ("image", self.startTagImage),
-                ("isindex", self.startTagIsIndex),
-                ("textarea", self.startTagTextarea),
-                ("iframe", self.startTagIFrame),
-                (("noembed", "noframes", "noscript"), self.startTagRawtext),
-                ("select", self.startTagSelect),
+                (("input",), self.startTagInput),
+                (("hr",), self.startTagHr),
+                (("image",), self.startTagImage),
+                (("isindex",), self.startTagIsIndex),
+                (("textarea",), self.startTagTextarea),
+                (("iframe",), self.startTagIFrame),
+                (("noembed", "noscript"), self.startTagRawtext),
+                (("select",), self.startTagSelect),
                 (("rp", "rt"), self.startTagRpRt),
                 (("option", "optgroup"), self.startTagOpt),
-                (("math"), self.startTagMath),
-                (("svg"), self.startTagSvg),
+                (("math",), self.startTagMath),
+                (("svg",), self.startTagSvg),
                 (("caption", "col", "colgroup", "frame", "head",
                   "tbody", "td", "tfoot", "th", "thead",
                   "tr"), self.startTagMisplaced)
@@ -912,20 +912,20 @@ def getPhases(debug):
             self.startTagHandler.default = self.startTagOther
 
             self.endTagHandler = utils.MethodDispatcher([
-                ("body", self.endTagBody),
-                ("html", self.endTagHtml),
+                (("body",), self.endTagBody),
+                (("html",), self.endTagHtml),
                 (("address", "article", "aside", "blockquote", "button", "center",
                   "details", "dialog", "dir", "div", "dl", "fieldset", "figcaption", "figure",
                   "footer", "header", "hgroup", "listing", "main", "menu", "nav", "ol", "pre",
                   "section", "summary", "ul"), self.endTagBlock),
-                ("form", self.endTagForm),
-                ("p", self.endTagP),
+                (("form",), self.endTagForm),
+                (("p",), self.endTagP),
                 (("dd", "dt", "li"), self.endTagListItem),
                 (headingElements, self.endTagHeading),
                 (("a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small",
                   "strike", "strong", "tt", "u"), self.endTagFormatting),
                 (("applet", "marquee", "object"), self.endTagAppletMarqueeObject),
-                ("br", self.endTagBr),
+                (("br",), self.endTagBr),
             ])
             self.endTagHandler.default = self.endTagOther
 
@@ -1587,7 +1587,7 @@ def getPhases(debug):
             self.startTagHandler = utils.MethodDispatcher([])
             self.startTagHandler.default = self.startTagOther
             self.endTagHandler = utils.MethodDispatcher([
-                ("script", self.endTagScript)])
+                (("script",), self.endTagScript)])
             self.endTagHandler.default = self.endTagOther
 
         def processCharacters(self, token):
@@ -1619,21 +1619,21 @@ def getPhases(debug):
         def __init__(self, parser, tree):
             Phase.__init__(self, parser, tree)
             self.startTagHandler = utils.MethodDispatcher([
-                ("html", self.startTagHtml),
-                ("caption", self.startTagCaption),
-                ("colgroup", self.startTagColgroup),
-                ("col", self.startTagCol),
+                (("html",), self.startTagHtml),
+                (("caption",), self.startTagCaption),
+                (("colgroup",), self.startTagColgroup),
+                (("col",), self.startTagCol),
                 (("tbody", "tfoot", "thead"), self.startTagRowGroup),
                 (("td", "th", "tr"), self.startTagImplyTbody),
-                ("table", self.startTagTable),
+                (("table",), self.startTagTable),
                 (("style", "script"), self.startTagStyleScript),
-                ("input", self.startTagInput),
-                ("form", self.startTagForm)
+                (("input",), self.startTagInput),
+                (("form",), self.startTagForm)
             ])
             self.startTagHandler.default = self.startTagOther
 
             self.endTagHandler = utils.MethodDispatcher([
-                ("table", self.endTagTable),
+                (("table",), self.endTagTable),
                 (("body", "caption", "col", "colgroup", "html", "tbody", "td",
                   "tfoot", "th", "thead", "tr"), self.endTagIgnore)
             ])
@@ -1810,15 +1810,15 @@ def getPhases(debug):
             Phase.__init__(self, parser, tree)
 
             self.startTagHandler = utils.MethodDispatcher([
-                ("html", self.startTagHtml),
+                (("html",), self.startTagHtml),
                 (("caption", "col", "colgroup", "tbody", "td", "tfoot", "th",
                   "thead", "tr"), self.startTagTableElement)
             ])
             self.startTagHandler.default = self.startTagOther
 
             self.endTagHandler = utils.MethodDispatcher([
-                ("caption", self.endTagCaption),
-                ("table", self.endTagTable),
+                (("caption",), self.endTagCaption),
+                (("table",), self.endTagTable),
                 (("body", "col", "colgroup", "html", "tbody", "td", "tfoot", "th",
                   "thead", "tr"), self.endTagIgnore)
             ])
@@ -1882,14 +1882,14 @@ def getPhases(debug):
             Phase.__init__(self, parser, tree)
 
             self.startTagHandler = utils.MethodDispatcher([
-                ("html", self.startTagHtml),
-                ("col", self.startTagCol)
+                (("html",), self.startTagHtml),
+                (("col",), self.startTagCol)
             ])
             self.startTagHandler.default = self.startTagOther
 
             self.endTagHandler = utils.MethodDispatcher([
-                ("colgroup", self.endTagColgroup),
-                ("col", self.endTagCol)
+                (("colgroup",), self.endTagColgroup),
+                (("col",), self.endTagCol)
             ])
             self.endTagHandler.default = self.endTagOther
 
@@ -1945,8 +1945,8 @@ def getPhases(debug):
         def __init__(self, parser, tree):
             Phase.__init__(self, parser, tree)
             self.startTagHandler = utils.MethodDispatcher([
-                ("html", self.startTagHtml),
-                ("tr", self.startTagTr),
+                (("html",), self.startTagHtml),
+                (("tr",), self.startTagTr),
                 (("td", "th"), self.startTagTableCell),
                 (("caption", "col", "colgroup", "tbody", "tfoot", "thead"),
                  self.startTagTableOther)
@@ -1955,7 +1955,7 @@ def getPhases(debug):
 
             self.endTagHandler = utils.MethodDispatcher([
                 (("tbody", "tfoot", "thead"), self.endTagTableRowGroup),
-                ("table", self.endTagTable),
+                (("table",), self.endTagTable),
                 (("body", "caption", "col", "colgroup", "html", "td", "th",
                   "tr"), self.endTagIgnore)
             ])
@@ -2043,7 +2043,7 @@ def getPhases(debug):
         def __init__(self, parser, tree):
             Phase.__init__(self, parser, tree)
             self.startTagHandler = utils.MethodDispatcher([
-                ("html", self.startTagHtml),
+                (("html",), self.startTagHtml),
                 (("td", "th"), self.startTagTableCell),
                 (("caption", "col", "colgroup", "tbody", "tfoot", "thead",
                   "tr"), self.startTagTableOther)
@@ -2051,8 +2051,8 @@ def getPhases(debug):
             self.startTagHandler.default = self.startTagOther
 
             self.endTagHandler = utils.MethodDispatcher([
-                ("tr", self.endTagTr),
-                ("table", self.endTagTable),
+                (("tr",), self.endTagTr),
+                (("table",), self.endTagTable),
                 (("tbody", "tfoot", "thead"), self.endTagTableRowGroup),
                 (("body", "caption", "col", "colgroup", "html", "td", "th"),
                  self.endTagIgnore)
@@ -2132,7 +2132,7 @@ def getPhases(debug):
         def __init__(self, parser, tree):
             Phase.__init__(self, parser, tree)
             self.startTagHandler = utils.MethodDispatcher([
-                ("html", self.startTagHtml),
+                (("html",), self.startTagHtml),
                 (("caption", "col", "colgroup", "tbody", "td", "tfoot", "th",
                   "thead", "tr"), self.startTagTableOther)
             ])
@@ -2208,19 +2208,19 @@ def getPhases(debug):
             Phase.__init__(self, parser, tree)
 
             self.startTagHandler = utils.MethodDispatcher([
-                ("html", self.startTagHtml),
-                ("option", self.startTagOption),
-                ("optgroup", self.startTagOptgroup),
-                ("select", self.startTagSelect),
+                (("html",), self.startTagHtml),
+                (("option",), self.startTagOption),
+                (("optgroup",), self.startTagOptgroup),
+                (("select",), self.startTagSelect),
                 (("input", "keygen", "textarea"), self.startTagInput),
-                ("script", self.startTagScript)
+                (("script",), self.startTagScript)
             ])
             self.startTagHandler.default = self.startTagOther
 
             self.endTagHandler = utils.MethodDispatcher([
-                ("option", self.endTagOption),
-                ("optgroup", self.endTagOptgroup),
-                ("select", self.endTagSelect)
+                (("option",), self.endTagOption),
+                (("optgroup",), self.endTagOptgroup),
+                (("select",), self.endTagSelect)
             ])
             self.endTagHandler.default = self.endTagOther
 
@@ -2462,11 +2462,13 @@ def getPhases(debug):
             Phase.__init__(self, parser, tree)
 
             self.startTagHandler = utils.MethodDispatcher([
-                ("html", self.startTagHtml)
+                (("html",), self.startTagHtml)
             ])
             self.startTagHandler.default = self.startTagOther
 
-            self.endTagHandler = utils.MethodDispatcher([("html", self.endTagHtml)])
+            self.endTagHandler = utils.MethodDispatcher([
+                (("html",), self.endTagHtml)
+            ])
             self.endTagHandler.default = self.endTagOther
 
         def processEOF(self):
@@ -2510,15 +2512,15 @@ def getPhases(debug):
             Phase.__init__(self, parser, tree)
 
             self.startTagHandler = utils.MethodDispatcher([
-                ("html", self.startTagHtml),
-                ("frameset", self.startTagFrameset),
-                ("frame", self.startTagFrame),
-                ("noframes", self.startTagNoframes)
+                (("html",), self.startTagHtml),
+                (("frameset",), self.startTagFrameset),
+                (("frame",), self.startTagFrame),
+                (("noframes",), self.startTagNoframes)
             ])
             self.startTagHandler.default = self.startTagOther
 
             self.endTagHandler = utils.MethodDispatcher([
-                ("frameset", self.endTagFrameset)
+                (("frameset",), self.endTagFrameset)
             ])
             self.endTagHandler.default = self.endTagOther
 
@@ -2567,13 +2569,13 @@ def getPhases(debug):
             Phase.__init__(self, parser, tree)
 
             self.startTagHandler = utils.MethodDispatcher([
-                ("html", self.startTagHtml),
-                ("noframes", self.startTagNoframes)
+                (("html",), self.startTagHtml),
+                (("noframes",), self.startTagNoframes)
             ])
             self.startTagHandler.default = self.startTagOther
 
             self.endTagHandler = utils.MethodDispatcher([
-                ("html", self.endTagHtml)
+                (("html",), self.endTagHtml)
             ])
             self.endTagHandler.default = self.endTagOther
 
@@ -2603,7 +2605,7 @@ def getPhases(debug):
             Phase.__init__(self, parser, tree)
 
             self.startTagHandler = utils.MethodDispatcher([
-                ("html", self.startTagHtml)
+                (("html",), self.startTagHtml)
             ])
             self.startTagHandler.default = self.startTagOther
 
@@ -2641,8 +2643,8 @@ def getPhases(debug):
             Phase.__init__(self, parser, tree)
 
             self.startTagHandler = utils.MethodDispatcher([
-                ("html", self.startTagHtml),
-                ("noframes", self.startTagNoFrames)
+                (("html",), self.startTagHtml),
+                (("noframes",), self.startTagNoFrames)
             ])
             self.startTagHandler.default = self.startTagOther
 
