@@ -868,7 +868,7 @@ def getPhases(debug):
             self.startTagHandler = utils.MethodDispatcher([
                 ("html", self.startTagHtml),
                 (("base", "basefont", "bgsound", "command", "link", "meta",
-                  "noframes", "script", "style", "title"),
+                  "script", "style", "title"),
                  self.startTagProcessInHead),
                 ("body", self.startTagBody),
                 ("frameset", self.startTagFrameset),
