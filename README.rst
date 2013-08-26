@@ -41,6 +41,29 @@ a treebuilder:
   with open("mydocument.html", "rb") as f:
       lxml_etree_document = html5lib.parse(f, treebuilder="lxml")
 
+When using with ``urllib2`` (Python 2), the charset from HTTP should be
+pass into html5lib as follows:
+
+.. code-block:: python
+
+  from contextlib import closing
+  from urllib2 import urlopen
+  import html5lib
+
+  with closing(urlopen("http://example.com/")) as f:
+      document = html5lib.parse(f, encoding=f.info().getparam("charset"))
+
+When using with ``urllib.request`` (Python 3), the charset from HTTP
+should be pass into html5lib as follows:
+
+.. code-block:: python
+
+  from urllib.request import urlopen
+  import html5lib
+
+  with urlopen("http://example.com/") as f:
+      document = html5lib.parse(f, encoding=f.info().get_content_charset())
+
 To have more control over the parser, create a parser object explicitly.
 For instance, to make the parser raise exceptions on parse errors, use:
 
