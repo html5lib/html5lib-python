@@ -83,16 +83,6 @@ else:
          "walker": treewalkers.getTreeWalker("lxml")}
 
 
-# Try whatever etree implementations are available from a list that are
-#"supposed" to work
-try:
-    import pxdom
-    treeTypes['pxdom'] = \
-        {"builder": treebuilders.getTreeBuilder("dom", pxdom),
-         "walker": treewalkers.getTreeWalker("dom")}
-except ImportError:
-    pass
-
 try:
     from genshi.core import QName, Attrs
     from genshi.core import START, END, TEXT, COMMENT, DOCTYPE
