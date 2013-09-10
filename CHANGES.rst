@@ -1,6 +1,16 @@
 Change Log
 ----------
 
+0.99
+~~~~
+
+Released on September 10, 2013
+
+* No library changes from 1.0b3; released as 0.99 as pip has changed
+  behaviour from 1.4 to avoid installing pre-release versions per
+  PEP 440.
+
+
 1.0b3
 ~~~~~
 
