@@ -1,5 +1,5 @@
 from __future__ import absolute_import, division, unicode_literals
-from six import text_type
+from six import text_type, string_types, binary_type
 
 from lxml import etree
 from ..treebuilders.etree import tag_regexp
@@ -87,7 +87,7 @@ class FragmentWrapper(object):
             self.tail = ensure_str(self.obj.tail)
         else:
             self.tail = None
-        self.isstring = isinstance(obj, str) or isinstance(obj, bytes)
+        self.isstring = isinstance(obj, string_types) or isinstance(obj, binary_type)
         # Support for bytes here is Py2
         if self.isstring:
             self.obj = ensure_str(self.obj)
