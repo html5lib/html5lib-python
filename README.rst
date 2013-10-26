@@ -116,10 +116,6 @@ functionality:
 - ``chardet`` can be used as a fallback when character encoding cannot
   be determined.
 
-- ``ordereddict`` can be used under Python 2.6
-  (``collections.OrderedDict`` is used instead on later versions) to
-  serialize attributes in alphabetical order.
-
 
 Bugs
 ----

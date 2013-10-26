@@ -49,3 +49,10 @@ def test_namespace_html_elements_1_etree():
 
 def test_unicode_file():
     assert parse(io.StringIO("a")) is not None
+
+
+def test_duplicate_attribute():
+    # This is here because we impl it in parser and not tokenizer
+    doc = parse('<p class=a class=b>')
+    el = doc[1][0]
+    assert el.get("class") == "a"

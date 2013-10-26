@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, unicode_literals
 
+import sys
 from types import ModuleType
 
 from six import text_type
@@ -12,8 +13,10 @@ except ImportError:
 
 __all__ = ["default_etree", "MethodDispatcher", "isSurrogatePair",
            "surrogatePairToCodepoint", "moduleFactoryFactory",
-           "supports_lone_surrogates"]
+           "supports_lone_surrogates", "PY27"]
 
+
+PY27 = sys.version_info[0] == 2 and sys.version_info[1] >= 7
 
 # Platforms not supporting lone surrogates (\uD800-\uDFFF) should be
 # caught by the below test. In general this would be any platform
