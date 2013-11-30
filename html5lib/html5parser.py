@@ -129,6 +129,17 @@ class HTMLParser(object):
 
         self.framesetOK = True
 
+    @property
+    def documentEncoding(self):
+        """The name of the character encoding
+        that was used to decode the input stream,
+        or :obj:`None` if that is not determined yet.
+
+        """
+        if not hasattr(self, 'tokenizer'):
+            return None
+        return self.tokenizer.stream.charEncoding[0]
+
     def isHTMLIntegrationPoint(self, element):
         if (element.name == "annotation-xml" and
                 element.namespace == namespaces["mathml"]):
