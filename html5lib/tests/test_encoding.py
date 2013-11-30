@@ -26,12 +26,35 @@ class Html5EncodingTestCase(unittest.TestCase):
         self.assertEqual(inputstream.codecName("ISO_8859--1"), "windows-1252")
 
 
+def test_unicode_input_encoding():
+    p = HTMLParser()
+    assert p.usedEncoding() is None
+    p.parse(b'<meta charset=latin2>', useChardet=False)
+    assert p.usedEncoding() == 'iso8859-2'
+
+    p = HTMLParser()
+    assert p.usedEncoding() is None
+    p.parse('<meta charset=latin2>')
+    assert p.usedEncoding() is None
+
+    p = HTMLParser()
+    assert p.usedEncoding() is None
+    try:
+        p.parse('<meta charset=latin2>', encoding='latin3')
+    except TypeError:
+        pass
+    else:
+        assert 0, 'Expected TypeError'
+    assert p.usedEncoding() is None
+
+
 def runParserEncodingTest(data, encoding):
     p = HTMLParser()
+    assert p.usedEncoding() is None
     p.parse(data, useChardet=False)
     encoding = encoding.lower().decode("ascii")
 
-    assert encoding == p.tokenizer.stream.charEncoding[0], errorMessage(data, encoding, p.tokenizer.stream.charEncoding[0])
+    assert encoding == p.usedEncoding(), errorMessage(data, encoding, p.usedEncoding())
 
 
 def runPreScanEncodingTest(data, encoding):

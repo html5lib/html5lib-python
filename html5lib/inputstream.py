@@ -175,6 +175,9 @@ class HTMLUnicodeInputStream(object):
 
         self.reset()
 
+    def usedEncoding(self):
+        return None  # No encoding involved for Unicode input.
+
     def reset(self):
         self.chunk = ""
         self.chunkSize = 0
@@ -412,6 +415,9 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
 
         # Call superclass
         self.reset()
+
+    def usedEncoding(self):
+        return self.charEncoding[0]
 
     def reset(self):
         self.dataStream = codecs.getreader(self.charEncoding[0])(self.rawStream,
