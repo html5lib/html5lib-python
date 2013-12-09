@@ -1312,7 +1312,7 @@ def getPhases(debug):
             elif self.tree.openElements[-1].name != "body":
                 for node in self.tree.openElements[2:]:
                     if node.name not in frozenset(("dd", "dt", "li", "optgroup",
-                                                   "option", "p", "rp", "rt",
+                                                   "option", "p", "rp", "rt", "rb", "rtc",
                                                    "tbody", "td", "tfoot",
                                                    "th", "thead", "tr", "body",
                                                    "html")):
