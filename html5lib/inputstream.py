@@ -142,6 +142,8 @@ class HTMLUnicodeInputStream(object):
 
     _defaultChunkSize = 10240
 
+    documentEncoding = None  # No encoding involved for Unicode input.
+
     def __init__(self, source):
         """Initialises the HTMLInputStream.
 
@@ -412,6 +414,10 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
 
         # Call superclass
         self.reset()
+
+    @property
+    def documentEncoding(self):
+        return self.charEncoding[0]
 
     def reset(self):
         self.dataStream = codecs.getreader(self.charEncoding[0])(self.rawStream,
