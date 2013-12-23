@@ -1,6 +1,18 @@
 Change Log
 ----------
 
+0.999
+~~~~~
+
+Released on December 23, 2013
+
+* Fix #127: add work-around for CPython issue #20007: .read(0) on
+  http.client.HTTPResponse drops the rest of the content.
+
+* Fix #115: lxml treewalker can now deal with fragments containing, at
+  their root level, text nodes with non-ASCII characters on Python 2.
+
+
 0.99
 ~~~~
 
