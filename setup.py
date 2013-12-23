@@ -29,7 +29,7 @@ with codecs.open(os.path.join(current_dir, 'README.rst'), 'r', 'utf8') as readme
         long_description = readme_file.read() + '\n' + changes_file.read()
 
 setup(name='html5lib',
-      version='0.999-dev',
+      version='0.999',
       url='https://github.com/html5lib/html5lib-python',
       license="MIT License",
       description='HTML parser based on the WHATWG HTML specifcation',
