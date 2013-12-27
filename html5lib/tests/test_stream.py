@@ -6,6 +6,7 @@ import codecs
 from io import BytesIO
 
 from six.moves import http_client
+from six.moves.urllib.response import addinfourl
 
 from html5lib.inputstream import (BufferedStream, HTMLInputStream,
                                   HTMLUnicodeInputStream, HTMLBinaryInputStream)
@@ -170,6 +171,17 @@ class HTMLInputStreamTest(unittest.TestCase):
         stream = HTMLInputStream(source)
         self.assertEqual(stream.charsUntil(" "), "Text")
 
+        source = http_client.HTTPResponse(FakeSocket())
+        source.begin()
+        try:
+            source = addinfourl(source, None, None)
+        except AttributeError:
+            # Fails on Python 2.x.
+            # Apparently, addinfourl it only used with HTTPResponse on 3.x
+            pass
+        else:
+            stream = HTMLInputStream(source)
+            self.assertEqual(stream.charsUntil(" "), "Text")
 
 def buildTestSuite():
     return unittest.defaultTestLoader.loadTestsFromName(__name__)
