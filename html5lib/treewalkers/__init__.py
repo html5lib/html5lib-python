@@ -21,19 +21,21 @@ treeWalkerCache = {}
 def getTreeWalker(treeType, implementation=None, **kwargs):
     """Get a TreeWalker class for various types of tree with built-in support
 
-    treeType - the name of the tree type required (case-insensitive). Supported
-               values are:
+    Args:
+        treeType (str): the name of the tree type required (case-insensitive).
+            Supported values are:
 
-                "dom" - The xml.dom.minidom DOM implementation
-                "etree" - A generic walker for tree implementations exposing an
-                          elementtree-like interface (known to work with
-                          ElementTree, cElementTree and lxml.etree).
-                "lxml" - Optimized walker for lxml.etree
-                "genshi" - a Genshi stream
+            - "dom": The xml.dom.minidom DOM implementation
+            - "etree": A generic walker for tree implementations exposing an
+                       elementtree-like interface (known to work with
+                       ElementTree, cElementTree and lxml.etree).
+            - "lxml": Optimized walker for lxml.etree
+            - "genshi": a Genshi stream
 
-    implementation - (Currently applies to the "etree" tree type only). A module
-                      implementing the tree type e.g. xml.etree.ElementTree or
-                      cElementTree."""
+        Implementation: A module implementing the tree type e.g.
+            xml.etree.ElementTree or cElementTree (Currently applies to the
+            "etree" tree type only).
+    """
 
     treeType = treeType.lower()
     if treeType not in treeWalkerCache:
