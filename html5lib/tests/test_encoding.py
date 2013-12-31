@@ -41,8 +41,8 @@ def test_unicode_input_encoding():
     assert p.documentEncoding is None
     try:
         p.parse('<meta charset=latin2>', encoding='latin3')
-    except TypeError:
-        pass
+    except TypeError as e:
+        assert 'Cannot explicitly set an encoding with a unicode string' in str(e)
     else:
         assert 0, 'Expected TypeError'
     assert p.documentEncoding is None
