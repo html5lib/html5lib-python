@@ -1,3 +1,5 @@
+# coding: utf8
+
 from __future__ import absolute_import, division, unicode_literals
 
 from . import support  # flake8: noqa
@@ -6,6 +8,7 @@ import codecs
 from io import BytesIO
 
 from six.moves import http_client
+from six.moves.urllib.response import addinfourl
 
 from html5lib.inputstream import (BufferedStream, HTMLInputStream,
                                   HTMLUnicodeInputStream, HTMLBinaryInputStream)
@@ -156,6 +159,25 @@ class HTMLInputStreamTest(unittest.TestCase):
         self.assertEqual(stream.char(), "d")
         self.assertEqual(stream.position(), (2, 1))
 
+    def test_non_seekable_stream(self):
+        class Stream(object):
+            def __init__(self, data):
+                self.data = data
+
+            def read(self, n=None):
+                if n is None:
+                    data = self.data
+                    self.data = b''
+                    return data
+                else:
+                    data = self.data[:n]
+                    self.data = self.data[n:]
+                    return data
+
+        # Fails when firstChunk is ignored
+        stream = HTMLInputStream(Stream(b"Test"))
+        self.assertEqual(stream.charsUntil(" "), "Test")
+
     def test_python_issue_20007(self):
         """
         Make sure we have a work-around for Python bug #20007
@@ -170,6 +192,26 @@ class HTMLInputStreamTest(unittest.TestCase):
         stream = HTMLInputStream(source)
         self.assertEqual(stream.charsUntil(" "), "Text")
 
+    def test_python_issue_20007_addinfourl(self):
+        """
+        Same as above, but the source is not necessarily an instance
+        of HTTPResponse.
+        """
+        class FakeSocket(object):
+            def makefile(self, _mode, _bufsize=None):
+                return BytesIO(b"HTTP/1.1 200 Ok\r\n\r\nText")
+
+        source = http_client.HTTPResponse(FakeSocket())
+        source.begin()
+        try:
+            source = addinfourl(source, None, None)
+        except AttributeError:
+            # Fails on Python 2.x where HTTPResponse does not have .readline()
+            # Apparently, addinfourl it only used with HTTPResponse on 3.x
+            pass
+        else:
+            stream = HTMLInputStream(source)
+            self.assertEqual(stream.charsUntil(" "), "Text")
 
 def buildTestSuite():
     return unittest.defaultTestLoader.loadTestsFromName(__name__)
