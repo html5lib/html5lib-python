@@ -138,7 +138,7 @@ class HTMLParser(object):
         """
         if not hasattr(self, 'tokenizer'):
             return None
-        return self.tokenizer.stream.documentEncoding
+        return self.tokenizer.stream.charEncoding[0]
 
     def isHTMLIntegrationPoint(self, element):
         if (element.name == "annotation-xml" and
