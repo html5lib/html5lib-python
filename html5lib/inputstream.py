@@ -119,14 +119,13 @@ class BufferedStream(object):
 
 def HTMLInputStream(source, encoding=None, parseMeta=True, chardet=True):
     if hasattr(source, "read"):
-        # Do no use .read(0) because of Python bug #20007
+        # Do not use .read(0) because of Python bug #20007
         # http://bugs.python.org/issue20007
         firstChunk = source.read(HTMLUnicodeInputStream._defaultChunkSize)
-        print(firstChunk)
         isUnicode = isinstance(firstChunk, text_type)
     else:
         isUnicode = isinstance(source, text_type)
-        firstChunk = "" if isUnicode else b""
+        firstChunk = None
 
     if isUnicode:
         if encoding is not None:
@@ -134,8 +133,8 @@ def HTMLInputStream(source, encoding=None, parseMeta=True, chardet=True):
 
         return HTMLUnicodeInputStream(source, firstChunk)
     else:
-        return HTMLBinaryInputStream(
-            source, firstChunk, encoding, parseMeta, chardet)
+        return HTMLBinaryInputStream(source, firstChunk, encoding, parseMeta,
+                                     chardet)
 
 
 class HTMLUnicodeInputStream(object):
