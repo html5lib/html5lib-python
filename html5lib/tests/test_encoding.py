@@ -26,28 +26,6 @@ class Html5EncodingTestCase(unittest.TestCase):
         self.assertEqual(inputstream.codecName("ISO_8859--1"), "windows-1252")
 
 
-def test_unicode_input_encoding():
-    p = HTMLParser()
-    assert p.documentEncoding is None
-    p.parse(b'<meta charset=latin2>', useChardet=False)
-    assert p.documentEncoding == 'iso8859-2'
-
-    p = HTMLParser()
-    assert p.documentEncoding is None
-    p.parse('<meta charset=latin2>')
-    assert p.documentEncoding is None
-
-    p = HTMLParser()
-    assert p.documentEncoding is None
-    try:
-        p.parse('<meta charset=latin2>', encoding='latin3')
-    except TypeError as e:
-        assert 'Cannot explicitly set an encoding with a unicode string' in str(e)
-    else:
-        assert 0, 'Expected TypeError'
-    assert p.documentEncoding is None
-
-
 def runParserEncodingTest(data, encoding):
     p = HTMLParser()
     assert p.documentEncoding is None
