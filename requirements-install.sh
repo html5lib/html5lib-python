@@ -9,8 +9,8 @@ pip install -r requirements-test.txt
 
 if [[ $USE_OPTIONAL == "true" && $TRAVIS_PYTHON_VERSION != "pypy" ]]; then
   if [[ $TRAVIS_PYTHON_VERSION == "2.6" ]]; then
-    pip install --allow-external Genshi --allow-unverified Genshi -r requirements-optional-2.6.txt
+    pip install --allow-external Genshi --allow-insecure Genshi -r requirements-optional-2.6.txt
   else
-    pip install --allow-external Genshi --allow-unverified Genshi -r requirements-optional-cpython.txt
+    pip install --allow-external Genshi --allow-insecure Genshi -r requirements-optional-cpython.txt
   fi
 fi
