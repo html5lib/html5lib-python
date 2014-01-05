@@ -86,29 +86,29 @@ class HTMLInputStreamTest(unittest.TestCase):
 
     def test_char_ascii(self):
         stream = HTMLInputStream(b"'", encoding='ascii')
-        self.assertEqual(stream.charEncoding[0], 'ascii')
+        self.assertEqual(stream.charEncoding[0].name, 'windows-1252')
         self.assertEqual(stream.char(), "'")
 
     def test_char_utf8(self):
         stream = HTMLInputStream('\u2018'.encode('utf-8'), encoding='utf-8')
-        self.assertEqual(stream.charEncoding[0], 'utf-8')
+        self.assertEqual(stream.charEncoding[0].name, 'utf-8')
         self.assertEqual(stream.char(), '\u2018')
 
     def test_char_win1252(self):
         stream = HTMLInputStream("\xa9\xf1\u2019".encode('windows-1252'))
-        self.assertEqual(stream.charEncoding[0], 'windows-1252')
+        self.assertEqual(stream.charEncoding[0].name, 'windows-1252')
         self.assertEqual(stream.char(), "\xa9")
         self.assertEqual(stream.char(), "\xf1")
         self.assertEqual(stream.char(), "\u2019")
 
     def test_bom(self):
         stream = HTMLInputStream(codecs.BOM_UTF8 + b"'")
-        self.assertEqual(stream.charEncoding[0], 'utf-8')
+        self.assertEqual(stream.charEncoding[0].name, 'utf-8')
         self.assertEqual(stream.char(), "'")
 
     def test_utf_16(self):
         stream = HTMLInputStream((' ' * 1025).encode('utf-16'))
-        self.assertTrue(stream.charEncoding[0] in ['utf-16-le', 'utf-16-be'], stream.charEncoding)
+        self.assertTrue(stream.charEncoding[0].name in ['utf-16le', 'utf-16be'], stream.charEncoding)
         self.assertEqual(len(stream.charsUntil(' ', True)), 1025)
 
     def test_newlines(self):

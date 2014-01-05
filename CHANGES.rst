@@ -22,6 +22,10 @@ Released on XXX
 
 * Move testsuite to ``py.test``.
 
+* Fix #124: move to webencodings for decoding the input byte stream;
+  this makes html5lib compliant with the Encoding Standard, and
+  introduces a required dependency on webencodings.
+
 
 0.9999999/1.0b8
 ~~~~~~~~~~~~~~~
