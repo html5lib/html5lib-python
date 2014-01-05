@@ -14,7 +14,3 @@ if [[ $USE_OPTIONAL == "true" && $TRAVIS_PYTHON_VERSION != "pypy" ]]; then
     pip install -r requirements-optional-cpython.txt
   fi
 fi
-
-if [[ $FLAKE == "true" ]]; then
-  pip install flake8
-fi
