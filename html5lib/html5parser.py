@@ -1327,7 +1327,7 @@ def getPhases(debug):
                         # Not sure this is the correct name for the parse error
                         self.parser.parseError(
                             "expected-one-end-tag-but-got-another",
-                            {"expectedName": "body", "gotName": node.name})
+                            {"gotName": "body", "expectedName": node.name})
                         break
             self.parser.phase = self.parser.phases["afterBody"]
 

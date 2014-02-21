@@ -6,7 +6,7 @@ Change Log
 
 Released on XXX, 2014
 
-* XXX
+* Minor fix on error reporting message.
 
 
 0.999
