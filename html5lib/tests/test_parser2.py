@@ -51,6 +51,10 @@ class MoreParserTests(unittest.TestCase):
         parser = html5parser.HTMLParser()
         parser.parse(io.StringIO("a"))
 
+    def test_svg_token(self):
+        parser = html5parser.HTMLParser(strict=True)
+        parser.parseFragment("<svg><switch><foreignObject></foreignObject></switch></svg>")
+
 
 def buildTestSuite():
     return unittest.defaultTestLoader.loadTestsFromName(__name__)

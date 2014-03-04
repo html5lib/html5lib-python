@@ -2445,6 +2445,8 @@ def getPhases(debug):
         def processEndTag(self, token):
             nodeIndex = len(self.tree.openElements) - 1
             node = self.tree.openElements[-1]
+            if node.namespace == namespaces["svg"]:
+                self.adjustSVGTagNames(token)
             if node.name != token["name"]:
                 self.parser.parseError("unexpected-end-tag", {"name": token["name"]})
 
