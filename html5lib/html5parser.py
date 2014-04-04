@@ -18,6 +18,7 @@ from .constants import cdataElements, rcdataElements
 from .constants import tokenTypes, ReparseException, namespaces
 from .constants import htmlIntegrationPointElements, mathmlTextIntegrationPointElements
 from .constants import adjustForeignAttributes as adjustForeignAttributesMap
+from .constants import E
 
 
 def parse(doc, treebuilder="etree", encoding=None,
@@ -256,7 +257,7 @@ class HTMLParser(object):
         # XXX The idea is to make errorcode mandatory.
         self.errors.append((self.tokenizer.stream.position(), errorcode, datavars))
         if self.strict:
-            raise ParseError
+            raise ParseError(E[errorcode] % datavars)
 
     def normalizeToken(self, token):
         """ HTML5 specific normalizations to the token stream """
