@@ -1216,8 +1216,7 @@ def getPhases(debug):
             attributes["name"] = "isindex"
             self.processStartTag(impliedTagToken("input", "StartTag",
                                                  attributes=attributes,
-                                                 selfClosing=
-                                                 token["selfClosing"]))
+                                                 selfClosing=token["selfClosing"]))
             self.processEndTag(impliedTagToken("label"))
             self.processStartTag(impliedTagToken("hr", "StartTag"))
             self.processEndTag(impliedTagToken("form"))
