@@ -68,8 +68,8 @@ class TokenizerTestParser(object):
 def concatenateCharacterTokens(tokens):
     outputTokens = []
     for token in tokens:
-        if not "ParseError" in token and token[0] == "Character":
-            if (outputTokens and not "ParseError" in outputTokens[-1] and
+        if "ParseError" not in token and token[0] == "Character":
+            if (outputTokens and "ParseError" not in outputTokens[-1] and
                     outputTokens[-1][0] == "Character"):
                 outputTokens[-1][1] += token[1]
             else:
@@ -112,7 +112,7 @@ def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder,
         # Sort the tokens into two groups; non-parse errors and parse errors
         tokens = {"expected": [[], []], "received": [[], []]}
         for tokenType, tokenList in zip(list(tokens.keys()),
-                                       (expectedTokens, receivedTokens)):
+                                        (expectedTokens, receivedTokens)):
             for token in tokenList:
                 if token != "ParseError":
                     tokens[tokenType][0].append(token)

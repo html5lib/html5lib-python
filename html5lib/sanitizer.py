@@ -245,7 +245,7 @@ class HTMLSanitizerMixin(object):
             elif prop.split('-')[0].lower() in ['background', 'border', 'margin',
                                                 'padding']:
                 for keyword in value.split():
-                    if not keyword in self.acceptable_css_keywords and \
+                    if keyword not in self.acceptable_css_keywords and \
                             not re.match("^(#[0-9a-f]+|rgb\(\d+%?,\d*%?,?\d*%?\)?|\d{0,2}\.?\d{0,2}(cm|em|ex|in|mm|pc|pt|px|%|,|\))?)$", keyword):
                         break
                 else:
