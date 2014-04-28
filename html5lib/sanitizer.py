@@ -138,7 +138,7 @@ class HTMLSanitizerMixin(object):
     acceptable_protocols = ['ed2k', 'ftp', 'http', 'https', 'irc',
                             'mailto', 'news', 'gopher', 'nntp', 'telnet', 'webcal',
                             'xmpp', 'callto', 'feed', 'urn', 'aim', 'rsync', 'tag',
-                            'ssh', 'sftp', 'rtsp', 'afs']
+                            'ssh', 'sftp', 'rtsp', 'afs', 'data']
 
     # subclasses may define their own versions of these constants
     allowed_elements = acceptable_elements + mathml_elements + svg_elements
