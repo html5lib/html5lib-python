@@ -139,83 +139,6 @@ else:
          "adapter": GenshiAdapter,
          "walker": treewalkers.getTreeWalker("genshi")}
 
-
-def concatenateCharacterTokens(tokens):
-    charactersToken = None
-    for token in tokens:
-        type = token["type"]
-        if type in ("Characters", "SpaceCharacters"):
-            if charactersToken is None:
-                charactersToken = {"type": "Characters", "data": token["data"]}
-            else:
-                charactersToken["data"] += token["data"]
-        else:
-            if charactersToken is not None:
-                yield charactersToken
-                charactersToken = None
-            yield token
-    if charactersToken is not None:
-        yield charactersToken
-
-
-def convertTokens(tokens):
-    output = []
-    indent = 0
-    for token in concatenateCharacterTokens(tokens):
-        type = token["type"]
-        if type in ("StartTag", "EmptyTag"):
-            if (token["namespace"] and
-                    token["namespace"] != constants.namespaces["html"]):
-                if token["namespace"] in constants.prefixes:
-                    name = constants.prefixes[token["namespace"]]
-                else:
-                    name = token["namespace"]
-                name += " " + token["name"]
-            else:
-                name = token["name"]
-            output.append("%s<%s>" % (" " * indent, name))
-            indent += 2
-            attrs = token["data"]
-            if attrs:
-                # TODO: Remove this if statement, attrs should always exist
-                for (namespace, name), value in sorted(attrs.items()):
-                    if namespace:
-                        if namespace in constants.prefixes:
-                            outputname = constants.prefixes[namespace]
-                        else:
-                            outputname = namespace
-                        outputname += " " + name
-                    else:
-                        outputname = name
-                    output.append("%s%s=\"%s\"" % (" " * indent, outputname, value))
-            if type == "EmptyTag":
-                indent -= 2
-        elif type == "EndTag":
-            indent -= 2
-        elif type == "Comment":
-            output.append("%s<!-- %s -->" % (" " * indent, token["data"]))
-        elif type == "Doctype":
-            if token["name"]:
-                if token["publicId"]:
-                    output.append("""%s<!DOCTYPE %s "%s" "%s">""" %
-                                  (" " * indent, token["name"],
-                                   token["publicId"],
-                                   token["systemId"] and token["systemId"] or ""))
-                elif token["systemId"]:
-                    output.append("""%s<!DOCTYPE %s "" "%s">""" %
-                                  (" " * indent, token["name"],
-                                   token["systemId"]))
-                else:
-                    output.append("%s<!DOCTYPE %s>" % (" " * indent,
-                                                       token["name"]))
-            else:
-                output.append("%s<!DOCTYPE >" % (" " * indent,))
-        elif type in ("Characters", "SpaceCharacters"):
-            output.append("%s\"%s\"" % (" " * indent, token["data"]))
-        else:
-            pass  # TODO: what to do with errors?
-    return "\n".join(output)
-
 import re
 attrlist = re.compile(r"^(\s+)\w+=.*(\n\1\w+=.*)+", re.M)
 
@@ -265,7 +188,7 @@ def runTreewalkerTest(innerHTML, input, expected, errors, treeClass):
 
     document = treeClass.get("adapter", lambda x: x)(document)
     try:
-        output = convertTokens(treeClass["walker"](document))
+        output = treewalkers.pprint(treeClass["walker"](document))
         output = attrlist.sub(sortattrs, output)
         expected = attrlist.sub(sortattrs, convertExpected(expected))
         diff = "".join(unified_diff([line + "\n" for line in expected.splitlines()],
@@ -323,7 +246,7 @@ def runTreewalkerEditTest(intext, expected, attrs_to_add, tree):
         set_attribute_on_first_child(document, nom, val, treeName)
 
     document = treeClass.get("adapter", lambda x: x)(document)
-    output = convertTokens(treeClass["walker"](document))
+    output = treewalkers.pprint(treeClass["walker"](document))
     output = attrlist.sub(sortattrs, output)
     if not output in expected:
         raise AssertionError("TreewalkerEditTest: %s\nExpected:\n%s\nReceived:\n%s" % (treeName, expected, output))

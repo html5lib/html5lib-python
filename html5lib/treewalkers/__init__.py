@@ -10,8 +10,12 @@ returning an iterator generating tokens.
 
 from __future__ import absolute_import, division, unicode_literals
 
+__all__ = ["getTreeWalker", "pprint", "dom", "etree", "genshistream", "lxmletree",
+           "pulldom"]
+
 import sys
 
+from .. import constants
 from ..utils import default_etree
 
 treeWalkerCache = {}
@@ -55,3 +59,80 @@ def getTreeWalker(treeType, implementation=None, **kwargs):
             # XXX: NEVER cache here, caching is done in the etree submodule
             return etree.getETreeModule(implementation, **kwargs).TreeWalker
     return treeWalkerCache.get(treeType)
+
+
+def concatenateCharacterTokens(tokens):
+    charactersToken = None
+    for token in tokens:
+        type = token["type"]
+        if type in ("Characters", "SpaceCharacters"):
+            if charactersToken is None:
+                charactersToken = {"type": "Characters", "data": token["data"]}
+            else:
+                charactersToken["data"] += token["data"]
+        else:
+            if charactersToken is not None:
+                yield charactersToken
+                charactersToken = None
+            yield token
+    if charactersToken is not None:
+        yield charactersToken
+
+
+def pprint(tokens):
+    output = []
+    indent = 0
+    for token in concatenateCharacterTokens(tokens):
+        type = token["type"]
+        if type in ("StartTag", "EmptyTag"):
+            if (token["namespace"] and
+                    token["namespace"] != constants.namespaces["html"]):
+                if token["namespace"] in constants.prefixes:
+                    name = constants.prefixes[token["namespace"]]
+                else:
+                    name = token["namespace"]
+                name += " " + token["name"]
+            else:
+                name = token["name"]
+            output.append("%s<%s>" % (" " * indent, name))
+            indent += 2
+            attrs = token["data"]
+            if attrs:
+                # TODO: Remove this if statement, attrs should always exist
+                for (namespace, name), value in sorted(attrs.items()):
+                    if namespace:
+                        if namespace in constants.prefixes:
+                            outputname = constants.prefixes[namespace]
+                        else:
+                            outputname = namespace
+                        outputname += " " + name
+                    else:
+                        outputname = name
+                    output.append("%s%s=\"%s\"" % (" " * indent, outputname, value))
+            if type == "EmptyTag":
+                indent -= 2
+        elif type == "EndTag":
+            indent -= 2
+        elif type == "Comment":
+            output.append("%s<!-- %s -->" % (" " * indent, token["data"]))
+        elif type == "Doctype":
+            if token["name"]:
+                if token["publicId"]:
+                    output.append("""%s<!DOCTYPE %s "%s" "%s">""" %
+                                  (" " * indent, token["name"],
+                                   token["publicId"],
+                                   token["systemId"] and token["systemId"] or ""))
+                elif token["systemId"]:
+                    output.append("""%s<!DOCTYPE %s "" "%s">""" %
+                                  (" " * indent, token["name"],
+                                   token["systemId"]))
+                else:
+                    output.append("%s<!DOCTYPE %s>" % (" " * indent,
+                                                       token["name"]))
+            else:
+                output.append("%s<!DOCTYPE >" % (" " * indent,))
+        elif type in ("Characters", "SpaceCharacters"):
+            output.append("%s\"%s\"" % (" " * indent, token["data"]))
+        else:
+            pass  # TODO: what to do with errors?
+    return "\n".join(output)
