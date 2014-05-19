@@ -62,21 +62,18 @@ def getTreeWalker(treeType, implementation=None, **kwargs):
 
 
 def concatenateCharacterTokens(tokens):
-    charactersToken = None
+    pendingCharacters = []
     for token in tokens:
         type = token["type"]
         if type in ("Characters", "SpaceCharacters"):
-            if charactersToken is None:
-                charactersToken = {"type": "Characters", "data": token["data"]}
-            else:
-                charactersToken["data"] += token["data"]
+            pendingCharacters.append(token["data"])
         else:
-            if charactersToken is not None:
-                yield charactersToken
-                charactersToken = None
+            if pendingCharacters:
+                yield {"type": "Characters", "data": "".join(pendingCharacters)}
+                pendingCharacters = []
             yield token
-    if charactersToken is not None:
-        yield charactersToken
+    if pendingCharacters:
+        yield {"type": "Characters", "data": "".join(pendingCharacters)}
 
 
 def pprint(tokens):
