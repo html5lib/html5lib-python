@@ -40,6 +40,10 @@ Released on XXX
   and the new default), and "spec" (the old False value, and the old
   default).**
 
+* **Fix #72 by rewriting the sanitizer to apply only to treewalkers
+  (instead of the tokenizer); as such, this will require amending all
+  callers of it to use it via the treewalker API.**
+
 
 0.9999999/1.0b8
 ~~~~~~~~~~~~~~~
