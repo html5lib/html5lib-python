@@ -76,60 +76,72 @@ def concatenateCharacterTokens(tokens):
         yield {"type": "Characters", "data": "".join(pendingCharacters)}
 
 
-def pprint(tokens):
+def pprint(walker):
+    """Pretty printer for tree walkers"""
     output = []
     indent = 0
-    for token in concatenateCharacterTokens(tokens):
+    for token in concatenateCharacterTokens(walker):
         type = token["type"]
         if type in ("StartTag", "EmptyTag"):
-            if (token["namespace"] and
-                    token["namespace"] != constants.namespaces["html"]):
+            # tag name
+            if token["namespace"] and token["namespace"] != constants.namespaces["html"]:
                 if token["namespace"] in constants.prefixes:
-                    name = constants.prefixes[token["namespace"]]
+                    ns = constants.prefixes[token["namespace"]]
                 else:
-                    name = token["namespace"]
-                name += " " + token["name"]
+                    ns = token["namespace"]
+                name = "%s %s" % (ns, token["name"])
             else:
                 name = token["name"]
             output.append("%s<%s>" % (" " * indent, name))
             indent += 2
+            # attributes (sorted for consistent ordering)
             attrs = token["data"]
-            if attrs:
-                # TODO: Remove this if statement, attrs should always exist
-                for (namespace, name), value in sorted(attrs.items()):
-                    if namespace:
-                        if namespace in constants.prefixes:
-                            outputname = constants.prefixes[namespace]
-                        else:
-                            outputname = namespace
-                        outputname += " " + name
+            for (namespace, localname), value in sorted(attrs.items()):
+                if namespace:
+                    if namespace in constants.prefixes:
+                        ns = constants.prefixes[namespace]
                     else:
-                        outputname = name
-                    output.append("%s%s=\"%s\"" % (" " * indent, outputname, value))
+                        ns = namespace
+                    name = "%s %s" % (ns, localname)
+                else:
+                    name = localname
+                output.append("%s%s=\"%s\"" % (" " * indent, name, value))
+            # self-closing
             if type == "EmptyTag":
                 indent -= 2
+
         elif type == "EndTag":
             indent -= 2
+
         elif type == "Comment":
             output.append("%s<!-- %s -->" % (" " * indent, token["data"]))
+
         elif type == "Doctype":
             if token["name"]:
                 if token["publicId"]:
                     output.append("""%s<!DOCTYPE %s "%s" "%s">""" %
-                                  (" " * indent, token["name"],
+                                  (" " * indent,
+                                   token["name"],
                                    token["publicId"],
-                                   token["systemId"] and token["systemId"] or ""))
+                                   token["systemId"] if token["systemId"] else ""))
                 elif token["systemId"]:
                     output.append("""%s<!DOCTYPE %s "" "%s">""" %
-                                  (" " * indent, token["name"],
+                                  (" " * indent,
+                                   token["name"],
                                    token["systemId"]))
                 else:
                     output.append("%s<!DOCTYPE %s>" % (" " * indent,
                                                        token["name"]))
             else:
                 output.append("%s<!DOCTYPE >" % (" " * indent,))
-        elif type in ("Characters", "SpaceCharacters"):
+
+        elif type == "Characters":
             output.append("%s\"%s\"" % (" " * indent, token["data"]))
+
+        elif type == "SpaceCharacters":
+            assert False, "concatenateCharacterTokens should have got rid of all Space tokens"
+
         else:
-            pass  # TODO: what to do with errors?
+            raise ValueError("Unknown token type, %s" % type)
+
     return "\n".join(output)
