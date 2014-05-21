@@ -62,6 +62,23 @@ except ImportError:
     print("charade/chardet not found, skipping chardet tests")
 else:
     def test_chardet():
-        with open(os.path.join(test_dir, "encoding" , "chardet", "test_big5.txt"), "rb") as fp:
-            encoding = inputstream.HTMLInputStream(fp.read()).charEncoding
-            assert encoding[0].lower() == "big5"
+        try:
+            with open(os.path.join(test_dir, "encoding" , "chardet", "test_big5.txt"), "rb") as fp:
+                encoding = inputstream.HTMLInputStream(fp.read()).charEncoding
+                assert encoding[0].lower() == "big5"
+        except IOError as e:
+            if e.errno == 2:  # No such file or directory
+                print("""
+                      The file
+
+                          html5lib/tests/testdata/encoding/chardet/test_big5.txt
+
+                      is missing.
+
+                      If you cloned it from git, run
+
+                          git submodule update --init
+
+                      to clone it and then rerun this test.
+                      """)
+            raise e
