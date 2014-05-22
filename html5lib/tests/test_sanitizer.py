@@ -82,7 +82,7 @@ def test_sanitizer():
             continue
         attribute_value = 'foo'
         if attribute_name in sanitizer.HTMLSanitizer.attr_val_is_uri:
-            attribute_value = 'http://sub.domain.tld/path/object.ext'
+            attribute_value = '%s://sub.domain.tld/path/object.ext' % sanitizer.HTMLSanitizer.allowed_protocols[0]
         yield (runSanitizerTest, "test_should_allow_%s_attribute" % attribute_name,
                "<p %s=\"%s\">foo &lt;bad&gt;bar&lt;/bad&gt; baz</p>" % (attribute_name, attribute_value),
                "<p %s='%s'>foo <bad>bar</bad> baz</p>" % (attribute_name, attribute_value),
