@@ -2,9 +2,24 @@ from __future__ import absolute_import, division, unicode_literals
 
 import re
 from xml.sax.saxutils import escape, unescape
+from six.moves import urllib_parse as urlparse
 
 from .tokenizer import HTMLTokenizer
 from .constants import tokenTypes
+
+
+content_type_rgx = re.compile(r'''
+                               ^
+                               # Match a content type <application>/<type>
+                               (?P<content_type>[-a-zA-Z0-9.]+/[-a-zA-Z0-9.]+)
+                               # Match any character set and encoding
+                               (?:(?:;charset=(?:[-a-zA-Z0-9]+)(?:;(?:base64))?)
+                                 |(?:;(?:base64))?(?:;charset=(?:[-a-zA-Z0-9]+))?)
+                               # Assume the rest is data
+                               ,.*
+                               $
+                               ''',
+                              re.VERBOSE)
 
 
 class HTMLSanitizerMixin(object):
@@ -138,7 +153,9 @@ class HTMLSanitizerMixin(object):
     acceptable_protocols = ['ed2k', 'ftp', 'http', 'https', 'irc',
                             'mailto', 'news', 'gopher', 'nntp', 'telnet', 'webcal',
                             'xmpp', 'callto', 'feed', 'urn', 'aim', 'rsync', 'tag',
-                            'ssh', 'sftp', 'rtsp', 'afs']
+                            'ssh', 'sftp', 'rtsp', 'afs', 'data']
+
+    acceptable_content_types = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/bmp', 'text/plain']
 
     # subclasses may define their own versions of these constants
     allowed_elements = acceptable_elements + mathml_elements + svg_elements
@@ -147,6 +164,7 @@ class HTMLSanitizerMixin(object):
     allowed_css_keywords = acceptable_css_keywords
     allowed_svg_properties = acceptable_svg_properties
     allowed_protocols = acceptable_protocols
+    allowed_content_types = acceptable_content_types
 
     # Sanitize the +html+, escaping all elements not in ALLOWED_ELEMENTS, and
     # stripping out all # attributes not in ALLOWED_ATTRIBUTES. Style
@@ -189,10 +207,17 @@ class HTMLSanitizerMixin(object):
                                        unescape(attrs[attr])).lower()
                 # remove replacement characters from unescaped characters
                 val_unescaped = val_unescaped.replace("\ufffd", "")
-                if (re.match("^[a-z0-9][-+.a-z0-9]*:", val_unescaped) and
-                    (val_unescaped.split(':')[0] not in
-                     self.allowed_protocols)):
-                    del attrs[attr]
+                uri = urlparse.urlparse(val_unescaped)
+                if uri:
+                    if uri.scheme not in self.allowed_protocols:
+                        del attrs[attr]
+                    if uri.scheme == 'data':
+                        m = content_type_rgx.match(uri.path)
+                        if not m:
+                            del attrs[attr]
+                        if m.group('content_type') not in self.allowed_content_types:
+                            del attrs[attr]
+
             for attr in self.svg_attr_val_allows_ref:
                 if attr in attrs:
                     attrs[attr] = re.sub(r'url\s*\(\s*[^#\s][^)]+?\)',

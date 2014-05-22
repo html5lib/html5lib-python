@@ -32,4 +32,6 @@ Patches and suggestions
 - Juan Carlos Garcia Segovia
 - Mike West
 - Marc DM
+- Drew Hubl
+- Austin Kumbera
 - Jim Baker
