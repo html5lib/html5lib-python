@@ -80,9 +80,12 @@ def test_sanitizer():
             continue  # TODO
         if attribute_name == 'style':
             continue
+        attribute_value = 'foo'
+        if attribute_name in sanitizer.HTMLSanitizer.attr_val_is_uri:
+            attribute_value = 'http://sub.domain.tld/path/object.ext'
         yield (runSanitizerTest, "test_should_allow_%s_attribute" % attribute_name,
-               "<p %s=\"foo\">foo &lt;bad&gt;bar&lt;/bad&gt; baz</p>" % attribute_name,
-               "<p %s='foo'>foo <bad>bar</bad> baz</p>" % attribute_name,
+               "<p %s=\"%s\">foo &lt;bad&gt;bar&lt;/bad&gt; baz</p>" % (attribute_name, attribute_value),
+               "<p %s='%s'>foo <bad>bar</bad> baz</p>" % (attribute_name, attribute_value),
                toxml)
 
     for attribute_name in sanitizer.HTMLSanitizer.allowed_attributes:
@@ -93,13 +96,20 @@ def test_sanitizer():
                toxml)
 
     for protocol in sanitizer.HTMLSanitizer.allowed_protocols:
-        yield (runSanitizerTest, "test_should_allow_%s_uris" % protocol,
-               "<a href=\"%s\">foo</a>" % protocol,
-               """<a href="%s">foo</a>""" % protocol,
+        rest_of_uri = '//sub.domain.tld/path/object.ext'
+        if protocol == 'data':
+            rest_of_uri = 'image/png;base64,aGVsbG8gd29ybGQ='
+        yield (runSanitizerTest, "test_should_allow_uppercase_%s_uris" % protocol,
+               "<img src=\"%s:%s\">foo</a>" % (protocol, rest_of_uri),
+               """<img src="%s:%s">foo</a>""" % (protocol, rest_of_uri),
                toxml)
 
     for protocol in sanitizer.HTMLSanitizer.allowed_protocols:
+        rest_of_uri = '//sub.domain.tld/path/object.ext'
+        if protocol == 'data':
+            rest_of_uri = 'image/png;base64,aGVsbG8gd29ybGQ='
+        protocol = protocol.upper()
         yield (runSanitizerTest, "test_should_allow_uppercase_%s_uris" % protocol,
-               "<a href=\"%s\">foo</a>" % protocol,
-               """<a href="%s">foo</a>""" % protocol,
+               "<img src=\"%s:%s\">foo</a>" % (protocol, rest_of_uri),
+               """<img src="%s:%s">foo</a>""" % (protocol, rest_of_uri),
                toxml)
