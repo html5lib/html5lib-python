@@ -182,9 +182,7 @@ class HTMLSanitizerMixin(object):
             attrs = dict([(name, val) for name, val in
                           token["data"][::-1]
                           if name in self.allowed_attributes])
-            for attr in self.attr_val_is_uri:
-                if attr not in attrs:
-                    continue
+            for attr in set(attrs.keys()).intersection(set(self.attr_val_is_uri)):
                 val_unescaped = re.sub("[`\000-\040\177-\240\s]+", '',
                                        unescape(attrs[attr])).lower()
                 # remove replacement characters from unescaped characters
