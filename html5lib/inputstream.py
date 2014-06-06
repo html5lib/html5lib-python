@@ -270,6 +270,7 @@ class HTMLUnicodeInputStream(object):
         # Replace invalid characters
         # Note U+0000 is dealt with in the tokenizer
         data = self.replaceCharactersRegexp.sub("\ufffd", data)
+        data = invalid_unicode_re.sub("\ufffd", data)
 
         data = data.replace("\r\n", "\n")
         data = data.replace("\r", "\n")

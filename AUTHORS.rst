@@ -32,3 +32,4 @@ Patches and suggestions
 - Juan Carlos Garcia Segovia
 - Mike West
 - Marc DM
+- Leif Arne Storset

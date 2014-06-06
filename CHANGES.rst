@@ -7,6 +7,8 @@ Change Log
 Released on XXX, 2014
 
 * XXX
+* Fix #96: replace invalid characters from "Preprocessing the input stream" with
+  U+FFFD, preventing problems in lxml.
 
 
 0.999
