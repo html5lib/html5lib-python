@@ -1,6 +1,7 @@
 # Because we never want compiled Python
 __pycache__/
 *.pyc
+*.py$class
 
 # Ignore stuff produced by distutils
 /build/
