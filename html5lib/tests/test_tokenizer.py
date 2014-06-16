@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, unicode_literals
 
 import json
+import platform
 import warnings
 import re
 
@@ -122,9 +123,26 @@ def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder,
         return tokens["expected"] == tokens["received"]
 
 
+_surrogateRe = re.compile(r"\\u(?P<codepoint>[0-9A-Fa-f]{4})")
+
+
 def unescape(test):
     def decode(inp):
-        return inp.encode("utf-8").decode("unicode-escape")
+        try:
+            return inp.encode("utf-8").decode("unicode-escape")
+        except UnicodeDecodeError:
+            possible_surrogate_match = _surrogateRe.search(inp)
+            if possible_surrogate_match and platform.python_implementation() == "Jython":
+                possible_surrogate = int(possible_surrogate_match.group("codepoint"), 16)
+                if possible_surrogate >= 0xD800 and possible_surrogate <= 0xDFFF:
+                    # Not valid unicode input for Jython.
+                    #
+                    # NOTE it's not even possible to have such
+                    # isolated surrogates in unicode input streams in
+                    # Jython - the decoding to unicode would have
+                    # raised a similar UnicodeDecodeError.
+                    return None
+            raise
 
     test["input"] = decode(test["input"])
     for token in test["output"]:
@@ -183,6 +201,8 @@ def testTokenizer():
                         test["initialStates"] = ["Data state"]
                     if 'doubleEscaped' in test:
                         test = unescape(test)
+                        if test["input"] is None:
+                            continue  # Not valid input for this platform
                     for initialState in test["initialStates"]:
                         test["initialState"] = capitalize(initialState)
                         yield runTokenizerTest, test
