@@ -1247,7 +1247,7 @@ def getPhases(debug):
 
         def startTagRpRtRbRtc(self, token):
             if self.tree.elementInScope("ruby"):
-                if token["name"] == "rt":
+                if token["name"] == "rt" or token["name"] == "rp":
                     self.tree.generateImpliedEndTags("rtc")
                 else:
                     self.tree.generateImpliedEndTags()
