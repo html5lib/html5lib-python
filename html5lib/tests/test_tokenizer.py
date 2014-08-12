@@ -1,14 +1,13 @@
 from __future__ import absolute_import, division, unicode_literals
 
 import json
-import platform
 import warnings
 import re
 
 from .support import get_data_files
 
 from html5lib.tokenizer import HTMLTokenizer
-from html5lib import constants
+from html5lib import constants, utils
 
 
 class TokenizerTestParser(object):
@@ -132,15 +131,17 @@ def unescape(test):
             return inp.encode("utf-8").decode("unicode-escape")
         except UnicodeDecodeError:
             possible_surrogate_match = _surrogateRe.search(inp)
-            if possible_surrogate_match and platform.python_implementation() == "Jython":
+            if possible_surrogate_match and not utils.supports_lone_surrogates:
                 possible_surrogate = int(possible_surrogate_match.group("codepoint"), 16)
                 if possible_surrogate >= 0xD800 and possible_surrogate <= 0xDFFF:
-                    # Not valid unicode input for Jython.
+                    # Not valid unicode input for platforms that do
+                    # not have support for lone surrogates.
                     #
                     # NOTE it's not even possible to have such
                     # isolated surrogates in unicode input streams in
-                    # Jython - the decoding to unicode would have
-                    # raised a similar UnicodeDecodeError.
+                    # such platforms (like Jython) - the decoding to
+                    # unicode would have raised a similar
+                    # UnicodeDecodeError.
                     return None
             raise
 
