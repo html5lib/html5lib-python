@@ -2,10 +2,7 @@ from __future__ import absolute_import, division, unicode_literals
 
 import re
 from xml.sax.saxutils import escape, unescape
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse
+from six.moves import urllib_parse as urlparse
 
 from .tokenizer import HTMLTokenizer
 from .constants import tokenTypes
@@ -196,7 +193,7 @@ class HTMLSanitizerMixin(object):
                                        unescape(attrs[attr])).lower()
                 # remove replacement characters from unescaped characters
                 val_unescaped = val_unescaped.replace("\ufffd", "")
-                uri = urlparse(val_unescaped)
+                uri = urlparse.urlparse(val_unescaped)
                 if uri:
                     if uri.scheme not in self.allowed_protocols:
                         del attrs[attr]
