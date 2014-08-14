@@ -8,6 +8,24 @@ from .tokenizer import HTMLTokenizer
 from .constants import tokenTypes
 
 
+content_type_rgx = re.compile(r'''
+                               ^
+                               # Match a content type <application>/<type>
+                               (?P<content_type>[-a-zA-Z0-9.]+/[-a-zA-Z0-9.]+)
+                               # Match any character set and encoding
+                               # Note that this does not prevent the
+                               # same one being set twice
+                               # The charset group is currently unused
+                               (?:;charset=(?P<charset>[-a-zA-Z0-9]+)|;(?P<encoding>base64)){0,2}
+                               # Match the base64-encoded or urlencoded
+                               # data
+                               # The data group is currently unused
+                               (?P<data>,(?P<base64_encoded_data>[a-zA-Z0-9+/]+=*|(?P<url_encoded_data>[a-zA-Z0-9]+|%[a-fA-F0-9]{2})))
+                               $
+                               ''',
+                              re.VERBOSE)
+
+
 class HTMLSanitizerMixin(object):
     """ sanitization of XHTML+MathML+SVG and of inline style attributes."""
 
@@ -197,24 +215,8 @@ class HTMLSanitizerMixin(object):
                 if uri:
                     if uri.scheme not in self.allowed_protocols:
                         del attrs[attr]
-                    rgx = re.compile(r'''
-                                      ^
-                                      # Match a content type <application>/<type>
-                                      (?P<content_type>[-a-zA-Z0-9.]+/[-a-zA-Z0-9.]+)
-                                      # Match any character set and encoding
-                                      # Note that this does not prevent the
-                                      # same one being set twice
-                                      # The charset group is currently unused
-                                      (?:;charset=(?P<charset>[-a-zA-Z0-9]+)|;(?P<encoding>base64)){0,2}
-                                      # Match the base64-encoded or urlencoded
-                                      # data
-                                      # The data group is currently unused
-                                      (?P<data>,(?P<base64_encoded_data>[a-zA-Z0-9+/]+=*|(?P<url_encoded_data>[a-zA-Z0-9]+|%[a-fA-F0-9]{2})))
-                                      $
-                                      ''',
-                                     re.VERBOSE)
                     if uri.scheme == 'data':
-                        m = rgx.match(uri.path)
+                        m = content_type_rgx.match(uri.path)
                         if not m:
                             del attrs[attr]
                         if m.group('content_type') not in self.allowed_content_types:
