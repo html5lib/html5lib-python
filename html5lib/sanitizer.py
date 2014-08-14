@@ -141,7 +141,7 @@ class HTMLSanitizerMixin(object):
                             'xmpp', 'callto', 'feed', 'urn', 'aim', 'rsync', 'tag',
                             'ssh', 'sftp', 'rtsp', 'afs', 'data']
 
-    acceptable_content_types = ['image/png']
+    acceptable_content_types = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/bmp', 'text/plain']
 
     # subclasses may define their own versions of these constants
     allowed_elements = acceptable_elements + mathml_elements + svg_elements
