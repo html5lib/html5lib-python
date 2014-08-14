@@ -13,14 +13,10 @@ content_type_rgx = re.compile(r'''
                                # Match a content type <application>/<type>
                                (?P<content_type>[-a-zA-Z0-9.]+/[-a-zA-Z0-9.]+)
                                # Match any character set and encoding
-                               # Note that this does not prevent the
-                               # same one being set twice
-                               # The charset group is currently unused
-                               (?:;charset=(?P<charset>[-a-zA-Z0-9]+)|;(?P<encoding>base64)){0,2}
-                               # Match the base64-encoded or urlencoded
-                               # data
-                               # The data group is currently unused
-                               (?P<data>,(?P<base64_encoded_data>[a-zA-Z0-9+/]+=*|(?P<url_encoded_data>[a-zA-Z0-9]+|%[a-fA-F0-9]{2})))
+                               (?:(?:;charset=(?:[-a-zA-Z0-9]+)(?:;(?:base64))?)
+                                 |(?:;(?:base64))?(?:;charset=(?:[-a-zA-Z0-9]+))?)
+                               # Assume the rest is data
+                               ,.*
                                $
                                ''',
                               re.VERBOSE)
@@ -221,19 +217,6 @@ class HTMLSanitizerMixin(object):
                             del attrs[attr]
                         if m.group('content_type') not in self.allowed_content_types:
                             del attrs[attr]
-                        if m.group('encoding'):
-                            if m.group('encoding') == 'base64':
-                                # If the encoding identifier is base64, then
-                                # make sure the data is encoded in base64
-                                if not m.group('base64_encoded_data'):
-                                    del attrs[attr]
-                            else:
-                                del attrs[attr]
-                        else:
-                            # If the encoding is not given, expect the data to
-                            # be urlencoded
-                            if not m.group('url_encoded_data'):
-                                del attrs[attr]
 
             for attr in self.svg_attr_val_allows_ref:
                 if attr in attrs:
