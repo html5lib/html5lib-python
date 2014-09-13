@@ -1,4 +1,18 @@
-from distutils.core import setup
+kw = {}
+try:
+    from setuptools import setup
+
+    kw['install_requires'] = ['six']
+    kw['extras_require'] = {
+        'optional' : ['datrie>=0.6.1', 'genshi', 'charade', 'lxml'],
+        'optional:python_version == "2.6"': 'ordereddict',
+        'test' : ['flake8', 'nose'],
+        'test:python_version == "2.6"': 'ordereddict',
+    }
+
+except ImportError:
+    from distutils.core import setup
+    
 import os
 import codecs
 
@@ -38,7 +52,5 @@ setup(name='html5lib',
       maintainer='James Graham',
       maintainer_email='james@hoppipolla.co.uk',
       packages=packages,
-      install_requires=[
-          'six',
-      ],
+      **kw
       )
