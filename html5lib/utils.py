@@ -19,7 +19,7 @@ __all__ = ["default_etree", "MethodDispatcher", "isSurrogatePair",
 # UTF-16 as its encoding of unicode strings, such as Jython. This is
 # because UTF-16 itself is based on the use of such surrogates, and
 # there is no mechanism to further escape such escapes.
-# 
+#
 # Otherwise we assume such support.
 supports_lone_surrogates = platform.python_implementation() != "Jython"
 
