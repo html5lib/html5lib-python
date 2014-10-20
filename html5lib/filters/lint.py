@@ -34,13 +34,13 @@ class Filter(_base.Filter):
                     raise LintError(_("Non-void element reported as EmptyTag token: %(tag)s") % {"tag": token["name"]})
                 if type == "StartTag":
                     open_elements.append(name)
-                for name, value in token["data"]:
-                    if not isinstance(name, str):
-                        raise LintError(_("Attribute name is not a string: %(name)r") % {"name": name})
-                    if not name:
-                        raise LintError(_("Empty attribute name"))
-                    if not isinstance(value, str):
-                        raise LintError(_("Attribute value is not a string: %(value)r") % {"value": value})
+                    for name, value in token["data"]:
+                        if not isinstance(name, str):
+                            raise LintError(_("Attribute name is not a string: %(name)r") % {"name": name})
+                        if not name:
+                            raise LintError(_("Empty attribute name"))
+                        if not isinstance(value, str):
+                            raise LintError(_("Attribute value is not a string: %(value)r") % {"value": value})
                 if name in cdataElements:
                     contentModelFlag = "CDATA"
                 elif name in rcdataElements:
