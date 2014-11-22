@@ -6,6 +6,8 @@ import codecs
 import glob
 import xml.sax.handler
 
+from nose.plugins.skip import SkipTest
+
 base_path = os.path.split(__file__)[0]
 
 test_dir = os.path.join(base_path, 'testdata')
@@ -182,6 +184,8 @@ def xfail(test):
     def t(*args, **kwargs):
         try:
             test(*args)
+        except SkipTest:
+            raise
         except:
             return
         else:

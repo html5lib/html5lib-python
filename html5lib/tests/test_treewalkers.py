@@ -11,6 +11,8 @@ try:
 except AttributeError:
     unittest.TestCase.assertEqual = unittest.TestCase.assertEquals
 
+from nose.plugins.skip import SkipTest
+
 from .support import get_data_files, TestData, convertExpected, xfail
 
 from html5lib import html5parser, treewalkers, treebuilders, constants
@@ -253,7 +255,7 @@ class TokenTestCase(unittest.TestCase):
 def runTreewalkerTest(innerHTML, input, expected, errors, treeClass, scriptingDisabled):
     if scriptingDisabled:
         # We don't support the scripting disabled case!
-        return
+        raise SkipTest()
 
     warnings.resetwarnings()
     warnings.simplefilter("error")
@@ -265,7 +267,7 @@ def runTreewalkerTest(innerHTML, input, expected, errors, treeClass, scriptingDi
             document = p.parse(input)
     except constants.DataLossWarning:
         # Ignore testcases we know we don't pass
-        return
+        raise SkipTest()
 
     document = treeClass.get("adapter", lambda x: x)(document)
     try:
@@ -282,7 +284,7 @@ def runTreewalkerTest(innerHTML, input, expected, errors, treeClass, scriptingDi
                 "", "Diff:", diff,
         ])
     except NotImplementedError:
-        pass  # Amnesty for those that confess...
+        raise SkipTest() # Amnesty for those that confess...
 
 
 @xfail

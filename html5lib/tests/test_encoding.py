@@ -8,6 +8,8 @@ try:
 except AttributeError:
     unittest.TestCase.assertEqual = unittest.TestCase.assertEquals
 
+from nose.plugins.skip import SkipTest
+
 from .support import get_data_files, TestData, test_dir, errorMessage
 from html5lib import HTMLParser, inputstream
 
@@ -41,7 +43,7 @@ def runPreScanEncodingTest(data, encoding):
 
     # Very crude way to ignore irrelevant tests
     if len(data) > stream.numBytesMeta:
-        return
+        raise SkipTest()
 
     assert encoding == stream.charEncoding[0], errorMessage(data, encoding, stream.charEncoding[0])
 

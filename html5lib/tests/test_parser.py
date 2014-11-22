@@ -8,6 +8,8 @@ import re
 
 warnings.simplefilter("error")
 
+from nose.plugins.skip import SkipTest
+
 from .support import get_data_files
 from .support import TestData, convert, convertExpected, treeTypes
 from .support import xfail
@@ -30,7 +32,7 @@ def runParserTest(innerHTML, input, expected, errors, treeClass,
                   namespaceHTMLElements, scriptingDisabled):
     if scriptingDisabled:
         # We don't support the scripting disabled case!
-        return
+        raise SkipTest()
 
     with warnings.catch_warnings(record=True) as caughtWarnings:
         warnings.simplefilter("always")
@@ -51,7 +53,7 @@ def runParserTest(innerHTML, input, expected, errors, treeClass,
                      if not issubclass(x.category, constants.DataLossWarning)]
     assert len(otherWarnings) == 0, [(x.category, x.message) for x in otherWarnings]
     if len(caughtWarnings):
-        return
+        raise SkipTest()
 
     output = convertTreeDump(p.tree.testSerializer(document))
 
