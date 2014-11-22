@@ -175,3 +175,15 @@ class TracingSaxHandler(xml.sax.handler.ContentHandler):
 
     def skippedEntity(self, name):
         self.visited.append(('skippedEntity', name))
+
+
+def xfail(test):
+    """Expected fail decorator function"""
+    def t(*args, **kwargs):
+        try:
+            test(*args)
+        except:
+            return
+        else:
+            assert False, "UNEXPECTED PASS"
+    return t

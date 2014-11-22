@@ -11,7 +11,7 @@ try:
 except AttributeError:
     unittest.TestCase.assertEqual = unittest.TestCase.assertEquals
 
-from .support import get_data_files, TestData, convertExpected
+from .support import get_data_files, TestData, convertExpected, xfail
 
 from html5lib import html5parser, treewalkers, treebuilders, constants
 
@@ -250,7 +250,11 @@ class TokenTestCase(unittest.TestCase):
                 self.assertEqual(expectedToken, outputToken)
 
 
-def runTreewalkerTest(innerHTML, input, expected, errors, treeClass):
+def runTreewalkerTest(innerHTML, input, expected, errors, treeClass, scriptingDisabled):
+    if scriptingDisabled:
+        # We don't support the scripting disabled case!
+        return
+
     warnings.resetwarnings()
     warnings.simplefilter("error")
     try:
@@ -281,9 +285,22 @@ def runTreewalkerTest(innerHTML, input, expected, errors, treeClass):
         pass  # Amnesty for those that confess...
 
 
+@xfail
+def xfailRunTreewalkerTest(*args, **kwargs):
+    return runTreewalkerTest(*args, **kwargs)
+
+
 def test_treewalker():
     sys.stdout.write('Testing tree walkers ' + " ".join(list(treeTypes.keys())) + "\n")
 
+    # Get xfails
+    filename = os.path.join(os.path.split(__file__)[0],
+                            "expected-failures",
+                            "tree-construction.dat")
+    xfails = TestData(filename, "data")
+    xfails = frozenset([x["data"] for x in xfails])
+
+    # Get the tests
     for treeName, treeCls in treeTypes.items():
         files = get_data_files('tree-construction')
         for filename in files:
@@ -299,7 +316,18 @@ def test_treewalker():
                                                                "document-fragment",
                                                                "document")]
                 errors = errors.split("\n")
-                yield runTreewalkerTest, innerHTML, input, expected, errors, treeCls
+
+                assert not ("script-off" in test and "script-on" in test), \
+                    ("The following test has scripting enabled" +
+                     "and disabled all at once: %s in %s" % (input, filename))
+
+                scriptingDisabled = "script-off" in test
+
+                if input in xfails:
+                    testFunc = xfailRunTreewalkerTest
+                else:
+                    testFunc = runTreewalkerTest
+                yield testFunc, innerHTML, input, expected, errors, treeCls, scriptingDisabled
 
 
 def set_attribute_on_first_child(docfrag, name, value, treeName):
