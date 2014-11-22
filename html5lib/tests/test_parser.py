@@ -68,7 +68,7 @@ def runParserTest(innerHTML, input, expected, errors, treeClass,
                            "\nExpected errors (" + str(len(errors)) + "):\n" + "\n".join(errors),
                            "\nActual errors (" + str(len(p.errors)) + "):\n" + "\n".join(errStr)])
     if checkParseErrors:
-            assert len(p.errors) == len(errors), errorMsg2
+        assert len(p.errors) == len(errors), errorMsg2
 
 
 def test_parser():
