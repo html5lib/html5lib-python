@@ -185,14 +185,10 @@ class HTMLUnicodeInputStream(object):
             # Such platforms will have already checked for such
             # surrogate errors, so no need to do this checking.
             self.reportCharacterErrors = None
-            self.replaceCharactersRegexp = None
         elif len("\U0010FFFF") == 1:
             self.reportCharacterErrors = self.characterErrorsUCS4
-            self.replaceCharactersRegexp = re.compile(eval('"[\\uD800-\\uDFFF]"'))
         else:
             self.reportCharacterErrors = self.characterErrorsUCS2
-            self.replaceCharactersRegexp = re.compile(
-                eval('"([\\uD800-\\uDBFF](?![\\uDC00-\\uDFFF])|(?<![\\uD800-\\uDBFF])[\\uDC00-\\uDFFF])"'))
 
         # List of where new lines occur
         self.newLines = [0]
@@ -290,10 +286,7 @@ class HTMLUnicodeInputStream(object):
         if self.reportCharacterErrors:
             self.reportCharacterErrors(data)
 
-            # Replace invalid characters
-            # Note U+0000 is dealt with in the tokenizer
-            data = self.replaceCharactersRegexp.sub("\ufffd", data)
-
+        # Replace invalid characters
         data = data.replace("\r\n", "\n")
         data = data.replace("\r", "\n")
 
