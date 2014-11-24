@@ -152,7 +152,6 @@ def runTokenizerTest(test):
     parser = TokenizerTestParser(test['initialState'],
                                  test['lastStartTag'])
     tokens = parser.parse(test['input'])
-    tokens = concatenateCharacterTokens(tokens)
     received = normalizeTokens(tokens)
     errorMsg = "\n".join(["\n\nInitial state:",
                           test['initialState'],
