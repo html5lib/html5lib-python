@@ -3,8 +3,9 @@ from __future__ import absolute_import, division, unicode_literals
 import json
 import warnings
 import re
+import os
 
-from .support import get_data_files
+from .support import get_data_files, TestData, xfail
 
 from html5lib.tokenizer import HTMLTokenizer
 from html5lib import constants
@@ -161,6 +162,11 @@ def runTokenizerTest(test):
     assert tokensMatch(expected, received, ignoreErrorOrder, True), errorMsg
 
 
+@xfail
+def xfailRunTokenizerTest(*args, **kwargs):
+    return runTokenizerTest(*args, **kwargs)
+
+
 def _doCapitalize(match):
     return match.group(1).upper()
 
@@ -174,6 +180,14 @@ def capitalize(s):
 
 
 def testTokenizer():
+    # Get xfails
+    filename = os.path.join(os.path.split(__file__)[0],
+                            "expected-failures",
+                            "tokenizer.dat")
+    xfails = TestData(filename, "data")
+    xfails = frozenset([x["data"] for x in xfails])
+
+    # Get tests
     for filename in get_data_files('tokenizer', '*.test'):
         with open(filename) as fp:
             tests = json.load(fp)
@@ -185,4 +199,8 @@ def testTokenizer():
                         test = unescape(test)
                     for initialState in test["initialStates"]:
                         test["initialState"] = capitalize(initialState)
-                        yield runTokenizerTest, test
+                        if test['input'] in xfails:
+                            testFunc = xfailRunTokenizerTest
+                        else:
+                            testFunc = runTokenizerTest
+                        yield testFunc, test
