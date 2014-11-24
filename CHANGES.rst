@@ -6,7 +6,7 @@ Change Log
 
 Released on XXX, 2014
 
-* XXX
+* Fix #XXX: added the seamless attribute for iframes.
 
 
 0.999
