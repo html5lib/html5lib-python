@@ -6,6 +6,8 @@ import codecs
 import glob
 import xml.sax.handler
 
+from nose.plugins.skip import SkipTest
+
 base_path = os.path.split(__file__)[0]
 
 test_dir = os.path.join(base_path, 'testdata')
@@ -128,7 +130,7 @@ convertExpected = convert(2)
 def errorMessage(input, expected, actual):
     msg = ("Input:\n%s\nExpected:\n%s\nRecieved\n%s\n" %
            (repr(input), repr(expected), repr(actual)))
-    if sys.version_info.major == 2:
+    if sys.version_info[0] == 2:
         msg = msg.encode("ascii", "backslashreplace")
     return msg
 
@@ -175,3 +177,17 @@ class TracingSaxHandler(xml.sax.handler.ContentHandler):
 
     def skippedEntity(self, name):
         self.visited.append(('skippedEntity', name))
+
+
+def xfail(test):
+    """Expected fail decorator function"""
+    def t(*args, **kwargs):
+        try:
+            test(*args)
+        except SkipTest:
+            raise
+        except:
+            return
+        else:
+            assert False, "UNEXPECTED PASS"
+    return t

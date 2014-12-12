@@ -3,8 +3,9 @@ from __future__ import absolute_import, division, unicode_literals
 import json
 import warnings
 import re
+import os
 
-from .support import get_data_files
+from .support import get_data_files, TestData, xfail
 
 from html5lib.tokenizer import HTMLTokenizer
 from html5lib import constants
@@ -107,6 +108,7 @@ def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder,
                 token.pop()
 
     if not ignoreErrorOrder and not ignoreErrors:
+        expectedTokens = concatenateCharacterTokens(expectedTokens)
         return expectedTokens == receivedTokens
     else:
         # Sort the tokens into two groups; non-parse errors and parse errors
@@ -119,6 +121,7 @@ def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder,
                 else:
                     if not ignoreErrors:
                         tokens[tokenType][1].append(token)
+            tokens[tokenType][0] = concatenateCharacterTokens(tokens[tokenType][0])
         return tokens["expected"] == tokens["received"]
 
 
@@ -143,13 +146,12 @@ def runTokenizerTest(test):
     warnings.resetwarnings()
     warnings.simplefilter("error")
 
-    expected = concatenateCharacterTokens(test['output'])
+    expected = test['output']
     if 'lastStartTag' not in test:
         test['lastStartTag'] = None
     parser = TokenizerTestParser(test['initialState'],
                                  test['lastStartTag'])
     tokens = parser.parse(test['input'])
-    tokens = concatenateCharacterTokens(tokens)
     received = normalizeTokens(tokens)
     errorMsg = "\n".join(["\n\nInitial state:",
                           test['initialState'],
@@ -159,6 +161,11 @@ def runTokenizerTest(test):
     errorMsg = errorMsg
     ignoreErrorOrder = test.get('ignoreErrorOrder', False)
     assert tokensMatch(expected, received, ignoreErrorOrder, True), errorMsg
+
+
+@xfail
+def xfailRunTokenizerTest(*args, **kwargs):
+    return runTokenizerTest(*args, **kwargs)
 
 
 def _doCapitalize(match):
@@ -174,6 +181,14 @@ def capitalize(s):
 
 
 def testTokenizer():
+    # Get xfails
+    filename = os.path.join(os.path.split(__file__)[0],
+                            "expected-failures",
+                            "tokenizer.dat")
+    xfails = TestData(filename, "data")
+    xfails = frozenset([x["data"] for x in xfails])
+
+    # Get tests
     for filename in get_data_files('tokenizer', '*.test'):
         with open(filename) as fp:
             tests = json.load(fp)
@@ -185,4 +200,8 @@ def testTokenizer():
                         test = unescape(test)
                     for initialState in test["initialStates"]:
                         test["initialState"] = capitalize(initialState)
-                        yield runTokenizerTest, test
+                        if test['input'] in xfails:
+                            testFunc = xfailRunTokenizerTest
+                        else:
+                            testFunc = runTokenizerTest
+                        yield testFunc, test
