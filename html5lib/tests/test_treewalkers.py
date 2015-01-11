@@ -87,7 +87,7 @@ class TokenTestCase(unittest.TestCase):
             {'data': {}, 'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'body'},
             {'data': {}, 'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'html'}
         ]
-        for treeName, treeCls in treeTypes.items():
+        for treeName, treeCls in sorted(treeTypes.items()):
             p = html5parser.HTMLParser(tree=treeCls["builder"])
             document = p.parse("<html><head></head><body>a<div>b</div>c</body></html>")
             document = treeCls.get("adapter", lambda x: x)(document)
@@ -130,7 +130,7 @@ def runTreewalkerTest(innerHTML, input, expected, errors, treeClass):
 def test_treewalker():
     sys.stdout.write('Testing tree walkers ' + " ".join(list(treeTypes.keys())) + "\n")
 
-    for treeName, treeCls in treeTypes.items():
+    for treeName, treeCls in sorted(treeTypes.items()):
         files = get_data_files('tree-construction')
         for filename in files:
             testName = os.path.basename(filename).replace(".dat", "")
@@ -194,6 +194,6 @@ def test_treewalker_six_mix():
          '<link>\n  href="http://example.com/cow"\n  rel="alternate"\n  "Example"')
     ]
 
-    for tree in treeTypes.items():
+    for tree in sorted(treeTypes.items()):
         for intext, attrs, expected in sm_tests:
             yield runTreewalkerEditTest, intext, expected, attrs, tree

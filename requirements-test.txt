@@ -1,6 +1,7 @@
 -r requirements.txt
 
 flake8
-nose
+pytest
+pytest-expect>=1.0,<2.0
 mock
 ordereddict ; python_version < '2.7'

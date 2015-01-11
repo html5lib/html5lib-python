@@ -42,7 +42,7 @@ else:
 
 
 def get_data_files(subdirectory, files='*.dat'):
-    return glob.glob(os.path.join(test_dir, subdirectory, files))
+    return sorted(glob.glob(os.path.join(test_dir, subdirectory, files)))
 
 
 class DefaultDict(dict):

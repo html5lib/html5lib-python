@@ -38,7 +38,7 @@ install:
   - bash requirements-install.sh
 
 script:
-  - nosetests
+  - py.test
   - bash flake8-run.sh
 
 after_script:

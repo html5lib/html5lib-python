@@ -90,7 +90,7 @@ def test_parser():
             if errors:
                 errors = errors.split("\n")
 
-            for treeName, treeCls in treeTypes.items():
+            for treeName, treeCls in sorted(treeTypes.items()):
                 for namespaceHTMLElements in (True, False):
                     yield (runParserTest, innerHTML, input, expected, errors, treeCls,
                            namespaceHTMLElements)
