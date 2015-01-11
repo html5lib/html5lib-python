@@ -13,6 +13,8 @@ Released on XXX
 
 * Now requires the ``mock`` package for the testsuite.
 
+* Cease supporting DATrie under PyPy.
+
 
 0.9999999/1.0b8
 ~~~~~~~~~~~~~~~

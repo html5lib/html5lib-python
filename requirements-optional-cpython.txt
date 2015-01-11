@@ -3,3 +3,7 @@
 # lxml is supported with its own treebuilder ("lxml") and otherwise
 # uses the standard ElementTree support
 lxml
+
+# DATrie can be used in place of our Python trie implementation for
+# slightly better parsing performance.
+datrie

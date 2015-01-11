@@ -104,8 +104,8 @@ Optional Dependencies
 The following third-party libraries may be used for additional
 functionality:
 
-- ``datrie`` can be used to improve parsing performance (though in
-  almost all cases the improvement is marginal);
+- ``datrie`` can be used under CPython to improve parsing performance
+  (though in almost all cases the improvement is marginal);
 
 - ``lxml`` is supported as a tree format (for both building and
   walking) under CPython (but *not* PyPy where it is known to cause
