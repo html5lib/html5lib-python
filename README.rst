@@ -132,9 +132,9 @@ Please report any bugs on the `issue tracker
 Tests
 -----
 
-Unit tests require the ``nose`` library and can be run using the
-``nosetests`` command in the root directory; ``ordereddict`` is
-required under Python 2.6. All should pass.
+Unit tests require the ``nose`` and ``mock`` libraries and can be run
+using the ``nosetests`` command in the root directory; ``ordereddict``
+is required under Python 2.6. All should pass.
 
 Test data are contained in a separate `html5lib-tests
 <https://github.com/html5lib/html5lib-tests>`_ repository and included
