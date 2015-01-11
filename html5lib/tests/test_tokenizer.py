@@ -109,6 +109,7 @@ def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder,
                 token.pop()
 
     if not ignoreErrorOrder and not ignoreErrors:
+        expectedTokens = concatenateCharacterTokens(expectedTokens)
         return expectedTokens == receivedTokens
     else:
         # Sort the tokens into two groups; non-parse errors and parse errors
@@ -121,6 +122,7 @@ def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder,
                 else:
                     if not ignoreErrors:
                         tokens[tokenType][1].append(token)
+            tokens[tokenType][0] = concatenateCharacterTokens(tokens[tokenType][0])
         return tokens["expected"] == tokens["received"]
 
 
@@ -174,7 +176,7 @@ def runTokenizerTest(test):
     warnings.resetwarnings()
     warnings.simplefilter("error")
 
-    expected = concatenateCharacterTokens(test['output'])
+    expected = test['output']
     if 'lastStartTag' not in test:
         test['lastStartTag'] = None
     parser = TokenizerTestParser(test['initialState'],
