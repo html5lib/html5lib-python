@@ -27,16 +27,18 @@ treeTypes['ElementTree'] = treebuilders.getTreeBuilder("etree", ElementTree, ful
 try:
     import xml.etree.cElementTree as cElementTree
 except ImportError:
-    pass
+    treeTypes['cElementTree'] = None
 else:
     # On Python 3.3 and above cElementTree is an alias, don't run them twice.
-    if cElementTree.Element is not ElementTree.Element:
+    if cElementTree.Element is ElementTree.Element:
+        treeTypes['cElementTree'] = None
+    else:
         treeTypes['cElementTree'] = treebuilders.getTreeBuilder("etree", cElementTree, fullTree=True)
 
 try:
     import lxml.etree as lxml  # flake8: noqa
 except ImportError:
-    pass
+    treeTypes['lxml'] = None
 else:
     treeTypes['lxml'] = treebuilders.getTreeBuilder("lxml")
 
@@ -62,9 +64,6 @@ class TestData(object):
             self.f = codecs.open(filename, encoding=encoding)
         self.encoding = encoding
         self.newTestHeading = newTestHeading
-
-    def __del__(self):
-        self.f.close()
 
     def __iter__(self):
         data = DefaultDict(None)
