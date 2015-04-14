@@ -91,13 +91,21 @@ def moduleFactoryFactory(factory):
         else:
             name = b"_%s_factory" % baseModule.__name__
 
-        if name in moduleCache:
-            return moduleCache[name]
-        else:
+        kwargs_tuple = tuple(kwargs.items())
+
+        try:
+            return moduleCache[name][args][kwargs_tuple]
+        except KeyError:
             mod = ModuleType(name)
             objs = factory(baseModule, *args, **kwargs)
             mod.__dict__.update(objs)
-            moduleCache[name] = mod
+            if "name" not in moduleCache:
+                moduleCache[name] = {}
+            if "args" not in moduleCache[name]:
+                moduleCache[name][args] = {}
+            if "kwargs" not in moduleCache[name][args]:
+                moduleCache[name][args][kwargs_tuple] = {}
+            moduleCache[name][args][kwargs_tuple] = mod
             return mod
 
     return moduleFactory

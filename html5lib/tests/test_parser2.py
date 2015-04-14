@@ -40,12 +40,12 @@ class MoreParserTests(unittest.TestCase):
     def test_namespace_html_elements_0_etree(self):
         parser = html5parser.HTMLParser(namespaceHTMLElements=True)
         doc = parser.parse("<html></html>")
-        self.assertTrue(list(doc)[0].tag == "{%s}html" % (namespaces["html"],))
+        self.assertTrue(doc.tag == "{%s}html" % (namespaces["html"],))
 
     def test_namespace_html_elements_1_etree(self):
         parser = html5parser.HTMLParser(namespaceHTMLElements=False)
         doc = parser.parse("<html></html>")
-        self.assertTrue(list(doc)[0].tag == "html")
+        self.assertTrue(doc.tag == "html")
 
     def test_unicode_file(self):
         parser = html5parser.HTMLParser()

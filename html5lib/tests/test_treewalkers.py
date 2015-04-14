@@ -60,7 +60,7 @@ except ImportError:
     pass
 else:
     treeTypes['ElementTree'] = \
-        {"builder": treebuilders.getTreeBuilder("etree", ElementTree),
+        {"builder": treebuilders.getTreeBuilder("etree", ElementTree, fullTree=True),
          "walker": treewalkers.getTreeWalker("etree", ElementTree)}
 
 try:
@@ -69,7 +69,7 @@ except ImportError:
     pass
 else:
     treeTypes['cElementTree'] = \
-        {"builder": treebuilders.getTreeBuilder("etree", ElementTree),
+        {"builder": treebuilders.getTreeBuilder("etree", ElementTree, fullTree=True),
          "walker": treewalkers.getTreeWalker("etree", ElementTree)}
 
 
