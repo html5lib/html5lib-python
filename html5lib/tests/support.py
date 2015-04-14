@@ -21,25 +21,17 @@ treeTypes = {"DOM": treebuilders.getTreeBuilder("dom")}
 
 # Try whatever etree implementations are available from a list that are
 #"supposed" to work
-try:
-    import xml.etree.ElementTree as ElementTree
-    treeTypes['ElementTree'] = treebuilders.getTreeBuilder("etree", ElementTree, fullTree=True)
-except ImportError:
-    try:
-        import elementtree.ElementTree as ElementTree
-        treeTypes['ElementTree'] = treebuilders.getTreeBuilder("etree", ElementTree, fullTree=True)
-    except ImportError:
-        pass
+import xml.etree.ElementTree as ElementTree
+treeTypes['ElementTree'] = treebuilders.getTreeBuilder("etree", ElementTree, fullTree=True)
 
 try:
     import xml.etree.cElementTree as cElementTree
-    treeTypes['cElementTree'] = treebuilders.getTreeBuilder("etree", cElementTree, fullTree=True)
 except ImportError:
-    try:
-        import cElementTree
+    pass
+else:
+    # On Python 3.3 and above cElementTree is an alias, don't run them twice.
+    if cElementTree.Element is not ElementTree.Element:
         treeTypes['cElementTree'] = treebuilders.getTreeBuilder("etree", cElementTree, fullTree=True)
-    except ImportError:
-        pass
 
 try:
     import lxml.etree as lxml  # flake8: noqa
