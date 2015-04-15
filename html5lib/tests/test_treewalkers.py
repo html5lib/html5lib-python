@@ -13,7 +13,7 @@ except AttributeError:
 
 from .support import get_data_files, TestData, convertExpected
 
-from html5lib import html5parser, treewalkers, treebuilders, constants
+from html5lib import html5parser, treewalkers, treebuilders, treeadapters, constants
 
 
 def PullDOMAdapter(node):
@@ -84,59 +84,13 @@ else:
 
 
 try:
-    from genshi.core import QName, Attrs
-    from genshi.core import START, END, TEXT, COMMENT, DOCTYPE
+    import genshi  # flake8: noqa
 except ImportError:
     pass
 else:
-    def GenshiAdapter(tree):
-        text = None
-        for token in treewalkers.getTreeWalker("dom")(tree):
-            type = token["type"]
-            if type in ("Characters", "SpaceCharacters"):
-                if text is None:
-                    text = token["data"]
-                else:
-                    text += token["data"]
-            elif text is not None:
-                yield TEXT, text, (None, -1, -1)
-                text = None
-
-            if type in ("StartTag", "EmptyTag"):
-                if token["namespace"]:
-                    name = "{%s}%s" % (token["namespace"], token["name"])
-                else:
-                    name = token["name"]
-                attrs = Attrs([(QName("{%s}%s" % attr if attr[0] is not None else attr[1]), value)
-                               for attr, value in token["data"].items()])
-                yield (START, (QName(name), attrs), (None, -1, -1))
-                if type == "EmptyTag":
-                    type = "EndTag"
-
-            if type == "EndTag":
-                if token["namespace"]:
-                    name = "{%s}%s" % (token["namespace"], token["name"])
-                else:
-                    name = token["name"]
-
-                yield END, QName(name), (None, -1, -1)
-
-            elif type == "Comment":
-                yield COMMENT, token["data"], (None, -1, -1)
-
-            elif type == "Doctype":
-                yield DOCTYPE, (token["name"], token["publicId"],
-                                token["systemId"]), (None, -1, -1)
-
-            else:
-                pass  # FIXME: What to do?
-
-        if text is not None:
-            yield TEXT, text, (None, -1, -1)
-
     treeTypes["genshi"] = \
         {"builder": treebuilders.getTreeBuilder("dom"),
-         "adapter": GenshiAdapter,
+         "adapter": lambda tree: treeadapters.genshi.to_genshi(treewalkers.getTreeWalker("dom")(tree)),
          "walker": treewalkers.getTreeWalker("genshi")}
 
 import re
