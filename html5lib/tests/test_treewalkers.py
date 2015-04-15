@@ -16,40 +16,9 @@ from .support import get_data_files, TestData, convertExpected
 from html5lib import html5parser, treewalkers, treebuilders, treeadapters, constants
 
 
-def PullDOMAdapter(node):
-    from xml.dom import Node
-    from xml.dom.pulldom import START_ELEMENT, END_ELEMENT, COMMENT, CHARACTERS
-
-    if node.nodeType in (Node.DOCUMENT_NODE, Node.DOCUMENT_FRAGMENT_NODE):
-        for childNode in node.childNodes:
-            for event in PullDOMAdapter(childNode):
-                yield event
-
-    elif node.nodeType == Node.DOCUMENT_TYPE_NODE:
-        raise NotImplementedError("DOCTYPE nodes are not supported by PullDOM")
-
-    elif node.nodeType == Node.COMMENT_NODE:
-        yield COMMENT, node
-
-    elif node.nodeType in (Node.TEXT_NODE, Node.CDATA_SECTION_NODE):
-        yield CHARACTERS, node
-
-    elif node.nodeType == Node.ELEMENT_NODE:
-        yield START_ELEMENT, node
-        for childNode in node.childNodes:
-            for event in PullDOMAdapter(childNode):
-                yield event
-        yield END_ELEMENT, node
-
-    else:
-        raise NotImplementedError("Node type not supported: " + str(node.nodeType))
-
 treeTypes = {
     "DOM": {"builder": treebuilders.getTreeBuilder("dom"),
             "walker": treewalkers.getTreeWalker("dom")},
-    "PullDOM": {"builder": treebuilders.getTreeBuilder("dom"),
-                "adapter": PullDOMAdapter,
-                "walker": treewalkers.getTreeWalker("pulldom")},
 }
 
 # Try whatever etree implementations are available from a list that are
