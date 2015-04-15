@@ -5,17 +5,14 @@ from genshi.core import START, END, TEXT, COMMENT, DOCTYPE
 
 
 def to_genshi(walker):
-    text = None
+    text = []
     for token in walker:
         type = token["type"]
         if type in ("Characters", "SpaceCharacters"):
-            if text is None:
-                text = token["data"]
-            else:
-                text += token["data"]
-        elif text is not None:
-            yield TEXT, text, (None, -1, -1)
-            text = None
+            text.append(token["data"])
+        elif text:
+            yield TEXT, "".join(text), (None, -1, -1)
+            text = []
 
         if type in ("StartTag", "EmptyTag"):
             if token["namespace"]:
@@ -46,5 +43,5 @@ def to_genshi(walker):
         else:
             pass  # FIXME: What to do?
 
-    if text is not None:
-        yield TEXT, text, (None, -1, -1)
+    if text:
+        yield TEXT, "".join(text), (None, -1, -1)
