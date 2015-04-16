@@ -7,7 +7,7 @@ import re
 from .support import get_data_files
 
 from html5lib.tokenizer import HTMLTokenizer
-from html5lib import constants
+from html5lib import constants, utils
 
 
 class TokenizerTestParser(object):
@@ -122,9 +122,28 @@ def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder,
         return tokens["expected"] == tokens["received"]
 
 
+_surrogateRe = re.compile(r"\\u(?P<codepoint>[0-9A-Fa-f]{4})")
+
+
 def unescape(test):
     def decode(inp):
-        return inp.encode("utf-8").decode("unicode-escape")
+        try:
+            return inp.encode("utf-8").decode("unicode-escape")
+        except UnicodeDecodeError:
+            possible_surrogate_match = _surrogateRe.search(inp)
+            if possible_surrogate_match and not utils.supports_lone_surrogates:
+                possible_surrogate = int(possible_surrogate_match.group("codepoint"), 16)
+                if possible_surrogate >= 0xD800 and possible_surrogate <= 0xDFFF:
+                    # Not valid unicode input for platforms that do
+                    # not have support for lone surrogates.
+                    #
+                    # NOTE it's not even possible to have such
+                    # isolated surrogates in unicode input streams in
+                    # such platforms (like Jython) - the decoding to
+                    # unicode would have raised a similar
+                    # UnicodeDecodeError.
+                    return None
+            raise
 
     test["input"] = decode(test["input"])
     for token in test["output"]:
@@ -183,6 +202,8 @@ def testTokenizer():
                         test["initialStates"] = ["Data state"]
                     if 'doubleEscaped' in test:
                         test = unescape(test)
+                        if test["input"] is None:
+                            continue  # Not valid input for this platform
                     for initialState in test["initialStates"]:
                         test["initialState"] = capitalize(initialState)
                         yield runTokenizerTest, test
