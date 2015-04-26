@@ -4,6 +4,7 @@ python:
   - "2.7"
   - "3.2"
   - "3.3"
+  - "3.4"
   - "pypy"
 
 env:
@@ -14,12 +15,12 @@ matrix:
   exclude:
     - python: "2.7"
       env: USE_OPTIONAL=false
-    - python: "3.3"
+    - python: "3.4"
       env: USE_OPTIONAL=false
   include:
     - python: "2.7"
       env: USE_OPTIONAL=false FLAKE=true
-    - python: "3.3"
+    - python: "3.4"
       env: USE_OPTIONAL=false FLAKE=true
 
 before_install:

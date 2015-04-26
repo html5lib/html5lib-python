@@ -5,16 +5,12 @@ if [[ $USE_OPTIONAL != "true" && $USE_OPTIONAL != "false" ]]; then
   exit 1
 fi
 
-pip install -r requirements-test.txt --use-mirrors
+pip install -r requirements-test.txt
 
 if [[ $USE_OPTIONAL == "true" && $TRAVIS_PYTHON_VERSION != "pypy" ]]; then
   if [[ $TRAVIS_PYTHON_VERSION == "2.6" ]]; then
-    pip install -r requirements-optional-2.6.txt --use-mirrors
+    pip install --allow-external Genshi --allow-insecure Genshi -r requirements-optional-2.6.txt
   else
-    pip install -r requirements-optional-cpython.txt --use-mirrors
+    pip install --allow-external Genshi --allow-insecure Genshi -r requirements-optional-cpython.txt
   fi
-fi
-
-if [[ $FLAKE == "true" ]]; then
-  pip install --use-mirrors flake8
 fi

@@ -296,7 +296,7 @@ namespaces = {
     "xmlns": "http://www.w3.org/2000/xmlns/"
 }
 
-scopingElements = frozenset((
+scopingElements = frozenset([
     (namespaces["html"], "applet"),
     (namespaces["html"], "caption"),
     (namespaces["html"], "html"),
@@ -314,9 +314,9 @@ scopingElements = frozenset((
     (namespaces["svg"], "foreignObject"),
     (namespaces["svg"], "desc"),
     (namespaces["svg"], "title"),
-))
+])
 
-formattingElements = frozenset((
+formattingElements = frozenset([
     (namespaces["html"], "a"),
     (namespaces["html"], "b"),
     (namespaces["html"], "big"),
@@ -331,9 +331,9 @@ formattingElements = frozenset((
     (namespaces["html"], "strong"),
     (namespaces["html"], "tt"),
     (namespaces["html"], "u")
-))
+])
 
-specialElements = frozenset((
+specialElements = frozenset([
     (namespaces["html"], "address"),
     (namespaces["html"], "applet"),
     (namespaces["html"], "area"),
@@ -414,22 +414,22 @@ specialElements = frozenset((
     (namespaces["html"], "wbr"),
     (namespaces["html"], "xmp"),
     (namespaces["svg"], "foreignObject")
-))
+])
 
-htmlIntegrationPointElements = frozenset((
+htmlIntegrationPointElements = frozenset([
     (namespaces["mathml"], "annotaion-xml"),
     (namespaces["svg"], "foreignObject"),
     (namespaces["svg"], "desc"),
     (namespaces["svg"], "title")
-))
+])
 
-mathmlTextIntegrationPointElements = frozenset((
+mathmlTextIntegrationPointElements = frozenset([
     (namespaces["mathml"], "mi"),
     (namespaces["mathml"], "mo"),
     (namespaces["mathml"], "mn"),
     (namespaces["mathml"], "ms"),
     (namespaces["mathml"], "mtext")
-))
+])
 
 adjustForeignAttributes = {
     "xlink:actuate": ("xlink", "actuate", namespaces["xlink"]),
@@ -449,21 +449,21 @@ adjustForeignAttributes = {
 unadjustForeignAttributes = dict([((ns, local), qname) for qname, (prefix, local, ns) in
                                   adjustForeignAttributes.items()])
 
-spaceCharacters = frozenset((
+spaceCharacters = frozenset([
     "\t",
     "\n",
     "\u000C",
     " ",
     "\r"
-))
+])
 
-tableInsertModeElements = frozenset((
+tableInsertModeElements = frozenset([
     "table",
     "tbody",
     "tfoot",
     "thead",
     "tr"
-))
+])
 
 asciiLowercase = frozenset(string.ascii_lowercase)
 asciiUppercase = frozenset(string.ascii_uppercase)
@@ -484,7 +484,7 @@ headingElements = (
     "h6"
 )
 
-voidElements = frozenset((
+voidElements = frozenset([
     "base",
     "command",
     "event-source",
@@ -500,11 +500,11 @@ voidElements = frozenset((
     "input",
     "source",
     "track"
-))
+])
 
-cdataElements = frozenset(('title', 'textarea'))
+cdataElements = frozenset(['title', 'textarea'])
 
-rcdataElements = frozenset((
+rcdataElements = frozenset([
     'style',
     'script',
     'xmp',
@@ -512,27 +512,27 @@ rcdataElements = frozenset((
     'noembed',
     'noframes',
     'noscript'
-))
+])
 
 booleanAttributes = {
-    "": frozenset(("irrelevant",)),
-    "style": frozenset(("scoped",)),
-    "img": frozenset(("ismap",)),
-    "audio": frozenset(("autoplay", "controls")),
-    "video": frozenset(("autoplay", "controls")),
-    "script": frozenset(("defer", "async")),
-    "details": frozenset(("open",)),
-    "datagrid": frozenset(("multiple", "disabled")),
-    "command": frozenset(("hidden", "disabled", "checked", "default")),
-    "hr": frozenset(("noshade")),
-    "menu": frozenset(("autosubmit",)),
-    "fieldset": frozenset(("disabled", "readonly")),
-    "option": frozenset(("disabled", "readonly", "selected")),
-    "optgroup": frozenset(("disabled", "readonly")),
-    "button": frozenset(("disabled", "autofocus")),
-    "input": frozenset(("disabled", "readonly", "required", "autofocus", "checked", "ismap")),
-    "select": frozenset(("disabled", "readonly", "autofocus", "multiple")),
-    "output": frozenset(("disabled", "readonly")),
+    "": frozenset(["irrelevant"]),
+    "style": frozenset(["scoped"]),
+    "img": frozenset(["ismap"]),
+    "audio": frozenset(["autoplay", "controls"]),
+    "video": frozenset(["autoplay", "controls"]),
+    "script": frozenset(["defer", "async"]),
+    "details": frozenset(["open"]),
+    "datagrid": frozenset(["multiple", "disabled"]),
+    "command": frozenset(["hidden", "disabled", "checked", "default"]),
+    "hr": frozenset(["noshade"]),
+    "menu": frozenset(["autosubmit"]),
+    "fieldset": frozenset(["disabled", "readonly"]),
+    "option": frozenset(["disabled", "readonly", "selected"]),
+    "optgroup": frozenset(["disabled", "readonly"]),
+    "button": frozenset(["disabled", "autofocus"]),
+    "input": frozenset(["disabled", "readonly", "required", "autofocus", "checked", "ismap"]),
+    "select": frozenset(["disabled", "readonly", "autofocus", "multiple"]),
+    "output": frozenset(["disabled", "readonly"]),
 }
 
 # entitiesWindows1252 has to be _ordered_ and needs to have an index. It
@@ -572,7 +572,7 @@ entitiesWindows1252 = (
     376     # 0x9F  0x0178  LATIN CAPITAL LETTER Y WITH DIAERESIS
 )
 
-xmlEntities = frozenset(('lt;', 'gt;', 'amp;', 'apos;', 'quot;'))
+xmlEntities = frozenset(['lt;', 'gt;', 'amp;', 'apos;', 'quot;'])
 
 entities = {
     "AElig": "\xc6",
@@ -3086,8 +3086,8 @@ tokenTypes = {
     "ParseError": 7
 }
 
-tagTokenTypes = frozenset((tokenTypes["StartTag"], tokenTypes["EndTag"],
-                           tokenTypes["EmptyTag"]))
+tagTokenTypes = frozenset([tokenTypes["StartTag"], tokenTypes["EndTag"],
+                           tokenTypes["EmptyTag"]])
 
 
 prefixes = dict([(v, k) for k, v in namespaces.items()])

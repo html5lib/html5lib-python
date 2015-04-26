@@ -1,6 +1,9 @@
 from __future__ import absolute_import, division, unicode_literals
 from six import text_type, string_types
 
+__all__ = ["DOCUMENT", "DOCTYPE", "TEXT", "ELEMENT", "COMMENT", "ENTITY", "UNKNOWN",
+           "TreeWalker", "NonRecursiveTreeWalker"]
+
 from xml.dom import Node
 
 DOCUMENT = Node.DOCUMENT_NODE

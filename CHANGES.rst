@@ -1,6 +1,36 @@
 Change Log
 ----------
 
+0.9999
+~~~~~~
+
+Released on XXX, 2014
+
+* XXX
+
+
+0.999
+~~~~~
+
+Released on December 23, 2013
+
+* Fix #127: add work-around for CPython issue #20007: .read(0) on
+  http.client.HTTPResponse drops the rest of the content.
+
+* Fix #115: lxml treewalker can now deal with fragments containing, at
+  their root level, text nodes with non-ASCII characters on Python 2.
+
+
+0.99
+~~~~
+
+Released on September 10, 2013
+
+* No library changes from 1.0b3; released as 0.99 as pip has changed
+  behaviour from 1.4 to avoid installing pre-release versions per
+  PEP 440.
+
+
 1.0b3
 ~~~~~
 

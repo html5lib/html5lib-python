@@ -5,6 +5,8 @@ import unittest
 import codecs
 from io import BytesIO
 
+from six.moves import http_client
+
 from html5lib.inputstream import (BufferedStream, HTMLInputStream,
                                   HTMLUnicodeInputStream, HTMLBinaryInputStream)
 
@@ -153,6 +155,20 @@ class HTMLInputStreamTest(unittest.TestCase):
         self.assertEqual(stream.position(), (2, 0))
         self.assertEqual(stream.char(), "d")
         self.assertEqual(stream.position(), (2, 1))
+
+    def test_python_issue_20007(self):
+        """
+        Make sure we have a work-around for Python bug #20007
+        http://bugs.python.org/issue20007
+        """
+        class FakeSocket(object):
+            def makefile(self, _mode, _bufsize=None):
+                return BytesIO(b"HTTP/1.1 200 Ok\r\n\r\nText")
+
+        source = http_client.HTTPResponse(FakeSocket())
+        source.begin()
+        stream = HTMLInputStream(source)
+        self.assertEqual(stream.charsUntil(" "), "Text")
 
 
 def buildTestSuite():

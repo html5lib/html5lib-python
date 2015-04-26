@@ -129,6 +129,17 @@ class HTMLParser(object):
 
         self.framesetOK = True
 
+    @property
+    def documentEncoding(self):
+        """The name of the character encoding
+        that was used to decode the input stream,
+        or :obj:`None` if that is not determined yet.
+
+        """
+        if not hasattr(self, 'tokenizer'):
+            return None
+        return self.tokenizer.stream.charEncoding[0]
+
     def isHTMLIntegrationPoint(self, element):
         if (element.name == "annotation-xml" and
                 element.namespace == namespaces["mathml"]):
@@ -1205,8 +1216,7 @@ def getPhases(debug):
             attributes["name"] = "isindex"
             self.processStartTag(impliedTagToken("input", "StartTag",
                                                  attributes=attributes,
-                                                 selfClosing=
-                                                 token["selfClosing"]))
+                                                 selfClosing=token["selfClosing"]))
             self.processEndTag(impliedTagToken("label"))
             self.processStartTag(impliedTagToken("hr", "StartTag"))
             self.processEndTag(impliedTagToken("form"))

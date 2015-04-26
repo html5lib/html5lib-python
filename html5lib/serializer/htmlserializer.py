@@ -32,7 +32,7 @@ else:
                 v = utils.surrogatePairToCodepoint(v)
             else:
                 v = ord(v)
-            if not v in encode_entity_map or k.islower():
+            if v not in encode_entity_map or k.islower():
                 # prefer &lt; over &LT; and similarly for &amp;, &gt;, etc.
                 encode_entity_map[v] = k
 
@@ -288,7 +288,7 @@ class HTMLSerializer(object):
             elif type == "Entity":
                 name = token["name"]
                 key = name + ";"
-                if not key in entities:
+                if key not in entities:
                     self.serializeError("Entity %s not recognized" % name)
                 if self.resolve_entities and key not in xmlEntities:
                     data = entities[key]

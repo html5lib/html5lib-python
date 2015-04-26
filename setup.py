@@ -1,4 +1,7 @@
-from distutils.core import setup
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
 import os
 import codecs
 
@@ -23,13 +26,19 @@ packages = ['html5lib'] + ['html5lib.'+name
                            if os.path.isdir(os.path.join('html5lib', name)) and
                            not name.startswith('.') and name != 'tests']
 
+install_requires = ['six']
+try:
+    from collections import OrderedDict
+except ImportError:
+    install_requires.append('ordereddict')
+
 current_dir = os.path.dirname(__file__)
 with codecs.open(os.path.join(current_dir, 'README.rst'), 'r', 'utf8') as readme_file:
     with codecs.open(os.path.join(current_dir, 'CHANGES.rst'), 'r', 'utf8') as changes_file:
         long_description = readme_file.read() + '\n' + changes_file.read()
 
 setup(name='html5lib',
-      version='1.0b4',
+      version='0.9999-dev',
       url='https://github.com/html5lib/html5lib-python',
       license="MIT License",
       description='HTML parser based on the WHATWG HTML specifcation',
@@ -38,7 +47,5 @@ setup(name='html5lib',
       maintainer='James Graham',
       maintainer_email='james@hoppipolla.co.uk',
       packages=packages,
-      install_requires=[
-          'six',
-      ],
+      install_requires=install_requires,
       )

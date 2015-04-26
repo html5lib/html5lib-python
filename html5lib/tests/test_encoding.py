@@ -28,10 +28,11 @@ class Html5EncodingTestCase(unittest.TestCase):
 
 def runParserEncodingTest(data, encoding):
     p = HTMLParser()
+    assert p.documentEncoding is None
     p.parse(data, useChardet=False)
     encoding = encoding.lower().decode("ascii")
 
-    assert encoding == p.tokenizer.stream.charEncoding[0], errorMessage(data, encoding, p.tokenizer.stream.charEncoding[0])
+    assert encoding == p.documentEncoding, errorMessage(data, encoding, p.documentEncoding)
 
 
 def runPreScanEncodingTest(data, encoding):
