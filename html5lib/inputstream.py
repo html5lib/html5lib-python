@@ -1,5 +1,5 @@
 from __future__ import absolute_import, division, unicode_literals
-from six import text_type, unichr
+from six import text_type
 from six.moves import http_client
 
 import codecs
@@ -29,17 +29,17 @@ asciiUppercaseBytes = frozenset([item.encode("ascii") for item in asciiUppercase
 spacesAngleBrackets = spaceCharactersBytes | frozenset([b">", b"<"])
 
 
-invalid_unicode_template = "[\u0001-\u0008\u000B\u000E-\u001F\u007F-\u009F\uFDD0-\uFDEF\uFFFE\uFFFF\U0001FFFE\U0001FFFF\U0002FFFE\U0002FFFF\U0003FFFE\U0003FFFF\U0004FFFE\U0004FFFF\U0005FFFE\U0005FFFF\U0006FFFE\U0006FFFF\U0007FFFE\U0007FFFF\U0008FFFE\U0008FFFF\U0009FFFE\U0009FFFF\U000AFFFE\U000AFFFF\U000BFFFE\U000BFFFF\U000CFFFE\U000CFFFF\U000DFFFE\U000DFFFF\U000EFFFE\U000EFFFF\U000FFFFE\U000FFFFF\U0010FFFE\U0010FFFF%s]"
+invalid_unicode_no_surrogate = "[\u0001-\u0008\u000B\u000E-\u001F\u007F-\u009F\uFDD0-\uFDEF\uFFFE\uFFFF\U0001FFFE\U0001FFFF\U0002FFFE\U0002FFFF\U0003FFFE\U0003FFFF\U0004FFFE\U0004FFFF\U0005FFFE\U0005FFFF\U0006FFFE\U0006FFFF\U0007FFFE\U0007FFFF\U0008FFFE\U0008FFFF\U0009FFFE\U0009FFFF\U000AFFFE\U000AFFFF\U000BFFFE\U000BFFFF\U000CFFFE\U000CFFFF\U000DFFFE\U000DFFFF\U000EFFFE\U000EFFFF\U000FFFFE\U000FFFFF\U0010FFFE\U0010FFFF]"
 
 if utils.supports_lone_surrogates:
     # Use one extra step of indirection and create surrogates with
     # unichr. Not using this indirection would introduce an illegal
     # unicode literal on platforms not supporting such lone
     # surrogates.
-    invalid_unicode_re = re.compile(invalid_unicode_template % (
-        "%s-%s" % (unichr(0xD800), unichr(0xDFFF)),))
+    invalid_unicode_re = re.compile(invalid_unicode_no_surrogate +
+                                    eval('"\\uD800-\\uDFFF"'))
 else:
-    invalid_unicode_re = re.compile(invalid_unicode_template % "")
+    invalid_unicode_re = re.compile(invalid_unicode_no_surrogate)
 
 non_bmp_invalid_codepoints = set([0x1FFFE, 0x1FFFF, 0x2FFFE, 0x2FFFF, 0x3FFFE,
                                   0x3FFFF, 0x4FFFE, 0x4FFFF, 0x5FFFE, 0x5FFFF,
@@ -182,16 +182,11 @@ class HTMLUnicodeInputStream(object):
             self.replaceCharactersRegexp = None
         elif len("\U0010FFFF") == 1:
             self.reportCharacterErrors = self.characterErrorsUCS4
-            self.replaceCharactersRegexp = re.compile("[%s-%s]" % (
-                unichr(0xD800), unichr(0xDFFF)))
+            self.replaceCharactersRegexp = re.compile(eval('"[\\uD800-\\uDFFF]"'))
         else:
             self.reportCharacterErrors = self.characterErrorsUCS2
             self.replaceCharactersRegexp = re.compile(
-                "([%s-%s](?![%s-%s])|(?<![%s-%s])[%s-%s])" % (
-                    unichr(0xD800), unichr(0xDBFF),
-                    unichr(0xDC00), unichr(0xDFFF),
-                    unichr(0xD800), unichr(0xDBFF),
-                    unichr(0xDC00), unichr(0xDFFF)))
+                eval('"([\\uD800-\\uDBFF](?![\\uDC00-\\uDFFF])|(?<![\\uD800-\\uDBFF])[\\uDC00-\\uDFFF])"'))
 
         # List of where new lines occur
         self.newLines = [0]
