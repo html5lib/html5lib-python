@@ -6,6 +6,8 @@ Change Log
 
 Released on XXX, 2014
 
+* Fix: SVG end tags were not being adjusted
+
 * XXX
 
 
