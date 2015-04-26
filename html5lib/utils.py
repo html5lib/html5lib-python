@@ -29,14 +29,12 @@ class MethodDispatcher(dict):
         # Using _dictEntries instead of directly assigning to self is about
         # twice as fast. Please do careful performance testing before changing
         # anything here.
-        _dictEntries = []
+        dict.__init__(self)
         for name, value in items:
-            if type(name) in (list, tuple, frozenset, set):
-                for item in name:
-                    _dictEntries.append((item, value))
-            else:
-                _dictEntries.append((name, value))
-        dict.__init__(self, _dictEntries)
+            assert isinstance(name, (list, tuple, frozenset, set)), repr(name)
+            for item in name:
+                assert item not in self, "%s duplicated" % item
+                self[item] = value
         self.default = None
 
     def __getitem__(self, key):
