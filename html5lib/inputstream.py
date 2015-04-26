@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, unicode_literals
 from six import text_type
-from six.moves import http_client
 
 import codecs
 import re
@@ -119,22 +118,23 @@ class BufferedStream(object):
 
 
 def HTMLInputStream(source, encoding=None, parseMeta=True, chardet=True):
-    if isinstance(source, http_client.HTTPResponse):
-        # Work around Python bug #20007: read(0) closes the connection.
+    if hasattr(source, "read"):
+        # Do not use .read(0) because of Python bug #20007
         # http://bugs.python.org/issue20007
-        isUnicode = False
-    elif hasattr(source, "read"):
-        isUnicode = isinstance(source.read(0), text_type)
+        firstChunk = source.read(HTMLUnicodeInputStream._defaultChunkSize)
+        isUnicode = isinstance(firstChunk, text_type)
     else:
         isUnicode = isinstance(source, text_type)
+        firstChunk = None
 
     if isUnicode:
         if encoding is not None:
             raise TypeError("Cannot explicitly set an encoding with a unicode string")
 
-        return HTMLUnicodeInputStream(source)
+        return HTMLUnicodeInputStream(source, firstChunk)
     else:
-        return HTMLBinaryInputStream(source, encoding, parseMeta, chardet)
+        return HTMLBinaryInputStream(source, firstChunk, encoding, parseMeta,
+                                     chardet)
 
 
 class HTMLUnicodeInputStream(object):
@@ -147,7 +147,7 @@ class HTMLUnicodeInputStream(object):
 
     _defaultChunkSize = 10240
 
-    def __init__(self, source):
+    def __init__(self, source, firstChunk=""):
         """Initialises the HTMLInputStream.
 
         HTMLInputStream(source, [encoding]) -> Normalized stream from source
@@ -163,6 +163,7 @@ class HTMLUnicodeInputStream(object):
         parseMeta - Look for a <meta> element containing encoding information
 
         """
+        # XXX do something with firstChunk
 
         # Craziness
         if len("\U0010FFFF") == 1:
@@ -378,7 +379,8 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
 
     """
 
-    def __init__(self, source, encoding=None, parseMeta=True, chardet=True):
+    def __init__(self, source, firstChunk=b"", encoding=None,
+                 parseMeta=True, chardet=True):
         """Initialises the HTMLInputStream.
 
         HTMLInputStream(source, [encoding]) -> Normalized stream from source
@@ -394,6 +396,8 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
         parseMeta - Look for a <meta> element containing encoding information
 
         """
+        # XXX do something with firstChunk
+
         # Raw Stream - for unicode objects this will encode to utf-8 and set
         #              self.charEncoding as appropriate
         self.rawStream = self.openStream(source)
