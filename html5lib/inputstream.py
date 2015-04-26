@@ -281,7 +281,7 @@ class HTMLUnicodeInputStream(object):
                 self._bufferedCharacter = data[-1]
                 data = data[:-1]
 
-        if utils.supports_lone_surrogates:
+        if self.reportCharacterErrors:
             self.reportCharacterErrors(data)
 
             # Replace invalid characters
