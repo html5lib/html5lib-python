@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, unicode_literals
+
 from six import text_type
-from six.moves import http_client
+from six.moves import http_client, urllib
 
 import codecs
 import re
@@ -130,9 +131,12 @@ class BufferedStream(object):
 
 
 def HTMLInputStream(source, encoding=None, parseMeta=True, chardet=True):
-    if isinstance(source, http_client.HTTPResponse):
-        # Work around Python bug #20007: read(0) closes the connection.
-        # http://bugs.python.org/issue20007
+    # Work around Python bug #20007: read(0) closes the connection.
+    # http://bugs.python.org/issue20007
+    if (isinstance(source, http_client.HTTPResponse) or
+        # Also check for addinfourl wrapping HTTPResponse
+        (isinstance(source, urllib.response.addbase) and
+         isinstance(source.fp, http_client.HTTPResponse))):
         isUnicode = False
     elif hasattr(source, "read"):
         isUnicode = isinstance(source.read(0), text_type)

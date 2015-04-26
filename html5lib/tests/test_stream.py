@@ -4,8 +4,10 @@ from . import support  # flake8: noqa
 import unittest
 import codecs
 from io import BytesIO
+import socket
 
-from six.moves import http_client
+import six
+from six.moves import http_client, urllib
 
 from html5lib.inputstream import (BufferedStream, HTMLInputStream,
                                   HTMLUnicodeInputStream, HTMLBinaryInputStream)
@@ -168,6 +170,24 @@ class HTMLInputStreamTest(unittest.TestCase):
         source = http_client.HTTPResponse(FakeSocket())
         source.begin()
         stream = HTMLInputStream(source)
+        self.assertEqual(stream.charsUntil(" "), "Text")
+
+    def test_python_issue_20007_b(self):
+        """
+        Make sure we have a work-around for Python bug #20007
+        http://bugs.python.org/issue20007
+        """
+        if six.PY2:
+            return
+
+        class FakeSocket(object):
+            def makefile(self, _mode, _bufsize=None):
+                return BytesIO(b"HTTP/1.1 200 Ok\r\n\r\nText")
+
+        source = http_client.HTTPResponse(FakeSocket())
+        source.begin()
+        wrapped = urllib.response.addinfourl(source, source.msg, "http://example.com")
+        stream = HTMLInputStream(wrapped)
         self.assertEqual(stream.charsUntil(" "), "Text")
 
 
