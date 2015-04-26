@@ -4,6 +4,8 @@ import json
 import warnings
 import re
 
+from six import unichr
+
 from .support import get_data_files
 
 from html5lib.tokenizer import HTMLTokenizer
@@ -122,28 +124,31 @@ def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder,
         return tokens["expected"] == tokens["received"]
 
 
-_surrogateRe = re.compile(r"\\u(?P<codepoint>[0-9A-Fa-f]{4})")
+_surrogateRe = re.compile(r"\\u([0-9A-Fa-f]{4})(?:\\u([0-9A-Fa-f]{4}))?")
 
 
 def unescape(test):
     def decode(inp):
+        def repl(m):
+            if m.group(2) is not None:
+                high = int(m.group(1), 16)
+                low = int(m.group(2), 16)
+                if (0xD800 <= high <= 0xDBFF and
+                        0xDC00 <= low <= 0xDFFF):
+                    cp = ((high - 0xD800) << 10) + (low - 0xDc00) + 0x10000
+                    return unichr(cp)
+                else:
+                    return unichr(high) + unichr(low)
+            else:
+                return unichr(int(m.group(1), 16))
         try:
-            return inp.encode("utf-8").decode("unicode-escape")
-        except UnicodeDecodeError:
-            possible_surrogate_match = _surrogateRe.search(inp)
-            if possible_surrogate_match and not utils.supports_lone_surrogates:
-                possible_surrogate = int(possible_surrogate_match.group("codepoint"), 16)
-                if possible_surrogate >= 0xD800 and possible_surrogate <= 0xDFFF:
-                    # Not valid unicode input for platforms that do
-                    # not have support for lone surrogates.
-                    #
-                    # NOTE it's not even possible to have such
-                    # isolated surrogates in unicode input streams in
-                    # such platforms (like Jython) - the decoding to
-                    # unicode would have raised a similar
-                    # UnicodeDecodeError.
-                    return None
-            raise
+            return _surrogateRe.sub(repl, inp)
+        except ValueError:
+            # This occurs when unichr throws ValueError, which should
+            # only be for a lone-surrogate.
+            if utils.supports_lone_surrogates:
+                raise
+            return None
 
     test["input"] = decode(test["input"])
     for token in test["output"]:
