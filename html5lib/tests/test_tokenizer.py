@@ -135,7 +135,7 @@ def unescape(test):
                 low = int(m.group(2), 16)
                 if (0xD800 <= high <= 0xDBFF and
                         0xDC00 <= low <= 0xDFFF):
-                    cp = ((high - 0xD800) << 10) + (low - 0xDc00) + 0x10000
+                    cp = ((high - 0xD800) << 10) + (low - 0xDC00) + 0x10000
                     return unichr(cp)
                 else:
                     return unichr(high) + unichr(low)
