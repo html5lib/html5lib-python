@@ -133,8 +133,7 @@ def unescape(test):
             if m.group(2) is not None:
                 high = int(m.group(1), 16)
                 low = int(m.group(2), 16)
-                if (0xD800 <= high <= 0xDBFF and
-                        0xDC00 <= low <= 0xDFFF):
+                if 0xD800 <= high <= 0xDBFF and 0xDC00 <= low <= 0xDFFF:
                     cp = ((high - 0xD800) << 10) + (low - 0xDC00) + 0x10000
                     return unichr(cp)
                 else:
