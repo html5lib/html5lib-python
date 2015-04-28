@@ -129,6 +129,14 @@ _surrogateRe = re.compile(r"\\u([0-9A-Fa-f]{4})(?:\\u([0-9A-Fa-f]{4}))?")
 
 def unescape(test):
     def decode(inp):
+        """Decode \uXXXX escapes
+
+        This decodes \uXXXX escapes, possibly into non-BMP characters when
+        two surrogate character escapes are adjacent to each other.
+        """
+        # This cannot be implemented using the unicode_escape codec
+        # because that requires its input be ISO-8859-1, and we need
+        # arbitrary unicode as input.
         def repl(m):
             if m.group(2) is not None:
                 high = int(m.group(1), 16)
