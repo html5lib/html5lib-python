@@ -4,9 +4,10 @@ Change Log
 0.9999
 ~~~~~~
 
-Released on XXX, 2014
+Released on XXX, 2015
 
-* XXX
+* Add support for Python implementations that don't support lone surrogates
+  (read: Jython).
 
 
 0.999
