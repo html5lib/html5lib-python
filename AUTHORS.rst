@@ -16,22 +16,28 @@ Patches and suggestions
 - Lachlan Hunt
 - lantis63
 - Sam Ruby
-- Tim Fletcher
 - Thomas Broyer
+- Tim Fletcher
 - Mark Pilgrim
-- Philip Taylor
 - Ryan King
+- Philip Taylor
 - Edward Z. Yang
 - fantasai
+- Mike West
 - Philip Jägenstedt
 - Ms2ger
+- Mohammad Taha Jahangir
 - Andy Wingo
+- Juan Carlos Garcia Segovia
 - Andreas Madsack
 - Karim Valiev
-- Mohammad Taha Jahangir
-- Juan Carlos Garcia Segovia
-- Mike West
 - Marc DM
+- Tony Lopes
+- lilbludevil
+- Simon Sapin
+- Jon Dufresne
 - Drew Hubl
 - Austin Kumbera
 - Jim Baker
+- Michael[tm] Smith
+- Marc Abramowitz
