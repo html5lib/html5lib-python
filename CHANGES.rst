@@ -6,6 +6,12 @@ Change Log
 
 Released on April 29, 2015
 
+* Fix #153: Sanitizer fails to treat some attributes as URLs. Despite how
+  this sounds, this has no known security implications.  No known version
+  of IE (5.5 to current), Firefox (3 to current), Safari (6 to current),
+  Chrome (1 to current), or Opera (12 to current) will run any script
+  provided in these attributes.
+
 * Pass error message to the ParseError exception in strict parsing mode.
 
 * Allow data URIs in the sanitizer, with a whitelist of content-types.
