@@ -13,6 +13,7 @@ from html5lib import html5parser, sanitizer
 from html5lib.tokenizer import HTMLTokenizer
 from html5lib import treebuilders, serializer, treewalkers
 from html5lib import constants
+from html5lib import utils
 
 def parse():
     optParser = getOptParser()
@@ -108,7 +109,14 @@ def printOutput(parser, document, opts):
 
     if document is not None:
         if opts.xml:
-            sys.stdout.write(document.toxml("utf-8"))
+            tb = opts.treebuilder.lower()
+            if tb == "dom":
+                document.writexml(sys.stdout, encoding="utf-8")
+            elif tb == "lxml":
+                import lxml.etree
+                sys.stdout.write(lxml.etree.tostring(document))
+            elif tb == "etree":
+                sys.stdout.write(utils.default_etree.tostring(document))
         elif opts.tree:
             if not hasattr(document,'__getitem__'):
                 document = [document]
@@ -152,7 +160,7 @@ def getOptParser():
                       help="Time the run using time.time (may not be accurate on all platforms, especially for short runs)")
 
     parser.add_option("-b", "--treebuilder", action="store", type="string",
-                      dest="treebuilder", default="simpleTree")
+                      dest="treebuilder", default="etree")
 
     parser.add_option("-e", "--error", action="store_true", default=False,
                       dest="error", help="Print a list of parse errors")
