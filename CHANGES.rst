@@ -1,13 +1,26 @@
 Change Log
 ----------
 
-0.9999
-~~~~~~
+0.9999/1.0b5
+~~~~~~~~~~~~
 
-Released on XXX, 2015
+Released on April 29, 2015
 
-* Add support for Python implementations that don't support lone surrogates
-  (read: Jython).
+* Pass error message to the ParseError exception in strict parsing mode.
+
+* Allow data URIs in the sanitizer, with a whitelist of content-types.
+
+* Add support for Python implementations that don't support lone
+  surrogates (read: Jython). Fixes #2.
+
+* Remove localization of error messages. This functionality was totally
+  unused (and untested that everything was localizable), so we may as
+  well follow numerous browsers in not supporting translating technical
+  strings.
+
+* Expose treewalkers.pprint as a public API.
+
+* Add a documentEncoding property to HTML5Parser, fix #121.
 
 
 0.999
