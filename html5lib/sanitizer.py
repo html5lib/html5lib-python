@@ -115,8 +115,8 @@ class HTMLSanitizerMixin(object):
                       'xml:base', 'xml:lang', 'xml:space', 'xmlns', 'xmlns:xlink', 'y',
                       'y1', 'y2', 'zoomAndPan']
 
-    attr_val_is_uri = ['href', 'src', 'cite', 'action', 'longdesc', 'poster',
-                       'xlink:href', 'xml:base']
+    attr_val_is_uri = ['href', 'src', 'cite', 'action', 'longdesc', 'poster', 'background', 'datasrc',
+                       'dynsrc', 'lowsrc', 'ping', 'poster', 'xlink:href', 'xml:base']
 
     svg_attr_val_allows_ref = ['clip-path', 'color-profile', 'cursor', 'fill',
                                'filter', 'marker', 'marker-start', 'marker-mid', 'marker-end',
