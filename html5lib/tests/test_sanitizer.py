@@ -104,6 +104,16 @@ def test_sanitizer():
                """<img src="%s:%s">foo</a>""" % (protocol, rest_of_uri),
                toxml)
 
+    yield (runSanitizerTest, "test_invalid_data_uri",
+           "<audio controls=\"\"></audio>",
+           "<audio controls=\"\" src=\"data:foobar\"></audio>",
+           toxml)
+
+    yield (runSanitizerTest, "test_data_uri_disallowed_type",
+           "<audio controls=\"\"></audio>",
+           "<audio controls=\"\" src=\"data:text/html,<html>\"></audio>",
+           toxml)
+
     for protocol in sanitizer.HTMLSanitizer.allowed_protocols:
         rest_of_uri = '//sub.domain.tld/path/object.ext'
         if protocol == 'data':

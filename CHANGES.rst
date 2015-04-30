@@ -1,6 +1,15 @@
 Change Log
 ----------
 
+0.9999.1/1.0b5.1
+~~~~~~~~~~~~~~~~
+
+Released on April 30, 2015
+
+* Fix #188: fix the sanitizer to not throw an exception when sanitizing
+  bogus data URLs.
+
+
 0.9999/1.0b5
 ~~~~~~~~~~~~
 
