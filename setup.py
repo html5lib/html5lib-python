@@ -1,4 +1,5 @@
 from distutils.core import setup
+import ast
 import os
 import codecs
 
@@ -29,8 +30,20 @@ with codecs.open(os.path.join(current_dir, 'README.rst'), 'r', 'utf8') as readme
     with codecs.open(os.path.join(current_dir, 'CHANGES.rst'), 'r', 'utf8') as changes_file:
         long_description = readme_file.read() + '\n' + changes_file.read()
 
+version = None
+with open(os.path.join("html5lib", "__init__.py"), "rb") as init_file:
+    t = ast.parse(init_file.read(), filename="__init__.py", mode="exec")
+    assert isinstance(t, ast.Module)
+    assignments = filter(lambda x: isinstance(x, ast.Assign), t.body)
+    for a in assignments:
+        if (len(a.targets) == 1 and
+              isinstance(a.targets[0], ast.Name) and
+              a.targets[0].id == "__version__" and
+              isinstance(a.value, ast.Str)):
+            version = a.value.s
+
 setup(name='html5lib',
-      version='0.999999-dev',
+      version=version,
       url='https://github.com/html5lib/html5lib-python',
       license="MIT License",
       description='HTML parser based on the WHATWG HTML specification',
