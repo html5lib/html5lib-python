@@ -208,7 +208,7 @@ class HTMLSanitizerMixin(object):
                 # remove replacement characters from unescaped characters
                 val_unescaped = val_unescaped.replace("\ufffd", "")
                 uri = urlparse.urlparse(val_unescaped)
-                if uri:
+                if uri and uri.scheme:
                     if uri.scheme not in self.allowed_protocols:
                         del attrs[attr]
                     if uri.scheme == 'data':

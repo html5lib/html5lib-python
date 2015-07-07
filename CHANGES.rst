@@ -1,6 +1,15 @@
 Change Log
 ----------
 
+0.999999/1.0b7
+~~~~~~~~~~~~~~
+
+Released on July 7, 2015
+
+* Fix #189: fix the sanitizer to allow relative URLs again (as it did
+  prior to 0.9999/1.0b5).
+
+
 0.99999/1.0b6
 ~~~~~~~~~~~~~
 

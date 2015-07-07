@@ -40,6 +40,10 @@ def test_should_handle_astral_plane_characters():
     assert '<html:p xmlns:html="http://www.w3.org/1999/xhtml">\U0001d4b5 \U0001d538</html:p>' == sanitize_html("<p>&#x1d4b5; &#x1d538;</p>")
 
 
+def test_should_allow_relative_uris():
+    assert '<html:p xmlns:html="http://www.w3.org/1999/xhtml"><html:a href="/example.com" /></html:p>' == sanitize_html('<p><a href="/example.com"></a></p>')
+
+
 def test_sanitizer():
     toxml = toxmlFactory()
     for tag_name in sanitizer.HTMLSanitizer.allowed_elements:
