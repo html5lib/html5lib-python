@@ -129,6 +129,7 @@ def getETreeBuilder(ElementTreeImplementation):
                 if not parents:
                     return parent
                 else:
+                    assert list(parents[-1]).count(parent) == 1
                     return parent, list(parents[-1]).index(parent), parents, None
 
     return locals()
