@@ -6,6 +6,11 @@ python:
   - "3.3"
   - "3.4"
   - "pypy"
+sudo: false
+
+cache:
+  directories:
+    - $HOME/.cache/pip
 
 env:
   - USE_OPTIONAL=true
