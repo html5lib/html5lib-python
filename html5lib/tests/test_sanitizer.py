@@ -113,6 +113,11 @@ def test_sanitizer():
            "<audio controls=\"\" src=\"data:foobar\"></audio>",
            toxml)
 
+    yield (runSanitizerTest, "test_invalid_ipv6_url",
+           "<a>",
+           "<a href=\"h://]\">",
+           toxml)
+
     yield (runSanitizerTest, "test_data_uri_disallowed_type",
            "<audio controls=\"\"></audio>",
            "<audio controls=\"\" src=\"data:text/html,<html>\"></audio>",
