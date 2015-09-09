@@ -4,9 +4,10 @@ Change Log
 0.9999999/1.0b8
 ~~~~~~~~~~~~~~~
 
-Released on XXX
+Released on September 10, 2015
 
-* XXX
+* Fix #195: fix the sanitizer to drop broken URLs (it threw an
+  exception between 0.9999 and 0.999999).
 
 
 0.999999/1.0b7
