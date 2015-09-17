@@ -6,7 +6,7 @@ Change Log
 
 Released on XXX
 
-* XXX
+* Minor fix on error reporting message.
 
 
 0.9999999/1.0b8
