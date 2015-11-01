@@ -5,14 +5,11 @@ if [[ $USE_OPTIONAL != "true" && $USE_OPTIONAL != "false" ]]; then
   exit 1
 fi
 
+# Make sure we're running setuptools >= 18.5
+pip install -U pip setuptools
+
 pip install -U -r requirements-test.txt
 
 if [[ $USE_OPTIONAL == "true" ]]; then
-  if [[ $TRAVIS_PYTHON_VERSION == "pypy" || $TRAVIS_PYTHON_VERSION == "pypy3" ]]; then
-    pip install -U -r requirements-optional.txt
-  elif [[ $TRAVIS_PYTHON_VERSION == "2.6" ]]; then
-    pip install -U -r requirements-optional-2.6.txt
-  else
-    pip install -U -r requirements-optional-cpython.txt
-  fi
+  pip install -U -r requirements-optional.txt
 fi
