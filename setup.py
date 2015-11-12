@@ -58,11 +58,23 @@ setup(name='html5lib',
           'six',
       ],
       extras_require={
+          # A empty extra that only has a conditional marker will be
+          # unconditonally installed when the condition matches.
           ":python_version == '2.6'": ["ordereddict"],
+
+          # A conditional extra will only install these items when the extra is
+          # requested and the condition matches.
           "lxml:python_implementation == 'CPython'": ["lxml"],
+
+          # Standard extras, will be installed when the extra is requested.
           "genshi": ["genshi"],
           "datrie": ["datrie"],
           "charade": ["charade"],
+
+          # The all extra combines a standard extra which will be used anytime
+          # the all extra is requested, and it extends it with a conditional
+          # extra that will be installed whenever the condition matches and the
+          # all extra is requested.
           "all": ["genshi", "datrie", "charade"],
           "all:python_implementation == 'CPython'": ["lxml"],
       },
