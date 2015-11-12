@@ -1,7 +1,9 @@
-from distutils.core import setup
 import ast
 import os
 import codecs
+
+from setuptools import setup
+
 
 classifiers=[
     'Development Status :: 5 - Production/Stable',
@@ -55,4 +57,13 @@ setup(name='html5lib',
       install_requires=[
           'six',
       ],
+      extras_require={
+          ":python_version == '2.6'": ["ordereddict"],
+          "lxml:python_implementation == 'CPython'": ["lxml"],
+          "genshi": ["genshi"],
+          "datrie": ["datrie"],
+          "charade": ["charade"],
+          "all": ["genshi", "datrie", "charade"],
+          "all:python_implementation == 'CPython'": ["lxml"],
+      },
       )
