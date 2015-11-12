@@ -6,7 +6,9 @@ Change Log
 
 Released on XXX
 
-* XXX
+* Added ordereddict as a mandatory dependency on Python 2.6.
+* Added ``lxml``, ``genshi``, ``datrie``, ``charade``, and ``all`` extras that
+  will do the right thing based on the specific interpreter implementation.
 
 
 0.9999999/1.0b8
