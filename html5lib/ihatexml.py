@@ -226,7 +226,7 @@ class InfosetFilter(object):
                 warnings.warn("Comments cannot contain adjacent dashes", DataLossWarning)
                 data = data.replace("--", "- -")
             if data.endswith("-"):
-                warnings.warn("Comments cannot contain end in a dash", DataLossWarning)
+                warnings.warn("Comments cannot end in a dash", DataLossWarning)
                 data += " "
         return data
 
