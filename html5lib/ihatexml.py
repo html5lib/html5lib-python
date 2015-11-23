@@ -225,6 +225,9 @@ class InfosetFilter(object):
             while "--" in data:
                 warnings.warn("Comments cannot contain adjacent dashes", DataLossWarning)
                 data = data.replace("--", "- -")
+            if data.endswith("-"):
+                warnings.warn("Comments cannot end in a dash", DataLossWarning)
+                data += " "
         return data
 
     def coerceCharacters(self, data):
