@@ -54,7 +54,7 @@ class Document(object):
 def testSerializer(element):
     rv = []
     finalText = None
-    infosetFilter = ihatexml.InfosetFilter()
+    infosetFilter = ihatexml.InfosetFilter(preventDoubleDashComments=True)
 
     def serializeElement(element, indent=0):
         if not hasattr(element, "tag"):
@@ -257,7 +257,7 @@ class TreeBuilder(_base.TreeBuilder):
             data = property(_getData, _setData)
 
         self.elementClass = Element
-        self.commentClass = builder.Comment
+        self.commentClass = Comment
         # self.fragmentClass = builder.DocumentFragment
         _base.TreeBuilder.__init__(self, namespaceHTMLElements)
 
@@ -344,7 +344,8 @@ class TreeBuilder(_base.TreeBuilder):
 
         # Append the initial comments:
         for comment_token in self.initial_comments:
-            root.addprevious(etree.Comment(comment_token["data"]))
+            comment = self.commentClass(comment_token["data"])
+            root.addprevious(comment._element)
 
         # Create the root document and add the ElementTree to it
         self.document = self.documentClass()
