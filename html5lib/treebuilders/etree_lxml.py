@@ -189,7 +189,7 @@ class TreeBuilder(_base.TreeBuilder):
 
     def __init__(self, namespaceHTMLElements, fullTree=False):
         builder = etree_builders.getETreeModule(etree, fullTree=fullTree)
-        infosetFilter = self.infosetFilter = ihatexml.InfosetFilter()
+        infosetFilter = self.infosetFilter = ihatexml.InfosetFilter(preventDoubleDashComments=True)
         self.namespaceHTMLElements = namespaceHTMLElements
 
         class Attributes(dict):
