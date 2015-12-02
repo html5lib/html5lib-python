@@ -2564,7 +2564,7 @@ def getPhases(debug):
                 self.tree.openElements.pop()
             if (not self.parser.innerHTML and
                     self.tree.openElements[-1].name != "frameset"):
-                # If we're not in innerHTML mode and the the current node is not a
+                # If we're not in innerHTML mode and the current node is not a
                 # "frameset" element (anymore) then switch.
                 self.parser.phase = self.parser.phases["afterFrameset"]
 

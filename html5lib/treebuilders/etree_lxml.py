@@ -315,7 +315,7 @@ class TreeBuilder(_base.TreeBuilder):
         """Create the document root"""
         # Because of the way libxml2 works, it doesn't seem to be possible to
         # alter information like the doctype after the tree has been parsed.
-        # Therefore we need to use the built-in parser to create our iniial
+        # Therefore we need to use the built-in parser to create our initial
         # tree, after which we can add elements like normal
         docStr = ""
         if self.doctype:

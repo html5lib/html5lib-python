@@ -64,7 +64,7 @@ class MethodDispatcher(dict):
         return dict.get(self, key, self.default)
 
 
-# Some utility functions to dal with weirdness around UCS2 vs UCS4
+# Some utility functions to deal with weirdness around UCS2 vs UCS4
 # python builds
 
 def isSurrogatePair(data):

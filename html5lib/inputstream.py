@@ -469,7 +469,7 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
         if encoding is None and parseMeta:
             encoding = self.detectEncodingMeta()
             confidence = "tentative"
-        # Guess with chardet, if avaliable
+        # Guess with chardet, if available
         if encoding is None and chardet:
             confidence = "tentative"
             try:

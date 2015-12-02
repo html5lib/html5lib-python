@@ -16,10 +16,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(base_path,
 from html5lib import treebuilders
 del base_path
 
-# Build a dict of avaliable trees
+# Build a dict of available trees
 treeTypes = {"DOM": treebuilders.getTreeBuilder("dom")}
 
-# Try whatever etree implementations are avaliable from a list that are
+# Try whatever etree implementations are available from a list that are
 #"supposed" to work
 try:
     import xml.etree.ElementTree as ElementTree

@@ -58,7 +58,7 @@ class Filter(_base.Filter):
         elif tagname == 'colgroup':
             # A colgroup element's start tag may be omitted if the first thing
             # inside the colgroup element is a col element, and if the element
-            # is not immediately preceeded by another colgroup element whose
+            # is not immediately preceded by another colgroup element whose
             # end tag has been omitted.
             if type in ("StartTag", "EmptyTag"):
                 # XXX: we do not look at the preceding event, so instead we never
@@ -70,7 +70,7 @@ class Filter(_base.Filter):
         elif tagname == 'tbody':
             # A tbody element's start tag may be omitted if the first thing
             # inside the tbody element is a tr element, and if the element is
-            # not immediately preceeded by a tbody, thead, or tfoot element
+            # not immediately preceded by a tbody, thead, or tfoot element
             # whose end tag has been omitted.
             if type == "StartTag":
                 # omit the thead and tfoot elements' end tag when they are
