@@ -259,8 +259,10 @@ class HTMLParser(object):
                     encoding=encoding, scripting=scripting)
         return self.tree.getFragment()
 
-    def parseError(self, errorcode="XXX-undefined-error", datavars={}):
+    def parseError(self, errorcode="XXX-undefined-error", datavars=None):
         # XXX The idea is to make errorcode mandatory.
+        if datavars is None:
+            datavars = {}
         self.errors.append((self.tokenizer.stream.position(), errorcode, datavars))
         if self.strict:
             raise ParseError(E[errorcode] % datavars)

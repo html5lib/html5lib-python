@@ -193,7 +193,9 @@ class TreeBuilder(_base.TreeBuilder):
         self.namespaceHTMLElements = namespaceHTMLElements
 
         class Attributes(dict):
-            def __init__(self, element, value={}):
+            def __init__(self, element, value=None):
+                if value is None:
+                    value = {}
                 self._element = element
                 dict.__init__(self, value)
                 for key, value in self.items():
