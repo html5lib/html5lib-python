@@ -460,6 +460,7 @@ def getPhases(debug):
         else:
             return type
 
+    # pylint:disable=unused-argument
     class Phase(with_metaclass(getMetaclass(debug, log))):
         """Base class for helper object that implements each phase of processing
         """
@@ -2765,6 +2766,7 @@ def getPhases(debug):
         def processEndTag(self, token):
             self.parser.parseError("expected-eof-but-got-end-tag",
                                    {"name": token["name"]})
+    # pylint:enable=unused-argument
 
     return {
         "initial": InitialPhase,
