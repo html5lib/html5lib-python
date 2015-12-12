@@ -1,7 +1,7 @@
 import ast
-import os
 import codecs
 
+from os.path import join, dirname
 from setuptools import setup, find_packages
 
 
@@ -22,13 +22,13 @@ classifiers = [
     'Topic :: Text Processing :: Markup :: HTML'
 ]
 
-current_dir = os.path.dirname(__file__)
-with codecs.open(os.path.join(current_dir, 'README.rst'), 'r', 'utf8') as readme_file:
-    with codecs.open(os.path.join(current_dir, 'CHANGES.rst'), 'r', 'utf8') as changes_file:
+here = dirname(__file__)
+with codecs.open(join(here, 'README.rst'), 'r', 'utf8') as readme_file:
+    with codecs.open(join(here, 'CHANGES.rst'), 'r', 'utf8') as changes_file:
         long_description = readme_file.read() + '\n' + changes_file.read()
 
 version = None
-with open(os.path.join("html5lib", "__init__.py"), "rb") as init_file:
+with open(join("html5lib", "__init__.py"), "rb") as init_file:
     t = ast.parse(init_file.read(), filename="__init__.py", mode="exec")
     assert isinstance(t, ast.Module)
     assignments = filter(lambda x: isinstance(x, ast.Assign), t.body)
