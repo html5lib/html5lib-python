@@ -12,8 +12,6 @@ from __future__ import absolute_import, division, unicode_literals
 
 __all__ = ["getTreeWalker", "pprint", "dom", "etree", "genshistream", "lxmletree"]
 
-import sys
-
 from .. import constants
 from ..utils import default_etree
 
