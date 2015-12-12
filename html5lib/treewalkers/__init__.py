@@ -27,7 +27,6 @@ def getTreeWalker(treeType, implementation=None, **kwargs):
                values are:
 
                 "dom" - The xml.dom.minidom DOM implementation
-                "pulldom" - The xml.dom.pulldom event stream
                 "etree" - A generic walker for tree implementations exposing an
                           elementtree-like interface (known to work with
                           ElementTree, cElementTree and lxml.etree).
@@ -40,11 +39,9 @@ def getTreeWalker(treeType, implementation=None, **kwargs):
 
     treeType = treeType.lower()
     if treeType not in treeWalkerCache:
-        if treeType in ("dom", "pulldom"):
-            name = "%s.%s" % (__name__, treeType)
-            __import__(name)
-            mod = sys.modules[name]
-            treeWalkerCache[treeType] = mod.TreeWalker
+        if treeType == "dom":
+            from . import dom
+            treeWalkerCache[treeType] = dom.TreeWalker
         elif treeType == "genshi":
             from . import genshistream
             treeWalkerCache[treeType] = genshistream.TreeWalker

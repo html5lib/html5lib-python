@@ -8,12 +8,19 @@ Released on XXX
 
 * Added ordereddict as a mandatory dependency on Python 2.6.
 
-* Added ``lxml``, ``genshi``, ``datrie``, ``charade``, and ``all`` extras that
-  will do the right thing based on the specific interpreter implementation.
+* Added ``lxml``, ``genshi``, ``datrie``, ``charade``, and ``all``
+  extras that will do the right thing based on the specific
+  interpreter implementation.
 
 * Now requires the ``mock`` package for the testsuite.
 
 * Cease supporting DATrie under PyPy.
+
+* Remove ``PullDOM`` support, as this hasn't ever been properly
+  tested, doesn't entirely work, and as far as I can tell is
+  completely unused by anyone.
+
+* Move testsuite to ``py.test``.
 
 
 0.9999999/1.0b8

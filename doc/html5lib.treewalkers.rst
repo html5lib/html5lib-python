@@ -48,12 +48,3 @@ treewalkers Package
     :members:
     :undoc-members:
     :show-inheritance:
-
-:mod:`pulldom` Module
----------------------
-
-.. automodule:: html5lib.treewalkers.pulldom
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
