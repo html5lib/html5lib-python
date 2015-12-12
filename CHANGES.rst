@@ -44,6 +44,8 @@ Released on XXX
   (instead of the tokenizer); as such, this will require amending all
   callers of it to use it via the treewalker API.**
 
+* **Drop support of charade, now that chardet is supported once more.**
+
 
 0.9999999/1.0b8
 ~~~~~~~~~~~~~~~

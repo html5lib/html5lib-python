@@ -57,12 +57,9 @@ def test_encoding():
 
 # pylint:disable=wrong-import-position
 try:
-    try:
-        import charade  # noqa
-    except ImportError:
-        import chardet  # noqa
+    import chardet  # noqa
 except ImportError:
-    print("charade/chardet not found, skipping chardet tests")
+    print("chardet not found, skipping chardet tests")
 else:
     def test_chardet():
         with open(os.path.join(test_dir, "encoding", "chardet", "test_big5.txt"), "rb") as fp:
