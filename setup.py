@@ -2,7 +2,7 @@ import ast
 import os
 import codecs
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 classifiers = [
@@ -21,11 +21,6 @@ classifiers = [
     'Topic :: Software Development :: Libraries :: Python Modules',
     'Topic :: Text Processing :: Markup :: HTML'
 ]
-
-packages = ['html5lib'] + ['html5lib.' + name
-                           for name in os.listdir(os.path.join('html5lib'))
-                           if os.path.isdir(os.path.join('html5lib', name)) and
-                           not name.startswith('.') and name != 'tests']
 
 current_dir = os.path.dirname(__file__)
 with codecs.open(os.path.join(current_dir, 'README.rst'), 'r', 'utf8') as readme_file:
@@ -53,7 +48,7 @@ setup(name='html5lib',
       classifiers=classifiers,
       maintainer='James Graham',
       maintainer_email='james@hoppipolla.co.uk',
-      packages=packages,
+      packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
       install_requires=[
           'six',
           'webencodings',
