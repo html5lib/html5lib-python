@@ -471,10 +471,7 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
         if encoding is None and chardet:
             confidence = "tentative"
             try:
-                try:
-                    from charade.universaldetector import UniversalDetector
-                except ImportError:
-                    from chardet.universaldetector import UniversalDetector
+                from chardet.universaldetector import UniversalDetector
                 buffers = []
                 detector = UniversalDetector()
                 while not detector.done:
@@ -490,7 +487,7 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
             except ImportError:
                 pass
         # If all else fails use the default encoding
-        if encoding is None:
+        if not encoding:
             confidence = "tentative"
             encoding = lookupEncoding(self.defaultEncoding)
 
