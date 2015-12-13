@@ -17,18 +17,6 @@ env:
   - USE_OPTIONAL=true
   - USE_OPTIONAL=false
 
-matrix:
-  exclude:
-    - python: "2.7"
-      env: USE_OPTIONAL=false
-    - python: "3.4"
-      env: USE_OPTIONAL=false
-  include:
-    - python: "2.7"
-      env: USE_OPTIONAL=false FLAKE=true
-    - python: "3.4"
-      env: USE_OPTIONAL=false FLAKE=true
-
 before_install:
   - git submodule update --init --recursive
 
