@@ -24,8 +24,12 @@ install:
   - bash requirements-install.sh
 
 script:
-  - py.test
+  - if [[ $TRAVIS_PYTHON_VERSION == pypy* ]]; then py.test; fi
+  - if [[ $TRAVIS_PYTHON_VERSION != pypy* ]]; then coverage run -m pytest; fi
   - bash flake8-run.sh
 
 after_script:
   - python debug-info.py
+
+after_success:
+  - if [[ $TRAVIS_PYTHON_VERSION != pypy* ]]; then coverage combine && codecov; fi
