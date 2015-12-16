@@ -139,7 +139,7 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             return _base.DOCTYPE, node.name, node.public_id, node.system_id
 
         elif isinstance(node, FragmentWrapper) and not hasattr(node, "tag"):
-            return _base.TEXT, node.obj
+            return _base.TEXT, ensure_str(node.obj)
 
         elif node.tag == etree.Comment:
             return _base.COMMENT, ensure_str(node.text)
