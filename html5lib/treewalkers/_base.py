@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, unicode_literals
 from six import text_type, string_types
 
 from xml.dom import Node
-from ..constants import voidElements, spaceCharacters
+from ..constants import namespaces, voidElements, spaceCharacters
 
 __all__ = ["DOCUMENT", "DOCTYPE", "TEXT", "ELEMENT", "COMMENT", "ENTITY", "UNKNOWN",
            "TreeWalker", "NonRecursiveTreeWalker"]
@@ -154,7 +154,7 @@ class NonRecursiveTreeWalker(TreeWalker):
 
             elif type == ELEMENT:
                 namespace, name, attributes, hasChildren = details
-                if name in voidElements:
+                if (not namespace or namespace == namespaces["html"]) and name in voidElements:
                     for token in self.emptyTag(namespace, name, attributes,
                                                hasChildren):
                         yield token
@@ -187,7 +187,7 @@ class NonRecursiveTreeWalker(TreeWalker):
                     type, details = details[0], details[1:]
                     if type == ELEMENT:
                         namespace, name, attributes, hasChildren = details
-                        if name not in voidElements:
+                        if (namespace and namespace != namespaces["html"]) or name not in voidElements:
                             yield self.endTag(namespace, name)
                     if self.tree is currentNode:
                         currentNode = None
