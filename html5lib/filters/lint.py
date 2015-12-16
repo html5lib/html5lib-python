@@ -62,7 +62,14 @@ class Filter(_base.Filter):
             elif type == "Doctype":
                 name = token["name"]
                 assert name is None or isinstance(name, text_type)
-                # XXX: what to do with token["data"] ?
+                assert token["publicId"] is None or isinstance(name, text_type)
+                assert token["systemId"] is None or isinstance(name, text_type)
+
+            elif type == "Entity":
+                assert isinstance(token["name"], text_type)
+
+            elif type == "SerializerError":
+                assert isinstance(token["data"], text_type)
 
             else:
                 assert False, "Unknown token type: %(type)s" % {"type": type}
