@@ -49,7 +49,8 @@ class Filter(_base.Filter):
                     assert start == (namespace, name)
 
             elif type == "Comment":
-                pass
+                data = token["data"]
+                assert isinstance(data, text_type)
 
             elif type in ("Characters", "SpaceCharacters"):
                 data = token["data"]
