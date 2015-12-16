@@ -1,5 +1,4 @@
 from __future__ import absolute_import, division, unicode_literals
-from six import text_type, string_types
 
 from xml.dom import Node
 from ..constants import namespaces, voidElements, spaceCharacters
@@ -18,19 +17,6 @@ UNKNOWN = "<#UNKNOWN#>"
 spaceCharacters = "".join(spaceCharacters)
 
 
-def to_text(s, blank_if_none=True):
-    """Wrapper around six.text_type to convert None to empty string"""
-    if s is None:
-        if blank_if_none:
-            return ""
-        else:
-            return None
-    elif isinstance(s, text_type):
-        return s
-    else:
-        return text_type(s)
-
-
 class TreeWalker(object):
     def __init__(self, tree):
         self.tree = tree
@@ -42,28 +28,26 @@ class TreeWalker(object):
         return {"type": "SerializeError", "data": msg}
 
     def emptyTag(self, namespace, name, attrs, hasChildren=False):
-        yield {"type": "EmptyTag", "name": to_text(name, False),
-               "namespace": to_text(namespace),
+        yield {"type": "EmptyTag", "name": name,
+               "namespace": namespace,
                "data": attrs}
         if hasChildren:
             yield self.error("Void element has children")
 
     def startTag(self, namespace, name, attrs):
         return {"type": "StartTag",
-                "name": text_type(name),
-                "namespace": to_text(namespace),
-                "data": dict(((to_text(namespace, False), to_text(name)),
-                              to_text(value, False))
-                             for (namespace, name), value in attrs.items())}
+                "name": name,
+                "namespace": namespace,
+                "data": attrs}
 
     def endTag(self, namespace, name):
         return {"type": "EndTag",
-                "name": to_text(name, False),
-                "namespace": to_text(namespace),
+                "name": name,
+                "namespace": namespace,
                 "data": {}}
 
     def text(self, data):
-        data = to_text(data)
+        data = data
         middle = data.lstrip(spaceCharacters)
         left = data[:len(data) - len(middle)]
         if left:
@@ -77,17 +61,17 @@ class TreeWalker(object):
             yield {"type": "SpaceCharacters", "data": right}
 
     def comment(self, data):
-        return {"type": "Comment", "data": text_type(data)}
+        return {"type": "Comment", "data": data}
 
     def doctype(self, name, publicId=None, systemId=None, correct=True):
         return {"type": "Doctype",
-                "name": to_text(name),
-                "publicId": to_text(publicId),
-                "systemId": to_text(systemId),
-                "correct": to_text(correct)}
+                "name": name,
+                "publicId": publicId,
+                "systemId": systemId,
+                "correct": correct}
 
     def entity(self, name):
-        return {"type": "Entity", "name": text_type(name)}
+        return {"type": "Entity", "name": name}
 
     def unknown(self, nodeType):
         return self.error("Unknown node type: " + nodeType)
