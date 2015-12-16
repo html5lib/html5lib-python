@@ -80,8 +80,8 @@ class Filter(_base.Filter):
 
             elif type == "Doctype":
                 name = token["name"]
-                if not isinstance(name, text_type):
-                    raise LintError("Tag name is not a string: %(tag)r" % {"tag": name})
+                if name is not None and not isinstance(name, text_type):
+                    raise LintError("Tag name is not a string or None: %(tag)r" % {"tag": name})
                 # XXX: what to do with token["data"] ?
 
             elif type in ("ParseError", "SerializeError"):
