@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, unicode_literals
 from six import text_type
 
 from . import _base
-from ..constants import cdataElements, rcdataElements, voidElements
+from ..constants import voidElements
 
 from ..constants import spaceCharacters
 spaceCharacters = "".join(spaceCharacters)
@@ -16,13 +16,10 @@ class LintError(Exception):
 class Filter(_base.Filter):
     def __iter__(self):
         open_elements = []
-        contentModelFlag = "PCDATA"
         for token in _base.Filter.__iter__(self):
             type = token["type"]
             if type in ("StartTag", "EmptyTag"):
                 name = token["name"]
-                if contentModelFlag != "PCDATA":
-                    raise LintError("StartTag not in PCDATA content model flag: %(tag)s" % {"tag": name})
                 if not isinstance(name, text_type):
                     raise LintError("Tag name is not a string: %(tag)r" % {"tag": name})
                 if not name:
@@ -44,12 +41,6 @@ class Filter(_base.Filter):
                         raise LintError("Empty attribute localname")
                     if not isinstance(value, text_type):
                         raise LintError("Attribute value is not a string: %(value)r" % {"value": value})
-                if name in cdataElements:
-                    contentModelFlag = "CDATA"
-                elif name in rcdataElements:
-                    contentModelFlag = "RCDATA"
-                elif name == "plaintext":
-                    contentModelFlag = "PLAINTEXT"
 
             elif type == "EndTag":
                 name = token["name"]
@@ -62,11 +53,9 @@ class Filter(_base.Filter):
                 start_name = open_elements.pop()
                 if start_name != name:
                     raise LintError("EndTag (%(end)s) does not match StartTag (%(start)s)" % {"end": name, "start": start_name})
-                contentModelFlag = "PCDATA"
 
             elif type == "Comment":
-                if contentModelFlag != "PCDATA":
-                    raise LintError("Comment not in PCDATA content model flag")
+                pass
 
             elif type in ("Characters", "SpaceCharacters"):
                 data = token["data"]
@@ -81,8 +70,6 @@ class Filter(_base.Filter):
 
             elif type == "Doctype":
                 name = token["name"]
-                if contentModelFlag != "PCDATA":
-                    raise LintError("Doctype not in PCDATA content model flag: %(name)s" % {"name": name})
                 if not isinstance(name, text_type):
                     raise LintError("Tag name is not a string: %(tag)r" % {"tag": name})
                 # XXX: what to do with token["data"] ?
