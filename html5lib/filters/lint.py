@@ -64,9 +64,6 @@ class Filter(_base.Filter):
                 assert name is None or isinstance(name, text_type)
                 # XXX: what to do with token["data"] ?
 
-            elif type in ("ParseError", "SerializeError"):
-                pass
-
             else:
                 assert False, "Unknown token type: %(type)s" % {"type": type}
 
