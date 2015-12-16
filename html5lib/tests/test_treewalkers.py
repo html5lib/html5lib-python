@@ -14,6 +14,7 @@ except AttributeError:
 from .support import get_data_files, TestData, convertExpected
 
 from html5lib import html5parser, treewalkers, treebuilders, treeadapters, constants
+from html5lib.filters.lint import Filter as Lint
 
 
 treeTypes = {
@@ -91,7 +92,7 @@ class TokenTestCase(unittest.TestCase):
             p = html5parser.HTMLParser(tree=treeCls["builder"])
             document = p.parse("<html><head></head><body>a<div>b</div>c</body></html>")
             document = treeCls.get("adapter", lambda x: x)(document)
-            output = treeCls["walker"](document)
+            output = Lint(treeCls["walker"](document))
             for expectedToken, outputToken in zip(expected, output):
                 self.assertEqual(expectedToken, outputToken)
 
@@ -111,7 +112,7 @@ def runTreewalkerTest(innerHTML, input, expected, errors, treeClass):
 
     document = treeClass.get("adapter", lambda x: x)(document)
     try:
-        output = treewalkers.pprint(treeClass["walker"](document))
+        output = treewalkers.pprint(Lint(treeClass["walker"](document)))
         output = attrlist.sub(sortattrs, output)
         expected = attrlist.sub(sortattrs, convertExpected(expected))
         diff = "".join(unified_diff([line + "\n" for line in expected.splitlines()],
