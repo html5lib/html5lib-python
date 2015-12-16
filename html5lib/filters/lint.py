@@ -33,11 +33,15 @@ class Filter(_base.Filter):
                     raise LintError("Non-void element reported as EmptyTag token: %(tag)s" % {"tag": token["name"]})
                 if type == "StartTag":
                     open_elements.append(name)
-                for name, value in token["data"]:
-                    if not isinstance(name, text_type):
-                        raise LintError("Attribute name is not a string: %(name)r" % {"name": name})
-                    if not name:
-                        raise LintError("Empty attribute name")
+                for (namespace, localname), value in token["data"].items():
+                    if namespace is not None and not isinstance(namespace, text_type):
+                        raise LintError("Attribute namespace is not a string or None: %(name)r" % {"name": namespace})
+                    if namespace == "":
+                        raise LintError("Empty attribute namespace")
+                    if not isinstance(localname, text_type):
+                        raise LintError("Attribute localname is not a string: %(name)r" % {"name": localname})
+                    if not localname:
+                        raise LintError("Empty attribute localname")
                     if not isinstance(value, text_type):
                         raise LintError("Attribute value is not a string: %(value)r" % {"value": value})
                 if name in cdataElements:
