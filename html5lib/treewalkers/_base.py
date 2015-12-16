@@ -31,11 +31,6 @@ def to_text(s, blank_if_none=True):
         return text_type(s)
 
 
-def is_text_or_none(string):
-    """Wrapper around isinstance(string_types) or is None"""
-    return string is None or isinstance(string, string_types)
-
-
 class TreeWalker(object):
     def __init__(self, tree):
         self.tree = tree
@@ -47,13 +42,6 @@ class TreeWalker(object):
         return {"type": "SerializeError", "data": msg}
 
     def emptyTag(self, namespace, name, attrs, hasChildren=False):
-        assert namespace is None or isinstance(namespace, string_types), type(namespace)
-        assert isinstance(name, string_types), type(name)
-        assert all((namespace is None or isinstance(namespace, string_types)) and
-                   isinstance(name, string_types) and
-                   isinstance(value, string_types)
-                   for (namespace, name), value in attrs.items())
-
         yield {"type": "EmptyTag", "name": to_text(name, False),
                "namespace": to_text(namespace),
                "data": attrs}
@@ -61,13 +49,6 @@ class TreeWalker(object):
             yield self.error("Void element has children")
 
     def startTag(self, namespace, name, attrs):
-        assert namespace is None or isinstance(namespace, string_types), type(namespace)
-        assert isinstance(name, string_types), type(name)
-        assert all((namespace is None or isinstance(namespace, string_types)) and
-                   isinstance(name, string_types) and
-                   isinstance(value, string_types)
-                   for (namespace, name), value in attrs.items())
-
         return {"type": "StartTag",
                 "name": text_type(name),
                 "namespace": to_text(namespace),
@@ -76,17 +57,12 @@ class TreeWalker(object):
                              for (namespace, name), value in attrs.items())}
 
     def endTag(self, namespace, name):
-        assert namespace is None or isinstance(namespace, string_types), type(namespace)
-        assert isinstance(name, string_types), type(namespace)
-
         return {"type": "EndTag",
                 "name": to_text(name, False),
                 "namespace": to_text(namespace),
                 "data": {}}
 
     def text(self, data):
-        assert isinstance(data, string_types), type(data)
-
         data = to_text(data)
         middle = data.lstrip(spaceCharacters)
         left = data[:len(data) - len(middle)]
@@ -101,15 +77,9 @@ class TreeWalker(object):
             yield {"type": "SpaceCharacters", "data": right}
 
     def comment(self, data):
-        assert isinstance(data, string_types), type(data)
-
         return {"type": "Comment", "data": text_type(data)}
 
     def doctype(self, name, publicId=None, systemId=None, correct=True):
-        assert is_text_or_none(name), type(name)
-        assert is_text_or_none(publicId), type(publicId)
-        assert is_text_or_none(systemId), type(systemId)
-
         return {"type": "Doctype",
                 "name": to_text(name),
                 "publicId": to_text(publicId),
@@ -117,8 +87,6 @@ class TreeWalker(object):
                 "correct": to_text(correct)}
 
     def entity(self, name):
-        assert isinstance(name, string_types), type(name)
-
         return {"type": "Entity", "name": text_type(name)}
 
     def unknown(self, nodeType):
