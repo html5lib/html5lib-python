@@ -2444,7 +2444,7 @@ def getPhases(debug):
         def processEndTag(self, token):
             nodeIndex = len(self.tree.openElements) - 1
             node = self.tree.openElements[-1]
-            if node.name != token["name"]:
+            if node.name.translate(asciiUpper2Lower) != token["name"]:
                 self.parser.parseError("unexpected-end-tag", {"name": token["name"]})
 
             while True:
