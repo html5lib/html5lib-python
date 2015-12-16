@@ -43,8 +43,7 @@ class TreeWalker(object):
     def endTag(self, namespace, name):
         return {"type": "EndTag",
                 "name": name,
-                "namespace": namespace,
-                "data": {}}
+                "namespace": namespace}
 
     def text(self, data):
         data = data
