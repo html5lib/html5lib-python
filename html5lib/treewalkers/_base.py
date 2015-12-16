@@ -62,12 +62,11 @@ class TreeWalker(object):
     def comment(self, data):
         return {"type": "Comment", "data": data}
 
-    def doctype(self, name, publicId=None, systemId=None, correct=True):
+    def doctype(self, name, publicId=None, systemId=None):
         return {"type": "Doctype",
                 "name": name,
                 "publicId": publicId,
-                "systemId": systemId,
-                "correct": correct}
+                "systemId": systemId}
 
     def entity(self, name):
         return {"type": "Entity", "name": name}
