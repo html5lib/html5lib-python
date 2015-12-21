@@ -913,7 +913,7 @@ def getPhases(debug):
                 ("iframe", self.startTagIFrame),
                 (("noembed", "noframes", "noscript"), self.startTagRawtext),
                 ("select", self.startTagSelect),
-                (("rp", "rt"), self.startTagRpRt),
+                (("rp", "rt", "rb", "rtc"), self.startTagRpRtRbRtc),
                 (("option", "optgroup"), self.startTagOpt),
                 (("math"), self.startTagMath),
                 (("svg"), self.startTagSvg),
@@ -1256,9 +1256,12 @@ def getPhases(debug):
             else:
                 self.parser.phase = self.parser.phases["inSelect"]
 
-        def startTagRpRt(self, token):
+        def startTagRpRtRbRtc(self, token):
             if self.tree.elementInScope("ruby"):
-                self.tree.generateImpliedEndTags()
+                if token["name"] == "rt" or token["name"] == "rp":
+                    self.tree.generateImpliedEndTags("rtc")
+                else:
+                    self.tree.generateImpliedEndTags()
                 if self.tree.openElements[-1].name != "ruby":
                     self.parser.parseError()
             self.tree.insertElement(token)
@@ -1320,7 +1323,7 @@ def getPhases(debug):
             elif self.tree.openElements[-1].name != "body":
                 for node in self.tree.openElements[2:]:
                     if node.name not in frozenset(("dd", "dt", "li", "optgroup",
-                                                   "option", "p", "rp", "rt",
+                                                   "option", "p", "rp", "rt", "rb", "rtc",
                                                    "tbody", "td", "tfoot",
                                                    "th", "thead", "tr", "body",
                                                    "html")):
