@@ -237,8 +237,8 @@ class HTMLSerializer(object):
 
                     yield self.encodeStrict(k)
                     if not self.minimize_boolean_attributes or \
-                        (k not in booleanAttributes.get(name, tuple())
-                         and k not in booleanAttributes.get("", tuple())):
+                        (k not in booleanAttributes.get(name, tuple()) and
+                         k not in booleanAttributes.get("", tuple())):
                         yield self.encodeStrict("=")
                         if self.quote_attr_values or not v:
                             quote_attr = True

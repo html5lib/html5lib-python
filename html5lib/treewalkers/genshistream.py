@@ -39,8 +39,8 @@ class TreeWalker(_base.TreeWalker):
 
             if namespace == namespaces["html"] and name in voidElements:
                 for token in self.emptyTag(namespace, name, converted_attribs,
-                                           not next or next[0] != END
-                                           or next[1] != tag):
+                                           not next or next[0] != END or
+                                           next[1] != tag):
                     yield token
             else:
                 yield self.startTag(namespace, name, converted_attribs)

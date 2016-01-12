@@ -91,8 +91,7 @@ def runSerializerTest(input, expected, options):
     encoding = options.get("encoding", None)
 
     if encoding:
-        encode = lambda x: x.encode(encoding)
-        expected = list(map(encode, expected))
+        expected = list(map(lambda x: x.encode(encoding), expected))
 
     result = serialize_html(input, options)
     if len(expected) == 1:

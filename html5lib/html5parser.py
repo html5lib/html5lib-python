@@ -204,8 +204,8 @@ class HTMLParser(object):
                     elif type == DoctypeToken:
                         new_token = phase.processDoctype(new_token)
 
-            if (type == StartTagToken and token["selfClosing"]
-                    and not token["selfClosingAcknowledged"]):
+            if (type == StartTagToken and token["selfClosing"] and
+                    not token["selfClosingAcknowledged"]):
                 self.parseError("non-void-element-with-trailing-solidus",
                                 {"name": token["name"]})
 
@@ -517,77 +517,76 @@ def getPhases(debug):
             if publicId != "":
                 publicId = publicId.translate(asciiUpper2Lower)
 
-            if (not correct or token["name"] != "html"
-                or publicId.startswith(
-                    ("+//silmaril//dtd html pro v0r11 19970101//",
-                     "-//advasoft ltd//dtd html 3.0 aswedit + extensions//",
-                     "-//as//dtd html 3.0 aswedit + extensions//",
-                     "-//ietf//dtd html 2.0 level 1//",
-                     "-//ietf//dtd html 2.0 level 2//",
-                     "-//ietf//dtd html 2.0 strict level 1//",
-                     "-//ietf//dtd html 2.0 strict level 2//",
-                     "-//ietf//dtd html 2.0 strict//",
-                     "-//ietf//dtd html 2.0//",
-                     "-//ietf//dtd html 2.1e//",
-                     "-//ietf//dtd html 3.0//",
-                     "-//ietf//dtd html 3.2 final//",
-                     "-//ietf//dtd html 3.2//",
-                     "-//ietf//dtd html 3//",
-                     "-//ietf//dtd html level 0//",
-                     "-//ietf//dtd html level 1//",
-                     "-//ietf//dtd html level 2//",
-                     "-//ietf//dtd html level 3//",
-                     "-//ietf//dtd html strict level 0//",
-                     "-//ietf//dtd html strict level 1//",
-                     "-//ietf//dtd html strict level 2//",
-                     "-//ietf//dtd html strict level 3//",
-                     "-//ietf//dtd html strict//",
-                     "-//ietf//dtd html//",
-                     "-//metrius//dtd metrius presentational//",
-                     "-//microsoft//dtd internet explorer 2.0 html strict//",
-                     "-//microsoft//dtd internet explorer 2.0 html//",
-                     "-//microsoft//dtd internet explorer 2.0 tables//",
-                     "-//microsoft//dtd internet explorer 3.0 html strict//",
-                     "-//microsoft//dtd internet explorer 3.0 html//",
-                     "-//microsoft//dtd internet explorer 3.0 tables//",
-                     "-//netscape comm. corp.//dtd html//",
-                     "-//netscape comm. corp.//dtd strict html//",
-                     "-//o'reilly and associates//dtd html 2.0//",
-                     "-//o'reilly and associates//dtd html extended 1.0//",
-                     "-//o'reilly and associates//dtd html extended relaxed 1.0//",
-                     "-//softquad software//dtd hotmetal pro 6.0::19990601::extensions to html 4.0//",
-                     "-//softquad//dtd hotmetal pro 4.0::19971010::extensions to html 4.0//",
-                     "-//spyglass//dtd html 2.0 extended//",
-                     "-//sq//dtd html 2.0 hotmetal + extensions//",
-                     "-//sun microsystems corp.//dtd hotjava html//",
-                     "-//sun microsystems corp.//dtd hotjava strict html//",
-                     "-//w3c//dtd html 3 1995-03-24//",
-                     "-//w3c//dtd html 3.2 draft//",
-                     "-//w3c//dtd html 3.2 final//",
-                     "-//w3c//dtd html 3.2//",
-                     "-//w3c//dtd html 3.2s draft//",
-                     "-//w3c//dtd html 4.0 frameset//",
-                     "-//w3c//dtd html 4.0 transitional//",
-                     "-//w3c//dtd html experimental 19960712//",
-                     "-//w3c//dtd html experimental 970421//",
-                     "-//w3c//dtd w3 html//",
-                     "-//w3o//dtd w3 html 3.0//",
-                     "-//webtechs//dtd mozilla html 2.0//",
-                     "-//webtechs//dtd mozilla html//"))
-                or publicId in
-                    ("-//w3o//dtd w3 html strict 3.0//en//",
-                     "-/w3c/dtd html 4.0 transitional/en",
-                     "html")
-                or publicId.startswith(
-                    ("-//w3c//dtd html 4.01 frameset//",
-                     "-//w3c//dtd html 4.01 transitional//")) and
-                    systemId is None
-                    or systemId and systemId.lower() == "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd"):
+            if (not correct or token["name"] != "html" or
+                    publicId.startswith(
+                        ("+//silmaril//dtd html pro v0r11 19970101//",
+                         "-//advasoft ltd//dtd html 3.0 aswedit + extensions//",
+                         "-//as//dtd html 3.0 aswedit + extensions//",
+                         "-//ietf//dtd html 2.0 level 1//",
+                         "-//ietf//dtd html 2.0 level 2//",
+                         "-//ietf//dtd html 2.0 strict level 1//",
+                         "-//ietf//dtd html 2.0 strict level 2//",
+                         "-//ietf//dtd html 2.0 strict//",
+                         "-//ietf//dtd html 2.0//",
+                         "-//ietf//dtd html 2.1e//",
+                         "-//ietf//dtd html 3.0//",
+                         "-//ietf//dtd html 3.2 final//",
+                         "-//ietf//dtd html 3.2//",
+                         "-//ietf//dtd html 3//",
+                         "-//ietf//dtd html level 0//",
+                         "-//ietf//dtd html level 1//",
+                         "-//ietf//dtd html level 2//",
+                         "-//ietf//dtd html level 3//",
+                         "-//ietf//dtd html strict level 0//",
+                         "-//ietf//dtd html strict level 1//",
+                         "-//ietf//dtd html strict level 2//",
+                         "-//ietf//dtd html strict level 3//",
+                         "-//ietf//dtd html strict//",
+                         "-//ietf//dtd html//",
+                         "-//metrius//dtd metrius presentational//",
+                         "-//microsoft//dtd internet explorer 2.0 html strict//",
+                         "-//microsoft//dtd internet explorer 2.0 html//",
+                         "-//microsoft//dtd internet explorer 2.0 tables//",
+                         "-//microsoft//dtd internet explorer 3.0 html strict//",
+                         "-//microsoft//dtd internet explorer 3.0 html//",
+                         "-//microsoft//dtd internet explorer 3.0 tables//",
+                         "-//netscape comm. corp.//dtd html//",
+                         "-//netscape comm. corp.//dtd strict html//",
+                         "-//o'reilly and associates//dtd html 2.0//",
+                         "-//o'reilly and associates//dtd html extended 1.0//",
+                         "-//o'reilly and associates//dtd html extended relaxed 1.0//",
+                         "-//softquad software//dtd hotmetal pro 6.0::19990601::extensions to html 4.0//",
+                         "-//softquad//dtd hotmetal pro 4.0::19971010::extensions to html 4.0//",
+                         "-//spyglass//dtd html 2.0 extended//",
+                         "-//sq//dtd html 2.0 hotmetal + extensions//",
+                         "-//sun microsystems corp.//dtd hotjava html//",
+                         "-//sun microsystems corp.//dtd hotjava strict html//",
+                         "-//w3c//dtd html 3 1995-03-24//",
+                         "-//w3c//dtd html 3.2 draft//",
+                         "-//w3c//dtd html 3.2 final//",
+                         "-//w3c//dtd html 3.2//",
+                         "-//w3c//dtd html 3.2s draft//",
+                         "-//w3c//dtd html 4.0 frameset//",
+                         "-//w3c//dtd html 4.0 transitional//",
+                         "-//w3c//dtd html experimental 19960712//",
+                         "-//w3c//dtd html experimental 970421//",
+                         "-//w3c//dtd w3 html//",
+                         "-//w3o//dtd w3 html 3.0//",
+                         "-//webtechs//dtd mozilla html 2.0//",
+                         "-//webtechs//dtd mozilla html//")) or
+                    publicId in ("-//w3o//dtd w3 html strict 3.0//en//",
+                                 "-/w3c/dtd html 4.0 transitional/en",
+                                 "html") or
+                    publicId.startswith(
+                        ("-//w3c//dtd html 4.01 frameset//",
+                         "-//w3c//dtd html 4.01 transitional//")) and
+                    systemId is None or
+                    systemId and systemId.lower() == "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd"):
                 self.parser.compatMode = "quirks"
             elif (publicId.startswith(
                     ("-//w3c//dtd xhtml 1.0 frameset//",
-                     "-//w3c//dtd xhtml 1.0 transitional//"))
-                  or publicId.startswith(
+                     "-//w3c//dtd xhtml 1.0 transitional//")) or
+                  publicId.startswith(
                       ("-//w3c//dtd html 4.01 frameset//",
                        "-//w3c//dtd html 4.01 transitional//")) and
                   systemId is not None):
@@ -988,8 +987,8 @@ def getPhases(debug):
             data = token["data"]
             self.processSpaceCharacters = self.processSpaceCharactersNonPre
             if (data.startswith("\n") and
-                self.tree.openElements[-1].name in ("pre", "listing", "textarea")
-                    and not self.tree.openElements[-1].hasContent()):
+                self.tree.openElements[-1].name in ("pre", "listing", "textarea") and
+                    not self.tree.openElements[-1].hasContent()):
                 data = data[1:]
             if data:
                 self.tree.reconstructActiveFormattingElements()
@@ -1016,8 +1015,8 @@ def getPhases(debug):
 
         def startTagBody(self, token):
             self.parser.parseError("unexpected-start-tag", {"name": "body"})
-            if (len(self.tree.openElements) == 1
-                    or self.tree.openElements[1].name != "body"):
+            if (len(self.tree.openElements) == 1 or
+                    self.tree.openElements[1].name != "body"):
                 assert self.parser.innerHTML
             else:
                 self.parser.framesetOK = False
