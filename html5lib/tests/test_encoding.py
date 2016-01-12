@@ -12,20 +12,6 @@ from .support import get_data_files, TestData, test_dir, errorMessage
 from html5lib import HTMLParser, inputstream
 
 
-class Html5EncodingTestCase(unittest.TestCase):
-    def test_codec_name_a(self):
-        self.assertEqual(inputstream.codecName("utf-8"), "utf-8")
-
-    def test_codec_name_b(self):
-        self.assertEqual(inputstream.codecName("utf8"), "utf-8")
-
-    def test_codec_name_c(self):
-        self.assertEqual(inputstream.codecName("  utf8  "), "utf-8")
-
-    def test_codec_name_d(self):
-        self.assertEqual(inputstream.codecName("ISO_8859--1"), "windows-1252")
-
-
 def runParserEncodingTest(data, encoding):
     p = HTMLParser()
     assert p.documentEncoding is None
@@ -43,7 +29,7 @@ def runPreScanEncodingTest(data, encoding):
     if len(data) > stream.numBytesMeta:
         return
 
-    assert encoding == stream.charEncoding[0], errorMessage(data, encoding, stream.charEncoding[0])
+    assert encoding == stream.charEncoding[0].name, errorMessage(data, encoding, stream.charEncoding[0].name)
 
 
 def test_encoding():
@@ -64,4 +50,4 @@ else:
     def test_chardet():
         with open(os.path.join(test_dir, "encoding" , "chardet", "test_big5.txt"), "rb") as fp:
             encoding = inputstream.HTMLInputStream(fp.read()).charEncoding
-            assert encoding[0].lower() == "big5"
+            assert encoding[0].name == "big5"

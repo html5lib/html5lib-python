@@ -57,6 +57,7 @@ setup(name='html5lib',
       packages=packages,
       install_requires=[
           'six',
+          'webencodings',
       ],
       extras_require={
           # A empty extra that only has a conditional marker will be
