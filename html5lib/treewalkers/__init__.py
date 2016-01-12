@@ -10,10 +10,10 @@ returning an iterator generating tokens.
 
 from __future__ import absolute_import, division, unicode_literals
 
-__all__ = ["getTreeWalker", "pprint", "dom", "etree", "genshistream", "lxmletree"]
-
 from .. import constants
 from ..utils import default_etree
+
+__all__ = ["getTreeWalker", "pprint", "dom", "etree", "genshistream", "lxmletree"]
 
 treeWalkerCache = {}
 

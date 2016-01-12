@@ -47,8 +47,8 @@ def getDomBuilder(DomImplementation):
             _base.Node.__init__(self, element.nodeName)
             self.element = element
 
-        namespace = property(lambda self: hasattr(self.element, "namespaceURI")
-                             and self.element.namespaceURI or None)
+        namespace = property(lambda self: hasattr(self.element, "namespaceURI") and
+                             self.element.namespaceURI or None)
 
         def appendChild(self, node):
             node.parent = self

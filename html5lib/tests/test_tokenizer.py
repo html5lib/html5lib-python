@@ -98,8 +98,8 @@ def tokensMatch(expectedTokens, receivedTokens, ignoreErrorOrder,
     """
     checkSelfClosing = False
     for token in expectedTokens:
-        if (token[0] == "StartTag" and len(token) == 4
-                or token[0] == "EndTag" and len(token) == 3):
+        if (token[0] == "StartTag" and len(token) == 4 or
+                token[0] == "EndTag" and len(token) == 3):
             checkSelfClosing = True
             break
 
