@@ -118,8 +118,10 @@ class FragmentWrapper(object):
 class TreeWalker(_base.NonRecursiveTreeWalker):
     def __init__(self, tree):
         if hasattr(tree, "getroot"):
+            self.fragmentChildren = set()
             tree = Root(tree)
         elif isinstance(tree, list):
+            self.fragmentChildren = set(tree)
             tree = FragmentRoot(tree)
         _base.NonRecursiveTreeWalker.__init__(self, tree)
         self.filter = ihatexml.InfosetFilter()
@@ -137,7 +139,7 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             return _base.DOCTYPE, node.name, node.public_id, node.system_id
 
         elif isinstance(node, FragmentWrapper) and not hasattr(node, "tag"):
-            return _base.TEXT, node.obj
+            return _base.TEXT, ensure_str(node.obj)
 
         elif node.tag == etree.Comment:
             return _base.COMMENT, ensure_str(node.text)
@@ -197,5 +199,7 @@ class TreeWalker(_base.NonRecursiveTreeWalker):
             if key == "text":
                 return node
             # else: fallback to "normal" processing
+        elif node in self.fragmentChildren:
+            return None
 
         return node.getparent()

@@ -48,7 +48,7 @@ class TreeWalker(_base.TreeWalker):
         elif kind == END:
             name = data.localname
             namespace = data.namespace
-            if name not in voidElements:
+            if namespace != namespaces["html"] or name not in voidElements:
                 yield self.endTag(namespace, name)
 
         elif kind == COMMENT:
