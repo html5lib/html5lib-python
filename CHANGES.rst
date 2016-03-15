@@ -26,6 +26,8 @@ Released on XXX
   this makes html5lib compliant with the Encoding Standard, and
   introduces a required dependency on webencodings.
 
+* Cease supporting Python 3.2 (in both CPython and PyPy forms).
+
 
 0.9999999/1.0b8
 ~~~~~~~~~~~~~~~
