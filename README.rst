@@ -113,9 +113,8 @@ functionality:
 
 - ``genshi`` has a treewalker (but not builder); and
 
-- ``charade`` can be used as a fallback when character encoding cannot
-  be determined; ``chardet``, from which it was forked, can also be used
-  on Python 2.
+- ``chardet`` can be used as a fallback when character encoding cannot
+  be determined.
 
 - ``ordereddict`` can be used under Python 2.6
   (``collections.OrderedDict`` is used instead on later versions) to
