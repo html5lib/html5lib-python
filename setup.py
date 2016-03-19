@@ -55,8 +55,8 @@ setup(name='html5lib',
 
           # A conditional extra will only install these items when the extra is
           # requested and the condition matches.
-          "datrie:python_implementation == 'CPython'": ["datrie"],
-          "lxml:python_implementation == 'CPython'": ["lxml"],
+          "datrie:platform_python_implementation == 'CPython'": ["datrie"],
+          "lxml:platform_python_implementation == 'CPython'": ["lxml"],
 
           # Standard extras, will be installed when the extra is requested.
           "genshi": ["genshi"],
@@ -67,6 +67,6 @@ setup(name='html5lib',
           # extra that will be installed whenever the condition matches and the
           # all extra is requested.
           "all": ["genshi", "chardet>=2.2"],
-          "all:python_implementation == 'CPython'": ["datrie", "lxml"],
+          "all:platform_python_implementation == 'CPython'": ["datrie", "lxml"],
       },
       )
