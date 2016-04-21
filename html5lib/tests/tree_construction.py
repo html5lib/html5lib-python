@@ -51,14 +51,17 @@ class ParserTest(pytest.Item):
         fragmentContainer = self.test['document-fragment']
         expected = self.test['document']
         expectedErrors = self.test['errors'].split("\n") if self.test['errors'] else []
+        script = True
+        if 'script-off' in self.test:
+            script = False
 
         with warnings.catch_warnings():
             warnings.simplefilter("error")
             try:
                 if fragmentContainer:
-                    document = p.parseFragment(input, fragmentContainer)
+                    document = p.parseFragment(input, fragmentContainer, script=script)
                 else:
-                    document = p.parse(input)
+                    document = p.parse(input, script=script)
             except constants.DataLossWarning:
                 pytest.skip("data loss warning")
 
