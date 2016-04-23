@@ -22,18 +22,18 @@ from .constants import E
 
 
 def parse(doc, treebuilder="etree", encoding=None,
-          namespaceHTMLElements=True, script=True):
+          namespaceHTMLElements=True, scripting=False):
     """Parse a string or file-like object into a tree"""
     tb = treebuilders.getTreeBuilder(treebuilder)
     p = HTMLParser(tb, namespaceHTMLElements=namespaceHTMLElements)
-    return p.parse(doc, encoding=encoding, script=script)
+    return p.parse(doc, encoding=encoding, scripting=scripting)
 
 
 def parseFragment(doc, container="div", treebuilder="etree", encoding=None,
-                  namespaceHTMLElements=True, script=True):
+                  namespaceHTMLElements=True, scripting=False):
     tb = treebuilders.getTreeBuilder(treebuilder)
     p = HTMLParser(tb, namespaceHTMLElements=namespaceHTMLElements)
-    return p.parseFragment(doc, container=container, encoding=encoding, script=script)
+    return p.parseFragment(doc, container=container, encoding=encoding, scripting=scripting)
 
 
 def method_decorator_metaclass(function):
@@ -79,11 +79,11 @@ class HTMLParser(object):
                             getPhases(debug).items()])
 
     def _parse(self, stream, innerHTML=False, container="div", encoding=None,
-               parseMeta=True, useChardet=True, script=True, **kwargs):
+               parseMeta=True, useChardet=True, scripting=False, **kwargs):
 
         self.innerHTMLMode = innerHTML
         self.container = container
-        self.scriptMode = script
+        self.scripting = scripting
         self.tokenizer = self.tokenizer_class(stream, encoding=encoding,
                                               parseMeta=parseMeta,
                                               useChardet=useChardet,
@@ -224,7 +224,7 @@ class HTMLParser(object):
             yield self.normalizeToken(token)
 
     def parse(self, stream, encoding=None, parseMeta=True,
-              useChardet=True, script=True):
+              useChardet=True, scripting=False):
         """Parse a HTML document into a well-formed tree
 
         stream - a filelike object or string containing the HTML to be parsed
@@ -234,14 +234,14 @@ class HTMLParser(object):
         regardless of any BOM or later declaration (such as in a meta
         element)
 
-        script - treat noscript elements as if javascript was turned on
+        scripting - treat noscript elements as if javascript was turned on
         """
         self._parse(stream, innerHTML=False, encoding=encoding,
-                    parseMeta=parseMeta, useChardet=useChardet, script=script)
+                    parseMeta=parseMeta, useChardet=useChardet, scripting=scripting)
         return self.tree.getDocument()
 
     def parseFragment(self, stream, container="div", encoding=None,
-                      parseMeta=False, useChardet=True, script=True):
+                      parseMeta=False, useChardet=True, scripting=False):
         """Parse a HTML fragment into a well-formed tree fragment
 
         container - name of the element we're setting the innerHTML property
@@ -254,10 +254,10 @@ class HTMLParser(object):
         regardless of any BOM or later declaration (such as in a meta
         element)
 
-        script - treat noscript elements as if javascript was turned on
+        scripting - treat noscript elements as if javascript was turned on
         """
         self._parse(stream, True, container=container,
-                    encoding=encoding, script=script)
+                    encoding=encoding, scripting=scripting)
         return self.tree.getFragment()
 
     def parseError(self, errorcode="XXX-undefined-error", datavars={}):
@@ -780,7 +780,7 @@ def getPhases(debug):
             self.parser.parseRCDataRawtext(token, "RAWTEXT")
 
         def startTagNoscript(self, token):
-            if self.parser.scriptMode:
+            if self.parser.scripting:
                 self.parser.parseRCDataRawtext(token, "RAWTEXT")
             else:
                 self.tree.insertElement(token)
@@ -1289,7 +1289,7 @@ def getPhases(debug):
             self.startTagRawtext(token)
 
         def startTagNoscript(self, token):
-            if self.parser.scriptMode:
+            if self.parser.scripting:
                 self.startTagRawtext(token)
             else:
                 self.startTagOther(token)
