@@ -22,18 +22,18 @@ from .constants import E
 
 
 def parse(doc, treebuilder="etree", encoding=None,
-          namespaceHTMLElements=True):
+          namespaceHTMLElements=True, scripting=False):
     """Parse a string or file-like object into a tree"""
     tb = treebuilders.getTreeBuilder(treebuilder)
     p = HTMLParser(tb, namespaceHTMLElements=namespaceHTMLElements)
-    return p.parse(doc, encoding=encoding)
+    return p.parse(doc, encoding=encoding, scripting=scripting)
 
 
 def parseFragment(doc, container="div", treebuilder="etree", encoding=None,
-                  namespaceHTMLElements=True):
+                  namespaceHTMLElements=True, scripting=False):
     tb = treebuilders.getTreeBuilder(treebuilder)
     p = HTMLParser(tb, namespaceHTMLElements=namespaceHTMLElements)
-    return p.parseFragment(doc, container=container, encoding=encoding)
+    return p.parseFragment(doc, container=container, encoding=encoding, scripting=scripting)
 
 
 def method_decorator_metaclass(function):
@@ -78,11 +78,12 @@ class HTMLParser(object):
         self.phases = dict([(name, cls(self, self.tree)) for name, cls in
                             getPhases(debug).items()])
 
-    def _parse(self, stream, innerHTML=False, container="div",
-               encoding=None, parseMeta=True, useChardet=True, **kwargs):
+    def _parse(self, stream, innerHTML=False, container="div", encoding=None,
+               parseMeta=True, useChardet=True, scripting=False, **kwargs):
 
         self.innerHTMLMode = innerHTML
         self.container = container
+        self.scripting = scripting
         self.tokenizer = self.tokenizer_class(stream, encoding=encoding,
                                               parseMeta=parseMeta,
                                               useChardet=useChardet,
@@ -222,7 +223,8 @@ class HTMLParser(object):
         for token in self.tokenizer:
             yield self.normalizeToken(token)
 
-    def parse(self, stream, encoding=None, parseMeta=True, useChardet=True):
+    def parse(self, stream, encoding=None, parseMeta=True,
+              useChardet=True, scripting=False):
         """Parse a HTML document into a well-formed tree
 
         stream - a filelike object or string containing the HTML to be parsed
@@ -231,13 +233,15 @@ class HTMLParser(object):
         the encoding.  If specified, that encoding will be used,
         regardless of any BOM or later declaration (such as in a meta
         element)
+
+        scripting - treat noscript elements as if javascript was turned on
         """
         self._parse(stream, innerHTML=False, encoding=encoding,
-                    parseMeta=parseMeta, useChardet=useChardet)
+                    parseMeta=parseMeta, useChardet=useChardet, scripting=scripting)
         return self.tree.getDocument()
 
     def parseFragment(self, stream, container="div", encoding=None,
-                      parseMeta=False, useChardet=True):
+                      parseMeta=False, useChardet=True, scripting=False):
         """Parse a HTML fragment into a well-formed tree fragment
 
         container - name of the element we're setting the innerHTML property
@@ -249,8 +253,11 @@ class HTMLParser(object):
         the encoding.  If specified, that encoding will be used,
         regardless of any BOM or later declaration (such as in a meta
         element)
+
+        scripting - treat noscript elements as if javascript was turned on
         """
-        self._parse(stream, True, container=container, encoding=encoding)
+        self._parse(stream, True, container=container,
+                    encoding=encoding, scripting=scripting)
         return self.tree.getFragment()
 
     def parseError(self, errorcode="XXX-undefined-error", datavars={}):
@@ -708,7 +715,8 @@ def getPhases(debug):
             self.startTagHandler = utils.MethodDispatcher([
                 ("html", self.startTagHtml),
                 ("title", self.startTagTitle),
-                (("noscript", "noframes", "style"), self.startTagNoScriptNoFramesStyle),
+                (("noframes", "style"), self.startTagNoFramesStyle),
+                ("noscript", self.startTagNoscript),
                 ("script", self.startTagScript),
                 (("base", "basefont", "bgsound", "command", "link"),
                  self.startTagBaseLinkCommand),
@@ -717,7 +725,7 @@ def getPhases(debug):
             ])
             self.startTagHandler.default = self.startTagOther
 
-            self. endTagHandler = utils.MethodDispatcher([
+            self.endTagHandler = utils.MethodDispatcher([
                 ("head", self.endTagHead),
                 (("br", "html", "body"), self.endTagHtmlBodyBr)
             ])
@@ -767,9 +775,16 @@ def getPhases(debug):
         def startTagTitle(self, token):
             self.parser.parseRCDataRawtext(token, "RCDATA")
 
-        def startTagNoScriptNoFramesStyle(self, token):
+        def startTagNoFramesStyle(self, token):
             # Need to decide whether to implement the scripting-disabled case
             self.parser.parseRCDataRawtext(token, "RAWTEXT")
+
+        def startTagNoscript(self, token):
+            if self.parser.scripting:
+                self.parser.parseRCDataRawtext(token, "RAWTEXT")
+            else:
+                self.tree.insertElement(token)
+                self.parser.phase = self.parser.phases["inHeadNoscript"]
 
         def startTagScript(self, token):
             self.tree.insertElement(token)
@@ -796,10 +811,51 @@ def getPhases(debug):
         def anythingElse(self):
             self.endTagHead(impliedTagToken("head"))
 
-    # XXX If we implement a parser for which scripting is disabled we need to
-    # implement this phase.
-    #
-    # class InHeadNoScriptPhase(Phase):
+    class InHeadNoscriptPhase(Phase):
+        def __init__(self, parser, tree):
+            Phase.__init__(self, parser, tree)
+
+            self.startTagHandler = utils.MethodDispatcher([
+                ("html", self.startTagHtml),
+                (("basefont", "bgsound", "link", "meta", "noframes", "style"), self.startTagBaseLinkCommand),
+                (("head", "noscript"), self.startTagHeadNoscript),
+            ])
+            self.startTagHandler.default = self.startTagOther
+
+            self.endTagHandler = utils.MethodDispatcher([
+                ("noscript", self.endTagNoscript),
+                ("br", self.endTagBr),
+            ])
+            self.endTagHandler.default = self.endTagOther
+
+        def startTagHtml(self, token):
+            return self.parser.phases["inBody"].processStartTag(token)
+
+        def startTagBaseLinkCommand(self, token):
+            return self.parser.phases["inHead"].startTagBaseLinkCommand(token)
+
+        def startTagHeadNoscript(self, token):
+            self.parser.parseError("unexpected-start-tag", {"name": token["name"]})
+
+        def startTagOther(self, token):
+            return self.anythingElse(token)
+
+        def endTagNoscript(self, token):
+            node = self.parser.tree.openElements.pop()
+            assert node.name == "noscript", "Expected noscript got %s" % node.name
+            self.parser.phase = self.parser.phases["inHead"]
+
+        def endTagBr(self, token):
+            return self.anythingElse(token)
+
+        def endTagOther(self, token):
+            self.parser.parseError("unexpected-end-tag", {"name": token["name"]})
+
+        def anythingElse(self, token):
+            self.parser.parseError("unexpected-inhead-noscript-tag", {"name": token["name"]})
+            self.endTagNoscript(impliedTagToken("noscript"))
+            return token
+
     class AfterHeadPhase(Phase):
         def __init__(self, parser, tree):
             Phase.__init__(self, parser, tree)
@@ -910,7 +966,8 @@ def getPhases(debug):
                 ("isindex", self.startTagIsIndex),
                 ("textarea", self.startTagTextarea),
                 ("iframe", self.startTagIFrame),
-                (("noembed", "noframes", "noscript"), self.startTagRawtext),
+                ("noscript", self.startTagNoscript),
+                (("noembed", "noframes"), self.startTagRawtext),
                 ("select", self.startTagSelect),
                 (("rp", "rt"), self.startTagRpRt),
                 (("option", "optgroup"), self.startTagOpt),
@@ -1230,6 +1287,12 @@ def getPhases(debug):
         def startTagIFrame(self, token):
             self.parser.framesetOK = False
             self.startTagRawtext(token)
+
+        def startTagNoscript(self, token):
+            if self.parser.scripting:
+                self.startTagRawtext(token)
+            else:
+                self.startTagOther(token)
 
         def startTagRawtext(self, token):
             """iframe, noembed noframes, noscript(if scripting enabled)"""
@@ -2687,7 +2750,7 @@ def getPhases(debug):
         "beforeHtml": BeforeHtmlPhase,
         "beforeHead": BeforeHeadPhase,
         "inHead": InHeadPhase,
-        # XXX "inHeadNoscript": InHeadNoScriptPhase,
+        "inHeadNoscript": InHeadNoscriptPhase,
         "afterHead": AfterHeadPhase,
         "inBody": InBodyPhase,
         "text": TextPhase,
