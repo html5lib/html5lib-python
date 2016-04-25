@@ -2,6 +2,6 @@
 
 flake8
 pytest
-pytest-expect>=1.0,<2.0
+pytest-expect>=1.1,<2.0
 mock
 ordereddict ; python_version < '2.7'
