@@ -12,6 +12,15 @@ from .support import get_data_files, TestData, test_dir, errorMessage
 from html5lib import HTMLParser, inputstream
 
 
+def test_basic_prescan_length():
+    data = "<title>Caf\u00E9</title><!--a--><meta charset='utf-8'>".encode('utf-8')
+    pad = 1024 - len(data) + 1
+    data = data.replace(b"-a-", b"-" + (b"a" * pad) + b"-")
+    assert len(data) == 1024  # Sanity
+    stream = inputstream.HTMLBinaryInputStream(data, chardet=False)
+    assert 'utf-8' == stream.charEncoding[0].name
+
+
 def runParserEncodingTest(data, encoding):
     p = HTMLParser()
     assert p.documentEncoding is None
