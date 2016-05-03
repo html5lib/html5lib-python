@@ -1,10 +1,6 @@
 from __future__ import absolute_import, division, unicode_literals
 
-import os
-import sys
 import unittest
-import warnings
-from difflib import unified_diff
 
 try:
     unittest.TestCase.assertEqual
@@ -13,9 +9,9 @@ except AttributeError:
 
 import pytest
 
-from .support import get_data_files, TestData, convertExpected, treeTypes
+from .support import treeTypes
 
-from html5lib import html5parser, treewalkers, constants
+from html5lib import html5parser, treewalkers
 from html5lib.filters.lint import Filter as Lint
 
 import re
@@ -52,60 +48,6 @@ class TokenTestCase(unittest.TestCase):
             output = Lint(treeCls["walker"](document))
             for expectedToken, outputToken in zip(expected, output):
                 self.assertEqual(expectedToken, outputToken)
-
-
-def runTreewalkerTest(innerHTML, input, expected, errors, treeClass):
-    if treeClass is None:
-        pytest.skip("Treebuilder not loaded")
-    warnings.resetwarnings()
-    warnings.simplefilter("error")
-    try:
-        p = html5parser.HTMLParser(tree=treeClass["builder"])
-        if innerHTML:
-            document = p.parseFragment(input, innerHTML)
-        else:
-            document = p.parse(input)
-    except constants.DataLossWarning:
-        # Ignore testcases we know we don't pass
-        return
-
-    document = treeClass.get("adapter", lambda x: x)(document)
-    try:
-        output = treewalkers.pprint(Lint(treeClass["walker"](document)))
-        output = attrlist.sub(sortattrs, output)
-        expected = attrlist.sub(sortattrs, convertExpected(expected))
-        diff = "".join(unified_diff([line + "\n" for line in expected.splitlines()],
-                                    [line + "\n" for line in output.splitlines()],
-                                    "Expected", "Received"))
-        assert expected == output, "\n".join([
-            "", "Input:", input,
-                "", "Expected:", expected,
-                "", "Received:", output,
-                "", "Diff:", diff,
-        ])
-    except NotImplementedError:
-        pass  # Amnesty for those that confess...
-
-
-def test_treewalker():
-    sys.stdout.write('Testing tree walkers ' + " ".join(list(treeTypes.keys())) + "\n")
-
-    for treeName, treeCls in sorted(treeTypes.items()):
-        files = get_data_files('tree-construction')
-        for filename in files:
-            testName = os.path.basename(filename).replace(".dat", "")
-            if testName in ("template",):
-                continue
-
-            tests = TestData(filename, "data")
-
-            for index, test in enumerate(tests):
-                (input, errors,
-                 innerHTML, expected) = [test[key] for key in ("data", "errors",
-                                                               "document-fragment",
-                                                               "document")]
-                errors = errors.split("\n")
-                yield runTreewalkerTest, innerHTML, input, expected, errors, treeCls
 
 
 def set_attribute_on_first_child(docfrag, name, value, treeName):
