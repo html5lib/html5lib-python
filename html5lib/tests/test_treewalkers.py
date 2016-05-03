@@ -75,7 +75,7 @@ def runTreewalkerEditTest(intext, expected, attrs_to_add, tree):
     document = treeClass.get("adapter", lambda x: x)(document)
     output = treewalkers.pprint(treeClass["walker"](document))
     output = attrlist.sub(sortattrs, output)
-    if not output in expected:
+    if output not in expected:
         raise AssertionError("TreewalkerEditTest: %s\nExpected:\n%s\nReceived:\n%s" % (treeName, expected, output))
 
 
