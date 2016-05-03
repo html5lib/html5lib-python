@@ -421,7 +421,7 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
         # Encoding Information
         # Number of bytes to use when looking for a meta element with
         # encoding information
-        self.numBytesMeta = 512
+        self.numBytesMeta = 1024
         # Number of bytes to use when using detecting encoding using chardet
         self.numBytesChardet = 100
         # Encoding to use if no other information can be found
