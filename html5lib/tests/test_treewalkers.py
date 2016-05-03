@@ -11,57 +11,12 @@ try:
 except AttributeError:
     unittest.TestCase.assertEqual = unittest.TestCase.assertEquals
 
-from .support import get_data_files, TestData, convertExpected
+import pytest
 
-from html5lib import html5parser, treewalkers, treebuilders, treeadapters, constants
+from .support import get_data_files, TestData, convertExpected, treeTypes
+
+from html5lib import html5parser, treewalkers, constants
 from html5lib.filters.lint import Filter as Lint
-
-
-treeTypes = {
-    "DOM": {"builder": treebuilders.getTreeBuilder("dom"),
-            "walker": treewalkers.getTreeWalker("dom")},
-}
-
-# Try whatever etree implementations are available from a list that are
-#"supposed" to work
-try:
-    import xml.etree.ElementTree as ElementTree
-except ImportError:
-    pass
-else:
-    treeTypes['ElementTree'] = \
-        {"builder": treebuilders.getTreeBuilder("etree", ElementTree, fullTree=True),
-         "walker": treewalkers.getTreeWalker("etree", ElementTree)}
-
-try:
-    import xml.etree.cElementTree as ElementTree
-except ImportError:
-    pass
-else:
-    treeTypes['cElementTree'] = \
-        {"builder": treebuilders.getTreeBuilder("etree", ElementTree, fullTree=True),
-         "walker": treewalkers.getTreeWalker("etree", ElementTree)}
-
-
-try:
-    import lxml.etree as ElementTree  # flake8: noqa
-except ImportError:
-    pass
-else:
-    treeTypes['lxml_native'] = \
-        {"builder": treebuilders.getTreeBuilder("lxml"),
-         "walker": treewalkers.getTreeWalker("lxml")}
-
-
-try:
-    import genshi  # flake8: noqa
-except ImportError:
-    pass
-else:
-    treeTypes["genshi"] = \
-        {"builder": treebuilders.getTreeBuilder("dom"),
-         "adapter": lambda tree: treeadapters.genshi.to_genshi(treewalkers.getTreeWalker("dom")(tree)),
-         "walker": treewalkers.getTreeWalker("genshi")}
 
 import re
 attrlist = re.compile(r"^(\s+)\w+=.*(\n\1\w+=.*)+", re.M)
@@ -89,6 +44,8 @@ class TokenTestCase(unittest.TestCase):
             {'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'html'}
         ]
         for treeName, treeCls in sorted(treeTypes.items()):
+            if treeCls is None:
+                continue
             p = html5parser.HTMLParser(tree=treeCls["builder"])
             document = p.parse("<html><head></head><body>a<div>b</div>c</body></html>")
             document = treeCls.get("adapter", lambda x: x)(document)
@@ -98,6 +55,8 @@ class TokenTestCase(unittest.TestCase):
 
 
 def runTreewalkerTest(innerHTML, input, expected, errors, treeClass):
+    if treeClass is None:
+        pytest.skip("Treebuilder not loaded")
     warnings.resetwarnings()
     warnings.simplefilter("error")
     try:
@@ -164,6 +123,8 @@ def set_attribute_on_first_child(docfrag, name, value, treeName):
 def runTreewalkerEditTest(intext, expected, attrs_to_add, tree):
     """tests what happens when we add attributes to the intext"""
     treeName, treeClass = tree
+    if treeClass is None:
+        pytest.skip("Treebuilder not loaded")
     parser = html5parser.HTMLParser(tree=treeClass["builder"])
     document = parser.parseFragment(intext)
     for nom, val in attrs_to_add:

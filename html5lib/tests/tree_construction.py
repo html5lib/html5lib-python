@@ -13,18 +13,23 @@ class TreeConstructionFile(pytest.File):
     def collect(self):
         tests = TestData(str(self.fspath), "data")
         for i, test in enumerate(tests):
-            for treeName, treeClass in sorted(treeTypes.items()):
+            for treeName, treeAPIs in sorted(treeTypes.items()):
+                if treeAPIs is not None and "adapter" in treeAPIs:
+                    continue
                 for namespaceHTMLElements in (True, False):
                     if namespaceHTMLElements:
                         nodeid = "%d::%s::namespaced" % (i, treeName)
                     else:
                         nodeid = "%d::%s::void-namespace" % (i, treeName)
-                    item = ParserTest(nodeid, self,
-                                      test, treeClass, namespaceHTMLElements)
+                    item = ParserTest(nodeid,
+                                      self,
+                                      test,
+                                      treeAPIs["builder"] if treeAPIs is not None else None,
+                                      namespaceHTMLElements)
                     item.add_marker(getattr(pytest.mark, treeName))
                     if namespaceHTMLElements:
                         item.add_marker(pytest.mark.namespaced)
-                    if treeClass is None:
+                    if treeAPIs is None:
                         item.add_marker(pytest.mark.skipif(True, reason="Treebuilder not loaded"))
                     yield item
 
