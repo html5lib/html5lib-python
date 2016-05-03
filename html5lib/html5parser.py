@@ -89,12 +89,11 @@ class HTMLParser(object):
                                               parser=self, **kwargs)
         self.reset()
 
-        while True:
-            try:
-                self.mainLoop()
-                break
-            except ReparseException:
-                self.reset()
+        try:
+            self.mainLoop()
+        except ReparseException:
+            self.reset()
+            self.mainLoop()
 
     def reset(self):
         self.tree.reset()
