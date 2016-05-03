@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, unicode_literals
 
+import itertools
 import warnings
 import re
 
@@ -23,7 +24,8 @@ class TreeConstructionTest(pytest.Collector):
 
     def collect(self):
         for treeName, treeAPIs in sorted(treeTypes.items()):
-            for x in self._getParserTests(treeName, treeAPIs):
+            for x in itertools.chain(self._getParserTests(treeName, treeAPIs),
+                                     self._getTreeWalkerTests(treeName, treeAPIs)):
                 yield x
 
     def _getParserTests(self, treeName, treeAPIs):
@@ -31,20 +33,25 @@ class TreeConstructionTest(pytest.Collector):
             return
         for namespaceHTMLElements in (True, False):
             if namespaceHTMLElements:
-                nodeid = "%s::namespaced" % treeName
+                nodeid = "%s::parser::namespaced" % treeName
             else:
-                nodeid = "%s::void-namespace" % treeName
+                nodeid = "%s::parser::void-namespace" % treeName
             item = ParserTest(nodeid,
                               self,
                               self.testdata,
                               treeAPIs["builder"] if treeAPIs is not None else None,
                               namespaceHTMLElements)
             item.add_marker(getattr(pytest.mark, treeName))
+            item.add_marker(pytest.mark.parser)
             if namespaceHTMLElements:
                 item.add_marker(pytest.mark.namespaced)
             if treeAPIs is None:
                 item.add_marker(pytest.mark.skipif(True, reason="Treebuilder not loaded"))
             yield item
+
+    def _getTreeWalkerTests(self, treeName, treeAPIs):
+        if False:
+            yield
 
 
 def convertTreeDump(data):
