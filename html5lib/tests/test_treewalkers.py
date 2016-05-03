@@ -1,12 +1,5 @@
 from __future__ import absolute_import, division, unicode_literals
 
-import unittest
-
-try:
-    unittest.TestCase.assertEqual
-except AttributeError:
-    unittest.TestCase.assertEqual = unittest.TestCase.assertEquals
-
 import pytest
 
 from .support import treeTypes
@@ -24,30 +17,29 @@ def sortattrs(x):
     return "\n".join(lines)
 
 
-class TokenTestCase(unittest.TestCase):
-    def test_all_tokens(self):
-        expected = [
-            {'data': {}, 'type': 'StartTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'html'},
-            {'data': {}, 'type': 'StartTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'head'},
-            {'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'head'},
-            {'data': {}, 'type': 'StartTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'body'},
-            {'data': 'a', 'type': 'Characters'},
-            {'data': {}, 'type': 'StartTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'div'},
-            {'data': 'b', 'type': 'Characters'},
-            {'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'div'},
-            {'data': 'c', 'type': 'Characters'},
-            {'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'body'},
-            {'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'html'}
-        ]
-        for treeName, treeCls in sorted(treeTypes.items()):
-            if treeCls is None:
-                continue
-            p = html5parser.HTMLParser(tree=treeCls["builder"])
-            document = p.parse("<html><head></head><body>a<div>b</div>c</body></html>")
-            document = treeCls.get("adapter", lambda x: x)(document)
-            output = Lint(treeCls["walker"](document))
-            for expectedToken, outputToken in zip(expected, output):
-                self.assertEqual(expectedToken, outputToken)
+def test_all_tokens():
+    expected = [
+        {'data': {}, 'type': 'StartTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'html'},
+        {'data': {}, 'type': 'StartTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'head'},
+        {'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'head'},
+        {'data': {}, 'type': 'StartTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'body'},
+        {'data': 'a', 'type': 'Characters'},
+        {'data': {}, 'type': 'StartTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'div'},
+        {'data': 'b', 'type': 'Characters'},
+        {'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'div'},
+        {'data': 'c', 'type': 'Characters'},
+        {'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'body'},
+        {'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'html'}
+    ]
+    for treeName, treeCls in sorted(treeTypes.items()):
+        if treeCls is None:
+            continue
+        p = html5parser.HTMLParser(tree=treeCls["builder"])
+        document = p.parse("<html><head></head><body>a<div>b</div>c</body></html>")
+        document = treeCls.get("adapter", lambda x: x)(document)
+        output = Lint(treeCls["walker"](document))
+        for expectedToken, outputToken in zip(expected, output):
+            assert expectedToken == outputToken
 
 
 def set_attribute_on_first_child(docfrag, name, value, treeName):
