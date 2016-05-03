@@ -1,12 +1,12 @@
 from __future__ import absolute_import, division, unicode_literals
 
+import codecs
 import json
 import warnings
 import re
 
+import pytest
 from six import unichr
-
-from .support import get_data_files
 
 from html5lib.tokenizer import HTMLTokenizer
 from html5lib import constants, utils
@@ -172,27 +172,6 @@ def unescape(test):
     return test
 
 
-def runTokenizerTest(test):
-    warnings.resetwarnings()
-    warnings.simplefilter("error")
-
-    expected = test['output']
-    if 'lastStartTag' not in test:
-        test['lastStartTag'] = None
-    parser = TokenizerTestParser(test['initialState'],
-                                 test['lastStartTag'])
-    tokens = parser.parse(test['input'])
-    received = normalizeTokens(tokens)
-    errorMsg = "\n".join(["\n\nInitial state:",
-                          test['initialState'],
-                          "\nInput:", test['input'],
-                          "\nExpected:", repr(expected),
-                          "\nreceived:", repr(tokens)])
-    errorMsg = errorMsg
-    ignoreErrorOrder = test.get('ignoreErrorOrder', False)
-    assert tokensMatch(expected, received, ignoreErrorOrder, True), errorMsg
-
-
 def _doCapitalize(match):
     return match.group(1).upper()
 
@@ -205,18 +184,68 @@ def capitalize(s):
     return s
 
 
-def testTokenizer():
-    for filename in get_data_files('tokenizer', '*.test'):
-        with open(filename) as fp:
+class TokenizerFile(pytest.File):
+    def collect(self):
+        with codecs.open(str(self.fspath), "r", encoding="utf-8") as fp:
             tests = json.load(fp)
-            if 'tests' in tests:
-                for index, test in enumerate(tests['tests']):
-                    if 'initialStates' not in test:
-                        test["initialStates"] = ["Data state"]
-                    if 'doubleEscaped' in test:
-                        test = unescape(test)
-                        if test["input"] is None:
-                            continue  # Not valid input for this platform
-                    for initialState in test["initialStates"]:
-                        test["initialState"] = capitalize(initialState)
-                        yield runTokenizerTest, test
+        if 'tests' in tests:
+            for i, test in enumerate(tests['tests']):
+                yield TokenizerTestCollector(str(i), self, testdata=test)
+
+
+class TokenizerTestCollector(pytest.Collector):
+    def __init__(self, name, parent=None, config=None, session=None, testdata=None):
+        super(TokenizerTestCollector, self).__init__(name, parent, config, session)
+        if 'initialStates' not in testdata:
+            testdata["initialStates"] = ["Data state"]
+        if 'doubleEscaped' in testdata:
+            testdata = unescape(testdata)
+        self.testdata = testdata
+
+    def collect(self):
+        for initialState in self.testdata["initialStates"]:
+            initialState = capitalize(initialState)
+            item = TokenizerTest(initialState,
+                                 self,
+                                 self.testdata,
+                                 initialState)
+            if self.testdata["input"] is None:
+                item.add_marker(pytest.mark.skipif(True, reason="Relies on lone surrogates"))
+            yield item
+
+
+class TokenizerTest(pytest.Item):
+    def __init__(self, name, parent, test, initialState):
+        super(TokenizerTest, self).__init__(name, parent)
+        self.obj = lambda: 1  # this is to hack around skipif needing a function!
+        self.test = test
+        self.initialState = initialState
+
+    def runtest(self):
+        warnings.resetwarnings()
+        warnings.simplefilter("error")
+
+        expected = self.test['output']
+        if 'lastStartTag' not in self.test:
+            self.test['lastStartTag'] = None
+        parser = TokenizerTestParser(self.initialState,
+                                     self.test['lastStartTag'])
+        tokens = parser.parse(self.test['input'])
+        received = normalizeTokens(tokens)
+        errorMsg = "\n".join(["\n\nInitial state:",
+                              self.initialState,
+                              "\nInput:", self.test['input'],
+                              "\nExpected:", repr(expected),
+                              "\nreceived:", repr(tokens)])
+        errorMsg = errorMsg
+        ignoreErrorOrder = self.test.get('ignoreErrorOrder', False)
+        assert tokensMatch(expected, received, ignoreErrorOrder, True), errorMsg
+
+    def repr_failure(self, excinfo):
+        traceback = excinfo.traceback
+        ntraceback = traceback.cut(path=__file__)
+        excinfo.traceback = ntraceback.filter()
+
+        return excinfo.getrepr(funcargs=True,
+                               showlocals=False,
+                               style="short", tbfilter=False)
