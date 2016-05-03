@@ -430,6 +430,7 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
         # Detect encoding iff no explicit "transport level" encoding is supplied
         if (self.charEncoding[0] is None):
             self.charEncoding = self.detectEncoding(parseMeta, chardet)
+            assert self.charEncoding[0] is not None
 
         # Call superclass
         self.reset()
