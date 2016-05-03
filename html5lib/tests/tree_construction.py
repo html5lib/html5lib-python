@@ -13,25 +13,38 @@ class TreeConstructionFile(pytest.File):
     def collect(self):
         tests = TestData(str(self.fspath), "data")
         for i, test in enumerate(tests):
-            for treeName, treeAPIs in sorted(treeTypes.items()):
-                if treeAPIs is not None and "adapter" in treeAPIs:
-                    continue
-                for namespaceHTMLElements in (True, False):
-                    if namespaceHTMLElements:
-                        nodeid = "%d::%s::namespaced" % (i, treeName)
-                    else:
-                        nodeid = "%d::%s::void-namespace" % (i, treeName)
-                    item = ParserTest(nodeid,
-                                      self,
-                                      test,
-                                      treeAPIs["builder"] if treeAPIs is not None else None,
-                                      namespaceHTMLElements)
-                    item.add_marker(getattr(pytest.mark, treeName))
-                    if namespaceHTMLElements:
-                        item.add_marker(pytest.mark.namespaced)
-                    if treeAPIs is None:
-                        item.add_marker(pytest.mark.skipif(True, reason="Treebuilder not loaded"))
-                    yield item
+            yield TreeConstructionTest(str(i), self, testdata=test)
+
+
+class TreeConstructionTest(pytest.Collector):
+    def __init__(self, name, parent=None, config=None, session=None, testdata=None):
+        super(TreeConstructionTest, self).__init__(name, parent, config, session)
+        self.testdata = testdata
+
+    def collect(self):
+        for treeName, treeAPIs in sorted(treeTypes.items()):
+            for x in self._getParserTests(treeName, treeAPIs):
+                yield x
+
+    def _getParserTests(self, treeName, treeAPIs):
+        if treeAPIs is not None and "adapter" in treeAPIs:
+            return
+        for namespaceHTMLElements in (True, False):
+            if namespaceHTMLElements:
+                nodeid = "%s::namespaced" % treeName
+            else:
+                nodeid = "%s::void-namespace" % treeName
+            item = ParserTest(nodeid,
+                              self,
+                              self.testdata,
+                              treeAPIs["builder"] if treeAPIs is not None else None,
+                              namespaceHTMLElements)
+            item.add_marker(getattr(pytest.mark, treeName))
+            if namespaceHTMLElements:
+                item.add_marker(pytest.mark.namespaced)
+            if treeAPIs is None:
+                item.add_marker(pytest.mark.skipif(True, reason="Treebuilder not loaded"))
+            yield item
 
 
 def convertTreeDump(data):
