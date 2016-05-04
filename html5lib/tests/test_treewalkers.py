@@ -1,67 +1,11 @@
 from __future__ import absolute_import, division, unicode_literals
 
-import os
-import sys
-import unittest
-import warnings
-from difflib import unified_diff
+import pytest
 
-try:
-    unittest.TestCase.assertEqual
-except AttributeError:
-    unittest.TestCase.assertEqual = unittest.TestCase.assertEquals
+from .support import treeTypes
 
-from .support import get_data_files, TestData, convertExpected
-
-from html5lib import html5parser, treewalkers, treebuilders, treeadapters, constants
+from html5lib import html5parser, treewalkers
 from html5lib.filters.lint import Filter as Lint
-
-
-treeTypes = {
-    "DOM": {"builder": treebuilders.getTreeBuilder("dom"),
-            "walker": treewalkers.getTreeWalker("dom")},
-}
-
-# Try whatever etree implementations are available from a list that are
-#"supposed" to work
-try:
-    import xml.etree.ElementTree as ElementTree
-except ImportError:
-    pass
-else:
-    treeTypes['ElementTree'] = \
-        {"builder": treebuilders.getTreeBuilder("etree", ElementTree, fullTree=True),
-         "walker": treewalkers.getTreeWalker("etree", ElementTree)}
-
-try:
-    import xml.etree.cElementTree as ElementTree
-except ImportError:
-    pass
-else:
-    treeTypes['cElementTree'] = \
-        {"builder": treebuilders.getTreeBuilder("etree", ElementTree, fullTree=True),
-         "walker": treewalkers.getTreeWalker("etree", ElementTree)}
-
-
-try:
-    import lxml.etree as ElementTree  # flake8: noqa
-except ImportError:
-    pass
-else:
-    treeTypes['lxml_native'] = \
-        {"builder": treebuilders.getTreeBuilder("lxml"),
-         "walker": treewalkers.getTreeWalker("lxml")}
-
-
-try:
-    import genshi  # flake8: noqa
-except ImportError:
-    pass
-else:
-    treeTypes["genshi"] = \
-        {"builder": treebuilders.getTreeBuilder("dom"),
-         "adapter": lambda tree: treeadapters.genshi.to_genshi(treewalkers.getTreeWalker("dom")(tree)),
-         "walker": treewalkers.getTreeWalker("genshi")}
 
 import re
 attrlist = re.compile(r"^(\s+)\w+=.*(\n\1\w+=.*)+", re.M)
@@ -73,80 +17,29 @@ def sortattrs(x):
     return "\n".join(lines)
 
 
-class TokenTestCase(unittest.TestCase):
-    def test_all_tokens(self):
-        expected = [
-            {'data': {}, 'type': 'StartTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'html'},
-            {'data': {}, 'type': 'StartTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'head'},
-            {'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'head'},
-            {'data': {}, 'type': 'StartTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'body'},
-            {'data': 'a', 'type': 'Characters'},
-            {'data': {}, 'type': 'StartTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'div'},
-            {'data': 'b', 'type': 'Characters'},
-            {'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'div'},
-            {'data': 'c', 'type': 'Characters'},
-            {'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'body'},
-            {'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'html'}
-        ]
-        for treeName, treeCls in sorted(treeTypes.items()):
-            p = html5parser.HTMLParser(tree=treeCls["builder"])
-            document = p.parse("<html><head></head><body>a<div>b</div>c</body></html>")
-            document = treeCls.get("adapter", lambda x: x)(document)
-            output = Lint(treeCls["walker"](document))
-            for expectedToken, outputToken in zip(expected, output):
-                self.assertEqual(expectedToken, outputToken)
-
-
-def runTreewalkerTest(innerHTML, input, expected, errors, treeClass):
-    warnings.resetwarnings()
-    warnings.simplefilter("error")
-    try:
-        p = html5parser.HTMLParser(tree=treeClass["builder"])
-        if innerHTML:
-            document = p.parseFragment(input, innerHTML)
-        else:
-            document = p.parse(input)
-    except constants.DataLossWarning:
-        # Ignore testcases we know we don't pass
-        return
-
-    document = treeClass.get("adapter", lambda x: x)(document)
-    try:
-        output = treewalkers.pprint(Lint(treeClass["walker"](document)))
-        output = attrlist.sub(sortattrs, output)
-        expected = attrlist.sub(sortattrs, convertExpected(expected))
-        diff = "".join(unified_diff([line + "\n" for line in expected.splitlines()],
-                                    [line + "\n" for line in output.splitlines()],
-                                    "Expected", "Received"))
-        assert expected == output, "\n".join([
-            "", "Input:", input,
-                "", "Expected:", expected,
-                "", "Received:", output,
-                "", "Diff:", diff,
-        ])
-    except NotImplementedError:
-        pass  # Amnesty for those that confess...
-
-
-def test_treewalker():
-    sys.stdout.write('Testing tree walkers ' + " ".join(list(treeTypes.keys())) + "\n")
-
+def test_all_tokens():
+    expected = [
+        {'data': {}, 'type': 'StartTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'html'},
+        {'data': {}, 'type': 'StartTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'head'},
+        {'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'head'},
+        {'data': {}, 'type': 'StartTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'body'},
+        {'data': 'a', 'type': 'Characters'},
+        {'data': {}, 'type': 'StartTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'div'},
+        {'data': 'b', 'type': 'Characters'},
+        {'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'div'},
+        {'data': 'c', 'type': 'Characters'},
+        {'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'body'},
+        {'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'html'}
+    ]
     for treeName, treeCls in sorted(treeTypes.items()):
-        files = get_data_files('tree-construction')
-        for filename in files:
-            testName = os.path.basename(filename).replace(".dat", "")
-            if testName in ("template",):
-                continue
-
-            tests = TestData(filename, "data")
-
-            for index, test in enumerate(tests):
-                (input, errors,
-                 innerHTML, expected) = [test[key] for key in ("data", "errors",
-                                                               "document-fragment",
-                                                               "document")]
-                errors = errors.split("\n")
-                yield runTreewalkerTest, innerHTML, input, expected, errors, treeCls
+        if treeCls is None:
+            continue
+        p = html5parser.HTMLParser(tree=treeCls["builder"])
+        document = p.parse("<html><head></head><body>a<div>b</div>c</body></html>")
+        document = treeCls.get("adapter", lambda x: x)(document)
+        output = Lint(treeCls["walker"](document))
+        for expectedToken, outputToken in zip(expected, output):
+            assert expectedToken == outputToken
 
 
 def set_attribute_on_first_child(docfrag, name, value, treeName):
@@ -164,6 +57,8 @@ def set_attribute_on_first_child(docfrag, name, value, treeName):
 def runTreewalkerEditTest(intext, expected, attrs_to_add, tree):
     """tests what happens when we add attributes to the intext"""
     treeName, treeClass = tree
+    if treeClass is None:
+        pytest.skip("Treebuilder not loaded")
     parser = html5parser.HTMLParser(tree=treeClass["builder"])
     document = parser.parseFragment(intext)
     for nom, val in attrs_to_add:
@@ -172,7 +67,7 @@ def runTreewalkerEditTest(intext, expected, attrs_to_add, tree):
     document = treeClass.get("adapter", lambda x: x)(document)
     output = treewalkers.pprint(treeClass["walker"](document))
     output = attrlist.sub(sortattrs, output)
-    if not output in expected:
+    if output not in expected:
         raise AssertionError("TreewalkerEditTest: %s\nExpected:\n%s\nReceived:\n%s" % (treeName, expected, output))
 
 

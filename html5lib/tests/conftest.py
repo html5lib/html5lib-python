@@ -1,10 +1,12 @@
 import os.path
 
 from .tree_construction import TreeConstructionFile
+from .tokenizer import TokenizerFile
 
 _dir = os.path.abspath(os.path.dirname(__file__))
 _testdata = os.path.join(_dir, "testdata")
 _tree_construction = os.path.join(_testdata, "tree-construction")
+_tokenizer = os.path.join(_testdata, "tokenizer")
 
 
 def pytest_collectstart():
@@ -19,3 +21,6 @@ def pytest_collect_file(path, parent):
             return
         if path.ext == ".dat":
             return TreeConstructionFile(path, parent)
+    elif dir == _tokenizer:
+        if path.ext == ".test":
+            return TokenizerFile(path, parent)

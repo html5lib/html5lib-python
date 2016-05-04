@@ -13,16 +13,24 @@ sys.path.insert(0, os.path.abspath(os.path.join(base_path,
                                                 os.path.pardir,
                                                 os.path.pardir)))
 
-from html5lib import treebuilders
+from html5lib import treebuilders, treewalkers, treeadapters
 del base_path
 
 # Build a dict of available trees
-treeTypes = {"DOM": treebuilders.getTreeBuilder("dom")}
+treeTypes = {}
 
-# Try whatever etree implementations are available from a list that are
-#"supposed" to work
+# DOM impls
+treeTypes["DOM"] = {
+    "builder": treebuilders.getTreeBuilder("dom"),
+    "walker": treewalkers.getTreeWalker("dom")
+}
+
+# ElementTree impls
 import xml.etree.ElementTree as ElementTree
-treeTypes['ElementTree'] = treebuilders.getTreeBuilder("etree", ElementTree, fullTree=True)
+treeTypes['ElementTree'] = {
+    "builder": treebuilders.getTreeBuilder("etree", ElementTree, fullTree=True),
+    "walker": treewalkers.getTreeWalker("etree", ElementTree)
+}
 
 try:
     import xml.etree.cElementTree as cElementTree
@@ -33,14 +41,32 @@ else:
     if cElementTree.Element is ElementTree.Element:
         treeTypes['cElementTree'] = None
     else:
-        treeTypes['cElementTree'] = treebuilders.getTreeBuilder("etree", cElementTree, fullTree=True)
+        treeTypes['cElementTree'] = {
+            "builder": treebuilders.getTreeBuilder("etree", cElementTree, fullTree=True),
+            "walker": treewalkers.getTreeWalker("etree", cElementTree)
+        }
 
 try:
     import lxml.etree as lxml  # flake8: noqa
 except ImportError:
     treeTypes['lxml'] = None
 else:
-    treeTypes['lxml'] = treebuilders.getTreeBuilder("lxml")
+    treeTypes['lxml'] = {
+        "builder": treebuilders.getTreeBuilder("lxml"),
+        "walker": treewalkers.getTreeWalker("lxml")
+    }
+
+# Genshi impls
+try:
+    import genshi  # flake8: noqa
+except ImportError:
+    pass
+else:
+    treeTypes["genshi"] = {
+        "builder": treebuilders.getTreeBuilder("dom"),
+        "adapter": lambda tree: treeadapters.genshi.to_genshi(treewalkers.getTreeWalker("dom")(tree)),
+        "walker": treewalkers.getTreeWalker("genshi")
+    }
 
 
 def get_data_files(subdirectory, files='*.dat'):
