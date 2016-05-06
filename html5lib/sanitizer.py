@@ -39,11 +39,15 @@ class HTMLSanitizerMixin(object):
                            'sub', 'sup', 'table', 'tbody', 'td', 'textarea', 'time', 'tfoot',
                            'th', 'thead', 'tr', 'tt', 'u', 'ul', 'var', 'video']
 
-    mathml_elements = ['maction', 'math', 'merror', 'mfrac', 'mi',
-                       'mmultiscripts', 'mn', 'mo', 'mover', 'mpadded', 'mphantom',
-                       'mprescripts', 'mroot', 'mrow', 'mspace', 'msqrt', 'mstyle', 'msub',
-                       'msubsup', 'msup', 'mtable', 'mtd', 'mtext', 'mtr', 'munder',
-                       'munderover', 'none']
+    mathml_elements = ['annotation', 'annotation-xml', 'maction', 'maligngroup',
+                       'malignmark', 'math', 'menclose', 'merror', 'mfenced',
+                       'mfrac', 'mglyph', 'mi', 'mlabeledtr', 'mlongdiv',
+                       'mmultiscripts', 'mn', 'mo', 'mover', 'mpadded',
+                       'mphantom', 'mprescripts', 'mroot', 'mrow', 'ms',
+                       'mscarries', 'mscarry', 'msgroup', 'msline', 'mstack',
+                       'mspace', 'msqrt', 'msrow', 'mstack' 'mstyle', 'msub',
+                       'msubsup', 'msup', 'mtable', 'mtd', 'mtext', 'mtr',
+                       'munder', 'munderover', 'none', 'semantics']
 
     svg_elements = ['a', 'animate', 'animateColor', 'animateMotion',
                     'animateTransform', 'clipPath', 'circle', 'defs', 'desc', 'ellipse',
@@ -76,15 +80,33 @@ class HTMLSanitizerMixin(object):
                              'urn', 'valign', 'value', 'variable', 'volume', 'vspace', 'vrml',
                              'width', 'wrap', 'xml:lang']
 
-    mathml_attributes = ['actiontype', 'align', 'columnalign', 'columnalign',
-                         'columnalign', 'columnlines', 'columnspacing', 'columnspan', 'depth',
-                         'display', 'displaystyle', 'equalcolumns', 'equalrows', 'fence',
-                         'fontstyle', 'fontweight', 'frame', 'height', 'linethickness', 'lspace',
-                         'mathbackground', 'mathcolor', 'mathvariant', 'mathvariant', 'maxsize',
-                         'minsize', 'other', 'rowalign', 'rowalign', 'rowalign', 'rowlines',
-                         'rowspacing', 'rowspan', 'rspace', 'scriptlevel', 'selection',
-                         'separator', 'stretchy', 'width', 'width', 'xlink:href', 'xlink:show',
-                         'xlink:type', 'xmlns', 'xmlns:xlink']
+    mathml_attributes = ['accent', 'accentunder', 'actiontype', 'align',
+                         'alignmentscope', 'altimg', 'altimg-height',
+                         'altimg-valign', 'altimg-width', 'alttext', 'bevelled',
+                         'charalign', 'close', 'columnalign', 'columnlines',
+                         'columnspacing', 'columnspan', 'columnwidth',
+                         'crossout', 'decimalpoint', 'denomalign', 'depth',
+                         'dir', 'display', 'displaystyle', 'edge', 'encoding',
+                         'equalcolumns', 'equalrows', 'fence', 'fontstyle',
+                         'fontweight', 'form', 'frame', 'framespacing',
+                         'groupalign', 'height', 'href', 'id', 'indentalign',
+                         'indentalignfirst', 'indentalignlast', 'indentshift',
+                         'indentshiftfirst', 'indentshiftlast', 'indenttarget',
+                         'infixlinebreakstyle', 'largeop', 'length',
+                         'linebreak', 'linebreakmultchar', 'linebreakstyle',
+                         'lineleading', 'linethickness', 'location',
+                         'longdivstyle', 'lquote', 'lspace', 'mathbackground',
+                         'mathcolor', 'mathsize', 'mathvariant', 'maxsize',
+                         'minlabelspacing', 'minsize', 'movablelimits',
+                         'notation', 'numalign', 'open', 'other', 'overflow',
+                         'position', 'rowalign', 'rowlines', 'rowspacing',
+                         'rowspan', 'rquote', 'rspace', 'scriptlevel',
+                         'scriptminsize', 'scriptsizemultiplier', 'selection',
+                         'separator', 'separators', 'shift', 'side', 'src',
+                         'stackalign', 'stretchy', 'subscriptshift',
+                         'superscriptshift', 'symmetric', 'voffset', 'width',
+                         'xlink:href', 'xlink:show', 'xlink:type', 'xmlns',
+                         'xmlns:xlink']
 
     svg_attributes = ['accent-height', 'accumulate', 'additive', 'alphabetic',
                       'arabic-form', 'ascent', 'attributeName', 'attributeType',
