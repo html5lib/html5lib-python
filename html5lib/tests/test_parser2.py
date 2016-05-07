@@ -93,3 +93,9 @@ def test_debug_log():
 def test_no_duplicate_clone():
     frag = parseFragment("<b><em><foo><foob><fooc><aside></b></em>")
     assert len(frag) == 2
+
+
+def test_self_closing_col():
+    parser = HTMLParser()
+    parser.parseFragment('<table><colgroup><col /></colgroup></table>')
+    assert not parser.errors

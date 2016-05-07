@@ -41,3 +41,4 @@ Patches and suggestions
 - Jim Baker
 - Michael[tm] Smith
 - Marc Abramowitz
+- Jon Dufresne

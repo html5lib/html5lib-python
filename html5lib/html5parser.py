@@ -171,8 +171,10 @@ class HTMLParser(object):
         ParseErrorToken = tokenTypes["ParseError"]
 
         for token in self.normalizedTokens():
+            prev_token = None
             new_token = token
             while new_token is not None:
+                prev_token = new_token
                 currentNode = self.tree.openElements[-1] if self.tree.openElements else None
                 currentNodeNamespace = currentNode.namespace if currentNode else None
                 currentNodeName = currentNode.name if currentNode else None
@@ -211,10 +213,10 @@ class HTMLParser(object):
                     elif type == DoctypeToken:
                         new_token = phase.processDoctype(new_token)
 
-            if (type == StartTagToken and token["selfClosing"] and
-                    not token["selfClosingAcknowledged"]):
+            if (type == StartTagToken and prev_token["selfClosing"] and
+                    not prev_token["selfClosingAcknowledged"]):
                 self.parseError("non-void-element-with-trailing-solidus",
-                                {"name": token["name"]})
+                                {"name": prev_token["name"]})
 
         # When the loop finishes it's EOF
         reprocess = True
@@ -1933,6 +1935,7 @@ def getPhases(debug):
         def startTagCol(self, token):
             self.tree.insertElement(token)
             self.tree.openElements.pop()
+            token["selfClosingAcknowledged"] = True
 
         def startTagOther(self, token):
             ignoreEndTag = self.ignoreEndTagColgroup()
