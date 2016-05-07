@@ -10,15 +10,16 @@ from . import treebuilders
 from .treebuilders._base import Marker
 
 from . import utils
-from . import constants
-from .constants import spaceCharacters, asciiUpper2Lower
-from .constants import specialElements
-from .constants import headingElements
-from .constants import cdataElements, rcdataElements
-from .constants import tokenTypes, ReparseException, namespaces
-from .constants import htmlIntegrationPointElements, mathmlTextIntegrationPointElements
-from .constants import adjustForeignAttributes as adjustForeignAttributesMap
-from .constants import E
+from .constants import (
+    spaceCharacters, asciiUpper2Lower,
+    specialElements, headingElements, cdataElements, rcdataElements,
+    tokenTypes, tagTokenTypes,
+    namespaces,
+    htmlIntegrationPointElements, mathmlTextIntegrationPointElements,
+    adjustForeignAttributes as adjustForeignAttributesMap,
+    E,
+    ReparseException
+)
 
 
 def parse(doc, treebuilder="etree", encoding=None,
@@ -434,7 +435,7 @@ def getPhases(debug):
     def log(function):
         """Logger that records which phase processes each token"""
         type_names = dict((value, key) for key, value in
-                          constants.tokenTypes.items())
+                          tokenTypes.items())
 
         def wrapped(self, *args, **kwargs):
             if function.__name__.startswith("process") and len(args) > 0:
@@ -443,7 +444,7 @@ def getPhases(debug):
                     info = {"type": type_names[token['type']]}
                 except:
                     raise
-                if token['type'] in constants.tagTokenTypes:
+                if token['type'] in tagTokenTypes:
                     info["name"] = token['name']
 
                 self.parser.log.append((self.parser.tokenizer.state.__name__,
