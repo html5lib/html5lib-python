@@ -41,9 +41,6 @@
                     ]
                 ]
             ],
-            "xhtml": [
-                "<button disabled=\"disabled\">"
-            ],
             "description": "quote_attr_values=true",
             "options": {
                 "quote_attr_values": true
@@ -66,9 +63,6 @@
                         }
                     ]
                 ]
-            ],
-            "xhtml": [
-                "<div irrelevant=\"irrelevant\">"
             ],
             "description": "quote_attr_values=true with irrelevant",
             "options": {
@@ -125,9 +119,6 @@
                         }
                     ]
                 ]
-            ],
-            "xhtml": [
-                "<div irrelevant=\"irrelevant\">"
             ],
             "description": "minimize_boolean_attributes=false",
             "options": {

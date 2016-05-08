@@ -17,9 +17,6 @@
                     "head"
                 ]
             ],
-            "xhtml": [
-                "<head></head>"
-            ],
             "description": "no encoding",
             "options": {
                 "inject_meta_charset": true
@@ -41,9 +38,6 @@
                     "http://www.w3.org/1999/xhtml",
                     "head"
                 ]
-            ],
-            "xhtml": [
-                "<head><meta charset=\"utf-8\" /></head>"
             ],
             "description": "empytag head",
             "options": {
@@ -83,9 +77,6 @@
                     "head"
                 ]
             ],
-            "xhtml": [
-                "<head><meta charset=\"utf-8\" /><title>foo</title></head>"
-            ],
             "description": "head w/title",
             "options": {
                 "encoding": "utf-8",
@@ -119,9 +110,6 @@
                     "http://www.w3.org/1999/xhtml",
                     "head"
                 ]
-            ],
-            "xhtml": [
-                "<head><meta charset=\"utf-8\" /></head>"
             ],
             "description": "head w/meta-charset",
             "options": {
@@ -169,10 +157,6 @@
                     "head"
                 ]
             ],
-            "xhtml": [
-                "<head><meta charset=\"utf-8\" /><meta charset=\"utf-8\" /></head>",
-                "<head><meta charset=\"utf-8\" /><meta charset=\"ascii\" /></head>"
-            ],
             "description": "head w/ two meta-charset",
             "options": {
                 "encoding": "utf-8",
@@ -211,9 +195,6 @@
                     "http://www.w3.org/1999/xhtml",
                     "head"
                 ]
-            ],
-            "xhtml": [
-                "<head><meta charset=\"utf-8\" /><meta content=\"noindex\" name=\"robots\" /></head>"
             ],
             "description": "head w/robots",
             "options": {
@@ -265,9 +246,6 @@
                     "head"
                 ]
             ],
-            "xhtml": [
-                "<head><meta content=\"noindex\" name=\"robots\" /><meta charset=\"utf-8\" /></head>"
-            ],
             "description": "head w/robots & charset",
             "options": {
                 "encoding": "utf-8",
@@ -306,9 +284,6 @@
                     "http://www.w3.org/1999/xhtml",
                     "head"
                 ]
-            ],
-            "xhtml": [
-                "<head><meta content=\"text/html; charset=utf-8\" http-equiv=\"content-type\" /></head>"
             ],
             "description": "head w/ charset in http-equiv content-type",
             "options": {
@@ -364,9 +339,6 @@
                     "http://www.w3.org/1999/xhtml",
                     "head"
                 ]
-            ],
-            "xhtml": [
-                "<head><meta content=\"noindex\" name=\"robots\" /><meta content=\"text/html; charset=utf-8\" http-equiv=\"content-type\" /></head>"
             ],
             "description": "head w/robots & charset in http-equiv content-type",
             "options": {
