@@ -418,6 +418,7 @@ class HTMLParser(object):
         self.phase = self.phases["text"]
 
 
+@utils.memoize
 def getPhases(debug):
     def log(function):
         """Logger that records which phase processes each token"""
