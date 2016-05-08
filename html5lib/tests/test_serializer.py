@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, unicode_literals
 
+import os
 import json
 import unittest
 
@@ -170,7 +171,7 @@ if "lxml" in optionals_loaded:
 
 
 def test_serializer():
-    for filename in get_data_files('serializer', '*.test'):
+    for filename in get_data_files('serializer-testdata', '*.test', os.path.dirname(__file__)):
         with open(filename) as fp:
             tests = json.load(fp)
             for index, test in enumerate(tests['tests']):

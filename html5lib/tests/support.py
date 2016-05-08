@@ -69,8 +69,8 @@ else:
     }
 
 
-def get_data_files(subdirectory, files='*.dat'):
-    return sorted(glob.glob(os.path.join(test_dir, subdirectory, files)))
+def get_data_files(subdirectory, files='*.dat', search_dir=test_dir):
+    return sorted(glob.glob(os.path.join(search_dir, subdirectory, files)))
 
 
 class DefaultDict(dict):
