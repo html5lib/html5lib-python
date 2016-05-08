@@ -184,6 +184,12 @@ class HTMLSerializer(object):
         if encoding and self.inject_meta_charset:
             from ..filters.inject_meta_charset import Filter
             treewalker = Filter(treewalker, encoding)
+        # Alphabetical attributes is here under the assumption that none of
+        # the later filters add or change order of attributes; it needs to be
+        # before the sanitizer so escaped elements come out correctly
+        if self.alphabetical_attributes:
+            from ..filters.alphabeticalattributes import Filter
+            treewalker = Filter(treewalker)
         # WhitespaceFilter should be used before OptionalTagFilter
         # for maximum efficiently of this latter filter
         if self.strip_whitespace:
@@ -194,11 +200,6 @@ class HTMLSerializer(object):
             treewalker = Filter(treewalker)
         if self.omit_optional_tags:
             from ..filters.optionaltags import Filter
-            treewalker = Filter(treewalker)
-        # Alphabetical attributes must be last, as other filters
-        # could add attributes and alter the order
-        if self.alphabetical_attributes:
-            from ..filters.alphabeticalattributes import Filter
             treewalker = Filter(treewalker)
 
         for token in treewalker:
