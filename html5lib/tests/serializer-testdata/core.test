@@ -295,20 +295,6 @@
         },
         {
             "expected": [
-                "<img>"
-            ],
-            "input": [
-                [
-                    "StartTag",
-                    "http://www.w3.org/1999/xhtml",
-                    "img",
-                    {}
-                ]
-            ],
-            "description": "void element (as StartTag token)"
-        },
-        {
-            "expected": [
                 "<!DOCTYPE foo>"
             ],
             "input": [

@@ -347,7 +347,7 @@
         },
         {
             "expected": [
-                "<foo>"
+                "<meta>"
             ],
             "input": [
                 [
@@ -358,7 +358,7 @@
                 ],
                 [
                     "EmptyTag",
-                    "foo",
+                    "meta",
                     {}
                 ]
             ],
@@ -2094,7 +2094,7 @@
                     {}
                 ],
                 [
-                    "StartTag",
+                    "EmptyTag",
                     "http://www.w3.org/1999/xhtml",
                     "col",
                     {}

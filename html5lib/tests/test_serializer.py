@@ -13,6 +13,7 @@ except AttributeError:
 
 import html5lib
 from html5lib import constants
+from html5lib.filters.lint import Filter as Lint
 from html5lib.serializer import HTMLSerializer, serialize
 from html5lib.treewalkers._base import TreeWalker
 
@@ -83,7 +84,7 @@ class JsonWalker(TreeWalker):
 
 def serialize_html(input, options):
     options = dict([(str(k), v) for k, v in options.items()])
-    stream = JsonWalker(input)
+    stream = Lint(JsonWalker(input), False)
     serializer = HTMLSerializer(alphabetical_attributes=True, **options)
     return serializer.render(stream, options.get("encoding", None))
 
@@ -124,9 +125,6 @@ class EncodingTestCase(unittest.TestCase):
 
     def testStartTagName(self):
         self.throwsWithLatin1([["StartTag", "http://www.w3.org/1999/xhtml", "\u0101", []]])
-
-    def testEmptyTagName(self):
-        self.throwsWithLatin1([["EmptyTag", "http://www.w3.org/1999/xhtml", "\u0101", []]])
 
     def testAttributeName(self):
         self.throwsWithLatin1([["StartTag", "http://www.w3.org/1999/xhtml", "span", [{"namespace": None, "name": "\u0101", "value": "potato"}]]])

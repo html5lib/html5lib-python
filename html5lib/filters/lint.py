@@ -10,6 +10,10 @@ spaceCharacters = "".join(spaceCharacters)
 
 
 class Filter(_base.Filter):
+    def __init__(self, source, require_matching_tags=True):
+        super(Filter, self).__init__(source)
+        self.require_matching_tags = require_matching_tags
+
     def __iter__(self):
         open_elements = []
         for token in _base.Filter.__iter__(self):
@@ -26,7 +30,7 @@ class Filter(_base.Filter):
                     assert type == "EmptyTag"
                 else:
                     assert type == "StartTag"
-                if type == "StartTag":
+                if type == "StartTag" and self.require_matching_tags:
                     open_elements.append((namespace, name))
                 for (namespace, name), value in token["data"].items():
                     assert namespace is None or isinstance(namespace, text_type)
@@ -44,7 +48,7 @@ class Filter(_base.Filter):
                 assert name != ""
                 if (not namespace or namespace == namespaces["html"]) and name in voidElements:
                     assert False, "Void element reported as EndTag token: %(tag)s" % {"tag": name}
-                else:
+                elif self.require_matching_tags:
                     start = open_elements.pop()
                     assert start == (namespace, name)
 
