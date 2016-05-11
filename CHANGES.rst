@@ -6,7 +6,7 @@ Change Log
 
 Released on XXX
 
-* Added ordereddict as a mandatory dependency on Python 2.6.
+* **Added ordereddict as a mandatory dependency on Python 2.6.**
 
 * Added ``lxml``, ``genshi``, ``datrie``, ``charade``, and ``all``
   extras that will do the right thing based on the specific
@@ -16,17 +16,22 @@ Released on XXX
 
 * Cease supporting DATrie under PyPy.
 
-* Remove ``PullDOM`` support, as this hasn't ever been properly
+* **Remove ``PullDOM`` support, as this hasn't ever been properly
   tested, doesn't entirely work, and as far as I can tell is
-  completely unused by anyone.
+  completely unused by anyone.**
 
 * Move testsuite to ``py.test``.
 
-* Fix #124: move to webencodings for decoding the input byte stream;
+* **Fix #124: move to webencodings for decoding the input byte stream;
   this makes html5lib compliant with the Encoding Standard, and
-  introduces a required dependency on webencodings.
+  introduces a required dependency on webencodings.**
 
-* Cease supporting Python 3.2 (in both CPython and PyPy forms).
+* **Cease supporting Python 3.2 (in both CPython and PyPy forms).**
+
+* **Fix comments containing double-dash with lxml 3.5 and above.**
+
+* **Use scripting disabled by default (as we don't implement
+  scripting).**
 
 
 0.9999999/1.0b8

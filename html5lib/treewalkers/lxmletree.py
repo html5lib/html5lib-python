@@ -15,7 +15,7 @@ def ensure_str(s):
     elif isinstance(s, text_type):
         return s
     else:
-        return s.decode("utf-8", "strict")
+        return s.decode("ascii", "strict")
 
 
 class Root(object):
