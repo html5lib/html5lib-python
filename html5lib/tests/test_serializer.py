@@ -2,16 +2,11 @@ from __future__ import absolute_import, division, unicode_literals
 
 import os
 import json
-import unittest
+
+import pytest
 
 from .support import get_data_files
 
-try:
-    unittest.TestCase.assertEqual
-except AttributeError:
-    unittest.TestCase.assertEqual = unittest.TestCase.assertEquals
-
-import html5lib
 from html5lib import constants
 from html5lib.filters.lint import Filter as Lint
 from html5lib.serializer import HTMLSerializer, serialize
@@ -102,70 +97,83 @@ def runSerializerTest(input, expected, options):
         assert False, "Expected: %s, Received: %s" % (expected, result)
 
 
-class EncodingTestCase(unittest.TestCase):
-    def throwsWithLatin1(self, input):
-        self.assertRaises(UnicodeEncodeError, serialize_html, input, {"encoding": "iso-8859-1"})
-
-    def testDoctypeName(self):
-        self.throwsWithLatin1([["Doctype", "\u0101"]])
-
-    def testDoctypePublicId(self):
-        self.throwsWithLatin1([["Doctype", "potato", "\u0101"]])
-
-    def testDoctypeSystemId(self):
-        self.throwsWithLatin1([["Doctype", "potato", "potato", "\u0101"]])
-
-    def testCdataCharacters(self):
-        runSerializerTest([["StartTag", "http://www.w3.org/1999/xhtml", "style", {}], ["Characters", "\u0101"]],
-                          ["<style>&amacr;"], {"encoding": "iso-8859-1"})
-
-    def testCharacters(self):
-        runSerializerTest([["Characters", "\u0101"]],
-                          ["&amacr;"], {"encoding": "iso-8859-1"})
-
-    def testStartTagName(self):
-        self.throwsWithLatin1([["StartTag", "http://www.w3.org/1999/xhtml", "\u0101", []]])
-
-    def testAttributeName(self):
-        self.throwsWithLatin1([["StartTag", "http://www.w3.org/1999/xhtml", "span", [{"namespace": None, "name": "\u0101", "value": "potato"}]]])
-
-    def testAttributeValue(self):
-        runSerializerTest([["StartTag", "http://www.w3.org/1999/xhtml", "span",
-                            [{"namespace": None, "name": "potato", "value": "\u0101"}]]],
-                          ["<span potato=&amacr;>"], {"encoding": "iso-8859-1"})
-
-    def testEndTagName(self):
-        self.throwsWithLatin1([["EndTag", "http://www.w3.org/1999/xhtml", "\u0101"]])
-
-    def testComment(self):
-        self.throwsWithLatin1([["Comment", "\u0101"]])
+def throwsWithLatin1(input):
+    with pytest.raises(UnicodeEncodeError):
+        serialize_html(input, {"encoding": "iso-8859-1"})
 
 
-if "lxml" in optionals_loaded:
-    class LxmlTestCase(unittest.TestCase):
-        def setUp(self):
-            self.parser = etree.XMLParser(resolve_entities=False)
-            self.treewalker = html5lib.getTreeWalker("lxml")
-            self.serializer = HTMLSerializer()
+def testDoctypeName():
+    throwsWithLatin1([["Doctype", "\u0101"]])
 
-        def testEntityReplacement(self):
-            doc = """<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&beta;</html>"""
-            tree = etree.fromstring(doc, parser=self.parser).getroottree()
-            result = serialize(tree, tree="lxml", omit_optional_tags=False)
-            self.assertEqual("""<!DOCTYPE html SYSTEM "about:legacy-compat"><html>\u03B2</html>""", result)
 
-        def testEntityXML(self):
-            doc = """<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&gt;</html>"""
-            tree = etree.fromstring(doc, parser=self.parser).getroottree()
-            result = serialize(tree, tree="lxml", omit_optional_tags=False)
-            self.assertEqual("""<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&gt;</html>""", result)
+def testDoctypePublicId():
+    throwsWithLatin1([["Doctype", "potato", "\u0101"]])
 
-        def testEntityNoResolve(self):
-            doc = """<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&beta;</html>"""
-            tree = etree.fromstring(doc, parser=self.parser).getroottree()
-            result = serialize(tree, tree="lxml", omit_optional_tags=False,
-                                          resolve_entities=False)
-            self.assertEqual("""<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&beta;</html>""", result)
+
+def testDoctypeSystemId():
+    throwsWithLatin1([["Doctype", "potato", "potato", "\u0101"]])
+
+
+def testCdataCharacters():
+    runSerializerTest([["StartTag", "http://www.w3.org/1999/xhtml", "style", {}], ["Characters", "\u0101"]],
+                      ["<style>&amacr;"], {"encoding": "iso-8859-1"})
+
+
+def testCharacters():
+    runSerializerTest([["Characters", "\u0101"]],
+                      ["&amacr;"], {"encoding": "iso-8859-1"})
+
+
+def testStartTagName():
+    throwsWithLatin1([["StartTag", "http://www.w3.org/1999/xhtml", "\u0101", []]])
+
+
+def testAttributeName():
+    throwsWithLatin1([["StartTag", "http://www.w3.org/1999/xhtml", "span", [{"namespace": None, "name": "\u0101", "value": "potato"}]]])
+
+
+def testAttributeValue():
+    runSerializerTest([["StartTag", "http://www.w3.org/1999/xhtml", "span",
+                        [{"namespace": None, "name": "potato", "value": "\u0101"}]]],
+                      ["<span potato=&amacr;>"], {"encoding": "iso-8859-1"})
+
+
+def testEndTagName():
+    throwsWithLatin1([["EndTag", "http://www.w3.org/1999/xhtml", "\u0101"]])
+
+
+def testComment():
+    throwsWithLatin1([["Comment", "\u0101"]])
+
+
+@pytest.fixture
+def lxml_parser():
+    return etree.XMLParser(resolve_entities=False)
+
+
+@pytest.mark.skipif("lxml" not in optionals_loaded, reason="lxml not importable")
+def testEntityReplacement(lxml_parser):
+    doc = '<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&beta;</html>'
+    tree = etree.fromstring(doc, parser=lxml_parser).getroottree()
+    result = serialize(tree, tree="lxml", omit_optional_tags=False)
+    assert result == '<!DOCTYPE html SYSTEM "about:legacy-compat"><html>\u03B2</html>'
+
+
+@pytest.mark.skipif("lxml" not in optionals_loaded, reason="lxml not importable")
+def testEntityXML(lxml_parser):
+    doc = '<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&gt;</html>'
+    tree = etree.fromstring(doc, parser=lxml_parser).getroottree()
+    result = serialize(tree, tree="lxml", omit_optional_tags=False)
+    assert result == '<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&gt;</html>'
+
+
+@pytest.mark.skipif("lxml" not in optionals_loaded, reason="lxml not importable")
+def testEntityNoResolve(lxml_parser):
+    doc = '<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&beta;</html>'
+    tree = etree.fromstring(doc, parser=lxml_parser).getroottree()
+    result = serialize(tree, tree="lxml", omit_optional_tags=False,
+                                  resolve_entities=False)
+    assert result == '<!DOCTYPE html SYSTEM "about:legacy-compat"><html>&beta;</html>'
 
 
 def test_serializer():
