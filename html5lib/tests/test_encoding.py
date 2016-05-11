@@ -8,7 +8,7 @@ try:
 except AttributeError:
     unittest.TestCase.assertEqual = unittest.TestCase.assertEquals
 
-from .support import get_data_files, TestData, test_dir, errorMessage
+from .support import get_data_files, test_dir, errorMessage, TestData as _TestData
 from html5lib import HTMLParser, inputstream
 
 
@@ -56,7 +56,7 @@ def runPreScanEncodingTest(data, encoding):
 
 def test_encoding():
     for filename in get_data_files("encoding"):
-        tests = TestData(filename, b"data", encoding=None)
+        tests = _TestData(filename, b"data", encoding=None)
         for idx, test in enumerate(tests):
             yield (runParserEncodingTest, test[b'data'], test[b'encoding'])
             yield (runPreScanEncodingTest, test[b'data'], test[b'encoding'])
