@@ -283,6 +283,12 @@ E = {
         "Element %(name)s not allowed in a non-html context",
     "unexpected-end-tag-before-html":
         "Unexpected end tag (%(name)s) before html.",
+    "unexpected-inhead-noscript-tag":
+        "Element %(name)s not allowed in a inhead-noscript context",
+    "eof-in-head-noscript":
+        "Unexpected end of file. Expected inhead-noscript content",
+    "char-in-head-noscript":
+        "Unexpected non-space character. Expected inhead-noscript content",
     "XXX-undefined-error":
         "Undefined error (this sucks and should be fixed)",
 }

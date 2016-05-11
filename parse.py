@@ -65,11 +65,12 @@ def parse():
     if opts.profile:
         import cProfile
         import pstats
-        cProfile.runctx("run(parseMethod, f, encoding)", None,
+        cProfile.runctx("run(parseMethod, f, encoding, scripting)", None,
                         {"run": run,
                          "parseMethod": parseMethod,
                          "f": f,
-                         "encoding": encoding},
+                         "encoding": encoding,
+                         "scripting": opts.scripting},
                         "stats.prof")
         # XXX - We should use a temp file here
         stats = pstats.Stats('stats.prof')
@@ -79,7 +80,7 @@ def parse():
     elif opts.time:
         import time
         t0 = time.time()
-        document = run(parseMethod, f, encoding)
+        document = run(parseMethod, f, encoding, opts.scripting)
         t1 = time.time()
         if document:
             printOutput(p, document, opts)
@@ -88,13 +89,13 @@ def parse():
         else:
             sys.stderr.write("\n\nRun took: %fs"%(t1-t0))
     else:
-        document = run(parseMethod, f, encoding)
+        document = run(parseMethod, f, encoding, opts.scripting)
         if document:
             printOutput(p, document, opts)
 
-def run(parseMethod, f, encoding):
+def run(parseMethod, f, encoding, scripting):
     try:
-        document = parseMethod(f, encoding=encoding)
+        document = parseMethod(f, encoding=encoding, scripting=scripting)
     except:
         document = None
         traceback.print_exc()
@@ -167,6 +168,9 @@ def getOptParser():
 
     parser.add_option("-f", "--fragment", action="store_true", default=False,
                       dest="fragment", help="Parse as a fragment")
+
+    parser.add_option("-s", "--scripting", action="store_true", default=False,
+                      dest="scripting", help="Handle noscript tags as if scripting was enabled")
 
     parser.add_option("", "--tree", action="store_true", default=False,
                       dest="tree", help="Output as debug tree")

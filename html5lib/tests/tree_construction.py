@@ -97,13 +97,17 @@ class ParserTest(pytest.Item):
         expected = convertExpected(self.test['document'])
         expectedErrors = self.test['errors'].split("\n") if self.test['errors'] else []
 
+        scripting = False
+        if 'script-on' in self.test:
+            scripting = True
+
         with warnings.catch_warnings():
             warnings.simplefilter("error")
             try:
                 if fragmentContainer:
-                    document = p.parseFragment(input, fragmentContainer)
+                    document = p.parseFragment(input, fragmentContainer, scripting=scripting)
                 else:
-                    document = p.parse(input)
+                    document = p.parse(input, scripting=scripting)
             except constants.DataLossWarning:
                 pytest.skip("data loss warning")
 
@@ -153,13 +157,17 @@ class TreeWalkerTest(pytest.Item):
         fragmentContainer = self.test['document-fragment']
         expected = convertExpected(self.test['document'])
 
+        scripting = False
+        if 'script-on' in self.test:
+            scripting = True
+
         with warnings.catch_warnings():
             warnings.simplefilter("error")
             try:
                 if fragmentContainer:
-                    document = p.parseFragment(input, fragmentContainer)
+                    document = p.parseFragment(input, fragmentContainer, scripting=scripting)
                 else:
-                    document = p.parse(input)
+                    document = p.parse(input, scripting=scripting)
             except constants.DataLossWarning:
                 pytest.skip("data loss warning")
 
