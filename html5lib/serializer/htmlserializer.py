@@ -155,6 +155,9 @@ class HTMLSerializer(object):
 
         .. _html5lib user documentation: http://code.google.com/p/html5lib/wiki/UserDocumentation
         """
+        unexpected_args = frozenset(kwargs) - frozenset(self.options)
+        if len(unexpected_args) > 0:
+            raise TypeError("__init__() got an unexpected keyword argument '%s'" % next(iter(unexpected_args)))
         if 'quote_char' in kwargs:
             self.use_best_quote_char = False
         for attr in self.options:
