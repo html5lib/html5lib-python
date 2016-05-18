@@ -79,9 +79,12 @@ class JsonWalker(TreeWalker):
 
 def serialize_html(input, options):
     options = dict([(str(k), v) for k, v in options.items()])
+    encoding = options.get("encoding", None)
+    if "encoding" in options:
+        del options["encoding"]
     stream = Lint(JsonWalker(input), False)
     serializer = HTMLSerializer(alphabetical_attributes=True, **options)
-    return serializer.render(stream, options.get("encoding", None))
+    return serializer.render(stream, encoding)
 
 
 def runSerializerTest(input, expected, options):
@@ -144,6 +147,11 @@ def testEndTagName():
 
 def testComment():
     throwsWithLatin1([["Comment", "\u0101"]])
+
+
+def testThrowsUnknownOption():
+    with pytest.raises(TypeError):
+        HTMLSerializer(foobar=None)
 
 
 @pytest.mark.parametrize("c", list("\t\n\u000C\x20\r\"'=<>`"))

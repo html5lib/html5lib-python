@@ -9,7 +9,7 @@ import os
 import traceback
 from optparse import OptionParser
 
-from html5lib import html5parser, sanitizer
+from html5lib import html5parser
 from html5lib.tokenizer import HTMLTokenizer
 from html5lib import treebuilders, serializer, treewalkers
 from html5lib import constants
@@ -50,10 +50,7 @@ def parse():
 
     treebuilder = treebuilders.getTreeBuilder(opts.treebuilder)
 
-    if opts.sanitize:
-        tokenizer = sanitizer.HTMLSanitizer
-    else:
-        tokenizer = HTMLTokenizer
+    tokenizer = HTMLTokenizer
 
     p = html5parser.HTMLParser(tree=treebuilder, tokenizer=tokenizer, debug=opts.log)
 
@@ -134,6 +131,9 @@ def printOutput(parser, document, opts):
                     pass
             if not kwargs['quote_char']:
                 del kwargs['quote_char']
+
+            if opts.sanitize:
+                kwargs["sanitize"] = True
 
             tokens = treewalkers.getTreeWalker(opts.treebuilder)(document)
             if sys.version_info[0] >= 3:
