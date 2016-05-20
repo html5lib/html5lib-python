@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, unicode_literals
 
+# pylint:disable=wrong-import-position
+
 import os
 import sys
 import codecs
@@ -67,6 +69,8 @@ else:
         "adapter": lambda tree: treeadapters.genshi.to_genshi(treewalkers.getTreeWalker("dom")(tree)),
         "walker": treewalkers.getTreeWalker("genshi")
     }
+
+# pylint:enable=wrong-import-position
 
 
 def get_data_files(subdirectory, files='*.dat', search_dir=test_dir):

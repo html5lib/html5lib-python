@@ -55,6 +55,7 @@ def test_encoding():
             yield (runParserEncodingTest, test[b'data'], test[b'encoding'])
             yield (runPreScanEncodingTest, test[b'data'], test[b'encoding'])
 
+# pylint:disable=wrong-import-position
 try:
     try:
         import charade  # noqa
@@ -67,3 +68,4 @@ else:
         with open(os.path.join(test_dir, "encoding", "chardet", "test_big5.txt"), "rb") as fp:
             encoding = inputstream.HTMLInputStream(fp.read()).charEncoding
             assert encoding[0].name == "big5"
+# pylint:enable=wrong-import-position

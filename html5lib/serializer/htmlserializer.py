@@ -3,6 +3,8 @@ from six import text_type
 
 import re
 
+from codecs import register_error, xmlcharrefreplace_errors
+
 from ..constants import voidElements, booleanAttributes, spaceCharacters
 from ..constants import rcdataElements, entities, xmlEntities
 from .. import utils
@@ -21,61 +23,54 @@ quoteAttributeLegacy = re.compile("[" + quoteAttributeSpecChars +
                                   "\u2008\u2009\u200a\u2028\u2029\u202f\u205f"
                                   "\u3000]")
 
-try:
-    from codecs import register_error, xmlcharrefreplace_errors
-except ImportError:
-    unicode_encode_errors = "strict"
-else:
-    unicode_encode_errors = "htmlentityreplace"
 
-    encode_entity_map = {}
-    is_ucs4 = len("\U0010FFFF") == 1
-    for k, v in list(entities.items()):
-        # skip multi-character entities
-        if ((is_ucs4 and len(v) > 1) or
-                (not is_ucs4 and len(v) > 2)):
-            continue
-        if v != "&":
-            if len(v) == 2:
-                v = utils.surrogatePairToCodepoint(v)
-            else:
-                v = ord(v)
-            if v not in encode_entity_map or k.islower():
-                # prefer &lt; over &LT; and similarly for &amp;, &gt;, etc.
-                encode_entity_map[v] = k
-
-    def htmlentityreplace_errors(exc):
-        if isinstance(exc, (UnicodeEncodeError, UnicodeTranslateError)):
-            res = []
-            codepoints = []
-            skip = False
-            for i, c in enumerate(exc.object[exc.start:exc.end]):
-                if skip:
-                    skip = False
-                    continue
-                index = i + exc.start
-                if utils.isSurrogatePair(exc.object[index:min([exc.end, index + 2])]):
-                    codepoint = utils.surrogatePairToCodepoint(exc.object[index:index + 2])
-                    skip = True
-                else:
-                    codepoint = ord(c)
-                codepoints.append(codepoint)
-            for cp in codepoints:
-                e = encode_entity_map.get(cp)
-                if e:
-                    res.append("&")
-                    res.append(e)
-                    if not e.endswith(";"):
-                        res.append(";")
-                else:
-                    res.append("&#x%s;" % (hex(cp)[2:]))
-            return ("".join(res), exc.end)
+encode_entity_map = {}
+is_ucs4 = len("\U0010FFFF") == 1
+for k, v in list(entities.items()):
+    # skip multi-character entities
+    if ((is_ucs4 and len(v) > 1) or
+            (not is_ucs4 and len(v) > 2)):
+        continue
+    if v != "&":
+        if len(v) == 2:
+            v = utils.surrogatePairToCodepoint(v)
         else:
-            return xmlcharrefreplace_errors(exc)
+            v = ord(v)
+        if v not in encode_entity_map or k.islower():
+            # prefer &lt; over &LT; and similarly for &amp;, &gt;, etc.
+            encode_entity_map[v] = k
 
-    register_error(unicode_encode_errors, htmlentityreplace_errors)
 
-    del register_error
+def htmlentityreplace_errors(exc):
+    if isinstance(exc, (UnicodeEncodeError, UnicodeTranslateError)):
+        res = []
+        codepoints = []
+        skip = False
+        for i, c in enumerate(exc.object[exc.start:exc.end]):
+            if skip:
+                skip = False
+                continue
+            index = i + exc.start
+            if utils.isSurrogatePair(exc.object[index:min([exc.end, index + 2])]):
+                codepoint = utils.surrogatePairToCodepoint(exc.object[index:index + 2])
+                skip = True
+            else:
+                codepoint = ord(c)
+            codepoints.append(codepoint)
+        for cp in codepoints:
+            e = encode_entity_map.get(cp)
+            if e:
+                res.append("&")
+                res.append(e)
+                if not e.endswith(";"):
+                    res.append(";")
+            else:
+                res.append("&#x%s;" % (hex(cp)[2:]))
+        return ("".join(res), exc.end)
+    else:
+        return xmlcharrefreplace_errors(exc)
+
+register_error("htmlentityreplace", htmlentityreplace_errors)
 
 
 class HTMLSerializer(object):
@@ -168,7 +163,7 @@ class HTMLSerializer(object):
     def encode(self, string):
         assert(isinstance(string, text_type))
         if self.encoding:
-            return string.encode(self.encoding, unicode_encode_errors)
+            return string.encode(self.encoding, "htmlentityreplace")
         else:
             return string
 
