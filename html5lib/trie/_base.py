@@ -7,6 +7,7 @@ class Trie(Mapping):
     """Abstract base class for tries"""
 
     def keys(self, prefix=None):
+        # pylint:disable=arguments-differ
         keys = super(Trie, self).keys()
 
         if prefix is None:
