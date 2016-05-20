@@ -304,7 +304,7 @@ class TreeBuilder(_base.TreeBuilder):
     def insertCommentMain(self, data, parent=None):
         if (parent == self.document and
                 self.document._elementTree.getroot()[-1].tag == comment_type):
-                warnings.warn("lxml cannot represent adjacent comments beyond the root elements", DataLossWarning)
+            warnings.warn("lxml cannot represent adjacent comments beyond the root elements", DataLossWarning)
         super(TreeBuilder, self).insertComment(data, parent)
 
     def insertRoot(self, token):
