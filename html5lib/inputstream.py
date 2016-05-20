@@ -19,12 +19,6 @@ try:
 except ImportError:
     BytesIO = StringIO
 
-try:
-    from io import BufferedIOBase
-except ImportError:
-    class BufferedIOBase(object):
-        pass
-
 # Non-unicode versions of constants for use in the pre-parser
 spaceCharactersBytes = frozenset([item.encode("ascii") for item in spaceCharacters])
 asciiLettersBytes = frozenset([item.encode("ascii") for item in asciiLetters])
