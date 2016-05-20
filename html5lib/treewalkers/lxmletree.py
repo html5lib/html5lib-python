@@ -117,6 +117,7 @@ class FragmentWrapper(object):
 
 class TreeWalker(_base.NonRecursiveTreeWalker):
     def __init__(self, tree):
+        # pylint:disable=redefined-variable-type
         if hasattr(tree, "getroot"):
             self.fragmentChildren = set()
             tree = Root(tree)

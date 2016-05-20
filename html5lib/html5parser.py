@@ -121,7 +121,7 @@ class HTMLParser(object):
             self.phase.insertHtmlElement()
             self.resetInsertionMode()
         else:
-            self.innerHTML = False
+            self.innerHTML = False  # pylint:disable=redefined-variable-type
             self.phase = self.phases["initial"]
 
         self.lastPhase = None

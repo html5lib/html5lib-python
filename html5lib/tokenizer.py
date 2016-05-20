@@ -1716,7 +1716,7 @@ class HTMLTokenizer(object):
                 else:
                     data.append(char)
 
-        data = "".join(data)
+        data = "".join(data)  # pylint:disable=redefined-variable-type
         # Deal with null here rather than in the parser
         nullCount = data.count("\u0000")
         if nullCount > 0:
