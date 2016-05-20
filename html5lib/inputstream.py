@@ -30,7 +30,7 @@ invalid_unicode_no_surrogate = "[\u0001-\u0008\u000B\u000E-\u001F\u007F-\u009F\u
 
 if utils.supports_lone_surrogates:
     # Use one extra step of indirection and create surrogates with
-    # unichr. Not using this indirection would introduce an illegal
+    # eval. Not using this indirection would introduce an illegal
     # unicode literal on platforms not supporting such lone
     # surrogates.
     assert invalid_unicode_no_surrogate[-1] == "]" and invalid_unicode_no_surrogate.count("]") == 1
