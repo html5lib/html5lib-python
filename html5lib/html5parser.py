@@ -953,8 +953,8 @@ def getPhases(debug):
         def __init__(self, parser, tree):
             Phase.__init__(self, parser, tree)
 
-            # Keep a ref to this for special handling of whitespace in <pre>
-            self.processSpaceCharactersNonPre = self.processSpaceCharacters
+            # Set this to the default handler
+            self.processSpaceCharacters = self.processSpaceCharactersNonPre
 
             self.startTagHandler = utils.MethodDispatcher([
                 ("html", self.startTagHtml),
@@ -1087,7 +1087,7 @@ def getPhases(debug):
                      for char in token["data"]])):
                 self.parser.framesetOK = False
 
-        def processSpaceCharacters(self, token):
+        def processSpaceCharactersNonPre(self, token):
             self.tree.reconstructActiveFormattingElements()
             self.tree.insertText(token["data"])
 
