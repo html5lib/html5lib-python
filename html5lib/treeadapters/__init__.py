@@ -5,7 +5,7 @@ from . import sax
 __all__ = ["sax"]
 
 try:
-    from . import genshi  # flake8: noqa
+    from . import genshi  # noqa
 except ImportError:
     pass
 else:

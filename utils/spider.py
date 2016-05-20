@@ -7,7 +7,9 @@ s = spider.Spider()
 s.spider("http://www.google.com", maxURLs=100)
 """
 
-import urllib.request, urllib.error, urllib.parse
+import urllib.request
+import urllib.error
+import urllib.parse
 import urllib.robotparser
 import md5
 
@@ -16,11 +18,13 @@ import httplib2
 import html5lib
 from html5lib.treebuilders import etree
 
+
 class Spider(object):
+
     def __init__(self):
         self.unvisitedURLs = set()
         self.visitedURLs = set()
-        self.buggyURLs=set()
+        self.buggyURLs = set()
         self.robotParser = urllib.robotparser.RobotFileParser()
         self.contentDigest = {}
         self.http = httplib2.Http(".cache")
@@ -70,18 +74,18 @@ class Spider(object):
         update the list of visited and unvisited URLs according to whether we
         have seen them before or not"""
         urls = set()
-        #Remove all links we have already visited
+        # Remove all links we have already visited
         for link in tree.findall(".//a"):
-                try:
-                    url = urllib.parse.urldefrag(link.attrib['href'])[0]
-                    if (url and url not in self.unvisitedURLs and url
+            try:
+                url = urllib.parse.urldefrag(link.attrib['href'])[0]
+                if (url and url not in self.unvisitedURLs and url
                         not in self.visitedURLs):
-                        urls.add(url)
-                except KeyError:
-                    pass
+                    urls.add(url)
+            except KeyError:
+                pass
 
-        #Remove all non-http URLs and add a suitable base URL where that is
-        #missing
+        # Remove all non-http URLs and add a suitable base URL where that is
+        # missing
         newUrls = set()
         for url in urls:
             splitURL = list(urllib.parse.urlsplit(url))
@@ -93,23 +97,22 @@ class Spider(object):
         urls = newUrls
 
         responseHeaders = {}
-        #Now we want to find the content types of the links we haven't visited
+        # Now we want to find the content types of the links we haven't visited
         for url in urls:
             try:
                 resp, content = self.http.request(url, "HEAD")
                 responseHeaders[url] = resp
-            except AttributeError as KeyError:
-                #Don't know why this happens
+            except AttributeError:
+                # Don't know why this happens
                 pass
 
-
-        #Remove links not of content-type html or pages not found
-        #XXX - need to deal with other status codes?
+        # Remove links not of content-type html or pages not found
+        # XXX - need to deal with other status codes?
         toVisit = set([url for url in urls if url in responseHeaders and
-                      "html" in responseHeaders[url]['content-type'] and
-                      responseHeaders[url]['status'] == "200"])
+                       "html" in responseHeaders[url]['content-type'] and
+                       responseHeaders[url]['status'] == "200"])
 
-        #Now check we are allowed to spider the page
+        # Now check we are allowed to spider the page
         for url in toVisit:
             robotURL = list(urllib.parse.urlsplit(url)[:2])
             robotURL.extend(["robots.txt", "", ""])

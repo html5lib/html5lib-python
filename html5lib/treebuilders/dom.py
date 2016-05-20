@@ -109,7 +109,7 @@ def getDomBuilder(DomImplementation):
 
         nameTuple = property(getNameTuple)
 
-    class TreeBuilder(_base.TreeBuilder):
+    class TreeBuilder(_base.TreeBuilder):  # pylint:disable=unused-variable
         def documentClass(self):
             self.dom = Dom.getDOMImplementation().createDocument(None, None, None)
             return weakref.proxy(self)
@@ -158,6 +158,7 @@ def getDomBuilder(DomImplementation):
             else:
                 # HACK: allow text nodes as children of the document node
                 if hasattr(self.dom, '_child_node_types'):
+                    # pylint:disable=protected-access
                     if Node.TEXT_NODE not in self.dom._child_node_types:
                         self.dom._child_node_types = list(self.dom._child_node_types)
                         self.dom._child_node_types.append(Node.TEXT_NODE)

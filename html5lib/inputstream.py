@@ -19,12 +19,6 @@ try:
 except ImportError:
     BytesIO = StringIO
 
-try:
-    from io import BufferedIOBase
-except ImportError:
-    class BufferedIOBase(object):
-        pass
-
 # Non-unicode versions of constants for use in the pre-parser
 spaceCharactersBytes = frozenset([item.encode("ascii") for item in spaceCharacters])
 asciiLettersBytes = frozenset([item.encode("ascii") for item in asciiLetters])
@@ -32,15 +26,17 @@ asciiUppercaseBytes = frozenset([item.encode("ascii") for item in asciiUppercase
 spacesAngleBrackets = spaceCharactersBytes | frozenset([b">", b"<"])
 
 
-invalid_unicode_no_surrogate = "[\u0001-\u0008\u000B\u000E-\u001F\u007F-\u009F\uFDD0-\uFDEF\uFFFE\uFFFF\U0001FFFE\U0001FFFF\U0002FFFE\U0002FFFF\U0003FFFE\U0003FFFF\U0004FFFE\U0004FFFF\U0005FFFE\U0005FFFF\U0006FFFE\U0006FFFF\U0007FFFE\U0007FFFF\U0008FFFE\U0008FFFF\U0009FFFE\U0009FFFF\U000AFFFE\U000AFFFF\U000BFFFE\U000BFFFF\U000CFFFE\U000CFFFF\U000DFFFE\U000DFFFF\U000EFFFE\U000EFFFF\U000FFFFE\U000FFFFF\U0010FFFE\U0010FFFF]"
+invalid_unicode_no_surrogate = "[\u0001-\u0008\u000B\u000E-\u001F\u007F-\u009F\uFDD0-\uFDEF\uFFFE\uFFFF\U0001FFFE\U0001FFFF\U0002FFFE\U0002FFFF\U0003FFFE\U0003FFFF\U0004FFFE\U0004FFFF\U0005FFFE\U0005FFFF\U0006FFFE\U0006FFFF\U0007FFFE\U0007FFFF\U0008FFFE\U0008FFFF\U0009FFFE\U0009FFFF\U000AFFFE\U000AFFFF\U000BFFFE\U000BFFFF\U000CFFFE\U000CFFFF\U000DFFFE\U000DFFFF\U000EFFFE\U000EFFFF\U000FFFFE\U000FFFFF\U0010FFFE\U0010FFFF]"  # noqa
 
 if utils.supports_lone_surrogates:
     # Use one extra step of indirection and create surrogates with
-    # unichr. Not using this indirection would introduce an illegal
+    # eval. Not using this indirection would introduce an illegal
     # unicode literal on platforms not supporting such lone
     # surrogates.
-    invalid_unicode_re = re.compile(invalid_unicode_no_surrogate +
-                                    eval('"\\uD800-\\uDFFF"'))
+    assert invalid_unicode_no_surrogate[-1] == "]" and invalid_unicode_no_surrogate.count("]") == 1
+    invalid_unicode_re = re.compile(invalid_unicode_no_surrogate[:-1] +
+                                    eval('"\\uD800-\\uDFFF"') +  # pylint:disable=eval-used
+                                    "]")
 else:
     invalid_unicode_re = re.compile(invalid_unicode_no_surrogate)
 
@@ -296,7 +292,7 @@ class HTMLUnicodeInputStream(object):
         return True
 
     def characterErrorsUCS4(self, data):
-        for i in range(len(invalid_unicode_re.findall(data))):
+        for _ in range(len(invalid_unicode_re.findall(data))):
             self.errors.append("invalid-codepoint")
 
     def characterErrorsUCS2(self, data):
@@ -453,7 +449,7 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
 
         try:
             stream.seek(stream.tell())
-        except:
+        except:  # pylint:disable=bare-except
             stream = BufferedStream(stream)
 
         return stream
@@ -571,6 +567,7 @@ class EncodingBytes(bytes):
         return bytes.__new__(self, value.lower())
 
     def __init__(self, value):
+        # pylint:disable=unused-argument
         self._position = -1
 
     def __iter__(self):
@@ -681,7 +678,7 @@ class EncodingParser(object):
             (b"<!", self.handleOther),
             (b"<?", self.handleOther),
             (b"<", self.handlePossibleStartTag))
-        for byte in self.data:
+        for _ in self.data:
             keepParsing = True
             for key, method in methodDispatch:
                 if self.data.matchBytes(key):

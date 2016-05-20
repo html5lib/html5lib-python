@@ -121,7 +121,7 @@ class HTMLParser(object):
             self.phase.insertHtmlElement()
             self.resetInsertionMode()
         else:
-            self.innerHTML = False
+            self.innerHTML = False  # pylint:disable=redefined-variable-type
             self.phase = self.phases["initial"]
 
         self.lastPhase = None
@@ -241,6 +241,7 @@ class HTMLParser(object):
 
     def parseFragment(self, stream, container="div", encoding=None,
                       parseMeta=False, useChardet=True, scripting=False):
+        # pylint:disable=unused-argument
         """Parse a HTML fragment into a well-formed tree fragment
 
         container - name of the element we're setting the innerHTML property
@@ -259,8 +260,10 @@ class HTMLParser(object):
                     encoding=encoding, scripting=scripting)
         return self.tree.getFragment()
 
-    def parseError(self, errorcode="XXX-undefined-error", datavars={}):
+    def parseError(self, errorcode="XXX-undefined-error", datavars=None):
         # XXX The idea is to make errorcode mandatory.
+        if datavars is None:
+            datavars = {}
         self.errors.append((self.tokenizer.stream.position(), errorcode, datavars))
         if self.strict:
             raise ParseError(E[errorcode] % datavars)
@@ -361,6 +364,7 @@ class HTMLParser(object):
                 del token["data"][originalName]
 
     def reparseTokenNormal(self, token):
+        # pylint:disable=unused-argument
         self.parser.phase()
 
     def resetInsertionMode(self):
@@ -458,6 +462,7 @@ def getPhases(debug):
         else:
             return type
 
+    # pylint:disable=unused-argument
     class Phase(with_metaclass(getMetaclass(debug, log))):
         """Base class for helper object that implements each phase of processing
         """
@@ -948,8 +953,8 @@ def getPhases(debug):
         def __init__(self, parser, tree):
             Phase.__init__(self, parser, tree)
 
-            # Keep a ref to this for special handling of whitespace in <pre>
-            self.processSpaceCharactersNonPre = self.processSpaceCharacters
+            # Set this to the default handler
+            self.processSpaceCharacters = self.processSpaceCharactersNonPre
 
             self.startTagHandler = utils.MethodDispatcher([
                 ("html", self.startTagHtml),
@@ -1082,7 +1087,7 @@ def getPhases(debug):
                      for char in token["data"]])):
                 self.parser.framesetOK = False
 
-        def processSpaceCharacters(self, token):
+        def processSpaceCharactersNonPre(self, token):
             self.tree.reconstructActiveFormattingElements()
             self.tree.insertText(token["data"])
 
@@ -2763,6 +2768,7 @@ def getPhases(debug):
         def processEndTag(self, token):
             self.parser.parseError("expected-eof-but-got-end-tag",
                                    {"name": token["name"]})
+    # pylint:enable=unused-argument
 
     return {
         "initial": InitialPhase,

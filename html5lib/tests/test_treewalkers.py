@@ -31,7 +31,7 @@ def test_all_tokens():
         {'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'body'},
         {'type': 'EndTag', 'namespace': 'http://www.w3.org/1999/xhtml', 'name': 'html'}
     ]
-    for treeName, treeCls in sorted(treeTypes.items()):
+    for _, treeCls in sorted(treeTypes.items()):
         if treeCls is None:
             continue
         p = html5parser.HTMLParser(tree=treeCls["builder"])

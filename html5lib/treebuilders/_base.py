@@ -126,6 +126,7 @@ class TreeBuilder(object):
     commentClass - the class to use for comments
     doctypeClass - the class to use for doctypes
     """
+    # pylint:disable=not-callable
 
     # Document class
     documentClass = None

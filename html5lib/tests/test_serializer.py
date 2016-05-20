@@ -12,6 +12,7 @@ from html5lib.filters.lint import Filter as Lint
 from html5lib.serializer import HTMLSerializer, serialize
 from html5lib.treewalkers._base import TreeWalker
 
+# pylint:disable=wrong-import-position
 optionals_loaded = []
 
 try:
@@ -19,6 +20,7 @@ try:
     optionals_loaded.append("lxml")
 except ImportError:
     pass
+# pylint:enable=wrong-import-position
 
 default_namespace = constants.namespaces["html"]
 
@@ -219,5 +221,5 @@ def test_serializer():
     for filename in get_data_files('serializer-testdata', '*.test', os.path.dirname(__file__)):
         with open(filename) as fp:
             tests = json.load(fp)
-            for index, test in enumerate(tests['tests']):
+            for test in tests['tests']:
                 yield runSerializerTest, test["input"], test["expected"], test.get("options", {})

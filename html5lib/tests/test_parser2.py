@@ -2,10 +2,8 @@ from __future__ import absolute_import, division, unicode_literals
 
 import io
 
-import pytest
+from . import support  # noqa
 
-from . import support  # flake8: noqa
-from html5lib import html5parser
 from html5lib.constants import namespaces
 from html5lib import parse
 
@@ -23,29 +21,29 @@ def test_line_counter():
 
 def test_namespace_html_elements_0_dom():
     doc = parse("<html></html>",
-                         treebuilder="dom",
-                         namespaceHTMLElements=True)
+                treebuilder="dom",
+                namespaceHTMLElements=True)
     assert doc.childNodes[0].namespaceURI == namespaces["html"]
 
 
 def test_namespace_html_elements_1_dom():
     doc = parse("<html></html>",
-                         treebuilder="dom",
-                         namespaceHTMLElements=False)
+                treebuilder="dom",
+                namespaceHTMLElements=False)
     assert doc.childNodes[0].namespaceURI is None
 
 
 def test_namespace_html_elements_0_etree():
     doc = parse("<html></html>",
-                         treebuilder="etree",
-                         namespaceHTMLElements=True)
+                treebuilder="etree",
+                namespaceHTMLElements=True)
     assert doc.tag == "{%s}html" % (namespaces["html"],)
 
 
 def test_namespace_html_elements_1_etree():
     doc = parse("<html></html>",
-                         treebuilder="etree",
-                         namespaceHTMLElements=False)
+                treebuilder="etree",
+                namespaceHTMLElements=False)
     assert doc.tag == "html"
 
 

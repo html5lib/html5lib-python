@@ -765,15 +765,15 @@ class Filter(_base.Filter):
             if ((namespace, name) in self.allowed_elements or
                 (namespace is None and
                  (namespaces["html"], name) in self.allowed_elements)):
-                return self.allowed_token(token, token_type)
+                return self.allowed_token(token)
             else:
-                return self.disallowed_token(token, token_type)
+                return self.disallowed_token(token)
         elif token_type == "Comment":
             pass
         else:
             return token
 
-    def allowed_token(self, token, token_type):
+    def allowed_token(self, token):
         if "data" in token:
             attrs = token["data"]
             attr_names = set(attrs.keys())
@@ -823,7 +823,8 @@ class Filter(_base.Filter):
             token["data"] = attrs
         return token
 
-    def disallowed_token(self, token, token_type):
+    def disallowed_token(self, token):
+        token_type = token["type"]
         if token_type == "EndTag":
             token["data"] = "</%s>" % token["name"]
         elif token["data"]:
@@ -862,7 +863,7 @@ class Filter(_base.Filter):
                                                 'padding']:
                 for keyword in value.split():
                     if keyword not in self.allowed_css_keywords and \
-                            not re.match("^(#[0-9a-f]+|rgb\(\d+%?,\d*%?,?\d*%?\)?|\d{0,2}\.?\d{0,2}(cm|em|ex|in|mm|pc|pt|px|%|,|\))?)$", keyword):
+                            not re.match("^(#[0-9a-f]+|rgb\(\d+%?,\d*%?,?\d*%?\)?|\d{0,2}\.?\d{0,2}(cm|em|ex|in|mm|pc|pt|px|%|,|\))?)$", keyword):  # noqa
                         break
                 else:
                     clean.append(prop + ': ' + value + ';')
