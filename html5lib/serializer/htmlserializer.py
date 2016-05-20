@@ -175,6 +175,7 @@ class HTMLSerializer(object):
             return string
 
     def serialize(self, treewalker, encoding=None):
+        # pylint:disable=too-many-nested-blocks
         self.encoding = encoding
         in_cdata = False
         self.errors = []
