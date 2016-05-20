@@ -53,7 +53,6 @@ class Document(object):
 
 def testSerializer(element):
     rv = []
-    finalText = None
     infosetFilter = ihatexml.InfosetFilter(preventDoubleDashComments=True)
 
     def serializeElement(element, indent=0):
@@ -128,16 +127,12 @@ def testSerializer(element):
                 rv.append("|%s\"%s\"" % (' ' * (indent - 2), element.tail))
     serializeElement(element, 0)
 
-    if finalText is not None:
-        rv.append("|%s\"%s\"" % (' ' * 2, finalText))
-
     return "\n".join(rv)
 
 
 def tostring(element):
     """Serialize an element and its child nodes to a string"""
     rv = []
-    finalText = None
 
     def serializeElement(element):
         if not hasattr(element, "tag"):
@@ -172,9 +167,6 @@ def tostring(element):
             rv.append(element.tail)
 
     serializeElement(element)
-
-    if finalText is not None:
-        rv.append("%s\"" % (' ' * 2, finalText))
 
     return "".join(rv)
 
