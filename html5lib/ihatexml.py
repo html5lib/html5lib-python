@@ -186,7 +186,7 @@ nonPubidCharRegexp = re.compile("[^\x20\x0D\x0Aa-zA-Z0-9\-\'()+,./:=?;!*#@$_%]")
 class InfosetFilter(object):
     replacementRegexp = re.compile(r"U[\dA-F]{5,5}")
 
-    def __init__(self, replaceChars=None,
+    def __init__(self,
                  dropXmlnsLocalName=False,
                  dropXmlnsAttrNs=False,
                  preventDoubleDashComments=False,
@@ -217,7 +217,7 @@ class InfosetFilter(object):
         else:
             return self.toXmlName(name)
 
-    def coerceElement(self, name, namespace=None):
+    def coerceElement(self, name):
         return self.toXmlName(name)
 
     def coerceComment(self, data):

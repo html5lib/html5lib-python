@@ -4,7 +4,7 @@ from html5lib import constants, parseFragment, serialize
 from html5lib.filters import sanitizer
 
 
-def runSanitizerTest(name, expected, input):
+def runSanitizerTest(_, expected, input):
     parsed = parseFragment(expected)
     expected = serialize(parsed,
                          omit_optional_tags=False,

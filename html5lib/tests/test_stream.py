@@ -184,6 +184,7 @@ def test_python_issue_20007():
     """
     class FakeSocket(object):
         def makefile(self, _mode, _bufsize=None):
+            # pylint:disable=unused-argument
             return BytesIO(b"HTTP/1.1 200 Ok\r\n\r\nText")
 
     source = http_client.HTTPResponse(FakeSocket())
@@ -202,6 +203,7 @@ def test_python_issue_20007_b():
 
     class FakeSocket(object):
         def makefile(self, _mode, _bufsize=None):
+            # pylint:disable=unused-argument
             return BytesIO(b"HTTP/1.1 200 Ok\r\n\r\nText")
 
     source = http_client.HTTPResponse(FakeSocket())

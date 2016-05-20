@@ -571,6 +571,7 @@ class EncodingBytes(bytes):
         return bytes.__new__(self, value.lower())
 
     def __init__(self, value):
+        # pylint:disable=unused-argument
         self._position = -1
 
     def __iter__(self):

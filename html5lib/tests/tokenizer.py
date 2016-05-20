@@ -19,6 +19,7 @@ class TokenizerTestParser(object):
         self._lastStartTag = lastStartTag
 
     def parse(self, stream, encoding=None, innerHTML=False):
+        # pylint:disable=unused-argument
         tokenizer = self.tokenizer(stream, encoding)
         self.outputTokens = []
 

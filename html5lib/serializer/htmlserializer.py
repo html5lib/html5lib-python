@@ -328,6 +328,6 @@ class HTMLSerializer(object):
             raise SerializeError
 
 
-def SerializeError(Exception):
+class SerializeError(Exception):
     """Error in serialized tree"""
     pass

@@ -241,6 +241,7 @@ class HTMLParser(object):
 
     def parseFragment(self, stream, container="div", encoding=None,
                       parseMeta=False, useChardet=True, scripting=False):
+        # pylint:disable=unused-argument
         """Parse a HTML fragment into a well-formed tree fragment
 
         container - name of the element we're setting the innerHTML property
@@ -363,6 +364,7 @@ class HTMLParser(object):
                 del token["data"][originalName]
 
     def reparseTokenNormal(self, token):
+        # pylint:disable=unused-argument
         self.parser.phase()
 
     def resetInsertionMode(self):

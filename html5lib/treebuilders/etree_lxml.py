@@ -305,6 +305,8 @@ class TreeBuilder(_base.TreeBuilder):
             self.doctype = doctype
 
     def insertCommentInitial(self, data, parent=None):
+        assert parent is None or parent is self.document
+        assert self.document._elementTree is None
         self.initial_comments.append(data)
 
     def insertCommentMain(self, data, parent=None):
