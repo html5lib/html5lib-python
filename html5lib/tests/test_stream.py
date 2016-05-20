@@ -3,13 +3,17 @@ from __future__ import absolute_import, division, unicode_literals
 from . import support  # noqa
 
 import codecs
-from io import BytesIO
+import sys
+from io import BytesIO, StringIO
+
+import pytest
 
 import six
 from six.moves import http_client, urllib
 
 from html5lib.inputstream import (BufferedStream, HTMLInputStream,
                                   HTMLUnicodeInputStream, HTMLBinaryInputStream)
+from html5lib.utils import supports_lone_surrogates
 
 
 def test_basic():
@@ -211,3 +215,109 @@ def test_python_issue_20007_b():
     wrapped = urllib.response.addinfourl(source, source.msg, "http://example.com")
     stream = HTMLInputStream(wrapped)
     assert stream.charsUntil(" ") == "Text"
+
+
+@pytest.mark.parametrize("inp,num",
+                         [("\u0000", 0),
+                          ("\u0001", 1),
+                          ("\u0008", 1),
+                          ("\u0009", 0),
+                          ("\u000A", 0),
+                          ("\u000B", 1),
+                          ("\u000C", 0),
+                          ("\u000D", 0),
+                          ("\u000E", 1),
+                          ("\u001F", 1),
+                          ("\u0020", 0),
+                          ("\u007E", 0),
+                          ("\u007F", 1),
+                          ("\u009F", 1),
+                          ("\u00A0", 0),
+                          ("\uFDCF", 0),
+                          ("\uFDD0", 1),
+                          ("\uFDEF", 1),
+                          ("\uFDF0", 0),
+                          ("\uFFFD", 0),
+                          ("\uFFFE", 1),
+                          ("\uFFFF", 1),
+                          ("\U0001FFFD", 0),
+                          ("\U0001FFFE", 1),
+                          ("\U0001FFFF", 1),
+                          ("\U0002FFFD", 0),
+                          ("\U0002FFFE", 1),
+                          ("\U0002FFFF", 1),
+                          ("\U0003FFFD", 0),
+                          ("\U0003FFFE", 1),
+                          ("\U0003FFFF", 1),
+                          ("\U0004FFFD", 0),
+                          ("\U0004FFFE", 1),
+                          ("\U0004FFFF", 1),
+                          ("\U0005FFFD", 0),
+                          ("\U0005FFFE", 1),
+                          ("\U0005FFFF", 1),
+                          ("\U0006FFFD", 0),
+                          ("\U0006FFFE", 1),
+                          ("\U0006FFFF", 1),
+                          ("\U0007FFFD", 0),
+                          ("\U0007FFFE", 1),
+                          ("\U0007FFFF", 1),
+                          ("\U0008FFFD", 0),
+                          ("\U0008FFFE", 1),
+                          ("\U0008FFFF", 1),
+                          ("\U0009FFFD", 0),
+                          ("\U0009FFFE", 1),
+                          ("\U0009FFFF", 1),
+                          ("\U000AFFFD", 0),
+                          ("\U000AFFFE", 1),
+                          ("\U000AFFFF", 1),
+                          ("\U000BFFFD", 0),
+                          ("\U000BFFFE", 1),
+                          ("\U000BFFFF", 1),
+                          ("\U000CFFFD", 0),
+                          ("\U000CFFFE", 1),
+                          ("\U000CFFFF", 1),
+                          ("\U000DFFFD", 0),
+                          ("\U000DFFFE", 1),
+                          ("\U000DFFFF", 1),
+                          ("\U000EFFFD", 0),
+                          ("\U000EFFFE", 1),
+                          ("\U000EFFFF", 1),
+                          ("\U000FFFFD", 0),
+                          ("\U000FFFFE", 1),
+                          ("\U000FFFFF", 1),
+                          ("\U0010FFFD", 0),
+                          ("\U0010FFFE", 1),
+                          ("\U0010FFFF", 1),
+                          ("\x01\x01\x01", 3),
+                          ("a\x01a\x01a\x01a", 3)])
+def test_invalid_codepoints(inp, num):
+    stream = HTMLUnicodeInputStream(StringIO(inp))
+    for _i in range(len(inp)):
+        stream.char()
+    assert len(stream.errors) == num
+
+
+@pytest.mark.skipif(not supports_lone_surrogates, reason="doesn't support lone surrogates")
+@pytest.mark.parametrize("inp,num",
+                         [("'\\uD7FF'", 0),
+                          ("'\\uD800'", 1),
+                          ("'\\uDBFF'", 1),
+                          ("'\\uDC00'", 1),
+                          ("'\\uDFFF'", 1),
+                          ("'\\uE000'", 0),
+                          ("'\\uD800\\uD800\\uD800'", 3),
+                          ("'a\\uD800a\\uD800a\\uD800a'", 3),
+                          ("'\\uDFFF\\uDBFF'", 2),
+                          pytest.mark.skipif(sys.maxunicode == 0xFFFF,
+                                             ("'\\uDBFF\\uDFFF'", 2),
+                                             reason="narrow Python")])
+def test_invalid_codepoints_surrogates(inp, num):
+    inp = eval(inp)
+    fp = StringIO(inp)
+    if ord(max(fp.read())) > 0xFFFF:
+        pytest.skip("StringIO altered string")
+    fp.seek(0)
+    stream = HTMLUnicodeInputStream(fp)
+    for _i in range(len(inp)):
+        stream.char()
+    assert len(stream.errors) == num
