@@ -189,7 +189,7 @@ class TreeBuilder(_base.TreeBuilder):
                 if value is None:
                     value = {}
                 self._element = element
-                dict.__init__(self, value)
+                dict.__init__(self, value)  # pylint:disable=non-parent-init-called
                 for key, value in self.items():
                     if isinstance(key, tuple):
                         name = "{%s}%s" % (key[2], infosetFilter.coerceAttribute(key[1]))
