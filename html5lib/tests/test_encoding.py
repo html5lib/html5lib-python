@@ -1,12 +1,6 @@
 from __future__ import absolute_import, division, unicode_literals
 
 import os
-import unittest
-
-try:
-    unittest.TestCase.assertEqual
-except AttributeError:
-    unittest.TestCase.assertEqual = unittest.TestCase.assertEquals
 
 from .support import get_data_files, test_dir, errorMessage, TestData as _TestData
 from html5lib import HTMLParser, inputstream
