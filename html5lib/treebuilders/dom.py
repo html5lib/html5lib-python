@@ -109,7 +109,7 @@ def getDomBuilder(DomImplementation):
 
         nameTuple = property(getNameTuple)
 
-    class TreeBuilder(_base.TreeBuilder):
+    class TreeBuilder(_base.TreeBuilder):  # pylint:disable=unused-variable
         def documentClass(self):
             self.dom = Dom.getDOMImplementation().createDocument(None, None, None)
             return weakref.proxy(self)

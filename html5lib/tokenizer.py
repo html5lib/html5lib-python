@@ -924,7 +924,7 @@ class HTMLTokenizer(object):
             if self.lowercaseAttrName:
                 self.currentToken["data"][-1][0] = (
                     self.currentToken["data"][-1][0].translate(asciiUpper2Lower))
-            for name, value in self.currentToken["data"][:-1]:
+            for name, _ in self.currentToken["data"][:-1]:
                 if self.currentToken["data"][-1][0] == name:
                     self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
                                             "duplicate-attribute"})
@@ -1720,7 +1720,7 @@ class HTMLTokenizer(object):
         # Deal with null here rather than in the parser
         nullCount = data.count("\u0000")
         if nullCount > 0:
-            for i in range(nullCount):
+            for _ in range(nullCount):
                 self.tokenQueue.append({"type": tokenTypes["ParseError"],
                                         "data": "invalid-codepoint"})
             data = data.replace("\u0000", "\uFFFD")

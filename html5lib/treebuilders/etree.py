@@ -253,7 +253,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
 
         return "\n".join(rv)
 
-    def tostring(element):
+    def tostring(element):  # pylint:disable=unused-variable
         """Serialize an element and its child nodes to a string"""
         rv = []
         filter = ihatexml.InfosetFilter()
@@ -307,7 +307,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
 
         return "".join(rv)
 
-    class TreeBuilder(_base.TreeBuilder):
+    class TreeBuilder(_base.TreeBuilder):  # pylint:disable=unused-variable
         documentClass = Document
         doctypeClass = DocumentType
         elementClass = Element

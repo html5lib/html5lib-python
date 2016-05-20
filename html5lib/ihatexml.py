@@ -232,7 +232,7 @@ class InfosetFilter(object):
 
     def coerceCharacters(self, data):
         if self.replaceFormFeedCharacters:
-            for i in range(data.count("\x0C")):
+            for _ in range(data.count("\x0C")):
                 warnings.warn("Text cannot contain U+000C", DataLossWarning)
             data = data.replace("\x0C", " ")
         # Other non-xml characters

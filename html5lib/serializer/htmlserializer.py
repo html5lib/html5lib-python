@@ -241,7 +241,7 @@ class HTMLSerializer(object):
                     in_cdata = True
                 elif in_cdata:
                     self.serializeError("Unexpected child element of a CDATA element")
-                for (attr_namespace, attr_name), attr_value in token["data"].items():
+                for (_, attr_name), attr_value in token["data"].items():
                     # TODO: Add namespace support here
                     k = attr_name
                     v = attr_value

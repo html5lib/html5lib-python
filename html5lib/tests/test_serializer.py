@@ -219,5 +219,5 @@ def test_serializer():
     for filename in get_data_files('serializer-testdata', '*.test', os.path.dirname(__file__)):
         with open(filename) as fp:
             tests = json.load(fp)
-            for index, test in enumerate(tests['tests']):
+            for test in tests['tests']:
                 yield runSerializerTest, test["input"], test["expected"], test.get("options", {})

@@ -296,7 +296,7 @@ class HTMLUnicodeInputStream(object):
         return True
 
     def characterErrorsUCS4(self, data):
-        for i in range(len(invalid_unicode_re.findall(data))):
+        for _ in range(len(invalid_unicode_re.findall(data))):
             self.errors.append("invalid-codepoint")
 
     def characterErrorsUCS2(self, data):
@@ -681,7 +681,7 @@ class EncodingParser(object):
             (b"<!", self.handleOther),
             (b"<?", self.handleOther),
             (b"<", self.handlePossibleStartTag))
-        for byte in self.data:
+        for _ in self.data:
             keepParsing = True
             for key, method in methodDispatch:
                 if self.data.matchBytes(key):

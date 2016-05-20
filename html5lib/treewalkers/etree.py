@@ -22,7 +22,7 @@ def getETreeBuilder(ElementTreeImplementation):
     ElementTree = ElementTreeImplementation
     ElementTreeCommentType = ElementTree.Comment("asd").tag
 
-    class TreeWalker(_base.NonRecursiveTreeWalker):
+    class TreeWalker(_base.NonRecursiveTreeWalker):  # pylint:disable=unused-variable
         """Given the particular ElementTree representation, this implementation,
         to avoid using recursion, returns "nodes" as tuples with the following
         content:
@@ -38,7 +38,7 @@ def getETreeBuilder(ElementTreeImplementation):
         """
         def getNodeDetails(self, node):
             if isinstance(node, tuple):  # It might be the root Element
-                elt, key, parents, flag = node
+                elt, _, _, flag = node
                 if flag in ("text", "tail"):
                     return _base.TEXT, getattr(elt, flag)
                 else:

@@ -25,7 +25,7 @@ class TreeWalker(_base.TreeWalker):
                 yield token
 
     def tokens(self, event, next):
-        kind, data, pos = event
+        kind, data, _ = event
         if kind == START:
             tag, attribs = data
             name = tag.localname
