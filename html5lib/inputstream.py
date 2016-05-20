@@ -35,7 +35,7 @@ if utils.supports_lone_surrogates:
     # surrogates.
     assert invalid_unicode_no_surrogate[-1] == "]" and invalid_unicode_no_surrogate.count("]") == 1
     invalid_unicode_re = re.compile(invalid_unicode_no_surrogate[:-1] +
-                                    eval('"\\uD800-\\uDFFF"') +
+                                    eval('"\\uD800-\\uDFFF"') +  # pylint:disable=eval-used
                                     "]")
 else:
     invalid_unicode_re = re.compile(invalid_unicode_no_surrogate)

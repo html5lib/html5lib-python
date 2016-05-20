@@ -312,7 +312,7 @@ def test_invalid_codepoints(inp, num):
                                              ("'\\uDBFF\\uDFFF'", 2),
                                              reason="narrow Python")])
 def test_invalid_codepoints_surrogates(inp, num):
-    inp = eval(inp)
+    inp = eval(inp)  # pylint:disable=eval-used
     fp = StringIO(inp)
     if ord(max(fp.read())) > 0xFFFF:
         pytest.skip("StringIO altered string")

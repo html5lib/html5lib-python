@@ -22,10 +22,10 @@ __all__ = ["default_etree", "MethodDispatcher", "isSurrogatePair",
 # surrogates, and there is no mechanism to further escape such
 # escapes.
 try:
-    _x = eval('"\\uD800"')
+    _x = eval('"\\uD800"')  # pylint:disable=eval-used
     if not isinstance(_x, text_type):
         # We need this with u"" because of http://bugs.jython.org/issue2039
-        _x = eval('u"\\uD800"')
+        _x = eval('u"\\uD800"')  # pylint:disable=eval-used
         assert isinstance(_x, text_type)
 except:
     supports_lone_surrogates = False
