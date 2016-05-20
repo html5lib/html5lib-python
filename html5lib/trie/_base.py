@@ -7,7 +7,7 @@ class Trie(Mapping):
     """Abstract base class for tries"""
 
     def keys(self, prefix=None):
-        keys = super().keys()
+        keys = super(Trie, self).keys()
 
         if prefix is None:
             return set(keys)
