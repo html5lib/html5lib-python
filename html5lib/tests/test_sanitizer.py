@@ -63,7 +63,8 @@ def test_sanitizer():
     for ns, tag_name in sanitizer.allowed_elements:
         if ns != constants.namespaces["html"]:
             continue
-        if tag_name in ['caption', 'col', 'colgroup', 'optgroup', 'option', 'table', 'tbody', 'td', 'tfoot', 'th', 'thead', 'tr', 'select']:
+        if tag_name in ['caption', 'col', 'colgroup', 'optgroup', 'option', 'table', 'tbody', 'td',
+                        'tfoot', 'th', 'thead', 'tr', 'select']:
             continue  # TODO
         if tag_name == 'image':
             yield (runSanitizerTest, "test_should_allow_%s_tag" % tag_name,
