@@ -57,13 +57,13 @@ def test_encoding():
 
 try:
     try:
-        import charade  # flake8: noqa
+        import charade  # noqa
     except ImportError:
-        import chardet  # flake8: noqa
+        import chardet  # noqa
 except ImportError:
     print("charade/chardet not found, skipping chardet tests")
 else:
     def test_chardet():
-        with open(os.path.join(test_dir, "encoding" , "chardet", "test_big5.txt"), "rb") as fp:
+        with open(os.path.join(test_dir, "encoding", "chardet", "test_big5.txt"), "rb") as fp:
             encoding = inputstream.HTMLInputStream(fp.read()).charEncoding
             assert encoding[0].name == "big5"

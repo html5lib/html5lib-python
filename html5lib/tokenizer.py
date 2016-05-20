@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, unicode_literals
 
 try:
-    chr = unichr # flake8: noqa
+    chr = unichr  # noqa
 except NameError:
     pass
 
@@ -147,8 +147,8 @@ class HTMLTokenizer(object):
         output = "&"
 
         charStack = [self.stream.char()]
-        if (charStack[0] in spaceCharacters or charStack[0] in (EOF, "<", "&")
-                or (allowedChar is not None and allowedChar == charStack[0])):
+        if (charStack[0] in spaceCharacters or charStack[0] in (EOF, "<", "&") or
+                (allowedChar is not None and allowedChar == charStack[0])):
             self.stream.unget(charStack[0])
 
         elif charStack[0] == "#":

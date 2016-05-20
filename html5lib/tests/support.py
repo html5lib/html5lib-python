@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(base_path,
                                                 os.path.pardir,
                                                 os.path.pardir)))
 
-from html5lib import treebuilders, treewalkers, treeadapters
+from html5lib import treebuilders, treewalkers, treeadapters  # noqa
 del base_path
 
 # Build a dict of available trees
@@ -26,14 +26,14 @@ treeTypes["DOM"] = {
 }
 
 # ElementTree impls
-import xml.etree.ElementTree as ElementTree
+import xml.etree.ElementTree as ElementTree  # noqa
 treeTypes['ElementTree'] = {
     "builder": treebuilders.getTreeBuilder("etree", ElementTree, fullTree=True),
     "walker": treewalkers.getTreeWalker("etree", ElementTree)
 }
 
 try:
-    import xml.etree.cElementTree as cElementTree
+    import xml.etree.cElementTree as cElementTree  # noqa
 except ImportError:
     treeTypes['cElementTree'] = None
 else:
@@ -47,7 +47,7 @@ else:
         }
 
 try:
-    import lxml.etree as lxml  # flake8: noqa
+    import lxml.etree as lxml  # noqa
 except ImportError:
     treeTypes['lxml'] = None
 else:
@@ -58,7 +58,7 @@ else:
 
 # Genshi impls
 try:
-    import genshi  # flake8: noqa
+    import genshi  # noqa
 except ImportError:
     pass
 else:
