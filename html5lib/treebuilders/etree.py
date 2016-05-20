@@ -1,4 +1,6 @@
 from __future__ import absolute_import, division, unicode_literals
+# pylint:disable=protected-access
+
 from six import text_type
 
 import re

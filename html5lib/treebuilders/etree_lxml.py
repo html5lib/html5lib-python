@@ -10,6 +10,7 @@ When any of these things occur, we emit a DataLossWarning
 """
 
 from __future__ import absolute_import, division, unicode_literals
+# pylint:disable=protected-access
 
 import warnings
 import re
