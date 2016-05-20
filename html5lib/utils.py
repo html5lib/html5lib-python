@@ -52,7 +52,7 @@ class MethodDispatcher(dict):
         # anything here.
         _dictEntries = []
         for name, value in items:
-            if type(name) in (list, tuple, frozenset, set):
+            if isinstance(name, (list, tuple, frozenset, set)):
                 for item in name:
                     _dictEntries.append((item, value))
             else:
