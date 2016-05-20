@@ -5,7 +5,7 @@ import codecs
 from setuptools import setup
 
 
-classifiers=[
+classifiers = [
     'Development Status :: 5 - Production/Stable',
     'Intended Audience :: Developers',
     'License :: OSI Approved :: MIT License',
@@ -20,9 +20,9 @@ classifiers=[
     'Programming Language :: Python :: 3.5',
     'Topic :: Software Development :: Libraries :: Python Modules',
     'Topic :: Text Processing :: Markup :: HTML'
-    ]
+]
 
-packages = ['html5lib'] + ['html5lib.'+name
+packages = ['html5lib'] + ['html5lib.' + name
                            for name in os.listdir(os.path.join('html5lib'))
                            if os.path.isdir(os.path.join('html5lib', name)) and
                            not name.startswith('.') and name != 'tests']
@@ -39,9 +39,9 @@ with open(os.path.join("html5lib", "__init__.py"), "rb") as init_file:
     assignments = filter(lambda x: isinstance(x, ast.Assign), t.body)
     for a in assignments:
         if (len(a.targets) == 1 and
-              isinstance(a.targets[0], ast.Name) and
-              a.targets[0].id == "__version__" and
-              isinstance(a.value, ast.Str)):
+                isinstance(a.targets[0], ast.Name) and
+                a.targets[0].id == "__version__" and
+                isinstance(a.value, ast.Str)):
             version = a.value.s
 
 setup(name='html5lib',

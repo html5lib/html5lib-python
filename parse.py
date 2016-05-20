@@ -5,7 +5,6 @@ Parse a document to a tree, with optional profiling
 """
 
 import sys
-import os
 import traceback
 from optparse import OptionParser
 
@@ -15,9 +14,10 @@ from html5lib import treebuilders, serializer, treewalkers
 from html5lib import constants
 from html5lib import utils
 
+
 def parse():
     optParser = getOptParser()
-    opts,args = optParser.parse_args()
+    opts, args = optParser.parse_args()
     encoding = "utf8"
 
     try:
@@ -25,7 +25,10 @@ def parse():
         # Try opening from the internet
         if f.startswith('http://'):
             try:
-                import urllib.request, urllib.parse, urllib.error, cgi
+                import urllib.request
+                import urllib.parse
+                import urllib.error
+                import cgi
                 f = urllib.request.urlopen(f)
                 contentType = f.headers.get('content-type')
                 if contentType:
@@ -41,7 +44,7 @@ def parse():
             try:
                 # Try opening from file system
                 f = open(f, "rb")
-            except IOError as e:                
+            except IOError as e:
                 sys.stderr.write("Unable to open file: %s\n" % e)
                 sys.exit(1)
     except IndexError:
@@ -82,13 +85,14 @@ def parse():
         if document:
             printOutput(p, document, opts)
             t2 = time.time()
-            sys.stderr.write("\n\nRun took: %fs (plus %fs to print the output)"%(t1-t0, t2-t1))
+            sys.stderr.write("\n\nRun took: %fs (plus %fs to print the output)" % (t1 - t0, t2 - t1))
         else:
-            sys.stderr.write("\n\nRun took: %fs"%(t1-t0))
+            sys.stderr.write("\n\nRun took: %fs" % (t1 - t0))
     else:
         document = run(parseMethod, f, encoding, opts.scripting)
         if document:
             printOutput(p, document, opts)
+
 
 def run(parseMethod, f, encoding, scripting):
     try:
@@ -97,6 +101,7 @@ def run(parseMethod, f, encoding, scripting):
         document = None
         traceback.print_exc()
     return document
+
 
 def printOutput(parser, document, opts):
     if opts.encoding:
@@ -116,7 +121,7 @@ def printOutput(parser, document, opts):
             elif tb == "etree":
                 sys.stdout.write(utils.default_etree.tostring(document))
         elif opts.tree:
-            if not hasattr(document,'__getitem__'):
+            if not hasattr(document, '__getitem__'):
                 document = [document]
             for fragment in document:
                 print(parser.tree.testSerializer(fragment))
@@ -126,7 +131,7 @@ def printOutput(parser, document, opts):
             kwargs = {}
             for opt in serializer.HTMLSerializer.options:
                 try:
-                    kwargs[opt] = getattr(opts,opt)
+                    kwargs[opt] = getattr(opts, opt)
                 except:
                     pass
             if not kwargs['quote_char']:
@@ -142,12 +147,14 @@ def printOutput(parser, document, opts):
                 encoding = "utf-8"
             for text in serializer.HTMLSerializer(**kwargs).serialize(tokens, encoding=encoding):
                 sys.stdout.write(text)
-            if not text.endswith('\n'): sys.stdout.write('\n')
+            if not text.endswith('\n'):
+                sys.stdout.write('\n')
     if opts.error:
-        errList=[]
+        errList = []
         for pos, errorcode, datavars in parser.errors:
-            errList.append("Line %i Col %i"%pos + " " + constants.E.get(errorcode, 'Unknown error "%s"' % errorcode) % datavars)
-        sys.stdout.write("\nParse errors:\n" + "\n".join(errList)+"\n")
+            errList.append("Line %i Col %i" % pos + " " + constants.E.get(errorcode, 'Unknown error "%s"' % errorcode) % datavars)
+        sys.stdout.write("\nParse errors:\n" + "\n".join(errList) + "\n")
+
 
 def getOptParser():
     parser = OptionParser(usage=__doc__)
