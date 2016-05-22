@@ -1,8 +1,8 @@
 import ast
-import os
 import codecs
 
-from setuptools import setup
+from os.path import join, dirname
+from setuptools import setup, find_packages
 
 
 classifiers = [
@@ -22,18 +22,13 @@ classifiers = [
     'Topic :: Text Processing :: Markup :: HTML'
 ]
 
-packages = ['html5lib'] + ['html5lib.' + name
-                           for name in os.listdir(os.path.join('html5lib'))
-                           if os.path.isdir(os.path.join('html5lib', name)) and
-                           not name.startswith('.') and name != 'tests']
-
-current_dir = os.path.dirname(__file__)
-with codecs.open(os.path.join(current_dir, 'README.rst'), 'r', 'utf8') as readme_file:
-    with codecs.open(os.path.join(current_dir, 'CHANGES.rst'), 'r', 'utf8') as changes_file:
+here = dirname(__file__)
+with codecs.open(join(here, 'README.rst'), 'r', 'utf8') as readme_file:
+    with codecs.open(join(here, 'CHANGES.rst'), 'r', 'utf8') as changes_file:
         long_description = readme_file.read() + '\n' + changes_file.read()
 
 version = None
-with open(os.path.join("html5lib", "__init__.py"), "rb") as init_file:
+with open(join("html5lib", "__init__.py"), "rb") as init_file:
     t = ast.parse(init_file.read(), filename="__init__.py", mode="exec")
     assert isinstance(t, ast.Module)
     assignments = filter(lambda x: isinstance(x, ast.Assign), t.body)
@@ -53,7 +48,7 @@ setup(name='html5lib',
       classifiers=classifiers,
       maintainer='James Graham',
       maintainer_email='james@hoppipolla.co.uk',
-      packages=packages,
+      packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
       install_requires=[
           'six',
           'webencodings',
@@ -70,13 +65,13 @@ setup(name='html5lib',
 
           # Standard extras, will be installed when the extra is requested.
           "genshi": ["genshi"],
-          "charade": ["charade"],
+          "chardet": ["chardet>=2.2"],
 
           # The all extra combines a standard extra which will be used anytime
           # the all extra is requested, and it extends it with a conditional
           # extra that will be installed whenever the condition matches and the
           # all extra is requested.
-          "all": ["genshi", "charade"],
+          "all": ["genshi", "chardet>=2.2"],
           "all:platform.python_implementation == 'CPython'": ["datrie", "lxml"],
       },
       )
