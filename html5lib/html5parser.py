@@ -86,13 +86,12 @@ class HTMLParser(object):
                             getPhases(debug).items()])
 
     def _parse(self, stream, innerHTML=False, container="div", encoding=None,
-               parseMeta=True, useChardet=True, scripting=False, **kwargs):
+               useChardet=True, scripting=False, **kwargs):
 
         self.innerHTMLMode = innerHTML
         self.container = container
         self.scripting = scripting
         self.tokenizer = self.tokenizer_class(stream, encoding=encoding,
-                                              parseMeta=parseMeta,
                                               useChardet=useChardet,
                                               parser=self, **kwargs)
         self.reset()
@@ -232,7 +231,7 @@ class HTMLParser(object):
         for token in self.tokenizer:
             yield self.normalizeToken(token)
 
-    def parse(self, stream, encoding=None, parseMeta=True,
+    def parse(self, stream, encoding=None,
               useChardet=True, scripting=False):
         """Parse a HTML document into a well-formed tree
 
@@ -246,11 +245,11 @@ class HTMLParser(object):
         scripting - treat noscript elements as if javascript was turned on
         """
         self._parse(stream, innerHTML=False, encoding=encoding,
-                    parseMeta=parseMeta, useChardet=useChardet, scripting=scripting)
+                    useChardet=useChardet, scripting=scripting)
         return self.tree.getDocument()
 
     def parseFragment(self, stream, container="div", encoding=None,
-                      parseMeta=False, useChardet=True, scripting=False):
+                      useChardet=True, scripting=False):
         # pylint:disable=unused-argument
         """Parse a HTML fragment into a well-formed tree fragment
 

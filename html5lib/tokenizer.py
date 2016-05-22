@@ -31,10 +31,10 @@ class HTMLTokenizer(object):
       Points to HTMLInputStream object.
     """
 
-    def __init__(self, stream, encoding=None, parseMeta=True, useChardet=True,
+    def __init__(self, stream, encoding=None, useChardet=True,
                  lowercaseElementName=True, lowercaseAttrName=True, parser=None):
 
-        self.stream = HTMLInputStream(stream, encoding, parseMeta, useChardet)
+        self.stream = HTMLInputStream(stream, encoding, True, useChardet)
         self.parser = parser
 
         # Perform case conversions?
