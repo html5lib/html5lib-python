@@ -59,18 +59,13 @@ class HTMLParser(object):
     """HTML parser. Generates a tree structure from a stream of (possibly
         malformed) HTML"""
 
-    def __init__(self, tree=None, tokenizer=tokenizer.HTMLTokenizer,
-                 strict=False, namespaceHTMLElements=True, debug=False):
+    def __init__(self, tree=None, strict=False, namespaceHTMLElements=True, debug=False):
         """
         strict - raise an exception when a parse error is encountered
 
         tree - a treebuilder class controlling the type of tree that will be
         returned. Built in treebuilders can be accessed through
         html5lib.treebuilders.getTreeBuilder(treeType)
-
-        tokenizer - a class that provides a stream of tokens to the treebuilder.
-        This may be replaced for e.g. a sanitizer which converts some tags to
-        text
         """
 
         # Raise an exception on the first error encountered
@@ -79,7 +74,6 @@ class HTMLParser(object):
         if tree is None:
             tree = treebuilders.getTreeBuilder("etree")
         self.tree = tree(namespaceHTMLElements)
-        self.tokenizer_class = tokenizer
         self.errors = []
 
         self.phases = dict([(name, cls(self, self.tree)) for name, cls in
@@ -91,9 +85,9 @@ class HTMLParser(object):
         self.innerHTMLMode = innerHTML
         self.container = container
         self.scripting = scripting
-        self.tokenizer = self.tokenizer_class(stream, encoding=encoding,
-                                              useChardet=useChardet,
-                                              parser=self, **kwargs)
+        self.tokenizer = tokenizer.HTMLTokenizer(stream, encoding=encoding,
+                                                 useChardet=useChardet,
+                                                 parser=self, **kwargs)
         self.reset()
 
         try:
