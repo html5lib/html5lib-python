@@ -99,13 +99,13 @@ class HTMLBinaryInputStreamShortChunk(HTMLBinaryInputStream):
 
 
 def test_char_ascii():
-    stream = HTMLInputStream(b"'", encoding='ascii')
+    stream = HTMLInputStream(b"'", override_encoding='ascii')
     assert stream.charEncoding[0].name == 'windows-1252'
     assert stream.char() == "'"
 
 
 def test_char_utf8():
-    stream = HTMLInputStream('\u2018'.encode('utf-8'), encoding='utf-8')
+    stream = HTMLInputStream('\u2018'.encode('utf-8'), override_encoding='utf-8')
     assert stream.charEncoding[0].name == 'utf-8'
     assert stream.char() == '\u2018'
 

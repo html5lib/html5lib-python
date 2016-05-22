@@ -31,9 +31,9 @@ class HTMLTokenizer(object):
       Points to HTMLInputStream object.
     """
 
-    def __init__(self, stream, encoding=None, useChardet=True, parser=None):
+    def __init__(self, stream, parser=None, **kwargs):
 
-        self.stream = HTMLInputStream(stream, encoding, True, useChardet)
+        self.stream = HTMLInputStream(stream, **kwargs)
         self.parser = parser
 
         # Setup the initial tokenizer state

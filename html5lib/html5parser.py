@@ -28,19 +28,17 @@ from .constants import (
 )
 
 
-def parse(doc, treebuilder="etree", encoding=None,
-          namespaceHTMLElements=True, scripting=False):
+def parse(doc, treebuilder="etree", namespaceHTMLElements=True, **kwargs):
     """Parse a string or file-like object into a tree"""
     tb = treebuilders.getTreeBuilder(treebuilder)
     p = HTMLParser(tb, namespaceHTMLElements=namespaceHTMLElements)
-    return p.parse(doc, encoding=encoding, scripting=scripting)
+    return p.parse(doc, **kwargs)
 
 
-def parseFragment(doc, container="div", treebuilder="etree", encoding=None,
-                  namespaceHTMLElements=True, scripting=False):
+def parseFragment(doc, container="div", treebuilder="etree", namespaceHTMLElements=True, **kwargs):
     tb = treebuilders.getTreeBuilder(treebuilder)
     p = HTMLParser(tb, namespaceHTMLElements=namespaceHTMLElements)
-    return p.parseFragment(doc, container=container, encoding=encoding, scripting=scripting)
+    return p.parseFragment(doc, container=container, **kwargs)
 
 
 def method_decorator_metaclass(function):
@@ -79,15 +77,12 @@ class HTMLParser(object):
         self.phases = dict([(name, cls(self, self.tree)) for name, cls in
                             getPhases(debug).items()])
 
-    def _parse(self, stream, innerHTML=False, container="div", encoding=None,
-               useChardet=True, scripting=False, **kwargs):
+    def _parse(self, stream, innerHTML=False, container="div", scripting=False, **kwargs):
 
         self.innerHTMLMode = innerHTML
         self.container = container
         self.scripting = scripting
-        self.tokenizer = tokenizer.HTMLTokenizer(stream, encoding=encoding,
-                                                 useChardet=useChardet,
-                                                 parser=self, **kwargs)
+        self.tokenizer = tokenizer.HTMLTokenizer(stream, parser=self, **kwargs)
         self.reset()
 
         try:
@@ -225,8 +220,7 @@ class HTMLParser(object):
         for token in self.tokenizer:
             yield self.normalizeToken(token)
 
-    def parse(self, stream, encoding=None,
-              useChardet=True, scripting=False):
+    def parse(self, stream, *args, **kwargs):
         """Parse a HTML document into a well-formed tree
 
         stream - a filelike object or string containing the HTML to be parsed
@@ -238,13 +232,10 @@ class HTMLParser(object):
 
         scripting - treat noscript elements as if javascript was turned on
         """
-        self._parse(stream, innerHTML=False, encoding=encoding,
-                    useChardet=useChardet, scripting=scripting)
+        self._parse(stream, False, None, *args, **kwargs)
         return self.tree.getDocument()
 
-    def parseFragment(self, stream, container="div", encoding=None,
-                      useChardet=True, scripting=False):
-        # pylint:disable=unused-argument
+    def parseFragment(self, stream, *args, **kwargs):
         """Parse a HTML fragment into a well-formed tree fragment
 
         container - name of the element we're setting the innerHTML property
@@ -259,8 +250,7 @@ class HTMLParser(object):
 
         scripting - treat noscript elements as if javascript was turned on
         """
-        self._parse(stream, True, container=container,
-                    encoding=encoding, scripting=scripting)
+        self._parse(stream, True, *args, **kwargs)
         return self.tree.getFragment()
 
     def parseError(self, errorcode="XXX-undefined-error", datavars=None):
