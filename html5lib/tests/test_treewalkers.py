@@ -2,6 +2,11 @@ from __future__ import absolute_import, division, unicode_literals
 
 import pytest
 
+try:
+    import lxml.etree
+except ImportError:
+    pass
+
 from .support import treeTypes
 
 from html5lib import html5parser, treewalkers
@@ -93,3 +98,19 @@ def test_treewalker_six_mix():
     for tree in sorted(treeTypes.items()):
         for intext, attrs, expected in sm_tests:
             yield runTreewalkerEditTest, intext, expected, attrs, tree
+
+
+@pytest.mark.skipif(treeTypes["lxml"] is None, reason="lxml not importable")
+def test_lxml_xml():
+    expected = [
+        {'data': {}, 'name': 'div', 'namespace': None, 'type': 'StartTag'},
+        {'data': {}, 'name': 'div', 'namespace': None, 'type': 'StartTag'},
+        {'name': 'div', 'namespace': None, 'type': 'EndTag'},
+        {'name': 'div', 'namespace': None, 'type': 'EndTag'}
+    ]
+
+    lxmltree = lxml.etree.fromstring('<div><div></div></div>')
+    walker = treewalkers.getTreeWalker('lxml')
+    output = Lint(walker(lxmltree))
+
+    assert list(output) == expected

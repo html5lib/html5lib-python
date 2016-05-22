@@ -22,13 +22,20 @@ class Root(object):
     def __init__(self, et):
         self.elementtree = et
         self.children = []
-        if et.docinfo.internalDTD:
-            self.children.append(Doctype(self,
-                                         ensure_str(et.docinfo.root_name),
-                                         ensure_str(et.docinfo.public_id),
-                                         ensure_str(et.docinfo.system_url)))
-        root = et.getroot()
-        node = root
+
+        try:
+            if et.docinfo.internalDTD:
+                self.children.append(Doctype(self,
+                                             ensure_str(et.docinfo.root_name),
+                                             ensure_str(et.docinfo.public_id),
+                                             ensure_str(et.docinfo.system_url)))
+        except AttributeError:
+            pass
+
+        try:
+            node = et.getroot()
+        except AttributeError:
+            node = et
 
         while node.getprevious() is not None:
             node = node.getprevious()
@@ -118,12 +125,12 @@ class FragmentWrapper(object):
 class TreeWalker(_base.NonRecursiveTreeWalker):
     def __init__(self, tree):
         # pylint:disable=redefined-variable-type
-        if hasattr(tree, "getroot"):
-            self.fragmentChildren = set()
-            tree = Root(tree)
-        elif isinstance(tree, list):
+        if isinstance(tree, list):
             self.fragmentChildren = set(tree)
             tree = FragmentRoot(tree)
+        else:
+            self.fragmentChildren = set()
+            tree = Root(tree)
         _base.NonRecursiveTreeWalker.__init__(self, tree)
         self.filter = ihatexml.InfosetFilter()
 
