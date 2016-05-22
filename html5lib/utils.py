@@ -61,6 +61,7 @@ class MethodDispatcher(dict):
             else:
                 _dictEntries.append((name, value))
         dict.__init__(self, _dictEntries)
+        assert len(self) == len(_dictEntries)
         self.default = None
 
     def __getitem__(self, key):

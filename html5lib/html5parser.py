@@ -893,7 +893,7 @@ def getPhases(debug):
                 ("body", self.startTagBody),
                 ("frameset", self.startTagFrameset),
                 (("address", "article", "aside", "blockquote", "center", "details",
-                  "details", "dir", "div", "dl", "fieldset", "figcaption", "figure",
+                  "dir", "div", "dl", "fieldset", "figcaption", "figure",
                   "footer", "header", "hgroup", "main", "menu", "nav", "ol", "p",
                   "section", "summary", "ul"),
                  self.startTagCloseP),
