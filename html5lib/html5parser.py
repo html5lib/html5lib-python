@@ -1,7 +1,12 @@
 from __future__ import absolute_import, division, unicode_literals
-from six import with_metaclass
+from six import with_metaclass, viewkeys, PY3
 
 import types
+
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 
 from . import inputstream
 from . import tokenizer
@@ -10,15 +15,17 @@ from . import treebuilders
 from .treebuilders._base import Marker
 
 from . import utils
-from . import constants
-from .constants import spaceCharacters, asciiUpper2Lower
-from .constants import specialElements
-from .constants import headingElements
-from .constants import cdataElements, rcdataElements
-from .constants import tokenTypes, ReparseException, namespaces
-from .constants import htmlIntegrationPointElements, mathmlTextIntegrationPointElements
-from .constants import adjustForeignAttributes as adjustForeignAttributesMap
-from .constants import E
+from .constants import (
+    spaceCharacters, asciiUpper2Lower,
+    specialElements, headingElements, cdataElements, rcdataElements,
+    tokenTypes, tagTokenTypes,
+    namespaces,
+    htmlIntegrationPointElements, mathmlTextIntegrationPointElements,
+    adjustForeignAttributes as adjustForeignAttributesMap,
+    adjustMathMLAttributes, adjustSVGAttributes,
+    E,
+    ReparseException
+)
 
 
 def parse(doc, treebuilder="etree", encoding=None,
@@ -272,96 +279,18 @@ class HTMLParser(object):
         """ HTML5 specific normalizations to the token stream """
 
         if token["type"] == tokenTypes["StartTag"]:
-            token["data"] = dict(token["data"][::-1])
+            token["data"] = OrderedDict(token['data'][::-1])
 
         return token
 
     def adjustMathMLAttributes(self, token):
-        replacements = {"definitionurl": "definitionURL"}
-        for k, v in replacements.items():
-            if k in token["data"]:
-                token["data"][v] = token["data"][k]
-                del token["data"][k]
+        adjust_attributes(token, adjustMathMLAttributes)
 
     def adjustSVGAttributes(self, token):
-        replacements = {
-            "attributename": "attributeName",
-            "attributetype": "attributeType",
-            "basefrequency": "baseFrequency",
-            "baseprofile": "baseProfile",
-            "calcmode": "calcMode",
-            "clippathunits": "clipPathUnits",
-            "contentscripttype": "contentScriptType",
-            "contentstyletype": "contentStyleType",
-            "diffuseconstant": "diffuseConstant",
-            "edgemode": "edgeMode",
-            "externalresourcesrequired": "externalResourcesRequired",
-            "filterres": "filterRes",
-            "filterunits": "filterUnits",
-            "glyphref": "glyphRef",
-            "gradienttransform": "gradientTransform",
-            "gradientunits": "gradientUnits",
-            "kernelmatrix": "kernelMatrix",
-            "kernelunitlength": "kernelUnitLength",
-            "keypoints": "keyPoints",
-            "keysplines": "keySplines",
-            "keytimes": "keyTimes",
-            "lengthadjust": "lengthAdjust",
-            "limitingconeangle": "limitingConeAngle",
-            "markerheight": "markerHeight",
-            "markerunits": "markerUnits",
-            "markerwidth": "markerWidth",
-            "maskcontentunits": "maskContentUnits",
-            "maskunits": "maskUnits",
-            "numoctaves": "numOctaves",
-            "pathlength": "pathLength",
-            "patterncontentunits": "patternContentUnits",
-            "patterntransform": "patternTransform",
-            "patternunits": "patternUnits",
-            "pointsatx": "pointsAtX",
-            "pointsaty": "pointsAtY",
-            "pointsatz": "pointsAtZ",
-            "preservealpha": "preserveAlpha",
-            "preserveaspectratio": "preserveAspectRatio",
-            "primitiveunits": "primitiveUnits",
-            "refx": "refX",
-            "refy": "refY",
-            "repeatcount": "repeatCount",
-            "repeatdur": "repeatDur",
-            "requiredextensions": "requiredExtensions",
-            "requiredfeatures": "requiredFeatures",
-            "specularconstant": "specularConstant",
-            "specularexponent": "specularExponent",
-            "spreadmethod": "spreadMethod",
-            "startoffset": "startOffset",
-            "stddeviation": "stdDeviation",
-            "stitchtiles": "stitchTiles",
-            "surfacescale": "surfaceScale",
-            "systemlanguage": "systemLanguage",
-            "tablevalues": "tableValues",
-            "targetx": "targetX",
-            "targety": "targetY",
-            "textlength": "textLength",
-            "viewbox": "viewBox",
-            "viewtarget": "viewTarget",
-            "xchannelselector": "xChannelSelector",
-            "ychannelselector": "yChannelSelector",
-            "zoomandpan": "zoomAndPan"
-        }
-        for originalName in list(token["data"].keys()):
-            if originalName in replacements:
-                svgName = replacements[originalName]
-                token["data"][svgName] = token["data"][originalName]
-                del token["data"][originalName]
+        adjust_attributes(token, adjustSVGAttributes)
 
     def adjustForeignAttributes(self, token):
-        replacements = adjustForeignAttributesMap
-
-        for originalName in token["data"].keys():
-            if originalName in replacements:
-                foreignName = replacements[originalName]
-                token["data"][foreignName] = token["data"][originalName]
-                del token["data"][originalName]
+        adjust_attributes(token, adjustForeignAttributesMap)
 
     def reparseTokenNormal(self, token):
         # pylint:disable=unused-argument
@@ -434,7 +363,7 @@ def getPhases(debug):
     def log(function):
         """Logger that records which phase processes each token"""
         type_names = dict((value, key) for key, value in
-                          constants.tokenTypes.items())
+                          tokenTypes.items())
 
         def wrapped(self, *args, **kwargs):
             if function.__name__.startswith("process") and len(args) > 0:
@@ -443,7 +372,7 @@ def getPhases(debug):
                     info = {"type": type_names[token['type']]}
                 except:
                     raise
-                if token['type'] in constants.tagTokenTypes:
+                if token['type'] in tagTokenTypes:
                     info["name"] = token['name']
 
                 self.parser.log.append((self.parser.tokenizer.state.__name__,
@@ -1022,17 +951,9 @@ def getPhases(debug):
             self.endTagHandler.default = self.endTagOther
 
         def isMatchingFormattingElement(self, node1, node2):
-            if node1.name != node2.name or node1.namespace != node2.namespace:
-                return False
-            elif len(node1.attributes) != len(node2.attributes):
-                return False
-            else:
-                attributes1 = sorted(node1.attributes.items())
-                attributes2 = sorted(node2.attributes.items())
-                for attr1, attr2 in zip(attributes1, attributes2):
-                    if attr1 != attr2:
-                        return False
-            return True
+            return (node1.name == node2.name and
+                    node1.namespace == node2.namespace and
+                    node1.attributes == node2.attributes)
 
         # helper
         def addFormattingElement(self, token):
@@ -2796,6 +2717,16 @@ def getPhases(debug):
         "afterAfterFrameset": AfterAfterFramesetPhase,
         # XXX after after frameset
     }
+
+
+def adjust_attributes(token, replacements):
+    if PY3 or utils.PY27:
+        needs_adjustment = viewkeys(token['data']) & viewkeys(replacements)
+    else:
+        needs_adjustment = frozenset(token['data']) & frozenset(replacements)
+    if needs_adjustment:
+        token['data'] = OrderedDict((replacements.get(k, k), v)
+                                    for k, v in token['data'].items())
 
 
 def impliedTagToken(name, type="EndTag", attributes=None,

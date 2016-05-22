@@ -15,7 +15,3 @@ lxml ; platform_python_implementation == 'CPython'
 # DATrie can be used in place of our Python trie implementation for
 # slightly better parsing performance.
 datrie ; platform_python_implementation == 'CPython'
-
-# Can be used to force attributes to be serialized in alphabetical
-# order.
-ordereddict ; python_version < '2.7'
