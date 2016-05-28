@@ -89,6 +89,7 @@ def test_debug_log():
 
     assert parser.log == expected
 
+
 def test_no_duplicate_clone():
     frag = parseFragment("<b><em><foo><foob><fooc><aside></b></em>")
     assert len(frag) == 2
