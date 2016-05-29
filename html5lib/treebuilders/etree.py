@@ -100,6 +100,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             node.parent = self
 
         def removeChild(self, node):
+            self._childNodes.remove(node)
             self._element.remove(node._element)
             node.parent = None
 
