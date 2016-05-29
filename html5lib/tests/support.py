@@ -62,7 +62,7 @@ else:
 try:
     import genshi  # noqa
 except ImportError:
-    pass
+    treeTypes["genshi"] = None
 else:
     treeTypes["genshi"] = {
         "builder": treebuilders.getTreeBuilder("dom"),
