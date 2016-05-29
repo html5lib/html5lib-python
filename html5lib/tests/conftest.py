@@ -18,14 +18,17 @@ def pytest_collectstart():
 
 def pytest_collect_file(path, parent):
     dir = os.path.abspath(path.dirname)
-    if dir == _tree_construction:
-        if path.basename == "template.dat":
-            return
+    dir_and_parents = set()
+    while dir not in dir_and_parents:
+        dir_and_parents.add(dir)
+        dir = os.path.dirname(dir)
+
+    if _tree_construction in dir_and_parents:
         if path.ext == ".dat":
             return TreeConstructionFile(path, parent)
-    elif dir == _tokenizer:
+    elif _tokenizer in dir_and_parents:
         if path.ext == ".test":
             return TokenizerFile(path, parent)
-    elif dir == _sanitizer_testdata:
+    elif _sanitizer_testdata in dir_and_parents:
         if path.ext == ".dat":
             return SanitizerFile(path, parent)
