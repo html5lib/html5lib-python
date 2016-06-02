@@ -167,12 +167,17 @@ class TreeBuilder(object):
         # If we pass a node in we match that. if we pass a string
         # match any node with that name
         exactNode = hasattr(target, "nameTuple")
+        if not exactNode:
+            if isinstance(target, text_type):
+                target = (namespaces["html"], target)
+            assert isinstance(target, tuple)
 
         listElements, invert = listElementsMap[variant]
 
         for node in reversed(self.openElements):
-            if (node.name == target and not exactNode or
-                    node == target and exactNode):
+            if exactNode and node == target:
+                return True
+            elif not exactNode and node.nameTuple == target:
                 return True
             elif (invert ^ (node.nameTuple in listElements)):
                 return False
