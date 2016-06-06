@@ -100,6 +100,42 @@ def test_treewalker_six_mix():
             yield runTreewalkerEditTest, intext, expected, attrs, tree
 
 
+@pytest.mark.parametrize("tree", sorted(treeTypes.items()))
+def test_fragment_single_char(tree):
+    expected = [
+        {'data': 'x', 'type': 'Characters'}
+    ]
+
+    treeName, treeClass = tree
+    if treeClass is None:
+        pytest.skip("Treebuilder not loaded")
+
+    parser = html5parser.HTMLParser(tree=treeClass["builder"])
+    document = parser.parseFragment("x")
+    document = treeClass.get("adapter", lambda x: x)(document)
+    output = Lint(treeClass["walker"](document))
+
+    assert list(output) == expected
+
+
+@pytest.mark.parametrize("tree", sorted(treeTypes.items()))
+def test_fragment_single_non_ascii_char(tree):
+    expected = [
+        {'data': '\u1234', 'type': 'Characters'}
+    ]
+
+    treeName, treeClass = tree
+    if treeClass is None:
+        pytest.skip("Treebuilder not loaded")
+
+    parser = html5parser.HTMLParser(tree=treeClass["builder"])
+    document = parser.parseFragment("\u1234")
+    document = treeClass.get("adapter", lambda x: x)(document)
+    output = Lint(treeClass["walker"](document))
+
+    assert list(output) == expected
+
+
 @pytest.mark.skipif(treeTypes["lxml"] is None, reason="lxml not importable")
 def test_lxml_xml():
     expected = [
