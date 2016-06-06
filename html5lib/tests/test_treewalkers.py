@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, unicode_literals
 
+import itertools
+
 import pytest
 
 try:
@@ -100,10 +102,10 @@ def test_treewalker_six_mix():
             yield runTreewalkerEditTest, intext, expected, attrs, tree
 
 
-@pytest.mark.parametrize("tree", sorted(treeTypes.items()))
-def test_fragment_single_char(tree):
+@pytest.mark.parametrize("tree,char", itertools.product(sorted(treeTypes.items()), ["x", "\u1234"]))
+def test_fragment_single_char(tree, char):
     expected = [
-        {'data': 'x', 'type': 'Characters'}
+        {'data': char, 'type': 'Characters'}
     ]
 
     treeName, treeClass = tree
@@ -111,25 +113,7 @@ def test_fragment_single_char(tree):
         pytest.skip("Treebuilder not loaded")
 
     parser = html5parser.HTMLParser(tree=treeClass["builder"])
-    document = parser.parseFragment("x")
-    document = treeClass.get("adapter", lambda x: x)(document)
-    output = Lint(treeClass["walker"](document))
-
-    assert list(output) == expected
-
-
-@pytest.mark.parametrize("tree", sorted(treeTypes.items()))
-def test_fragment_single_non_ascii_char(tree):
-    expected = [
-        {'data': '\u1234', 'type': 'Characters'}
-    ]
-
-    treeName, treeClass = tree
-    if treeClass is None:
-        pytest.skip("Treebuilder not loaded")
-
-    parser = html5parser.HTMLParser(tree=treeClass["builder"])
-    document = parser.parseFragment("\u1234")
+    document = parser.parseFragment(char)
     document = treeClass.get("adapter", lambda x: x)(document)
     output = Lint(treeClass["walker"](document))
 
