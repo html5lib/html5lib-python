@@ -1,3 +1,4 @@
 six
 webencodings
 ordereddict ; python_version < '2.7'
+setuptools>=18.5

@@ -1,9 +1,17 @@
+from __future__ import print_function
+
 import ast
 import codecs
+import sys
 
 from os.path import join, dirname
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, __version__ as setuptools_version
+from pkg_resources import parse_version
 
+if parse_version(setuptools_version) < parse_version("18.5"):
+    print("html5lib requires setuptools version 18.5 or above; "
+          "please upgrade before installing (you have %s)" % setuptools_version)
+    sys.exit(1)
 
 classifiers = [
     'Development Status :: 5 - Production/Stable',
@@ -28,7 +36,7 @@ with codecs.open(join(here, 'README.rst'), 'r', 'utf8') as readme_file:
         long_description = readme_file.read() + '\n' + changes_file.read()
 
 version = None
-with open(join("html5lib", "__init__.py"), "rb") as init_file:
+with open(join(here, "html5lib", "__init__.py"), "rb") as init_file:
     t = ast.parse(init_file.read(), filename="__init__.py", mode="exec")
     assert isinstance(t, ast.Module)
     assignments = filter(lambda x: isinstance(x, ast.Assign), t.body)
@@ -52,6 +60,7 @@ setup(name='html5lib',
       install_requires=[
           'six',
           'webencodings',
+          'setuptools>=18.5'
       ],
       extras_require={
           # A empty extra that only has a conditional marker will be
@@ -60,8 +69,8 @@ setup(name='html5lib',
 
           # A conditional extra will only install these items when the extra is
           # requested and the condition matches.
-          "datrie:platform.python_implementation == 'CPython'": ["datrie"],
-          "lxml:platform.python_implementation == 'CPython'": ["lxml"],
+          "datrie:platform_python_implementation == 'CPython'": ["datrie"],
+          "lxml:platform_python_implementation == 'CPython'": ["lxml"],
 
           # Standard extras, will be installed when the extra is requested.
           "genshi": ["genshi"],
@@ -72,6 +81,6 @@ setup(name='html5lib',
           # extra that will be installed whenever the condition matches and the
           # all extra is requested.
           "all": ["genshi", "chardet>=2.2"],
-          "all:platform.python_implementation == 'CPython'": ["datrie", "lxml"],
+          "all:platform_python_implementation == 'CPython'": ["datrie", "lxml"],
       },
       )
