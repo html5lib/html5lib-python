@@ -1,9 +1,17 @@
+from __future__ import print_function
+
 import ast
 import codecs
+import sys
 
 from os.path import join, dirname
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, __version__ as setuptools_version
+from pkg_resources import parse_version
 
+if parse_version(setuptools_version) < parse_version("18.5"):
+    print("html5lib requires setuptools version 18.5 or above; "
+          "please upgrade before installing (you have %s)" % setuptools_version)
+    sys.exit(1)
 
 classifiers = [
     'Development Status :: 5 - Production/Stable',
