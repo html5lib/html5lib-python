@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, unicode_literals
 
+import itertools
+
 import pytest
 
 try:
@@ -98,6 +100,24 @@ def test_treewalker_six_mix():
     for tree in sorted(treeTypes.items()):
         for intext, attrs, expected in sm_tests:
             yield runTreewalkerEditTest, intext, expected, attrs, tree
+
+
+@pytest.mark.parametrize("tree,char", itertools.product(sorted(treeTypes.items()), ["x", "\u1234"]))
+def test_fragment_single_char(tree, char):
+    expected = [
+        {'data': char, 'type': 'Characters'}
+    ]
+
+    treeName, treeClass = tree
+    if treeClass is None:
+        pytest.skip("Treebuilder not loaded")
+
+    parser = html5parser.HTMLParser(tree=treeClass["builder"])
+    document = parser.parseFragment(char)
+    document = treeClass.get("adapter", lambda x: x)(document)
+    output = Lint(treeClass["walker"](document))
+
+    assert list(output) == expected
 
 
 @pytest.mark.skipif(treeTypes["lxml"] is None, reason="lxml not importable")
