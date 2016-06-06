@@ -28,7 +28,7 @@ with codecs.open(join(here, 'README.rst'), 'r', 'utf8') as readme_file:
         long_description = readme_file.read() + '\n' + changes_file.read()
 
 version = None
-with open(join("html5lib", "__init__.py"), "rb") as init_file:
+with open(join(here, "html5lib", "__init__.py"), "rb") as init_file:
     t = ast.parse(init_file.read(), filename="__init__.py", mode="exec")
     assert isinstance(t, ast.Module)
     assignments = filter(lambda x: isinstance(x, ast.Assign), t.body)
