@@ -1,5 +1,7 @@
 import os.path
 
+import pytest
+
 from .tree_construction import TreeConstructionFile
 from .tokenizer import TokenizerFile
 from .sanitizer import SanitizerFile
@@ -11,9 +13,19 @@ _tokenizer = os.path.join(_testdata, "tokenizer")
 _sanitizer_testdata = os.path.join(_dir, "sanitizer-testdata")
 
 
-def pytest_collectstart():
-    """check to see if the git submodule has been init'd"""
-    pass
+def pytest_configure(config):
+    msgs = []
+    if not os.path.exists(_testdata):
+        msg = "testdata not available! "
+        if os.path.exists(os.path.join(_dir, "..", "..", ".git")):
+            msg += ("Please run git submodule update --init --recursive " +
+                    "and then run tests again.")
+        else:
+            msg += ("The testdata doesn't appear to be included with this package, " +
+                    "so finding the right version will be hard. :(")
+        msgs.append(msg)
+    if msgs:
+        pytest.exit("\n".join(msgs))
 
 
 def pytest_collect_file(path, parent):
