@@ -193,6 +193,7 @@ class HTMLParser(object):
                           type in (CharactersToken, SpaceCharactersToken))) or
                         (currentNodeNamespace == namespaces["mathml"] and
                          currentNodeName == "annotation-xml" and
+                         type == StartTagToken and
                          token["name"] == "svg") or
                         (self.isHTMLIntegrationPoint(currentNode) and
                          type in (StartTagToken, CharactersToken, SpaceCharactersToken))):
