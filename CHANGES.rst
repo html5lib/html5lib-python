@@ -46,6 +46,10 @@ Released on XXX
 
 * **Drop support of charade, now that chardet is supported once more.**
 
+* **Replace the charset keyword argument on parse and related methods
+  with a set of keyword arguments: override_encoding, transport_encoding,
+  same_origin_parent_encoding, likely_encoding, and default_encoding.**
+
 
 0.9999999/1.0b8
 ~~~~~~~~~~~~~~~

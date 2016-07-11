@@ -28,19 +28,17 @@ from .constants import (
 )
 
 
-def parse(doc, treebuilder="etree", encoding=None,
-          namespaceHTMLElements=True, scripting=False):
+def parse(doc, treebuilder="etree", namespaceHTMLElements=True, **kwargs):
     """Parse a string or file-like object into a tree"""
     tb = treebuilders.getTreeBuilder(treebuilder)
     p = HTMLParser(tb, namespaceHTMLElements=namespaceHTMLElements)
-    return p.parse(doc, encoding=encoding, scripting=scripting)
+    return p.parse(doc, **kwargs)
 
 
-def parseFragment(doc, container="div", treebuilder="etree", encoding=None,
-                  namespaceHTMLElements=True, scripting=False):
+def parseFragment(doc, container="div", treebuilder="etree", namespaceHTMLElements=True, **kwargs):
     tb = treebuilders.getTreeBuilder(treebuilder)
     p = HTMLParser(tb, namespaceHTMLElements=namespaceHTMLElements)
-    return p.parseFragment(doc, container=container, encoding=encoding, scripting=scripting)
+    return p.parseFragment(doc, container=container, **kwargs)
 
 
 def method_decorator_metaclass(function):
@@ -59,18 +57,13 @@ class HTMLParser(object):
     """HTML parser. Generates a tree structure from a stream of (possibly
         malformed) HTML"""
 
-    def __init__(self, tree=None, tokenizer=tokenizer.HTMLTokenizer,
-                 strict=False, namespaceHTMLElements=True, debug=False):
+    def __init__(self, tree=None, strict=False, namespaceHTMLElements=True, debug=False):
         """
         strict - raise an exception when a parse error is encountered
 
         tree - a treebuilder class controlling the type of tree that will be
         returned. Built in treebuilders can be accessed through
         html5lib.treebuilders.getTreeBuilder(treeType)
-
-        tokenizer - a class that provides a stream of tokens to the treebuilder.
-        This may be replaced for e.g. a sanitizer which converts some tags to
-        text
         """
 
         # Raise an exception on the first error encountered
@@ -79,22 +72,17 @@ class HTMLParser(object):
         if tree is None:
             tree = treebuilders.getTreeBuilder("etree")
         self.tree = tree(namespaceHTMLElements)
-        self.tokenizer_class = tokenizer
         self.errors = []
 
         self.phases = dict([(name, cls(self, self.tree)) for name, cls in
                             getPhases(debug).items()])
 
-    def _parse(self, stream, innerHTML=False, container="div", encoding=None,
-               parseMeta=True, useChardet=True, scripting=False, **kwargs):
+    def _parse(self, stream, innerHTML=False, container="div", scripting=False, **kwargs):
 
         self.innerHTMLMode = innerHTML
         self.container = container
         self.scripting = scripting
-        self.tokenizer = self.tokenizer_class(stream, encoding=encoding,
-                                              parseMeta=parseMeta,
-                                              useChardet=useChardet,
-                                              parser=self, **kwargs)
+        self.tokenizer = tokenizer.HTMLTokenizer(stream, parser=self, **kwargs)
         self.reset()
 
         try:
@@ -232,8 +220,7 @@ class HTMLParser(object):
         for token in self.tokenizer:
             yield self.normalizeToken(token)
 
-    def parse(self, stream, encoding=None, parseMeta=True,
-              useChardet=True, scripting=False):
+    def parse(self, stream, *args, **kwargs):
         """Parse a HTML document into a well-formed tree
 
         stream - a filelike object or string containing the HTML to be parsed
@@ -245,13 +232,10 @@ class HTMLParser(object):
 
         scripting - treat noscript elements as if javascript was turned on
         """
-        self._parse(stream, innerHTML=False, encoding=encoding,
-                    parseMeta=parseMeta, useChardet=useChardet, scripting=scripting)
+        self._parse(stream, False, None, *args, **kwargs)
         return self.tree.getDocument()
 
-    def parseFragment(self, stream, container="div", encoding=None,
-                      parseMeta=False, useChardet=True, scripting=False):
-        # pylint:disable=unused-argument
+    def parseFragment(self, stream, *args, **kwargs):
         """Parse a HTML fragment into a well-formed tree fragment
 
         container - name of the element we're setting the innerHTML property
@@ -266,8 +250,7 @@ class HTMLParser(object):
 
         scripting - treat noscript elements as if javascript was turned on
         """
-        self._parse(stream, True, container=container,
-                    encoding=encoding, scripting=scripting)
+        self._parse(stream, True, *args, **kwargs)
         return self.tree.getFragment()
 
     def parseError(self, errorcode="XXX-undefined-error", datavars=None):

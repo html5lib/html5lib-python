@@ -51,7 +51,7 @@ pass into html5lib as follows:
   import html5lib
 
   with closing(urlopen("http://example.com/")) as f:
-      document = html5lib.parse(f, encoding=f.info().getparam("charset"))
+      document = html5lib.parse(f, transport_encoding=f.info().getparam("charset"))
 
 When using with ``urllib.request`` (Python 3), the charset from HTTP
 should be pass into html5lib as follows:
@@ -62,7 +62,7 @@ should be pass into html5lib as follows:
   import html5lib
 
   with urlopen("http://example.com/") as f:
-      document = html5lib.parse(f, encoding=f.info().get_content_charset())
+      document = html5lib.parse(f, transport_encoding=f.info().get_content_charset())
 
 To have more control over the parser, create a parser object explicitly.
 For instance, to make the parser raise exceptions on parse errors, use:

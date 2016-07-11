@@ -128,7 +128,7 @@ class BufferedStream(object):
         return b"".join(rv)
 
 
-def HTMLInputStream(source, encoding=None, parseMeta=True, chardet=True):
+def HTMLInputStream(source, **kwargs):
     # Work around Python bug #20007: read(0) closes the connection.
     # http://bugs.python.org/issue20007
     if (isinstance(source, http_client.HTTPResponse) or
@@ -142,12 +142,13 @@ def HTMLInputStream(source, encoding=None, parseMeta=True, chardet=True):
         isUnicode = isinstance(source, text_type)
 
     if isUnicode:
-        if encoding is not None:
-            raise TypeError("Cannot explicitly set an encoding with a unicode string")
+        encodings = [x for x in kwargs if x.endswith("_encoding")]
+        if encodings:
+            raise TypeError("Cannot set an encoding with a unicode input, set %r" % encodings)
 
-        return HTMLUnicodeInputStream(source)
+        return HTMLUnicodeInputStream(source, **kwargs)
     else:
-        return HTMLBinaryInputStream(source, encoding, parseMeta, chardet)
+        return HTMLBinaryInputStream(source, **kwargs)
 
 
 class HTMLUnicodeInputStream(object):
@@ -172,8 +173,6 @@ class HTMLUnicodeInputStream(object):
         the encoding.  If specified, that encoding will be used,
         regardless of any BOM or later declaration (such as in a meta
         element)
-
-        parseMeta - Look for a <meta> element containing encoding information
 
         """
 
@@ -390,7 +389,9 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
 
     """
 
-    def __init__(self, source, encoding=None, parseMeta=True, chardet=True):
+    def __init__(self, source, override_encoding=None, transport_encoding=None,
+                 same_origin_parent_encoding=None, likely_encoding=None,
+                 default_encoding="windows-1252", useChardet=True):
         """Initialises the HTMLInputStream.
 
         HTMLInputStream(source, [encoding]) -> Normalized stream from source
@@ -403,8 +404,6 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
         regardless of any BOM or later declaration (such as in a meta
         element)
 
-        parseMeta - Look for a <meta> element containing encoding information
-
         """
         # Raw Stream - for unicode objects this will encode to utf-8 and set
         #              self.charEncoding as appropriate
@@ -412,21 +411,22 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
 
         HTMLUnicodeInputStream.__init__(self, self.rawStream)
 
-        self.charEncoding = (lookupEncoding(encoding), "certain")
-
         # Encoding Information
         # Number of bytes to use when looking for a meta element with
         # encoding information
         self.numBytesMeta = 1024
         # Number of bytes to use when using detecting encoding using chardet
         self.numBytesChardet = 100
-        # Encoding to use if no other information can be found
-        self.defaultEncoding = "windows-1252"
+        # Things from args
+        self.override_encoding = override_encoding
+        self.transport_encoding = transport_encoding
+        self.same_origin_parent_encoding = same_origin_parent_encoding
+        self.likely_encoding = likely_encoding
+        self.default_encoding = default_encoding
 
-        # Detect encoding iff no explicit "transport level" encoding is supplied
-        if (self.charEncoding[0] is None):
-            self.charEncoding = self.detectEncoding(parseMeta, chardet)
-            assert self.charEncoding[0] is not None
+        # Determine encoding
+        self.charEncoding = self.determineEncoding(useChardet)
+        assert self.charEncoding[0] is not None
 
         # Call superclass
         self.reset()
@@ -454,21 +454,45 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
 
         return stream
 
-    def detectEncoding(self, parseMeta=True, chardet=True):
-        # First look for a BOM
+    def determineEncoding(self, chardet=True):
+        # BOMs take precedence over everything
         # This will also read past the BOM if present
-        encoding = self.detectBOM()
-        confidence = "certain"
-        # If there is no BOM need to look for meta elements with encoding
-        # information
-        if encoding is None and parseMeta:
-            encoding = self.detectEncodingMeta()
-            confidence = "tentative"
+        charEncoding = self.detectBOM(), "certain"
+        if charEncoding[0] is not None:
+            return charEncoding
+
+        # If we've been overriden, we've been overriden
+        charEncoding = lookupEncoding(self.override_encoding), "certain"
+        if charEncoding[0] is not None:
+            return charEncoding
+
+        # Now check the transport layer
+        charEncoding = lookupEncoding(self.transport_encoding), "certain"
+        if charEncoding[0] is not None:
+            return charEncoding
+
+        # Look for meta elements with encoding information
+        charEncoding = self.detectEncodingMeta(), "tentative"
+        if charEncoding[0] is not None:
+            return charEncoding
+
+        # Parent document encoding
+        charEncoding = lookupEncoding(self.same_origin_parent_encoding), "tentative"
+        if charEncoding[0] is not None and not charEncoding[0].name.startswith("utf-16"):
+            return charEncoding
+
+        # "likely" encoding
+        charEncoding = lookupEncoding(self.likely_encoding), "tentative"
+        if charEncoding[0] is not None:
+            return charEncoding
+
         # Guess with chardet, if available
-        if encoding is None and chardet:
-            confidence = "tentative"
+        if chardet:
             try:
                 from chardet.universaldetector import UniversalDetector
+            except ImportError:
+                pass
+            else:
                 buffers = []
                 detector = UniversalDetector()
                 while not detector.done:
@@ -481,14 +505,16 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
                 detector.close()
                 encoding = lookupEncoding(detector.result['encoding'])
                 self.rawStream.seek(0)
-            except ImportError:
-                pass
-        # If all else fails use the default encoding
-        if encoding is None:
-            confidence = "tentative"
-            encoding = lookupEncoding(self.defaultEncoding)
+                if encoding is not None:
+                    return encoding, "tentative"
 
-        return encoding, confidence
+        # Try the default encoding
+        charEncoding = lookupEncoding(self.default_encoding), "tentative"
+        if charEncoding[0] is not None:
+            return charEncoding
+
+        # Fallback to html5lib's default if even that hasn't worked
+        return lookupEncoding("windows-1252"), "tentative"
 
     def changeEncoding(self, newEncoding):
         assert self.charEncoding[1] != "certain"
