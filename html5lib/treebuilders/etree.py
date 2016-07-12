@@ -5,7 +5,7 @@ from six import text_type
 
 import re
 
-from . import _base
+from . import base
 from .. import ihatexml
 from .. import constants
 from ..constants import namespaces
@@ -18,7 +18,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
     ElementTree = ElementTreeImplementation
     ElementTreeCommentType = ElementTree.Comment("asd").tag
 
-    class Element(_base.Node):
+    class Element(base.Node):
         def __init__(self, name, namespace=None):
             self._name = name
             self._namespace = namespace
@@ -142,7 +142,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                 if self._element.text is not None:
                     newParent._element.text += self._element.text
             self._element.text = ""
-            _base.Node.reparentChildren(self, newParent)
+            base.Node.reparentChildren(self, newParent)
 
     class Comment(Element):
         def __init__(self, data):
@@ -310,7 +310,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
 
         return "".join(rv)
 
-    class TreeBuilder(_base.TreeBuilder):  # pylint:disable=unused-variable
+    class TreeBuilder(base.TreeBuilder):  # pylint:disable=unused-variable
         documentClass = Document
         doctypeClass = DocumentType
         elementClass = Element
@@ -332,7 +332,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                     return self.document._element.find("html")
 
         def getFragment(self):
-            return _base.TreeBuilder.getFragment(self)._element
+            return base.TreeBuilder.getFragment(self)._element
 
     return locals()
 
