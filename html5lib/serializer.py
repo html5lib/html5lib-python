@@ -5,9 +5,9 @@ import re
 
 from codecs import register_error, xmlcharrefreplace_errors
 
-from ..constants import voidElements, booleanAttributes, spaceCharacters
-from ..constants import rcdataElements, entities, xmlEntities
-from .. import utils
+from .constants import voidElements, booleanAttributes, spaceCharacters
+from .constants import rcdataElements, entities, xmlEntities
+from . import treewalkers, utils
 from xml.sax.saxutils import escape
 
 spaceCharacters = "".join(spaceCharacters)
@@ -71,6 +71,13 @@ def htmlentityreplace_errors(exc):
         return xmlcharrefreplace_errors(exc)
 
 register_error("htmlentityreplace", htmlentityreplace_errors)
+
+
+def serialize(input, tree="etree", encoding=None, **serializer_opts):
+    # XXX: Should we cache this?
+    walker = treewalkers.getTreeWalker(tree)
+    s = HTMLSerializer(**serializer_opts)
+    return s.render(walker(input), encoding)
 
 
 class HTMLSerializer(object):
@@ -181,24 +188,24 @@ class HTMLSerializer(object):
         self.errors = []
 
         if encoding and self.inject_meta_charset:
-            from ..filters.inject_meta_charset import Filter
+            from .filters.inject_meta_charset import Filter
             treewalker = Filter(treewalker, encoding)
         # Alphabetical attributes is here under the assumption that none of
         # the later filters add or change order of attributes; it needs to be
         # before the sanitizer so escaped elements come out correctly
         if self.alphabetical_attributes:
-            from ..filters.alphabeticalattributes import Filter
+            from .filters.alphabeticalattributes import Filter
             treewalker = Filter(treewalker)
         # WhitespaceFilter should be used before OptionalTagFilter
         # for maximum efficiently of this latter filter
         if self.strip_whitespace:
-            from ..filters.whitespace import Filter
+            from .filters.whitespace import Filter
             treewalker = Filter(treewalker)
         if self.sanitize:
-            from ..filters.sanitizer import Filter
+            from .filters.sanitizer import Filter
             treewalker = Filter(treewalker)
         if self.omit_optional_tags:
-            from ..filters.optionaltags import Filter
+            from .filters.optionaltags import Filter
             treewalker = Filter(treewalker)
 
         for token in treewalker:
