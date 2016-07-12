@@ -11,9 +11,9 @@ import pytest
 import six
 from six.moves import http_client, urllib
 
-from html5lib.inputstream import (BufferedStream, HTMLInputStream,
-                                  HTMLUnicodeInputStream, HTMLBinaryInputStream)
-from html5lib.utils import supports_lone_surrogates
+from html5lib._inputstream import (BufferedStream, HTMLInputStream,
+                                   HTMLUnicodeInputStream, HTMLBinaryInputStream)
+from html5lib._utils import supports_lone_surrogates
 
 
 def test_basic():

@@ -11,7 +11,7 @@ returning an iterator generating tokens.
 from __future__ import absolute_import, division, unicode_literals
 
 from .. import constants
-from ..utils import default_etree
+from .._utils import default_etree
 
 __all__ = ["getTreeWalker", "pprint", "dom", "etree", "genshi", "etree_lxml"]
 

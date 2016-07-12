@@ -20,7 +20,7 @@ from . import base
 from ..constants import DataLossWarning
 from .. import constants
 from . import etree as etree_builders
-from .. import ihatexml
+from .. import _ihatexml
 
 import lxml.etree as etree
 
@@ -54,7 +54,7 @@ class Document(object):
 
 def testSerializer(element):
     rv = []
-    infosetFilter = ihatexml.InfosetFilter(preventDoubleDashComments=True)
+    infosetFilter = _ihatexml.InfosetFilter(preventDoubleDashComments=True)
 
     def serializeElement(element, indent=0):
         if not hasattr(element, "tag"):
@@ -182,7 +182,7 @@ class TreeBuilder(base.TreeBuilder):
 
     def __init__(self, namespaceHTMLElements, fullTree=False):
         builder = etree_builders.getETreeModule(etree, fullTree=fullTree)
-        infosetFilter = self.infosetFilter = ihatexml.InfosetFilter(preventDoubleDashComments=True)
+        infosetFilter = self.infosetFilter = _ihatexml.InfosetFilter(preventDoubleDashComments=True)
         self.namespaceHTMLElements = namespaceHTMLElements
 
         class Attributes(dict):

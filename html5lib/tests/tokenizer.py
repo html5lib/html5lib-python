@@ -8,8 +8,8 @@ import re
 import pytest
 from six import unichr
 
-from html5lib.tokenizer import HTMLTokenizer
-from html5lib import constants, utils
+from html5lib._tokenizer import HTMLTokenizer
+from html5lib import constants, _utils
 
 
 class TokenizerTestParser(object):
@@ -156,7 +156,7 @@ def unescape(test):
         except ValueError:
             # This occurs when unichr throws ValueError, which should
             # only be for a lone-surrogate.
-            if utils.supports_lone_surrogates:
+            if _utils.supports_lone_surrogates:
                 raise
             return None
 

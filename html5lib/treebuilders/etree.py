@@ -6,10 +6,10 @@ from six import text_type
 import re
 
 from . import base
-from .. import ihatexml
+from .. import _ihatexml
 from .. import constants
 from ..constants import namespaces
-from ..utils import moduleFactoryFactory
+from .._utils import moduleFactoryFactory
 
 tag_regexp = re.compile("{([^}]*)}(.*)")
 
@@ -259,7 +259,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
     def tostring(element):  # pylint:disable=unused-variable
         """Serialize an element and its child nodes to a string"""
         rv = []
-        filter = ihatexml.InfosetFilter()
+        filter = _ihatexml.InfosetFilter()
 
         def serializeElement(element):
             if isinstance(element, ElementTree.ElementTree):

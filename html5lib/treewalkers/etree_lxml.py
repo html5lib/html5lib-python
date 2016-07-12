@@ -6,7 +6,7 @@ from ..treebuilders.etree import tag_regexp
 
 from . import base
 
-from .. import ihatexml
+from .. import _ihatexml
 
 
 def ensure_str(s):
@@ -132,7 +132,7 @@ class TreeWalker(base.NonRecursiveTreeWalker):
             self.fragmentChildren = set()
             tree = Root(tree)
         base.NonRecursiveTreeWalker.__init__(self, tree)
-        self.filter = ihatexml.InfosetFilter()
+        self.filter = _ihatexml.InfosetFilter()
 
     def getNodeDetails(self, node):
         if isinstance(node, tuple):  # Text node

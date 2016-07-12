@@ -10,7 +10,7 @@ import webencodings
 
 from .constants import EOF, spaceCharacters, asciiLetters, asciiUppercase
 from .constants import ReparseException
-from . import utils
+from . import _utils
 
 from io import StringIO
 
@@ -28,7 +28,7 @@ spacesAngleBrackets = spaceCharactersBytes | frozenset([b">", b"<"])
 
 invalid_unicode_no_surrogate = "[\u0001-\u0008\u000B\u000E-\u001F\u007F-\u009F\uFDD0-\uFDEF\uFFFE\uFFFF\U0001FFFE\U0001FFFF\U0002FFFE\U0002FFFF\U0003FFFE\U0003FFFF\U0004FFFE\U0004FFFF\U0005FFFE\U0005FFFF\U0006FFFE\U0006FFFF\U0007FFFE\U0007FFFF\U0008FFFE\U0008FFFF\U0009FFFE\U0009FFFF\U000AFFFE\U000AFFFF\U000BFFFE\U000BFFFF\U000CFFFE\U000CFFFF\U000DFFFE\U000DFFFF\U000EFFFE\U000EFFFF\U000FFFFE\U000FFFFF\U0010FFFE\U0010FFFF]"  # noqa
 
-if utils.supports_lone_surrogates:
+if _utils.supports_lone_surrogates:
     # Use one extra step of indirection and create surrogates with
     # eval. Not using this indirection would introduce an illegal
     # unicode literal on platforms not supporting such lone
@@ -176,7 +176,7 @@ class HTMLUnicodeInputStream(object):
 
         """
 
-        if not utils.supports_lone_surrogates:
+        if not _utils.supports_lone_surrogates:
             # Such platforms will have already checked for such
             # surrogate errors, so no need to do this checking.
             self.reportCharacterErrors = None
@@ -304,9 +304,9 @@ class HTMLUnicodeInputStream(object):
             codepoint = ord(match.group())
             pos = match.start()
             # Pretty sure there should be endianness issues here
-            if utils.isSurrogatePair(data[pos:pos + 2]):
+            if _utils.isSurrogatePair(data[pos:pos + 2]):
                 # We have a surrogate pair!
-                char_val = utils.surrogatePairToCodepoint(data[pos:pos + 2])
+                char_val = _utils.surrogatePairToCodepoint(data[pos:pos + 2])
                 if char_val in non_bmp_invalid_codepoints:
                     self.errors.append("invalid-codepoint")
                 skip = True

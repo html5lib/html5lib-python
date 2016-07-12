@@ -8,7 +8,7 @@ import weakref
 from . import base
 from .. import constants
 from ..constants import namespaces
-from ..utils import moduleFactoryFactory
+from .._utils import moduleFactoryFactory
 
 
 def getDomBuilder(DomImplementation):

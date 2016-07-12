@@ -7,7 +7,7 @@ from codecs import register_error, xmlcharrefreplace_errors
 
 from .constants import voidElements, booleanAttributes, spaceCharacters
 from .constants import rcdataElements, entities, xmlEntities
-from . import treewalkers, utils
+from . import treewalkers, _utils
 from xml.sax.saxutils import escape
 
 spaceCharacters = "".join(spaceCharacters)
@@ -33,7 +33,7 @@ for k, v in list(entities.items()):
         continue
     if v != "&":
         if len(v) == 2:
-            v = utils.surrogatePairToCodepoint(v)
+            v = _utils.surrogatePairToCodepoint(v)
         else:
             v = ord(v)
         if v not in encode_entity_map or k.islower():
@@ -51,8 +51,8 @@ def htmlentityreplace_errors(exc):
                 skip = False
                 continue
             index = i + exc.start
-            if utils.isSurrogatePair(exc.object[index:min([exc.end, index + 2])]):
-                codepoint = utils.surrogatePairToCodepoint(exc.object[index:index + 2])
+            if _utils.isSurrogatePair(exc.object[index:min([exc.end, index + 2])]):
+                codepoint = _utils.surrogatePairToCodepoint(exc.object[index:index + 2])
                 skip = True
             else:
                 codepoint = ord(c)
