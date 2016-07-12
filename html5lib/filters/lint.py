@@ -2,21 +2,21 @@ from __future__ import absolute_import, division, unicode_literals
 
 from six import text_type
 
-from . import _base
+from . import base
 from ..constants import namespaces, voidElements
 
 from ..constants import spaceCharacters
 spaceCharacters = "".join(spaceCharacters)
 
 
-class Filter(_base.Filter):
+class Filter(base.Filter):
     def __init__(self, source, require_matching_tags=True):
         super(Filter, self).__init__(source)
         self.require_matching_tags = require_matching_tags
 
     def __iter__(self):
         open_elements = []
-        for token in _base.Filter.__iter__(self):
+        for token in base.Filter.__iter__(self):
             type = token["type"]
             if type in ("StartTag", "EmptyTag"):
                 namespace = token["namespace"]

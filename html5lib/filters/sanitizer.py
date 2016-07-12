@@ -5,7 +5,7 @@ from xml.sax.saxutils import escape, unescape
 
 from six.moves import urllib_parse as urlparse
 
-from . import _base
+from . import base
 from ..constants import namespaces, prefixes
 
 __all__ = ["Filter"]
@@ -712,7 +712,7 @@ data_content_type = re.compile(r'''
                                re.VERBOSE)
 
 
-class Filter(_base.Filter):
+class Filter(base.Filter):
     """ sanitization of XHTML+MathML+SVG and of inline style attributes."""
     def __init__(self,
                  source,
@@ -739,7 +739,7 @@ class Filter(_base.Filter):
         self.svg_allow_local_href = svg_allow_local_href
 
     def __iter__(self):
-        for token in _base.Filter.__iter__(self):
+        for token in base.Filter.__iter__(self):
             token = self.sanitize_token(token)
             if token:
                 yield token
