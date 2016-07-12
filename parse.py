@@ -55,7 +55,7 @@ def parse():
 
     tokenizer = HTMLTokenizer
 
-    p = html5parser.HTMLParser(tree=treebuilder, tokenizer=tokenizer, debug=opts.log)
+    p = html5parser.HTMLParser(tree=treebuilder, debug=opts.log)
 
     if opts.fragment:
         parseMethod = p.parseFragment
@@ -96,7 +96,7 @@ def parse():
 
 def run(parseMethod, f, encoding, scripting):
     try:
-        document = parseMethod(f, encoding=encoding, scripting=scripting)
+        document = parseMethod(f, override_encoding=encoding, scripting=scripting)
     except:
         document = None
         traceback.print_exc()
@@ -117,16 +117,14 @@ def printOutput(parser, document, opts):
                 document.writexml(sys.stdout, encoding="utf-8")
             elif tb == "lxml":
                 import lxml.etree
-                sys.stdout.write(lxml.etree.tostring(document))
+                sys.stdout.write(lxml.etree.tostring(document, encoding="unicode"))
             elif tb == "etree":
-                sys.stdout.write(utils.default_etree.tostring(document))
+                sys.stdout.write(utils.default_etree.tostring(document, encoding="unicode"))
         elif opts.tree:
             if not hasattr(document, '__getitem__'):
                 document = [document]
             for fragment in document:
                 print(parser.tree.testSerializer(fragment))
-        elif opts.hilite:
-            sys.stdout.write(document.hilite("utf-8"))
         elif opts.html:
             kwargs = {}
             for opt in serializer.HTMLSerializer.options:
@@ -187,9 +185,6 @@ def getOptParser():
 
     parser.add_option("", "--no-html", action="store_false", default=True,
                       dest="html", help="Don't output html")
-
-    parser.add_option("", "--hilite", action="store_true", default=False,
-                      dest="hilite", help="Output as formatted highlighted code.")
 
     parser.add_option("-c", "--encoding", action="store_true", default=False,
                       dest="encoding", help="Print character encoding used")
