@@ -13,7 +13,7 @@ from __future__ import absolute_import, division, unicode_literals
 from .. import constants
 from ..utils import default_etree
 
-__all__ = ["getTreeWalker", "pprint", "dom", "etree", "genshistream", "lxmletree"]
+__all__ = ["getTreeWalker", "pprint", "dom", "etree", "genshi", "lxmletree"]
 
 treeWalkerCache = {}
 
@@ -43,8 +43,8 @@ def getTreeWalker(treeType, implementation=None, **kwargs):
             from . import dom
             treeWalkerCache[treeType] = dom.TreeWalker
         elif treeType == "genshi":
-            from . import genshistream
-            treeWalkerCache[treeType] = genshistream.TreeWalker
+            from . import genshi
+            treeWalkerCache[treeType] = genshi.TreeWalker
         elif treeType == "lxml":
             from . import lxmletree
             treeWalkerCache[treeType] = lxmletree.TreeWalker
