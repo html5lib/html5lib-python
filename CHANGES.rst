@@ -50,6 +50,20 @@ Released on XXX
   with a set of keyword arguments: override_encoding, transport_encoding,
   same_origin_parent_encoding, likely_encoding, and default_encoding.**
 
+* **Move filters._base, treebuilder._base, and treewalkers._base to .base
+  to clarify their status as public.**
+
+* **Get rid of the sanitizer package. Merge sanitizer.sanitize into the
+  sanitizer.htmlsanitizer module and move that to saniziter. This means
+  anyone who used sanitizer.sanitize or sanitizer.HTMLSanitizer needs no
+  code changes.**
+
+* **Rename treewalkers.lxmletree to .etree_lxml and
+  treewalkers.genshistream to .genshi to have a consistent API.**
+
+* Move a whole load of stuff (inputstream, ihatexml, trie, tokenizer,
+  utils) to be underscore prefixed to clarify their status as private.
+
 
 0.9999999/1.0b8
 ~~~~~~~~~~~~~~~
