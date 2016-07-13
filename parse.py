@@ -9,7 +9,6 @@ import traceback
 from optparse import OptionParser
 
 from html5lib import html5parser
-from html5lib.tokenizer import HTMLTokenizer
 from html5lib import treebuilders, serializer, treewalkers
 from html5lib import constants
 from html5lib import utils
