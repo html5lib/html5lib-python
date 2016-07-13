@@ -53,8 +53,6 @@ def parse():
 
     treebuilder = treebuilders.getTreeBuilder(opts.treebuilder)
 
-    tokenizer = HTMLTokenizer
-
     p = html5parser.HTMLParser(tree=treebuilder, debug=opts.log)
 
     if opts.fragment:
