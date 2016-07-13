@@ -10,35 +10,33 @@ from .constants import rcdataElements, entities, xmlEntities
 from . import treewalkers, _utils
 from xml.sax.saxutils import escape
 
-spaceCharacters = "".join(spaceCharacters)
-
-quoteAttributeSpecChars = spaceCharacters + "\"'=<>`"
-quoteAttributeSpec = re.compile("[" + quoteAttributeSpecChars + "]")
-quoteAttributeLegacy = re.compile("[" + quoteAttributeSpecChars +
-                                  "\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n"
-                                  "\x0b\x0c\r\x0e\x0f\x10\x11\x12\x13\x14\x15"
-                                  "\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f"
-                                  "\x20\x2f\x60\xa0\u1680\u180e\u180f\u2000"
-                                  "\u2001\u2002\u2003\u2004\u2005\u2006\u2007"
-                                  "\u2008\u2009\u200a\u2028\u2029\u202f\u205f"
-                                  "\u3000]")
+_quoteAttributeSpecChars = "".join(spaceCharacters) + "\"'=<>`"
+_quoteAttributeSpec = re.compile("[" + _quoteAttributeSpecChars + "]")
+_quoteAttributeLegacy = re.compile("[" + _quoteAttributeSpecChars +
+                                   "\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n"
+                                   "\x0b\x0c\r\x0e\x0f\x10\x11\x12\x13\x14\x15"
+                                   "\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f"
+                                   "\x20\x2f\x60\xa0\u1680\u180e\u180f\u2000"
+                                   "\u2001\u2002\u2003\u2004\u2005\u2006\u2007"
+                                   "\u2008\u2009\u200a\u2028\u2029\u202f\u205f"
+                                   "\u3000]")
 
 
-encode_entity_map = {}
-is_ucs4 = len("\U0010FFFF") == 1
+_encode_entity_map = {}
+_is_ucs4 = len("\U0010FFFF") == 1
 for k, v in list(entities.items()):
     # skip multi-character entities
-    if ((is_ucs4 and len(v) > 1) or
-            (not is_ucs4 and len(v) > 2)):
+    if ((_is_ucs4 and len(v) > 1) or
+            (not _is_ucs4 and len(v) > 2)):
         continue
     if v != "&":
         if len(v) == 2:
             v = _utils.surrogatePairToCodepoint(v)
         else:
             v = ord(v)
-        if v not in encode_entity_map or k.islower():
+        if v not in _encode_entity_map or k.islower():
             # prefer &lt; over &LT; and similarly for &amp;, &gt;, etc.
-            encode_entity_map[v] = k
+            _encode_entity_map[v] = k
 
 
 def htmlentityreplace_errors(exc):
@@ -58,7 +56,7 @@ def htmlentityreplace_errors(exc):
                 codepoint = ord(c)
             codepoints.append(codepoint)
         for cp in codepoints:
-            e = encode_entity_map.get(cp)
+            e = _encode_entity_map.get(cp)
             if e:
                 res.append("&")
                 res.append(e)
@@ -258,9 +256,9 @@ class HTMLSerializer(object):
                         if self.quote_attr_values == "always" or len(v) == 0:
                             quote_attr = True
                         elif self.quote_attr_values == "spec":
-                            quote_attr = quoteAttributeSpec.search(v) is not None
+                            quote_attr = _quoteAttributeSpec.search(v) is not None
                         elif self.quote_attr_values == "legacy":
-                            quote_attr = quoteAttributeLegacy.search(v) is not None
+                            quote_attr = _quoteAttributeLegacy.search(v) is not None
                         else:
                             raise ValueError("quote_attr_values must be one of: "
                                              "'always', 'spec', or 'legacy'")
