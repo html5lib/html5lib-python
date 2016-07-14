@@ -4,7 +4,7 @@ Change Log
 0.99999999/1.0b9
 ~~~~~~~~~~~~~~~~
 
-Released on XXX
+Released on July 14, 2016
 
 * **Added ordereddict as a mandatory dependency on Python 2.6.**
 
