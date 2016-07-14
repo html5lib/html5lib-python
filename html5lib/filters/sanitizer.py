@@ -5,13 +5,13 @@ from xml.sax.saxutils import escape, unescape
 
 from six.moves import urllib_parse as urlparse
 
-from . import _base
+from . import base
 from ..constants import namespaces, prefixes
 
 __all__ = ["Filter"]
 
 
-acceptable_elements = frozenset((
+allowed_elements = frozenset((
     (namespaces['html'], 'a'),
     (namespaces['html'], 'abbr'),
     (namespaces['html'], 'acronym'),
@@ -175,7 +175,7 @@ acceptable_elements = frozenset((
     (namespaces['svg'], 'use'),
 ))
 
-acceptable_attributes = frozenset((
+allowed_attributes = frozenset((
     # HTML attributes
     (None, 'abbr'),
     (None, 'accept'),
@@ -552,7 +552,7 @@ svg_allow_local_href = frozenset((
     (None, 'use')
 ))
 
-acceptable_css_properties = frozenset((
+allowed_css_properties = frozenset((
     'azimuth',
     'background-color',
     'border-bottom-color',
@@ -601,7 +601,7 @@ acceptable_css_properties = frozenset((
     'width',
 ))
 
-acceptable_css_keywords = frozenset((
+allowed_css_keywords = frozenset((
     'auto',
     'aqua',
     'black',
@@ -643,7 +643,7 @@ acceptable_css_keywords = frozenset((
     'yellow',
 ))
 
-acceptable_svg_properties = frozenset((
+allowed_svg_properties = frozenset((
     'fill',
     'fill-opacity',
     'fill-rule',
@@ -654,7 +654,7 @@ acceptable_svg_properties = frozenset((
     'stroke-opacity',
 ))
 
-acceptable_protocols = frozenset((
+allowed_protocols = frozenset((
     'ed2k',
     'ftp',
     'http',
@@ -680,7 +680,7 @@ acceptable_protocols = frozenset((
     'data',
 ))
 
-acceptable_content_types = frozenset((
+allowed_content_types = frozenset((
     'image/png',
     'image/jpeg',
     'image/gif',
@@ -688,14 +688,6 @@ acceptable_content_types = frozenset((
     'image/bmp',
     'text/plain',
 ))
-
-allowed_elements = acceptable_elements
-allowed_attributes = acceptable_attributes
-allowed_css_properties = acceptable_css_properties
-allowed_css_keywords = acceptable_css_keywords
-allowed_svg_properties = acceptable_svg_properties
-allowed_protocols = acceptable_protocols
-allowed_content_types = acceptable_content_types
 
 
 data_content_type = re.compile(r'''
@@ -712,7 +704,7 @@ data_content_type = re.compile(r'''
                                re.VERBOSE)
 
 
-class Filter(_base.Filter):
+class Filter(base.Filter):
     """ sanitization of XHTML+MathML+SVG and of inline style attributes."""
     def __init__(self,
                  source,
@@ -739,7 +731,7 @@ class Filter(_base.Filter):
         self.svg_allow_local_href = svg_allow_local_href
 
     def __iter__(self):
-        for token in _base.Filter.__iter__(self):
+        for token in base.Filter.__iter__(self):
             token = self.sanitize_token(token)
             if token:
                 yield token

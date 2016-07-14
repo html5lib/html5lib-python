@@ -25,42 +25,10 @@ html5lib Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`ihatexml` Module
+:mod:`serializer` Module
 ----------------------
 
-.. automodule:: html5lib.ihatexml
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`inputstream` Module
--------------------------
-
-.. automodule:: html5lib.inputstream
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`sanitizer` Module
------------------------
-
-.. automodule:: html5lib.sanitizer
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`tokenizer` Module
------------------------
-
-.. automodule:: html5lib.tokenizer
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`utils` Module
--------------------
-
-.. automodule:: html5lib.utils
+.. automodule:: html5lib.serializer
     :members:
     :undoc-members:
     :show-inheritance:
@@ -71,7 +39,6 @@ Subpackages
 .. toctree::
 
     html5lib.filters
-    html5lib.serializer
     html5lib.treebuilders
     html5lib.treewalkers
 

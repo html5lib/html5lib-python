@@ -11,9 +11,9 @@ from .constants import digits, hexDigits, EOF
 from .constants import tokenTypes, tagTokenTypes
 from .constants import replacementCharacters
 
-from .inputstream import HTMLInputStream
+from ._inputstream import HTMLInputStream
 
-from .trie import Trie
+from ._trie import Trie
 
 entitiesTrie = Trie(entities)
 

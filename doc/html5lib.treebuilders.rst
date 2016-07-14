@@ -9,10 +9,10 @@ treebuilders Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`_base` Module
+:mod:`base` Module
 -------------------
 
-.. automodule:: html5lib.treebuilders._base
+.. automodule:: html5lib.treebuilders.base
     :members:
     :undoc-members:
     :show-inheritance:
