@@ -265,7 +265,11 @@ class HTMLParser(object):
         """ HTML5 specific normalizations to the token stream """
 
         if token["type"] == tokenTypes["StartTag"]:
-            token["data"] = OrderedDict(token['data'][::-1])
+            raw = token["data"]
+            token["data"] = OrderedDict(raw)
+            if len(raw) > len(token["data"]):
+                # we had some duplicated attribute, fix so first wins
+                token["data"].update(raw[::-1])
 
         return token
 
