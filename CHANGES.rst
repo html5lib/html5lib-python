@@ -4,9 +4,10 @@ Change Log
 0.999999999/1.0b10
 ~~~~~~~~~~~~~~~~~~
 
-Released on XXX
+Released on July 15, 2016
 
-* XXX
+* Fix attribute order going to the tree builder to be document order
+  instead of reverse document order(!).
 
 
 0.99999999/1.0b9
