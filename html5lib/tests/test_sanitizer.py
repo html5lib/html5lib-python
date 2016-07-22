@@ -117,7 +117,5 @@ def test_sanitizer():
 
 def test_should_handle_uppercase_color_codes_in_style():
     sanitized = sanitize_html("<p style=\"border: 1px solid #A2A2A2;\"></p>")
-    print sanitized
     expected = '<p style=\"border: 1px solid #A2A2A2;\"></p>'
-    print expected
     assert expected == sanitized
