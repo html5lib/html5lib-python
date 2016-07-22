@@ -5,9 +5,6 @@ if [[ $USE_OPTIONAL != "true" && $USE_OPTIONAL != "false" ]]; then
   exit 1
 fi
 
-# Make sure we're running setuptools >= 18.5
-pip install -U pip setuptools>=18.5
-
 pip install -U -r requirements-test.txt
 
 if [[ $USE_OPTIONAL == "true" ]]; then
