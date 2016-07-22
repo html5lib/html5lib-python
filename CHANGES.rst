@@ -1,6 +1,15 @@
 Change Log
 ----------
 
+0.999999999/1.0b11
+~~~~~~~~~~~~~~~~~~
+
+Released on XXX
+
+* Adds uppercase check (A-F) in the css regex to allow sanitizer to pass css
+  of the format: border: 1px solid #A2A2A2.
+
+
 0.999999999/1.0b10
 ~~~~~~~~~~~~~~~~~~
 
