@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import ast
 import codecs
@@ -83,7 +83,7 @@ version = None
 with open(join(here, "html5lib", "__init__.py"), "rb") as init_file:
     t = ast.parse(init_file.read(), filename="__init__.py", mode="exec")
     assert isinstance(t, ast.Module)
-    assignments = filter(lambda x: isinstance(x, ast.Assign), t.body)
+    assignments = (x for x in t.body if isinstance(x, ast.Assign))
     for a in assignments:
         if (len(a.targets) == 1 and
                 isinstance(a.targets[0], ast.Name) and

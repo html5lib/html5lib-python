@@ -27,6 +27,7 @@ script:
   - if [[ $TRAVIS_PYTHON_VERSION == pypy* ]]; then py.test; fi
   - if [[ $TRAVIS_PYTHON_VERSION != pypy* ]]; then coverage run -m pytest; fi
   - bash flake8-run.sh
+  - pylint --rcfile=.pylintrc html5lib
 
 after_script:
   - python debug-info.py

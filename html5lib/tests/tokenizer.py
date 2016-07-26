@@ -132,7 +132,7 @@ _surrogateRe = re.compile(r"\\u([0-9A-Fa-f]{4})(?:\\u([0-9A-Fa-f]{4}))?")
 
 def unescape(test):
     def decode(inp):
-        """Decode \\uXXXX escapes
+        r"""Decode \\uXXXX escapes
 
         This decodes \\uXXXX escapes, possibly into non-BMP characters when
         two surrogate character escapes are adjacent to each other.

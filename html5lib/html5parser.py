@@ -55,10 +55,11 @@ def method_decorator_metaclass(function):
 
 class HTMLParser(object):
     """HTML parser. Generates a tree structure from a stream of (possibly
-        malformed) HTML"""
+       malformed) HTML"""
 
     def __init__(self, tree=None, strict=False, namespaceHTMLElements=True, debug=False):
-        """
+        """Constructor.
+
         strict - raise an exception when a parse error is encountered
 
         tree - a treebuilder class controlling the type of tree that will be
@@ -108,10 +109,9 @@ class HTMLParser(object):
                 self.tokenizer.state = self.tokenizer.rawtextState
             elif self.innerHTML == 'plaintext':
                 self.tokenizer.state = self.tokenizer.plaintextState
-            else:
-                # state already is data state
-                # self.tokenizer.state = self.tokenizer.dataState
-                pass
+            # else state already is data state
+            # i.e. self.tokenizer.state = self.tokenizer.dataState
+
             self.phase = self.phases["beforeHtml"]
             self.phase.insertHtmlElement()
             self.resetInsertionMode()
@@ -262,7 +262,7 @@ class HTMLParser(object):
             raise ParseError(E[errorcode] % datavars)
 
     def normalizeToken(self, token):
-        """ HTML5 specific normalizations to the token stream """
+        """HTML5 specific normalizations to the token stream."""
 
         if token["type"] == tokenTypes["StartTag"]:
             raw = token["data"]
@@ -358,10 +358,7 @@ def getPhases(debug):
         def wrapped(self, *args, **kwargs):
             if function.__name__.startswith("process") and len(args) > 0:
                 token = args[0]
-                try:
-                    info = {"type": type_names[token['type']]}
-                except:
-                    raise
+                info = {"type": type_names[token['type']]}
                 if token['type'] in tagTokenTypes:
                     info["name"] = token['name']
 
@@ -383,8 +380,7 @@ def getPhases(debug):
 
     # pylint:disable=unused-argument
     class Phase(with_metaclass(getMetaclass(debug, log))):
-        """Base class for helper object that implements each phase of processing
-        """
+        """Base class for helper object that implements each phase of processing."""
 
         def __init__(self, parser, tree):
             self.parser = parser
@@ -1285,7 +1281,7 @@ def getPhases(debug):
                 token["selfClosingAcknowledged"] = True
 
         def startTagMisplaced(self, token):
-            """ Elements that should be children of other elements that have a
+            """Elements that should be children of other elements that have a
             different insertion mode; here they are ignored
             "caption", "col", "colgroup", "frame", "frameset", "head",
             "option", "optgroup", "tbody", "td", "tfoot", "th", "thead",
@@ -2730,4 +2726,3 @@ def impliedTagToken(name, type="EndTag", attributes=None,
 
 class ParseError(Exception):
     """Error in parsed document"""
-    pass

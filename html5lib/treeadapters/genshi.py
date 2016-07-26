@@ -40,8 +40,7 @@ def to_genshi(walker):
             yield DOCTYPE, (token["name"], token["publicId"],
                             token["systemId"]), (None, -1, -1)
 
-        else:
-            pass  # FIXME: What to do?
+        # FIXME: What to do if type is not known?
 
     if text:
         yield TEXT, "".join(text), (None, -1, -1)

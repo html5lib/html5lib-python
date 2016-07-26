@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division, unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
 
@@ -105,7 +105,8 @@ def test_encoding():
 
 # pylint:disable=wrong-import-position
 try:
-    import chardet  # noqa
+    import chardet
+    del chardet
 except ImportError:
     print("chardet not found, skipping chardet tests")
 else:

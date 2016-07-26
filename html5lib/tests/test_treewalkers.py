@@ -50,7 +50,7 @@ def test_all_tokens():
 
 
 def set_attribute_on_first_child(docfrag, name, value, treeName):
-    """naively sets an attribute on the first child of the document
+    """Naively sets an attribute on the first child of the document
     fragment passed in"""
     setter = {'ElementTree': lambda d: d[0].set,
               'DOM': lambda d: d.firstChild.setAttribute}
@@ -62,7 +62,7 @@ def set_attribute_on_first_child(docfrag, name, value, treeName):
 
 
 def runTreewalkerEditTest(intext, expected, attrs_to_add, tree):
-    """tests what happens when we add attributes to the intext"""
+    """Test what happens when we add attributes to the intext"""
     treeName, treeClass = tree
     if treeClass is None:
         pytest.skip("Treebuilder not loaded")

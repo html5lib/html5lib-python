@@ -5,5 +5,6 @@ if [[ ! -x $(which flake8) ]]; then
   exit 1
 fi
 
+flake8 --version
 flake8 `dirname $0`
 exit $?

@@ -52,8 +52,7 @@ class Node(object):
         return "<%s>" % (self.name)
 
     def appendChild(self, node):
-        """Insert node as a child of the current node
-        """
+        """Insert node as a child of the current node."""
         raise NotImplementedError
 
     def insertText(self, data, insertBefore=None):
@@ -69,8 +68,7 @@ class Node(object):
         raise NotImplementedError
 
     def removeChild(self, node):
-        """Remove node from the children of the current node
-        """
+        """Remove node from the children of the current node."""
         raise NotImplementedError
 
     def reparentChildren(self, newParent):
@@ -90,8 +88,7 @@ class Node(object):
         raise NotImplementedError
 
     def hasContent(self):
-        """Return true if the node has children or text, false otherwise
-        """
+        """Return true if the node has children or text, false otherwise."""
         raise NotImplementedError
 
 
@@ -367,17 +364,18 @@ class TreeBuilder(object):
             self.generateImpliedEndTags(exclude)
 
     def getDocument(self):
-        "Return the final tree"
+        """Return the final tree."""
         return self.document
 
     def getFragment(self):
-        "Return the final fragment"
+        """Return the final fragment."""
         # assert self.innerHTML
         fragment = self.fragmentClass()
         self.openElements[0].reparentChildren(fragment)
         return fragment
 
-    def testSerializer(self, node):
-        """Serialize the subtree of node in the format required by unit tests
-        node - the node from which to start serializing"""
+    def testSerializer(self, element):
+        """Serialize the subtree of node in the format required by unit tests.
+
+        element - the node from which to start serializing"""
         raise NotImplementedError

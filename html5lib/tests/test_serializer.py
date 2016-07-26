@@ -74,7 +74,7 @@ class JsonWalker(TreeWalker):
         attrs = {}
         for attrib in attribs:
             name = (attrib["namespace"], attrib["name"])
-            assert(name not in attrs)
+            assert name not in attrs
             attrs[name] = attrib["value"]
         return attrs
 
@@ -93,7 +93,7 @@ def runSerializerTest(input, expected, options):
     encoding = options.get("encoding", None)
 
     if encoding:
-        expected = list(map(lambda x: x.encode(encoding), expected))
+        expected = list(x.encode(encoding) for x in expected)
 
     result = serialize_html(input, options)
     if len(expected) == 1:

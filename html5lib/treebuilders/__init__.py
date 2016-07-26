@@ -34,7 +34,7 @@ treeBuilderCache = {}
 
 
 def getTreeBuilder(treeType, implementation=None, **kwargs):
-    """Get a TreeBuilder class for various types of tree with built-in support
+    """Get a TreeBuilder class for various types of tree with built-in support.
 
     treeType - the name of the tree type required (case-insensitive). Supported
                values are:

@@ -1,17 +1,19 @@
 #!/usr/bin/env python
-"""Spider to try and find bugs in the parser. Requires httplib2 and elementtree
+"""Spider to try and find bugs in the parser. Requires httplib2 and elementtree.
 
 usage:
 import spider
 s = spider.Spider()
 s.spider("http://www.google.com", maxURLs=100)
 """
+from __future__ import absolute_import, division, unicode_literals, print_function
 
 import urllib.request
 import urllib.error
 import urllib.parse
 import urllib.robotparser
-import md5
+
+from hashlib import md5
 
 import httplib2
 
@@ -46,7 +48,7 @@ class Spider(object):
         p = html5lib.HTMLParser(tree=etree.TreeBuilder)
         try:
             tree = p.parse(content)
-        except:
+        except Exception:
             self.buggyURLs.add(self.currentURL)
             failed = True
             print("BUGGY:", self.currentURL)
@@ -57,7 +59,7 @@ class Spider(object):
     def loadURL(self, url):
         resp, content = self.http.request(url, "GET")
         self.currentURL = url
-        digest = md5.md5(content).hexdigest()
+        digest = md5(content).hexdigest()
         if digest in self.contentDigest:
             content = None
             self.visitedURLs.add(url)

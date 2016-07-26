@@ -30,14 +30,14 @@ try:
         # We need this with u"" because of http://bugs.jython.org/issue2039
         _x = eval('u"\\uD800"')  # pylint:disable=eval-used
         assert isinstance(_x, text_type)
-except:  # pylint:disable=bare-except
+except Exception:  # pylint: disable=broad-except
     supports_lone_surrogates = False
 else:
     supports_lone_surrogates = True
 
 
 class MethodDispatcher(dict):
-    """Dict with 2 special properties:
+    """Dict with 2 special properties.
 
     On initiation, keys that are lists, sets or tuples are converted to
     multiple keys so accessing any one of the items in the original

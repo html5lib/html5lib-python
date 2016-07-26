@@ -3,6 +3,8 @@
 
 Parse a document to a tree, with optional profiling
 """
+from __future__ import absolute_import, division, unicode_literals, print_function
+
 
 import sys
 import traceback
@@ -33,7 +35,7 @@ def parse():
                 if contentType:
                     (mediaType, params) = cgi.parse_header(contentType)
                     encoding = params.get('charset')
-            except:
+            except Exception:
                 pass
         elif f == '-':
             f = sys.stdin
@@ -94,7 +96,7 @@ def parse():
 def run(parseMethod, f, encoding, scripting):
     try:
         document = parseMethod(f, override_encoding=encoding, scripting=scripting)
-    except:
+    except Exception:
         document = None
         traceback.print_exc()
     return document
@@ -127,7 +129,7 @@ def printOutput(parser, document, opts):
             for opt in serializer.HTMLSerializer.options:
                 try:
                     kwargs[opt] = getattr(opts, opt)
-                except:
+                except AttributeError:
                     pass
             if not kwargs['quote_char']:
                 del kwargs['quote_char']

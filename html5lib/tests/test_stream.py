@@ -1,7 +1,5 @@
 from __future__ import absolute_import, division, unicode_literals
 
-from . import support  # noqa
-
 import codecs
 import sys
 from io import BytesIO, StringIO
@@ -11,9 +9,14 @@ import pytest
 import six
 from six.moves import http_client, urllib
 
+from . import support
+
 from html5lib._inputstream import (BufferedStream, HTMLInputStream,
                                    HTMLUnicodeInputStream, HTMLBinaryInputStream)
 from html5lib._utils import supports_lone_surrogates
+
+# above import has side-effects; mark it as used and del it
+del support
 
 
 def test_basic():
@@ -182,8 +185,8 @@ def test_position2():
 
 
 def test_python_issue_20007():
-    """
-    Make sure we have a work-around for Python bug #20007
+    """Ensure we have a work-around for Python bug #20007.
+
     http://bugs.python.org/issue20007
     """
     class FakeSocket(object):
@@ -198,8 +201,8 @@ def test_python_issue_20007():
 
 
 def test_python_issue_20007_b():
-    """
-    Make sure we have a work-around for Python bug #20007
+    """Ensure we have a work-around for Python bug #20007 (part b).
+
     http://bugs.python.org/issue20007
     """
     if six.PY2:

@@ -11,7 +11,7 @@ for prefix, localName, namespace in adjustForeignAttributes.values():
 
 
 def to_sax(walker, handler):
-    """Call SAX-like content handler based on treewalker walker"""
+    """Call SAX-like content handler based on treewalker walker."""
     handler.startDocument()
     for prefix, namespace in prefix_mapping.items():
         handler.startPrefixMapping(prefix, namespace)

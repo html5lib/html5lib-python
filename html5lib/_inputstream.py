@@ -238,8 +238,9 @@ class HTMLUnicodeInputStream(object):
         return (line + 1, col)
 
     def char(self):
-        """ Read one character from the stream or queue if available. Return
-            EOF when EOF is reached.
+        """Read one character from the stream or queue if available.
+
+        Return EOF when EOF is reached.
         """
         # Read a new chunk from the input stream if necessary
         if self.chunkOffset >= self.chunkSize:
@@ -318,7 +319,7 @@ class HTMLUnicodeInputStream(object):
                 self.errors.append("invalid-codepoint")
 
     def charsUntil(self, characters, opposite=False):
-        """ Returns a string of characters from the stream up to but not
+        """Returns a string of characters from the stream up to but not
         including any character in 'characters' or EOF. 'characters' must be
         a container that supports the 'in' method and iteration over its
         characters.
@@ -330,7 +331,7 @@ class HTMLUnicodeInputStream(object):
         except KeyError:
             if __debug__:
                 for c in characters:
-                    assert(ord(c) < 128)
+                    assert ord(c) < 128
             regex = "".join(["\\x%02x" % ord(c) for c in characters])
             if not opposite:
                 regex = "^%s" % regex
@@ -449,7 +450,7 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
 
         try:
             stream.seek(stream.tell())
-        except:  # pylint:disable=bare-except
+        except Exception:  # pylint: disable=broad-except
             stream = BufferedStream(stream)
 
         return stream
@@ -567,8 +568,7 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
             return None
 
     def detectEncodingMeta(self):
-        """Report the encoding declared by the meta element
-        """
+        """Report the encoding declared by the meta element."""
         buffer = self.rawStream.read(self.numBytesMeta)
         assert isinstance(buffer, bytes)
         parser = EncodingParser(buffer)
@@ -686,10 +686,12 @@ class EncodingBytes(bytes):
 
 
 class EncodingParser(object):
-    """Mini parser for detecting character encoding from meta elements"""
+    """Mini parser for detecting character encoding from meta elements."""
 
     def __init__(self, data):
-        """string - the data to work on for encoding detection"""
+        """Constructor.
+
+        data - the data to work on for encoding detection"""
         self.data = EncodingBytes(data)
         self.encoding = None
 

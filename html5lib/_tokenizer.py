@@ -19,7 +19,7 @@ entitiesTrie = Trie(entities)
 
 
 class HTMLTokenizer(object):
-    """ This class takes care of tokenizing HTML.
+    """This class takes care of tokenizing HTML.
 
     * self.currentToken
       Holds the token that is currently being processed.
@@ -47,7 +47,7 @@ class HTMLTokenizer(object):
         super(HTMLTokenizer, self).__init__()
 
     def __iter__(self):
-        """ This is where the magic happens.
+        """This is where the magic happens.
 
         We do our usually processing through the states and when we have a token
         to return we yield the token which pauses processing until the next token
@@ -215,8 +215,7 @@ class HTMLTokenizer(object):
             self.tokenQueue.append({"type": tokenTypes[tokenType], "data": output})
 
     def processEntityInAttribute(self, allowedChar):
-        """This method replaces the need for "entityInAttributeValueState".
-        """
+        """This method replaces the need for "entityInAttributeValueState"."""
         self.consumeEntity(allowedChar=allowedChar, fromAttribute=True)
 
     def emitCurrentToken(self):
@@ -1686,8 +1685,7 @@ class HTMLTokenizer(object):
             self.stream.unget(data)
             self.tokenQueue.append(self.currentToken)
             self.state = self.dataState
-        else:
-            pass
+
         return True
 
     def cdataSectionState(self):

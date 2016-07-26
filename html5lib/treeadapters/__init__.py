@@ -2,11 +2,9 @@ from __future__ import absolute_import, division, unicode_literals
 
 from . import sax
 
-__all__ = ["sax"]
-
 try:
-    from . import genshi  # noqa
+    from . import genshi
 except ImportError:
-    pass
+    __all__ = ("sax", )
 else:
-    __all__.append("genshi")
+    __all__ = ("sax", "genshi")

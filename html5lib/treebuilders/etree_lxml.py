@@ -77,7 +77,7 @@ def testSerializer(element):
                 while next_element is not None:
                     serializeElement(next_element, indent + 2)
                     next_element = next_element.getnext()
-            elif isinstance(element, str) or isinstance(element, bytes):
+            elif isinstance(element, (str, bytes)):
                 # Text in a fragment
                 assert isinstance(element, str) or sys.version_info[0] == 2
                 rv.append("|%s\"%s\"" % (' ' * indent, element))

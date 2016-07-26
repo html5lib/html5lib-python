@@ -49,7 +49,8 @@ else:
         }
 
 try:
-    import lxml.etree as lxml  # noqa
+    import lxml.etree as lxml
+    del lxml
 except ImportError:
     treeTypes['lxml'] = None
 else:
@@ -60,7 +61,8 @@ else:
 
 # Genshi impls
 try:
-    import genshi  # noqa
+    import genshi
+    del genshi
 except ImportError:
     treeTypes["genshi"] = None
 else:
@@ -132,7 +134,7 @@ class TestData(object):
 
 def convert(stripChars):
     def convertData(data):
-        """convert the output of str(document) to the format used in the testcases"""
+        """Convert the output of str(document) to the format used in the testcases"""
         data = data.split("\n")
         rv = []
         for line in data:

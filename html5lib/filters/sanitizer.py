@@ -705,7 +705,7 @@ data_content_type = re.compile(r'''
 
 
 class Filter(base.Filter):
-    """ sanitization of XHTML+MathML+SVG and of inline style attributes."""
+    """Sanitization of XHTML+MathML+SVG and of inline style attributes."""
     def __init__(self,
                  source,
                  allowed_elements=allowed_elements,
