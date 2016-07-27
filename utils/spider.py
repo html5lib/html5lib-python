@@ -147,9 +147,25 @@ class Spider(object):
             robotURL = urllib_parse.urlunsplit(robotURL)
             self.robotParser.set_url(robotURL)
             try:
-                self.robotParser.read()
+                resp, content = self.http.request(robotURL, "GET")
             except Exception as e:
-                print('Failed to read {0}: {1}'.format(robotURL, e), file=sys.stderr)
+                print("Failed to fetch {0}: {1}".format(robotURL, e), file=sys.stderr)
+                urls.remove(url)
+                continue
+
+            if resp['status'] == '404':
+                # no robots.txt to check
+                continue
+
+            if resp['status'] not in ('200', '304'):
+                print("Fetch {0} status {1}".format(url, resp['status']), file=sys.stderr)
+                urls.remove(url)
+                continue
+
+            try:
+                self.robotParser.parse(content.decode('utf8'))
+            except Exception as e:
+                print('Failed to parse {0}: {1}'.format(robotURL, e), file=sys.stderr)
                 urls.remove(url)
                 continue
 
