@@ -112,6 +112,13 @@ class Spider(object):
             newUrls.add(urllib_parse.urlunsplit(splitURL))
         urls = newUrls
 
+        toVisit = self.check_robots(urls)
+        toVisit = self.check_headers(toVisit)
+
+        self.visitedURLs.update(urls)
+        self.unvisitedURLs.update(toVisit)
+
+    def check_headers(self, urls):
         responseHeaders = {}
         # Now we want to find the content types of the links we haven't visited
         for url in urls:
@@ -128,8 +135,13 @@ class Spider(object):
                        'html' in responseHeaders[url].get('content-type', '') and
                        responseHeaders[url]['status'] == "200"])
 
+        return toVisit
+
+    def check_robots(self, urls):
         # Now check we are allowed to spider the page
-        for url in list(toVisit):
+        toVisit = list(urls)
+
+        for url in toVisit:
             robotURL = list(urllib_parse.urlsplit(url)[:2])
             robotURL.extend(["robots.txt", "", ""])
             robotURL = urllib_parse.urlunsplit(robotURL)
@@ -138,15 +150,14 @@ class Spider(object):
                 self.robotParser.read()
             except Exception as e:
                 print('Failed to read {0}: {1}'.format(robotURL, e), file=sys.stderr)
-                toVisit.remove(url)
+                urls.remove(url)
                 continue
 
             if not self.robotParser.can_fetch("*", url):
                 print('{0} rejects {1}'.format(robotURL, url), file=sys.stderr)
-                toVisit.remove(url)
+                urls.remove(url)
 
-        self.visitedURLs.update(urls)
-        self.unvisitedURLs.update(toVisit)
+        return urls
 
 
 def main():
