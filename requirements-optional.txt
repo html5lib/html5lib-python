@@ -10,7 +10,11 @@ chardet>=2.2
 
 # lxml is supported with its own treebuilder ("lxml") and otherwise
 # uses the standard ElementTree support
-lxml ; platform_python_implementation == 'CPython'
+lxml ; platform_python_implementation == 'CPython' and sys_platform != 'win32'
+lxml==3.6.0 ; platform_python_implementation == 'CPython' and sys_platform == 'win32' and python_version <= '3.4'
+lxml==3.6.0 ; platform_python_implementation == 'CPython' and sys_platform == 'win_amd64' and python_version <= '3.4'
+lxml ; platform_python_implementation == 'CPython' and sys_platform == 'win32' and python_version >= '3.5'
+lxml ; platform_python_implementation == 'CPython' and sys_platform == 'win_amd64' and python_version >= '3.5'
 
 # DATrie can be used in place of our Python trie implementation for
 # slightly better parsing performance.
