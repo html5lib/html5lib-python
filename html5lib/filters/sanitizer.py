@@ -717,7 +717,8 @@ class Filter(base.Filter):
                  allowed_content_types=allowed_content_types,
                  attr_val_is_uri=attr_val_is_uri,
                  svg_attr_val_allows_ref=svg_attr_val_allows_ref,
-                 svg_allow_local_href=svg_allow_local_href):
+                 svg_allow_local_href=svg_allow_local_href,
+                 strip_comments=True):
         super(Filter, self).__init__(source)
         self.allowed_elements = allowed_elements
         self.allowed_attributes = allowed_attributes
@@ -729,6 +730,7 @@ class Filter(base.Filter):
         self.attr_val_is_uri = attr_val_is_uri
         self.svg_attr_val_allows_ref = svg_attr_val_allows_ref
         self.svg_allow_local_href = svg_allow_local_href
+        self.strip_comments = strip_comments
 
     def __iter__(self):
         for token in base.Filter.__iter__(self):
@@ -760,7 +762,7 @@ class Filter(base.Filter):
                 return self.allowed_token(token)
             else:
                 return self.disallowed_token(token)
-        elif token_type == "Comment":
+        elif token_type == "Comment" and self.strip_comments:
             pass
         else:
             return token
