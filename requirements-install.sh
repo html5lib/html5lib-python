@@ -11,6 +11,10 @@ if [[ $USE_OPTIONAL == "true" ]]; then
   pip install -U -r requirements-optional.txt
 fi
 
+if [[ $SIX_VERSION != "false" ]]; then
+  pip install six==$SIX_VERSION
+fi
+
 if [[ $CI == "true" ]]; then
   pip install -U codecov
 fi
