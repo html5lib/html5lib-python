@@ -17,9 +17,6 @@ env:
   - USE_OPTIONAL=true
   - USE_OPTIONAL=false
 
-before_install:
-  - git submodule update --init --recursive
-
 install:
   - bash requirements-install.sh
 
