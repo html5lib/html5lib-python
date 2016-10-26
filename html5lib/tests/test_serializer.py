@@ -80,7 +80,7 @@ class JsonWalker(TreeWalker):
 
 
 def serialize_html(input, options):
-    options = dict([(str(k), v) for k, v in options.items()])
+    options = {str(k): v for k, v in options.items()}
     encoding = options.get("encoding", None)
     if "encoding" in options:
         del options["encoding"]

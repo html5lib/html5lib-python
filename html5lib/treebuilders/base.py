@@ -10,9 +10,9 @@ Marker = None
 
 listElementsMap = {
     None: (frozenset(scopingElements), False),
-    "button": (frozenset(scopingElements | set([(namespaces["html"], "button")])), False),
-    "list": (frozenset(scopingElements | set([(namespaces["html"], "ol"),
-                                              (namespaces["html"], "ul")])), False),
+    "button": (frozenset(scopingElements | {(namespaces["html"], "button")}), False),
+    "list": (frozenset(scopingElements | {(namespaces["html"], "ol"),
+                                          (namespaces["html"], "ul")}), False),
     "table": (frozenset([(namespaces["html"], "html"),
                          (namespaces["html"], "table")]), False),
     "select": (frozenset([(namespaces["html"], "optgroup"),

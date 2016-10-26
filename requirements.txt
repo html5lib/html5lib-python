@@ -1,3 +1,2 @@
 six>=1.9
 webencodings
-ordereddict ; python_version < '2.7'
