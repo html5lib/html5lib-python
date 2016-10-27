@@ -16,6 +16,7 @@ cache:
 env:
   - USE_OPTIONAL=true
   - USE_OPTIONAL=false
+  - SIX_VERSION=1.9 USE_OPTIONAL=true
 
 install:
   - bash requirements-install.sh

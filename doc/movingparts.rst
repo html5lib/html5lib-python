@@ -136,7 +136,7 @@ To use a filter, simply wrap it around a stream:
   >>> dom = html5lib.parse("<p><script>alert('Boo!')", treebuilder="dom")
   >>> walker = html5lib.getTreeWalker("dom")
   >>> stream = walker(dom)
-  >>> sane_stream = sanitizer.Filter(stream) clean_stream = sanitizer.Filter(stream)
+  >>> clean_stream = sanitizer.Filter(stream)
 
 
 Tree adapters
