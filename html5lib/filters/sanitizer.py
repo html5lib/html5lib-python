@@ -782,7 +782,7 @@ class Filter(base.Filter):
                 # characters, nor why we call unescape. I just know it's always been here.
                 # Should you be worried by this comment in a sanitizer? Yes. On the other hand, all
                 # this will do is remove *more* than it otherwise would.
-                val_unescaped = re.sub("[`\x00-\x20\x7f-\xa0\s]+", '',
+                val_unescaped = re.sub("[`\x00-\x20\x7f-\xa0\\s]+", '',
                                        unescape(attrs[attr])).lower()
                 # remove replacement characters from unescaped characters
                 val_unescaped = val_unescaped.replace("\ufffd", "")
@@ -807,7 +807,7 @@ class Filter(base.Filter):
                                          ' ',
                                          unescape(attrs[attr]))
             if (token["name"] in self.svg_allow_local_href and
-                (namespaces['xlink'], 'href') in attrs and re.search('^\s*[^#\s].*',
+                (namespaces['xlink'], 'href') in attrs and re.search(r'^\s*[^#\s].*',
                                                                      attrs[(namespaces['xlink'], 'href')])):
                 del attrs[(namespaces['xlink'], 'href')]
             if (None, 'style') in attrs:
@@ -837,16 +837,16 @@ class Filter(base.Filter):
 
     def sanitize_css(self, style):
         # disallow urls
-        style = re.compile('url\s*\(\s*[^\s)]+?\s*\)\s*').sub(' ', style)
+        style = re.compile(r'url\s*\(\s*[^\s)]+?\s*\)\s*').sub(' ', style)
 
         # gauntlet
-        if not re.match("""^([:,;#%.\sa-zA-Z0-9!]|\w-\w|'[\s\w]+'|"[\s\w]+"|\([\d,\s]+\))*$""", style):
+        if not re.match(r"""^([:,;#%.\sa-zA-Z0-9!]|\w-\w|'[\s\w]+'|"[\s\w]+"|\([\d,\s]+\))*$""", style):
             return ''
-        if not re.match("^\s*([-\w]+\s*:[^:;]*(;\s*|$))*$", style):
+        if not re.match(r"^\s*([-\w]+\s*:[^:;]*(;\s*|$))*$", style):
             return ''
 
         clean = []
-        for prop, value in re.findall("([-\w]+)\s*:\s*([^:;]*)", style):
+        for prop, value in re.findall(r"([-\w]+)\s*:\s*([^:;]*)", style):
             if not value:
                 continue
             if prop.lower() in self.allowed_css_properties:
@@ -855,7 +855,7 @@ class Filter(base.Filter):
                                                 'padding']:
                 for keyword in value.split():
                     if keyword not in self.allowed_css_keywords and \
-                            not re.match("^(#[0-9a-f]+|rgb\(\d+%?,\d*%?,?\d*%?\)?|\d{0,2}\.?\d{0,2}(cm|em|ex|in|mm|pc|pt|px|%|,|\))?)$", keyword):  # noqa
+                            not re.match(r"^(#[0-9a-f]+|rgb\(\d+%?,\d*%?,?\d*%?\)?|\d{0,2}\.?\d{0,2}(cm|em|ex|in|mm|pc|pt|px|%|,|\))?)$", keyword):  # noqa
                         break
                 else:
                     clean.append(prop + ': ' + value + ';')
