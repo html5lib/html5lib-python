@@ -1,9 +1,6 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
-if [[ $USE_OPTIONAL != "true" && $USE_OPTIONAL != "false" ]]; then
-  echo "fatal: \$USE_OPTIONAL not set to true or false. Exiting."
-  exit 1
-fi
+pip install pip==6.1.0
 
 pip install -U -r requirements-test.txt
 
@@ -11,7 +8,7 @@ if [[ $USE_OPTIONAL == "true" ]]; then
   pip install -U -r requirements-optional.txt
 fi
 
-if [[ $SIX_VERSION != "false" ]]; then
+if [[ $SIX_VERSION ]]; then
   pip install six==$SIX_VERSION
 fi
 
