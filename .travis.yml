@@ -19,7 +19,7 @@ env:
   - SIX_VERSION=1.9 USE_OPTIONAL=true
 
 install:
-  - bash requirements-install.sh
+  - ./requirements-install.sh
 
 script:
   - if [[ $TRAVIS_PYTHON_VERSION == pypy* ]]; then py.test; fi
