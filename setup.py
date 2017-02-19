@@ -102,28 +102,28 @@ setup(name='html5lib',
       maintainer_email='james@hoppipolla.co.uk',
       packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
       install_requires=[
-          'six>=1.9',
-          'webencodings',
+          'six>=1.9,<2.0',
+          'webencodings>=0.5,<0.6',
       ],
       extras_require={
           # A empty extra that only has a conditional marker will be
           # unconditonally installed when the condition matches.
-          ":python_version == '2.6'": ["ordereddict"],
+          ":python_version == '2.6'": ["ordereddict>=1.1,<2.0"],
 
           # A conditional extra will only install these items when the extra is
           # requested and the condition matches.
-          "datrie:platform_python_implementation == 'CPython'": ["datrie"],
-          "lxml:platform_python_implementation == 'CPython'": ["lxml"],
+          "datrie:platform_python_implementation == 'CPython'": ["datrie>=0.5,<2.0"],
+          "lxml:platform_python_implementation == 'CPython'": ["lxml>=2.3,<4.0"],
 
           # Standard extras, will be installed when the extra is requested.
-          "genshi": ["genshi"],
-          "chardet": ["chardet>=2.2"],
+          "genshi": ["genshi>=0.7,<2.0"],
+          "chardet": ["chardet>=2.2.1,<3.0"],
 
           # The all extra combines a standard extra which will be used anytime
           # the all extra is requested, and it extends it with a conditional
           # extra that will be installed whenever the condition matches and the
           # all extra is requested.
-          "all": ["genshi", "chardet>=2.2"],
-          "all:platform_python_implementation == 'CPython'": ["datrie", "lxml"],
+          "all": ["genshi>=0.7,<2.0", "chardet>=2.2,<3.0"],
+          "all:platform_python_implementation == 'CPython'": ["datrie>=0.5,<2.0", "lxml>=2.3,<4.0"],
       },
       )

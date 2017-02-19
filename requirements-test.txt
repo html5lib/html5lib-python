@@ -1,6 +1,8 @@
 -r requirements.txt
 
-flake8<3.0
-pytest
+flake8==2.6.2
+pycodestyle==2.0.0
+pyflakes==1.2.3
+pytest>=2.7,<4.0
 pytest-expect>=1.1,<2.0
-mock
+mock>=0.7,<3.0
