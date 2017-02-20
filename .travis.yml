@@ -19,6 +19,13 @@ env:
   - USE_OPTIONAL=false
   - DEP_VERSION=min USE_OPTIONAL=true
 
+matrix:
+  include:
+    - python: "2.6"
+      env: PIP_VERSION=6.1.0 DEP_VERSION=min USE_OPTIONAL=true
+    - python: "3.3"
+      env: PIP_VERSION=6.1.0 DEP_VERSION=min USE_OPTIONAL=true
+
 install:
   - ./requirements-install.sh
 

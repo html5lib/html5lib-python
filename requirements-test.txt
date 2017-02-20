@@ -3,6 +3,6 @@
 flake8==2.6.2
 pycodestyle==2.0.0
 pyflakes==1.2.3
-pytest>=2.7,<4.0
+pytest>=2.7.3,<4.0
 pytest-expect>=1.1,<2.0
 mock>=0.7,<3.0

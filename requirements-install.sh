@@ -1,6 +1,10 @@
 #!/bin/bash -ex
 
-pip install pip==6.1.0
+if [[ $PIP_VERSION ]]; then
+  pip install "pip==$PIP_VERSION"
+else
+  pip install -U pip setuptools wheel
+fi
 
 if [[ $DEP_VERSION == "min" ]]; then
   sed -i'' -e 's/>=/==/g' requirements*.txt
