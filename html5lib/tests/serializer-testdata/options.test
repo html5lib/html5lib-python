@@ -48,6 +48,29 @@
         },
         {
             "expected": [
+                "<div itemscope>"
+            ],
+            "input": [
+                [
+                    "StartTag",
+                    "http://www.w3.org/1999/xhtml",
+                    "div",
+                    [
+                        {
+                            "namespace": null,
+                            "name": "itemscope",
+                            "value": "itemscope"
+                        }
+                    ]
+                ]
+            ],
+            "description": "quote_attr_values='always' with itemscope",
+            "options": {
+                "quote_attr_values": "always"
+            }
+        },
+        {
+            "expected": [
                 "<div irrelevant>"
             ],
             "input": [
@@ -173,6 +196,29 @@
         },
         {
             "expected": [
+                "<div itemscope=itemscope>"
+            ],
+            "input": [
+                [
+                    "StartTag",
+                    "http://www.w3.org/1999/xhtml",
+                    "div",
+                    [
+                        {
+                            "namespace": null,
+                            "name": "itemscope",
+                            "value": "itemscope"
+                        }
+                    ]
+                ]
+            ],
+            "description": "minimize_boolean_attributes=false",
+            "options": {
+                "minimize_boolean_attributes": false
+            }
+        },
+        {
+            "expected": [
                 "<div irrelevant=irrelevant>"
             ],
             "input": [
@@ -190,6 +236,29 @@
                 ]
             ],
             "description": "minimize_boolean_attributes=false",
+            "options": {
+                "minimize_boolean_attributes": false
+            }
+        },
+        {
+            "expected": [
+                "<div itemscope=\"\">"
+            ],
+            "input": [
+                [
+                    "StartTag",
+                    "http://www.w3.org/1999/xhtml",
+                    "div",
+                    [
+                        {
+                            "namespace": null,
+                            "name": "itemscope",
+                            "value": ""
+                        }
+                    ]
+                ]
+            ],
+            "description": "minimize_boolean_attributes=false with empty value",
             "options": {
                 "minimize_boolean_attributes": false
             }

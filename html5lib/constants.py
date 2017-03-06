@@ -588,7 +588,7 @@ rcdataElements = frozenset([
 ])
 
 booleanAttributes = {
-    "": frozenset(["irrelevant"]),
+    "": frozenset(["irrelevant", "itemscope"]),
     "style": frozenset(["scoped"]),
     "img": frozenset(["ismap"]),
     "audio": frozenset(["autoplay", "controls"]),

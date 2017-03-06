@@ -1,6 +1,12 @@
 Change Log
 ----------
 
+unreleased
+~~~~~~~~~~~~~~~~~~
+
+* Added `itemscope` as boolean attribute 
+  https://github.com/html5lib/html5lib-python/issues/194
+
 0.999999999/1.0b10
 ~~~~~~~~~~~~~~~~~~
 
