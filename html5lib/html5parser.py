@@ -289,6 +289,7 @@ class HTMLParser(object):
     def resetInsertionMode(self):
         # The name of this method is mostly historical. (It's also used in the
         # specification.)
+        new_phase = None
         last = False
         newModes = {
             "select": "inSelect",
