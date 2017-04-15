@@ -39,4 +39,5 @@ Subpackages
     html5lib.filters
     html5lib.treebuilders
     html5lib.treewalkers
+    html5lib.treeadapters
 
