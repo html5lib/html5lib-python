@@ -1,9 +1,6 @@
 html5lib Package
 ================
 
-:mod:`html5lib` Package
------------------------
-
 .. automodule:: html5lib
     :members: __version__
 
