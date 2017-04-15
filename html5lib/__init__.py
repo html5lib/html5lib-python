@@ -19,7 +19,8 @@ from .treewalkers import getTreeWalker
 from .serializer import serialize
 
 __all__ = ["HTMLParser", "parse", "parseFragment", "getTreeBuilder",
-           "getTreeWalker", "serialize"]
+           "getTreeWalker", "serialize", "__version__"]
 
 # this has to be at the top level, see how setup.py parses this
+#: Distribution version number, which asymptotically approaches 1.
 __version__ = "0.9999999999-dev"
