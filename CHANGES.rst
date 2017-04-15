@@ -63,7 +63,7 @@ Released on July 14, 2016
   to clarify their status as public.**
 
 * **Get rid of the sanitizer package. Merge sanitizer.sanitize into the
-  sanitizer.htmlsanitizer module and move that to saniziter. This means
+  sanitizer.htmlsanitizer module and move that to sanitizer. This means
   anyone who used sanitizer.sanitize or sanitizer.HTMLSanitizer needs no
   code changes.**
 
