@@ -4,10 +4,8 @@ html5lib Package
 :mod:`html5lib` Package
 -----------------------
 
-.. automodule:: html5lib.__init__
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. automodule:: html5lib
+    :members: __version__
 
 :mod:`constants` Module
 -----------------------
