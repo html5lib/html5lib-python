@@ -1,7 +1,7 @@
 """
-HTML parsing library based on the WHATWG "HTML5"
-specification. The parser is designed to be compatible with existing
-HTML found in the wild and implements well-defined error recovery that
+HTML parsing library based on the `WHATWG HTML specification
+<https://whatwg.org/html>`_. The parser is designed to be compatible with
+existing HTML found in the wild and implements well-defined error recovery that
 is largely compatible with modern desktop web browsers.
 
 Example usage::
@@ -12,7 +12,9 @@ Example usage::
 
 For convenience, this module re-exports the following names:
 
-* :func:`~.html5parser.parse`, :func:`~.html5parser.parseFragment`, and :class:`~.html5parser.HTMLParser`
+* :func:`~.html5parser.parse`
+* :func:`~.html5parser.parseFragment`
+* :class:`~.html5parser.HTMLParser`
 * :func:`~.treebuilders.getTreeBuilder`
 * :func:`~.treewalkers.getTreeWalker`
 * :func:`~.serializer.serialize`
