@@ -24,7 +24,7 @@ html5lib Package
     :show-inheritance:
 
 :mod:`serializer` Module
-----------------------
+------------------------
 
 .. automodule:: html5lib.serializer
     :members:
