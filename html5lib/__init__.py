@@ -7,8 +7,8 @@ is largely compatible with modern desktop web browsers.
 Example usage::
 
     import html5lib
-    f = open("my_document.html")
-    tree = html5lib.parse(f)
+    with open("my_document.html") as f:
+        tree = html5lib.parse(f)
 """
 
 from __future__ import absolute_import, division, unicode_literals
