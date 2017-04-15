@@ -42,3 +42,4 @@ Patches and suggestions
 - Michael[tm] Smith
 - Marc Abramowitz
 - Jon Dufresne
+- Tom Most
