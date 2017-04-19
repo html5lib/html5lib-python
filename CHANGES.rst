@@ -1,6 +1,12 @@
 Change Log
 ----------
 
+UPCOMING
+~~~~~~~~
+
+* Added ``strip_comments`` parameter to sanitizer. When ``False`` HTML comments
+  will not be stripped.
+
 0.999999999/1.0b10
 ~~~~~~~~~~~~~~~~~~
 

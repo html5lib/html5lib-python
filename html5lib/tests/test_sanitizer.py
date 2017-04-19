@@ -1,7 +1,8 @@
 from __future__ import absolute_import, division, unicode_literals
 
-from html5lib import constants, parseFragment, serialize
+from html5lib import constants, getTreeWalker, parseFragment, serialize
 from html5lib.filters import sanitizer
+from html5lib.serializer import HTMLSerializer
 
 
 def runSanitizerTest(_, expected, input):
@@ -113,3 +114,15 @@ def test_sanitizer():
         yield (runSanitizerTest, "test_should_allow_uppercase_%s_uris" % protocol,
                "<img src=\"%s:%s\">foo</a>" % (protocol, rest_of_uri),
                """<img src="%s:%s">foo</a>""" % (protocol, rest_of_uri))
+
+
+def test_strip_comments():
+    comment = '<!-- this is a comment -->'
+    assert sanitize_html(comment) == ''
+
+    parsed = parseFragment(comment)
+    walker = getTreeWalker('etree')
+    stream = walker(parsed)
+    sanitized = sanitizer.Filter(stream, strip_comments=False)
+    s = HTMLSerializer()
+    assert s.render(sanitized) == comment
