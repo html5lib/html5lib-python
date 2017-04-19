@@ -108,9 +108,9 @@ class Spider(object):
 
         # Remove links not of content-type html or pages not found
         # XXX - need to deal with other status codes?
-        toVisit = set([url for url in urls if url in responseHeaders and
-                       "html" in responseHeaders[url]['content-type'] and
-                       responseHeaders[url]['status'] == "200"])
+        toVisit = {url for url in urls if url in responseHeaders and
+                   "html" in responseHeaders[url]['content-type'] and
+                   responseHeaders[url]['status'] == "200"}
 
         # Now check we are allowed to spider the page
         for url in toVisit:

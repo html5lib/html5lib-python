@@ -2,10 +2,7 @@ from __future__ import absolute_import, division, unicode_literals
 
 from . import base
 
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
+from collections import OrderedDict
 
 
 class Filter(base.Filter):

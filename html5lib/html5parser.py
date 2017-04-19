@@ -1,12 +1,9 @@
 from __future__ import absolute_import, division, unicode_literals
-from six import with_metaclass, viewkeys, PY3
+from six import with_metaclass, viewkeys
 
 import types
 
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
+from collections import OrderedDict
 
 from . import _inputstream
 from . import _tokenizer
@@ -74,8 +71,8 @@ class HTMLParser(object):
         self.tree = tree(namespaceHTMLElements)
         self.errors = []
 
-        self.phases = dict([(name, cls(self, self.tree)) for name, cls in
-                            getPhases(debug).items()])
+        self.phases = {name: cls(self, self.tree)
+                       for name, cls in getPhases(debug).items()}
 
     def _parse(self, stream, innerHTML=False, container="div", scripting=False, **kwargs):
 
@@ -2417,7 +2414,7 @@ def getPhases(debug):
             currentNode = self.tree.openElements[-1]
             if (token["name"] in self.breakoutElements or
                 (token["name"] == "font" and
-                 set(token["data"].keys()) & set(["color", "face", "size"]))):
+                 set(token["data"].keys()) & {"color", "face", "size"})):
                 self.parser.parseError("unexpected-html-element-in-foreign-content",
                                        {"name": token["name"]})
                 while (self.tree.openElements[-1].namespace !=
@@ -2711,10 +2708,7 @@ def getPhases(debug):
 
 
 def adjust_attributes(token, replacements):
-    if PY3 or _utils.PY27:
-        needs_adjustment = viewkeys(token['data']) & viewkeys(replacements)
-    else:
-        needs_adjustment = frozenset(token['data']) & frozenset(replacements)
+    needs_adjustment = viewkeys(token['data']) & viewkeys(replacements)
     if needs_adjustment:
         token['data'] = OrderedDict((replacements.get(k, k), v)
                                     for k, v in token['data'].items())
