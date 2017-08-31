@@ -9,9 +9,7 @@ python:
 
 sudo: false
 
-cache:
-  directories:
-    - $HOME/.cache/pip
+cache: pip
 
 env:
   - USE_OPTIONAL=true
