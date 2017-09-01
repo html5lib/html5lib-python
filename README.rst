@@ -9,6 +9,20 @@ conform to the WHATWG HTML specification, as is implemented by all major
 web browsers.
 
 
+API Stability
+-------------
+
+In line with `SemVer <http://semver.org/spec/v2.0.0.html>`_, we do not
+guarantee API stability for 0.y.z releases.
+
+A few major breakages include:
+
+- beautifulsoup4 (bs4) requires html5lib<0.99999999 (minimum version
+  unknown!)
+
+- bleach requires >=0.999,<0.99999999
+
+
 Usage
 -----
 
