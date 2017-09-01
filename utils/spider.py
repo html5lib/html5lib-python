@@ -1,22 +1,28 @@
 #!/usr/bin/env python
-"""Spider to try and find bugs in the parser. Requires httplib2 and elementtree
+"""Spider to try and find bugs in the parser. Requires httplib2 and elementtree.
 
 usage:
 import spider
 s = spider.Spider()
 s.spider("http://www.google.com", maxURLs=100)
 """
+from __future__ import absolute_import, division, unicode_literals, print_function
 
-import urllib.request
-import urllib.error
-import urllib.parse
-import urllib.robotparser
-import md5
+import sys
+
+try:
+    import urllib.parse as urllib_parse
+except ImportError:
+    import urlparse as urllib_parse
+try:
+    import urllib.robotparser as robotparser
+except ImportError:
+    import robotparser
+
+from hashlib import md5
 
 import httplib2
-
 import html5lib
-from html5lib.treebuilders import etree
 
 
 class Spider(object):
@@ -25,7 +31,7 @@ class Spider(object):
         self.unvisitedURLs = set()
         self.visitedURLs = set()
         self.buggyURLs = set()
-        self.robotParser = urllib.robotparser.RobotFileParser()
+        self.robotParser = robotparser.RobotFileParser()
         self.contentDigest = {}
         self.http = httplib2.Http(".cache")
 
@@ -40,31 +46,39 @@ class Spider(object):
             if not self.unvisitedURLs:
                 break
             content = self.loadURL(self.unvisitedURLs.pop())
+        return urlNumber
 
     def parse(self, content):
         failed = False
-        p = html5lib.HTMLParser(tree=etree.TreeBuilder)
+        p = html5lib.HTMLParser(tree=html5lib.getTreeBuilder('etree'))
         try:
             tree = p.parse(content)
-        except:
+        except Exception as e:
             self.buggyURLs.add(self.currentURL)
             failed = True
-            print("BUGGY:", self.currentURL)
+            print("BUGGY: {0}: {1}".format(self.currentURL, e), file=sys.stderr)
         self.visitedURLs.add(self.currentURL)
         if not failed:
             self.updateURLs(tree)
 
     def loadURL(self, url):
-        resp, content = self.http.request(url, "GET")
+        print('Processing {0}'.format(url), file=sys.stderr)
+        try:
+            resp, content = self.http.request(url, "GET")
+        except Exception as e:
+            print("Failed to fetch {0}: {1}".format(url, e), file=sys.stderr)
+            return None
+
         self.currentURL = url
-        digest = md5.md5(content).hexdigest()
+        digest = md5(content).hexdigest()
         if digest in self.contentDigest:
             content = None
             self.visitedURLs.add(url)
         else:
             self.contentDigest[digest] = url
 
-        if resp['status'] != "200":
+        if resp['status'] not in ('200', '304'):
+            print("Fetch {0} status {1}".format(url, resp['status']), file=sys.stderr)
             content = None
 
         return content
@@ -75,9 +89,11 @@ class Spider(object):
         have seen them before or not"""
         urls = set()
         # Remove all links we have already visited
-        for link in tree.findall(".//a"):
+        namespace = tree.tag[1:].split('}')[0]
+        links = list(tree.findall('.//{%s}a' % namespace))
+        for link in links:
             try:
-                url = urllib.parse.urldefrag(link.attrib['href'])[0]
+                url = urllib_parse.urldefrag(link.attrib['href'])[0]
                 if (url and url not in self.unvisitedURLs and url
                         not in self.visitedURLs):
                     urls.add(url)
@@ -88,38 +104,89 @@ class Spider(object):
         # missing
         newUrls = set()
         for url in urls:
-            splitURL = list(urllib.parse.urlsplit(url))
+            splitURL = list(urllib_parse.urlsplit(url))
             if splitURL[0] != "http":
                 continue
             if splitURL[1] == "":
-                splitURL[1] = urllib.parse.urlsplit(self.currentURL)[1]
-            newUrls.add(urllib.parse.urlunsplit(splitURL))
+                splitURL[1] = urllib_parse.urlsplit(self.currentURL)[1]
+            newUrls.add(urllib_parse.urlunsplit(splitURL))
         urls = newUrls
 
+        toVisit = self.check_robots(urls)
+        toVisit = self.check_headers(toVisit)
+
+        self.visitedURLs.update(urls)
+        self.unvisitedURLs.update(toVisit)
+
+    def check_headers(self, urls):
         responseHeaders = {}
         # Now we want to find the content types of the links we haven't visited
         for url in urls:
+            print('Checking {0}'.format(url), file=sys.stderr)
             try:
                 resp, content = self.http.request(url, "HEAD")
                 responseHeaders[url] = resp
-            except AttributeError:
-                # Don't know why this happens
-                pass
+            except Exception as e:
+                print('Error fetching HEAD of {0}: {1}'.format(url, e), file=sys.stderr)
 
         # Remove links not of content-type html or pages not found
         # XXX - need to deal with other status codes?
         toVisit = set([url for url in urls if url in responseHeaders and
-                       "html" in responseHeaders[url]['content-type'] and
+                       'html' in responseHeaders[url].get('content-type', '') and
                        responseHeaders[url]['status'] == "200"])
 
-        # Now check we are allowed to spider the page
-        for url in toVisit:
-            robotURL = list(urllib.parse.urlsplit(url)[:2])
-            robotURL.extend(["robots.txt", "", ""])
-            robotURL = urllib.parse.urlunsplit(robotURL)
-            self.robotParser.set_url(robotURL)
-            if not self.robotParser.can_fetch("*", url):
-                toVisit.remove(url)
+        return toVisit
 
-        self.visitedURLs.update(urls)
-        self.unvisitedURLs.update(toVisit)
+    def check_robots(self, urls):
+        # Now check we are allowed to spider the page
+        toVisit = list(urls)
+
+        for url in toVisit:
+            robotURL = list(urllib_parse.urlsplit(url)[:2])
+            robotURL.extend(["robots.txt", "", ""])
+            robotURL = urllib_parse.urlunsplit(robotURL)
+            self.robotParser.set_url(robotURL)
+            try:
+                resp, content = self.http.request(robotURL, "GET")
+            except Exception as e:
+                print("Failed to fetch {0}: {1}".format(robotURL, e), file=sys.stderr)
+                urls.remove(url)
+                continue
+
+            if resp['status'] == '404':
+                # no robots.txt to check
+                continue
+
+            if resp['status'] not in ('200', '304'):
+                print("Fetch {0} status {1}".format(url, resp['status']), file=sys.stderr)
+                urls.remove(url)
+                continue
+
+            try:
+                self.robotParser.parse(content.decode('utf8'))
+            except Exception as e:
+                print('Failed to parse {0}: {1}'.format(robotURL, e), file=sys.stderr)
+                urls.remove(url)
+                continue
+
+            if not self.robotParser.can_fetch("*", url):
+                print('{0} rejects {1}'.format(robotURL, url), file=sys.stderr)
+                urls.remove(url)
+
+        return urls
+
+
+def main():
+    max_urls = 100
+    s = Spider()
+    count = s.run("http://yahoo.com/", maxURLs=max_urls)
+    if s.buggyURLs:
+        print('Buggy URLs:')
+        print('  ' + '\n  '.join(s.buggyURLs))
+        print('')
+    if count != max_urls:
+        print('{0} of {1} processed'.format(count, max_urls))
+    sys.exit(count == max_urls and len(s.buggyURLs) == 0)
+
+if __name__ == '__main__':
+    main()
