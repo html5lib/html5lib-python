@@ -9,10 +9,10 @@ treewalkers Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`_base` Module
+:mod:`base` Module
 -------------------
 
-.. automodule:: html5lib.treewalkers._base
+.. automodule:: html5lib.treewalkers.base
     :members:
     :undoc-members:
     :show-inheritance:
@@ -33,27 +33,19 @@ treewalkers Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`genshistream` Module
---------------------------
-
-.. automodule:: html5lib.treewalkers.genshistream
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`lxmletree` Module
+:mod:`etree_lxml` Module
 -----------------------
 
-.. automodule:: html5lib.treewalkers.lxmletree
+.. automodule:: html5lib.treewalkers.etree_lxml
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`pulldom` Module
----------------------
 
-.. automodule:: html5lib.treewalkers.pulldom
+:mod:`genshi` Module
+--------------------------
+
+.. automodule:: html5lib.treewalkers.genshi
     :members:
     :undoc-members:
     :show-inheritance:
-

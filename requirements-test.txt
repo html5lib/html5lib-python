@@ -1,5 +1,6 @@
 -r requirements.txt
 
-flake8
-nose
-ordereddict # Python 2.6
+flake8<3.0
+pytest
+pytest-expect>=1.1,<2.0
+mock

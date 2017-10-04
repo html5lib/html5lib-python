@@ -1,10 +1,10 @@
 filters Package
 ===============
 
-:mod:`_base` Module
+:mod:`base` Module
 -------------------
 
-.. automodule:: html5lib.filters._base
+.. automodule:: html5lib.filters.base
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,6 +1,6 @@
 from __future__ import absolute_import, division, unicode_literals
 
-from . import _base
+from . import base
 
 try:
     from collections import OrderedDict
@@ -8,13 +8,24 @@ except ImportError:
     from ordereddict import OrderedDict
 
 
-class Filter(_base.Filter):
+def _attr_key(attr):
+    """Return an appropriate key for an attribute for sorting
+
+    Attributes have a namespace that can be either ``None`` or a string. We
+    can't compare the two because they're different types, so we convert
+    ``None`` to an empty string first.
+
+    """
+    return (attr[0][0] or ''), attr[0][1]
+
+
+class Filter(base.Filter):
     def __iter__(self):
-        for token in _base.Filter.__iter__(self):
+        for token in base.Filter.__iter__(self):
             if token["type"] in ("StartTag", "EmptyTag"):
                 attrs = OrderedDict()
                 for name, value in sorted(token["data"].items(),
-                                          key=lambda x: x[0]):
+                                          key=_attr_key):
                     attrs[name] = value
                 token["data"] = attrs
             yield token
