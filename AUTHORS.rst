@@ -43,3 +43,4 @@ Patches and suggestions
 - Marc Abramowitz
 - Jon Dufresne
 - Ville Skyttä
+- Jonathan Vanasco
