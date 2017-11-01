@@ -32,6 +32,7 @@ Patches and suggestions
 - Andreas Madsack
 - Karim Valiev
 - Marc DM
+- Ritwik Gupta
 - Tony Lopes
 - lilbludevil
 - Simon Sapin

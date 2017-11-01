@@ -4,6 +4,7 @@ Change Log
 unreleased
 ~~~~~~~~~~~~~~~~~~
 
+* Added the seamless attribute for iframes.
 * Added `itemscope` as boolean attribute 
   https://github.com/html5lib/html5lib-python/issues/194
 
