@@ -32,6 +32,7 @@ Patches and suggestions
 - Andreas Madsack
 - Karim Valiev
 - Marc DM
+- Ritwik Gupta
 - Tony Lopes
 - lilbludevil
 - Simon Sapin
@@ -42,4 +43,6 @@ Patches and suggestions
 - Michael[tm] Smith
 - Marc Abramowitz
 - Jon Dufresne
+- Ville Skyttä
+- Jonathan Vanasco
 - Tom Most

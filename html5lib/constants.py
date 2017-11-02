@@ -588,7 +588,7 @@ rcdataElements = frozenset([
 ])
 
 booleanAttributes = {
-    "": frozenset(["irrelevant"]),
+    "": frozenset(["irrelevant", "itemscope"]),
     "style": frozenset(["scoped"]),
     "img": frozenset(["ismap"]),
     "audio": frozenset(["autoplay", "controls"]),
@@ -606,6 +606,7 @@ booleanAttributes = {
     "input": frozenset(["disabled", "readonly", "required", "autofocus", "checked", "ismap"]),
     "select": frozenset(["disabled", "readonly", "autofocus", "multiple"]),
     "output": frozenset(["disabled", "readonly"]),
+    "iframe": frozenset(["seamless"]),
 }
 
 # entitiesWindows1252 has to be _ordered_ and needs to have an index. It
