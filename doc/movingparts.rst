@@ -93,7 +93,7 @@ the :class:`~html5lib.serializer.HTMLSerializer` documentation.
 Filters
 ~~~~~~~
 
-html5lib provides several filters
+html5lib provides several filters:
 
 * :class:`alphabeticalattributes.Filter
   <html5lib.filters.alphabeticalattributes.Filter>` sorts attributes on
