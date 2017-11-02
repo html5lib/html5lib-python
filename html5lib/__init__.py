@@ -31,5 +31,5 @@ __all__ = ["HTMLParser", "parse", "parseFragment", "getTreeBuilder",
            "getTreeWalker", "serialize", "__version__"]
 
 # this has to be at the top level, see how setup.py parses this
-#: Distribution version number, which asymptotically approaches 1.
+#: Distribution version number.
 __version__ = "0.9999999999-dev"
