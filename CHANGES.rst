@@ -32,7 +32,7 @@ Released on July 14, 2016
 
 * Cease supporting DATrie under PyPy.
 
-* **Remove ``PullDOM`` support, as this hasn't ever been properly
+* **Remove PullDOM support, as this hasn't ever been properly
   tested, doesn't entirely work, and as far as I can tell is
   completely unused by anyone.**
 
