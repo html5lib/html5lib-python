@@ -58,10 +58,7 @@ html5lib provides walkers for ``etree``, ``dom``, and ``lxml`` trees, as well as
 The implementation of walkers can be found in `html5lib/treewalkers/
 <https://github.com/html5lib/html5lib-python/tree/master/html5lib/treewalkers>`_.
 
-html5lib provides a few tools for consuming token streams:
-
-* :class:`~html5lib.serializer.HTMLSerializer`, to generate a stream of bytes; and
-* filters, to manipulate the token stream.
+html5lib provides :class:`~html5lib.serializer.HTMLSerializer` for generating a stream of bytes from a token stream, and several filters which manipulate the stream.
 
 HTMLSerializer
 ~~~~~~~~~~~~~~
