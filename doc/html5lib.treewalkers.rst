@@ -10,7 +10,7 @@ treewalkers Package
     :show-inheritance:
 
 :mod:`base` Module
--------------------
+------------------
 
 .. automodule:: html5lib.treewalkers.base
     :members:
@@ -34,7 +34,7 @@ treewalkers Package
     :show-inheritance:
 
 :mod:`etree_lxml` Module
------------------------
+------------------------
 
 .. automodule:: html5lib.treewalkers.etree_lxml
     :members:
@@ -43,7 +43,7 @@ treewalkers Package
 
 
 :mod:`genshi` Module
---------------------------
+--------------------
 
 .. automodule:: html5lib.treewalkers.genshi
     :members:

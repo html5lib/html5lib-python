@@ -1,13 +1,8 @@
 html5lib Package
 ================
 
-:mod:`html5lib` Package
------------------------
-
-.. automodule:: html5lib.__init__
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. automodule:: html5lib
+    :members: __version__
 
 :mod:`constants` Module
 -----------------------
@@ -26,7 +21,7 @@ html5lib Package
     :show-inheritance:
 
 :mod:`serializer` Module
-----------------------
+------------------------
 
 .. automodule:: html5lib.serializer
     :members:
@@ -41,4 +36,5 @@ Subpackages
     html5lib.filters
     html5lib.treebuilders
     html5lib.treewalkers
+    html5lib.treeadapters
 

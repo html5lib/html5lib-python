@@ -32,7 +32,7 @@ Released on July 14, 2016
 
 * Cease supporting DATrie under PyPy.
 
-* **Remove ``PullDOM`` support, as this hasn't ever been properly
+* **Remove PullDOM support, as this hasn't ever been properly
   tested, doesn't entirely work, and as far as I can tell is
   completely unused by anyone.**
 
@@ -70,7 +70,7 @@ Released on July 14, 2016
   to clarify their status as public.**
 
 * **Get rid of the sanitizer package. Merge sanitizer.sanitize into the
-  sanitizer.htmlsanitizer module and move that to saniziter. This means
+  sanitizer.htmlsanitizer module and move that to sanitizer. This means
   anyone who used sanitizer.sanitize or sanitizer.HTMLSanitizer needs no
   code changes.**
 
