@@ -2,11 +2,7 @@ from __future__ import absolute_import, division, unicode_literals
 from six import with_metaclass, viewkeys, PY3
 
 import types
-
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
+from collections import OrderedDict
 
 from . import _inputstream
 from . import _tokenizer
