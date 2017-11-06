@@ -13,7 +13,7 @@ class Trie(Mapping):
         if prefix is None:
             return set(keys)
 
-        return set([x for x in keys if x.startswith(prefix)])
+        return {x for x in keys if x.startswith(prefix)}
 
     def has_keys_with_prefix(self, prefix):
         for key in self.keys():
