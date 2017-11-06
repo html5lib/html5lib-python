@@ -423,7 +423,7 @@ specialElements = frozenset([
 ])
 
 htmlIntegrationPointElements = frozenset([
-    (namespaces["mathml"], "annotaion-xml"),
+    (namespaces["mathml"], "annotation-xml"),
     (namespaces["svg"], "foreignObject"),
     (namespaces["svg"], "desc"),
     (namespaces["svg"], "title")
