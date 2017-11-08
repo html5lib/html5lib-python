@@ -64,7 +64,6 @@ classifiers = [
     'Operating System :: OS Independent',
     'Programming Language :: Python',
     'Programming Language :: Python :: 2',
-    'Programming Language :: Python :: 2.6',
     'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.4',
@@ -106,10 +105,6 @@ setup(name='html5lib',
           'webencodings',
       ],
       extras_require={
-          # A empty extra that only has a conditional marker will be
-          # unconditonally installed when the condition matches.
-          ":python_version == '2.6'": ["ordereddict"],
-
           # A conditional extra will only install these items when the extra is
           # requested and the condition matches.
           "datrie:platform_python_implementation == 'CPython'": ["datrie"],
