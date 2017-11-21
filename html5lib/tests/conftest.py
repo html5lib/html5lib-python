@@ -1,4 +1,6 @@
+from __future__ import print_function
 import os.path
+import sys
 
 import pkg_resources
 import pytest
@@ -13,6 +15,26 @@ _testdata = os.path.join(_dir, "testdata")
 _tree_construction = os.path.join(_testdata, "tree-construction")
 _tokenizer = os.path.join(_testdata, "tokenizer")
 _sanitizer_testdata = os.path.join(_dir, "sanitizer-testdata")
+
+
+def fail_if_missing_pytest_expect():
+    """Throws an exception halting pytest if pytest-expect isn't working"""
+    try:
+        from pytest_expect import expect  # noqa
+    except ImportError:
+        header = '*' * 78
+        print(
+            '\n' +
+            header + '\n' +
+            'ERROR: Either pytest-expect or its dependency u-msgpack-python is not\n' +
+            'installed. Please install them both before running pytest.\n' +
+            header + '\n',
+            file=sys.stderr
+        )
+        raise
+
+
+fail_if_missing_pytest_expect()
 
 
 def pytest_configure(config):
