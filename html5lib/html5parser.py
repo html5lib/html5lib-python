@@ -1,5 +1,5 @@
 from __future__ import absolute_import, division, unicode_literals
-from six import with_metaclass, viewkeys, PY3
+from six import with_metaclass, viewkeys
 
 import types
 from collections import OrderedDict
@@ -2707,10 +2707,7 @@ def getPhases(debug):
 
 
 def adjust_attributes(token, replacements):
-    if PY3 or _utils.PY27:
-        needs_adjustment = viewkeys(token['data']) & viewkeys(replacements)
-    else:
-        needs_adjustment = frozenset(token['data']) & frozenset(replacements)
+    needs_adjustment = viewkeys(token['data']) & viewkeys(replacements)
     if needs_adjustment:
         token['data'] = OrderedDict((replacements.get(k, k), v)
                                     for k, v in token['data'].items())
