@@ -28,4 +28,4 @@ after_script:
   - python debug-info.py
 
 after_success:
-  - if [[ $TRAVIS_PYTHON_VERSION != pypy* ]]; then coverage combine && codecov; fi
+  - if [[ $TRAVIS_PYTHON_VERSION != pypy* ]]; then codecov; fi
