@@ -1,6 +1,18 @@
 # To activate, change the Appveyor settings to use `.appveyor.yml`.
-init:
-  - SET PATH=C:\\Python27\\Scripts\\;%PATH%"
+environment:
+  global:
+    PATH: "C:\\Python27\\Scripts\\;%PATH%"
+  matrix:
+    - TOXENV: py27-base
+    - TOXENV: py27-optional
+    - TOXENV: py33-base
+    - TOXENV: py33-optional
+    - TOXENV: py34-base
+    - TOXENV: py34-optional
+    - TOXENV: py35-base
+    - TOXENV: py35-optional
+    - TOXENV: py36-base
+    - TOXENV: py36-optional
 
 install:
   - git submodule update --init --recursive
@@ -9,7 +21,7 @@ install:
 build: off
 
 test_script:
-  - python -m tox -e "{py27,py33,py34,py35,py36}-{base,optional}"
+  - tox
 
 after_test:
   - python debug-info.py
