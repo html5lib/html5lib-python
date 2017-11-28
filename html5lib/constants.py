@@ -2939,14 +2939,9 @@ prefixes["http://www.w3.org/1998/Math/MathML"] = "math"
 
 
 class DataLossWarning(UserWarning):
-    """Raised whenever html5lib changes something in such a way that some input data is lost"""
+    """Raised when the current tree is unable to represent the input data"""
     pass
 
 
 class ReparseException(Exception):
-    """Raised when the parser should restart parsing
-
-    This is used when the parsing discovers a new encoding that should be used.
-
-    """
     pass
