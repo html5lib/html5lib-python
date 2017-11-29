@@ -9,7 +9,7 @@ import re
 import webencodings
 
 from .constants import EOF, spaceCharacters, asciiLetters, asciiUppercase
-from .constants import ReparseException
+from .constants import _ReparseException
 from . import _utils
 
 from io import StringIO
@@ -530,7 +530,7 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
             self.rawStream.seek(0)
             self.charEncoding = (newEncoding, "certain")
             self.reset()
-            raise ReparseException("Encoding changed from %s to %s" % (self.charEncoding[0], newEncoding))
+            raise _ReparseException("Encoding changed from %s to %s" % (self.charEncoding[0], newEncoding))
 
     def detectBOM(self):
         """Attempts to detect at BOM at the start of the stream. If
