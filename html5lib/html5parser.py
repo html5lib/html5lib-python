@@ -20,7 +20,7 @@ from .constants import (
     adjustForeignAttributes as adjustForeignAttributesMap,
     adjustMathMLAttributes, adjustSVGAttributes,
     E,
-    ReparseException
+    _ReparseException
 )
 
 
@@ -83,7 +83,7 @@ class HTMLParser(object):
 
         try:
             self.mainLoop()
-        except ReparseException:
+        except _ReparseException:
             self.reset()
             self.mainLoop()
 

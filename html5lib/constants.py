@@ -2943,5 +2943,5 @@ class DataLossWarning(UserWarning):
     pass
 
 
-class ReparseException(Exception):
+class _ReparseException(Exception):
     pass
