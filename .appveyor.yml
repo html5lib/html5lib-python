@@ -2,6 +2,7 @@
 environment:
   global:
     PATH: "C:\\Python27\\Scripts\\;%PATH%"
+    PYTEST_COMMAND: "coverage run -m pytest"
   matrix:
     - TOXENV: py27-base
     - TOXENV: py27-optional
@@ -16,7 +17,7 @@ environment:
 
 install:
   - git submodule update --init --recursive
-  - python -m pip install tox
+  - python -m pip install tox codecov
 
 build: off
 
@@ -25,3 +26,6 @@ test_script:
 
 after_test:
   - python debug-info.py
+
+on_success:
+  - codecov

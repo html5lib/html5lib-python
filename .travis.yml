@@ -12,20 +12,21 @@ sudo: false
 cache: pip
 
 env:
-  - USE_OPTIONAL=true
-  - USE_OPTIONAL=false
-  - SIX_VERSION=1.9 USE_OPTIONAL=true
+  global:
+    - PYTEST_COMMAND="coverage run -m pytest"
+  matrix:
+    - TOXENV=optional
+    - TOXENV=base
+    - TOXENV=six19-optional
 
 install:
-  - ./requirements-install.sh
+  - pip install tox codecov
 
 script:
-  - if [[ $TRAVIS_PYTHON_VERSION == pypy* ]]; then py.test; fi
-  - if [[ $TRAVIS_PYTHON_VERSION != pypy* ]]; then coverage run -m pytest; fi
-  - bash flake8-run.sh
+  - tox
 
 after_script:
   - python debug-info.py
 
 after_success:
-  - if [[ $TRAVIS_PYTHON_VERSION != pypy* ]]; then coverage combine && codecov; fi
+  - codecov
