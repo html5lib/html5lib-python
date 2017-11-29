@@ -705,7 +705,7 @@ data_content_type = re.compile(r'''
 
 
 class Filter(base.Filter):
-    """ sanitization of XHTML+MathML+SVG and of inline style attributes."""
+    """Sanitizes token stream of XHTML+MathML+SVG and of inline style attributes"""
     def __init__(self,
                  source,
                  allowed_elements=allowed_elements,
@@ -718,6 +718,37 @@ class Filter(base.Filter):
                  attr_val_is_uri=attr_val_is_uri,
                  svg_attr_val_allows_ref=svg_attr_val_allows_ref,
                  svg_allow_local_href=svg_allow_local_href):
+        """Creates a Filter
+
+        :arg allowed_elements: set of elements to allow--everything else will
+            be escaped
+
+        :arg allowed_attributes: set of attributes to allow in
+            elements--everything else will be stripped
+
+        :arg allowed_css_properties: set of CSS properties to allow--everything
+            else will be stripped
+
+        :arg allowed_css_keywords: set of CSS keywords to allow--everything
+            else will be stripped
+
+        :arg allowed_svg_properties: set of SVG properties to allow--everything
+            else will be removed
+
+        :arg allowed_protocols: set of allowed protocols for URIs
+
+        :arg allowed_content_types: set of allowed content types for ``data`` URIs.
+
+        :arg attr_val_is_uri: set of attributes that have URI values--values
+            that have a scheme not listed in ``allowed_protocols`` are removed
+
+        :arg svg_attr_val_allows_ref: set of SVG attributes that can have
+            references
+
+        :arg svg_allow_local_href: set of SVG elements that can have local
+            hrefs--these are removed
+
+        """
         super(Filter, self).__init__(source)
         self.allowed_elements = allowed_elements
         self.allowed_attributes = allowed_attributes
@@ -737,11 +768,11 @@ class Filter(base.Filter):
                 yield token
 
     # Sanitize the +html+, escaping all elements not in ALLOWED_ELEMENTS, and
-    # stripping out all # attributes not in ALLOWED_ATTRIBUTES. Style
-    # attributes are parsed, and a restricted set, # specified by
-    # ALLOWED_CSS_PROPERTIES and ALLOWED_CSS_KEYWORDS, are allowed through.
-    # attributes in ATTR_VAL_IS_URI are scanned, and only URI schemes specified
-    # in ALLOWED_PROTOCOLS are allowed.
+    # stripping out all attributes not in ALLOWED_ATTRIBUTES. Style attributes
+    # are parsed, and a restricted set, specified by ALLOWED_CSS_PROPERTIES and
+    # ALLOWED_CSS_KEYWORDS, are allowed through. attributes in ATTR_VAL_IS_URI
+    # are scanned, and only URI schemes specified in ALLOWED_PROTOCOLS are
+    # allowed.
     #
     #   sanitize_html('<script> do_nasty_stuff() </script>')
     #    => &lt;script> do_nasty_stuff() &lt;/script>
