@@ -6,6 +6,7 @@ Credits
 - James Graham
 - Geoffrey Sneddon
 - Łukasz Langa
+- Will Kahn-Greene
 
 
 Patches and suggestions
@@ -23,26 +24,43 @@ Patches and suggestions
 - Philip Taylor
 - Edward Z. Yang
 - fantasai
-- Mike West
 - Philip Jägenstedt
 - Ms2ger
 - Mohammad Taha Jahangir
 - Andy Wingo
-- Juan Carlos Garcia Segovia
 - Andreas Madsack
 - Karim Valiev
+- Juan Carlos Garcia Segovia
+- Mike West
 - Marc DM
+- Simon Sapin
+- Michael[tm] Smith
 - Ritwik Gupta
+- Marc Abramowitz
 - Tony Lopes
 - lilbludevil
-- Simon Sapin
-- Jon Dufresne
+- Kevin
 - Drew Hubl
 - Austin Kumbera
 - Jim Baker
-- Michael[tm] Smith
-- Marc Abramowitz
 - Jon Dufresne
-- Ville Skyttä
+- Donald Stufft
+- Alex Gaynor
+- Nik Nyby
+- Jakub Wilk
+- Sigmund Cherem
+- Gabi Davar
+- Florian Mounier
+- neumond
+- Vitalik Verhovodov
+- Kovid Goyal
+- Adam Chainz
+- John Vandenberg
+- Eric Amorde
+- Benedikt Morbach
 - Jonathan Vanasco
 - Tom Most
+- Ville Skyttä
+- Hugo van Kemenade
+- Mark Vasilkov
+
