@@ -2939,8 +2939,9 @@ prefixes["http://www.w3.org/1998/Math/MathML"] = "math"
 
 
 class DataLossWarning(UserWarning):
+    """Raised when the current tree is unable to represent the input data"""
     pass
 
 
-class ReparseException(Exception):
+class _ReparseException(Exception):
     pass

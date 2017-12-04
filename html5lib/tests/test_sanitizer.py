@@ -113,3 +113,15 @@ def test_sanitizer():
         yield (runSanitizerTest, "test_should_allow_uppercase_%s_uris" % protocol,
                "<img src=\"%s:%s\">foo</a>" % (protocol, rest_of_uri),
                """<img src="%s:%s">foo</a>""" % (protocol, rest_of_uri))
+
+
+def test_lowercase_color_codes_in_style():
+    sanitized = sanitize_html("<p style=\"border: 1px solid #a2a2a2;\"></p>")
+    expected = '<p style=\"border: 1px solid #a2a2a2;\"></p>'
+    assert expected == sanitized
+
+
+def test_uppercase_color_codes_in_style():
+    sanitized = sanitize_html("<p style=\"border: 1px solid #A2A2A2;\"></p>")
+    expected = '<p style=\"border: 1px solid #A2A2A2;\"></p>'
+    assert expected == sanitized

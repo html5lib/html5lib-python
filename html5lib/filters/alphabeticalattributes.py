@@ -17,6 +17,7 @@ def _attr_key(attr):
 
 
 class Filter(base.Filter):
+    """Alphabetizes attributes for elements"""
     def __iter__(self):
         for token in base.Filter.__iter__(self):
             if token["type"] in ("StartTag", "EmptyTag"):
