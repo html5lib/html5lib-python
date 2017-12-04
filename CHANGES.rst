@@ -4,9 +4,37 @@ Change Log
 unreleased
 ~~~~~~~~~~~~~~~~~~
 
-* Added the seamless attribute for iframes.
-* Added `itemscope` as boolean attribute 
-  https://github.com/html5lib/html5lib-python/issues/194
+Breaking changes:
+
+* Drop support for Python 2.6. (#330) (Thank you, Hugo, Will Kahn-Greene!)
+* Remove ``utils/spider.py`` (#353) (Thank you, Jon Dufresne!)
+
+Features:
+
+* Improve documentation. (#300, #307) (Thank you, Jon Dufresne, Tom Most,
+  Will Kahn-Greene!)
+* Add iframe seamless boolean attribute. (Thank you, Ritwik Gupta!)
+* Add itemscope as a boolean attribute. (#194) (Thank you, Jonathan Vanasco!)
+* Support Python 3.6. (#333) (Thank you, Jon Dufresne!)
+* Add CI support for Windows using AppVeyor. (Thank you, John Vandenberg!)
+* Improve testing and CI and add code coverage (#323, #334), (Thank you, Jon
+  Dufresne, John Vandenberg, Geoffrey Sneddon, Will Kahn-Greene!)
+* Semver-compliant version number.
+
+Bug fixes:
+
+* Add support for setuptools < 18.5 to support environment markers. (Thank you,
+  John Vandenberg!)
+* Add explicit dependency for six >= 1.9. (Thank you, Eric Amorde!)
+* Fix regexes to work with Python 3.7 regex adjustments. (#318, #379) (Thank
+  you, Benedikt Morbach, Ville Skyttä, Mark Vasilkov!)
+* Fix alphabeticalattributes filter namespace bug. (#324) (Thank you, Will
+  Kahn-Greene!)
+* Include license file in generated wheel package. (#350) (Thank you, Jon
+  Dufresne!)
+* Fix annotation-xml typo. (#339) (Thank you, Will Kahn-Greene!)
+* Allow uppercase hex chararcters in CSS colour check. (#377) (Thank you,
+  Komal Dembla, Hugo!)
 
 0.999999999/1.0b10
 ~~~~~~~~~~~~~~~~~~
