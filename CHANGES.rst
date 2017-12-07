@@ -1,8 +1,10 @@
 Change Log
 ----------
 
-unreleased
-~~~~~~~~~~~~~~~~~~
+1.0.1
+~~~~~
+
+Released on December 7, 2017
 
 Breaking changes:
 
@@ -35,6 +37,13 @@ Bug fixes:
 * Fix annotation-xml typo. (#339) (Thank you, Will Kahn-Greene!)
 * Allow uppercase hex chararcters in CSS colour check. (#377) (Thank you,
   Komal Dembla, Hugo!)
+
+
+1.0
+~~~
+
+Released and unreleased on December 7, 2017. Badly packaged release.
+
 
 0.999999999/1.0b10
 ~~~~~~~~~~~~~~~~~~
