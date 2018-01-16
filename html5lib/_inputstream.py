@@ -367,7 +367,7 @@ class HTMLUnicodeInputStream(object):
     def unget(self, char):
         # Only one character is allowed to be ungotten at once - it must
         # be consumed again before any further call to unget
-        if char is not None:
+        if char is not EOF:
             if self.chunkOffset == 0:
                 # unget is called quite rarely, so it's a good idea to do
                 # more work here if it saves a bit of work in the frequently
