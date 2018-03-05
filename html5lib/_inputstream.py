@@ -461,7 +461,7 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
         if charEncoding[0] is not None:
             return charEncoding
 
-        # If we've been overriden, we've been overriden
+        # If we've been overridden, we've been overridden
         charEncoding = lookupEncoding(self.override_encoding), "certain"
         if charEncoding[0] is not None:
             return charEncoding
