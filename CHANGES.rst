@@ -1,6 +1,16 @@
 Change Log
 ----------
 
+1.1.0
+~~~~~
+
+Features:
+
+* Add support serializing the ``<ol reversed>`` boolean attribute. (Thank you,
+  Tom Most!)
+* The ``<ol reversed>`` and ``<ol start>`` attributes are now permitted by the
+  sanitizer. (#321) (Thank you, Tom Most!)
+
 1.0.1
 ~~~~~
 

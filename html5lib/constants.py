@@ -605,6 +605,7 @@ booleanAttributes = {
     "button": frozenset(["disabled", "autofocus"]),
     "input": frozenset(["disabled", "readonly", "required", "autofocus", "checked", "ismap"]),
     "select": frozenset(["disabled", "readonly", "autofocus", "multiple"]),
+    "ol": frozenset(["reversed"]),
     "output": frozenset(["disabled", "readonly"]),
     "iframe": frozenset(["seamless"]),
 }
