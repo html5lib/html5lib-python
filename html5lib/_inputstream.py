@@ -5,19 +5,13 @@ from six.moves import http_client, urllib
 
 import codecs
 import re
+from io import BytesIO, StringIO
 
 import webencodings
 
 from .constants import EOF, spaceCharacters, asciiLetters, asciiUppercase
 from .constants import _ReparseException
 from . import _utils
-
-from io import StringIO
-
-try:
-    from io import BytesIO
-except ImportError:
-    BytesIO = StringIO
 
 # Non-unicode versions of constants for use in the pre-parser
 spaceCharactersBytes = frozenset([item.encode("ascii") for item in spaceCharacters])
