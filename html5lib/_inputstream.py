@@ -1,6 +1,6 @@
 from __future__ import absolute_import, division, unicode_literals
 
-from six import text_type, binary_type
+from six import text_type
 from six.moves import http_client, urllib
 
 import codecs
@@ -908,7 +908,7 @@ class ContentAttrParser(object):
 def lookupEncoding(encoding):
     """Return the python codec name corresponding to an encoding or None if the
     string doesn't correspond to a valid encoding."""
-    if isinstance(encoding, binary_type):
+    if isinstance(encoding, bytes):
         try:
             encoding = encoding.decode("ascii")
         except UnicodeDecodeError:
