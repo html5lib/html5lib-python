@@ -6,8 +6,6 @@ environment:
   matrix:
     - TOXENV: py27-base
     - TOXENV: py27-optional
-    - TOXENV: py33-base
-    - TOXENV: py33-optional
     - TOXENV: py34-base
     - TOXENV: py34-optional
     - TOXENV: py35-base

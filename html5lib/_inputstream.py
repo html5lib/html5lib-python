@@ -1,23 +1,17 @@
 from __future__ import absolute_import, division, unicode_literals
 
-from six import text_type, binary_type
+from six import text_type
 from six.moves import http_client, urllib
 
 import codecs
 import re
+from io import BytesIO, StringIO
 
 import webencodings
 
 from .constants import EOF, spaceCharacters, asciiLetters, asciiUppercase
 from .constants import _ReparseException
 from . import _utils
-
-from io import StringIO
-
-try:
-    from io import BytesIO
-except ImportError:
-    BytesIO = StringIO
 
 # Non-unicode versions of constants for use in the pre-parser
 spaceCharactersBytes = frozenset([item.encode("ascii") for item in spaceCharacters])
@@ -908,7 +902,7 @@ class ContentAttrParser(object):
 def lookupEncoding(encoding):
     """Return the python codec name corresponding to an encoding or None if the
     string doesn't correspond to a valid encoding."""
-    if isinstance(encoding, binary_type):
+    if isinstance(encoding, bytes):
         try:
             encoding = encoding.decode("ascii")
         except UnicodeDecodeError:
