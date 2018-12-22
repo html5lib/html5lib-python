@@ -2,7 +2,6 @@ from __future__ import absolute_import, division, unicode_literals
 from six import with_metaclass, viewkeys
 
 import types
-from collections import OrderedDict
 
 from . import _inputstream
 from . import _tokenizer
@@ -22,6 +21,11 @@ from .constants import (
     E,
     _ReparseException
 )
+
+try:
+    from collections.abc import OrderedDict
+except ImportError:
+    from collections import OrderedDict
 
 
 def parse(doc, treebuilder="etree", namespaceHTMLElements=True, **kwargs):

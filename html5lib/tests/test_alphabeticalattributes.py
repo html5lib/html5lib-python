@@ -1,12 +1,15 @@
 from __future__ import absolute_import, division, unicode_literals
 
-from collections import OrderedDict
-
 import pytest
 
 import html5lib
 from html5lib.filters.alphabeticalattributes import Filter
 from html5lib.serializer import HTMLSerializer
+
+try:
+    from collections.abc import OrderedDict
+except ImportError:
+    from collections import OrderedDict
 
 
 @pytest.mark.parametrize('msg, attrs, expected_attrs', [

@@ -1,12 +1,16 @@
 from __future__ import absolute_import, division, unicode_literals
 
-from collections import OrderedDict
 import re
 
 from six import string_types
 
 from . import base
 from .._utils import moduleFactoryFactory
+
+try:
+    from collections.abc import OrderedDict
+except ImportError:
+    from collections import OrderedDict
 
 tag_regexp = re.compile("{([^}]*)}(.*)")
 

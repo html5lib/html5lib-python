@@ -2,8 +2,6 @@ from __future__ import absolute_import, division, unicode_literals
 
 from six import unichr as chr
 
-from collections import deque
-
 from .constants import spaceCharacters
 from .constants import entities
 from .constants import asciiLetters, asciiUpper2Lower
@@ -14,6 +12,11 @@ from .constants import replacementCharacters
 from ._inputstream import HTMLInputStream
 
 from ._trie import Trie
+
+try:
+    from collections.abc import deque
+except ImportError:
+    from collections import deque
 
 entitiesTrie = Trie(entities)
 
