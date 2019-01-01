@@ -10,6 +10,10 @@ environment:
     - TOXENV: py35-optional
     - TOXENV: py36-base
     - TOXENV: py36-optional
+    - TOXENV: py37-base
+    - TOXENV: py37-optional
+    - TOXENV: py38-base
+    - TOXENV: py38-optional
 
 install:
   - git submodule update --init --recursive
