@@ -99,7 +99,7 @@ def test_treewalker_six_mix():
 
     for tree in sorted(treeTypes.items()):
         for intext, attrs, expected in sm_tests:
-            yield runTreewalkerEditTest, intext, expected, attrs, tree
+            yield (runTreewalkerEditTest, intext, expected, attrs, tree)
 
 
 @pytest.mark.parametrize("tree,char", itertools.product(sorted(treeTypes.items()), ["x", "\u1234"]))
