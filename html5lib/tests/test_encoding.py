@@ -99,8 +99,8 @@ def test_encoding():
     for filename in get_data_files("encoding"):
         tests = _TestData(filename, b"data", encoding=None)
         for test in tests:
-            yield (runParserEncodingTest, test[b'data'], test[b'encoding'])
-            yield (runPreScanEncodingTest, test[b'data'], test[b'encoding'])
+            runParserEncodingTest(test[b'data'], test[b'encoding'])
+            runPreScanEncodingTest(test[b'data'], test[b'encoding'])
 
 
 # pylint:disable=wrong-import-position

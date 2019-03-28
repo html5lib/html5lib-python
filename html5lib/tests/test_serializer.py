@@ -222,4 +222,4 @@ def test_serializer():
         with open(filename) as fp:
             tests = json.load(fp)
             for test in tests['tests']:
-                yield runSerializerTest, test["input"], test["expected"], test.get("options", {})
+                runSerializerTest(test["input"], test["expected"], test.get("options", {}))

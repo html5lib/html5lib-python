@@ -67,19 +67,19 @@ def test_sanitizer():
                         'tfoot', 'th', 'thead', 'tr', 'select']:
             continue  # TODO
         if tag_name == 'image':
-            yield (runSanitizerTest, "test_should_allow_%s_tag" % tag_name,
+            runSanitizerTest("test_should_allow_%s_tag" % tag_name,
                    "<img title=\"1\"/>foo &lt;bad&gt;bar&lt;/bad&gt; baz",
                    "<%s title='1'>foo <bad>bar</bad> baz</%s>" % (tag_name, tag_name))
         elif tag_name == 'br':
-            yield (runSanitizerTest, "test_should_allow_%s_tag" % tag_name,
+            runSanitizerTest("test_should_allow_%s_tag" % tag_name,
                    "<br title=\"1\"/>foo &lt;bad&gt;bar&lt;/bad&gt; baz<br/>",
                    "<%s title='1'>foo <bad>bar</bad> baz</%s>" % (tag_name, tag_name))
         elif tag_name in constants.voidElements:
-            yield (runSanitizerTest, "test_should_allow_%s_tag" % tag_name,
+            runSanitizerTest("test_should_allow_%s_tag" % tag_name,
                    "<%s title=\"1\"/>foo &lt;bad&gt;bar&lt;/bad&gt; baz" % tag_name,
                    "<%s title='1'>foo <bad>bar</bad> baz</%s>" % (tag_name, tag_name))
         else:
-            yield (runSanitizerTest, "test_should_allow_%s_tag" % tag_name,
+            runSanitizerTest("test_should_allow_%s_tag" % tag_name,
                    "<%s title=\"1\">foo &lt;bad&gt;bar&lt;/bad&gt; baz</%s>" % (tag_name, tag_name),
                    "<%s title='1'>foo <bad>bar</bad> baz</%s>" % (tag_name, tag_name))
 
@@ -93,7 +93,7 @@ def test_sanitizer():
         attribute_value = 'foo'
         if attribute_name in sanitizer.attr_val_is_uri:
             attribute_value = '%s://sub.domain.tld/path/object.ext' % sanitizer.allowed_protocols[0]
-        yield (runSanitizerTest, "test_should_allow_%s_attribute" % attribute_name,
+        runSanitizerTest("test_should_allow_%s_attribute" % attribute_name,
                "<p %s=\"%s\">foo &lt;bad&gt;bar&lt;/bad&gt; baz</p>" % (attribute_name, attribute_value),
                "<p %s='%s'>foo <bad>bar</bad> baz</p>" % (attribute_name, attribute_value))
 
@@ -101,7 +101,7 @@ def test_sanitizer():
         rest_of_uri = '//sub.domain.tld/path/object.ext'
         if protocol == 'data':
             rest_of_uri = 'image/png;base64,aGVsbG8gd29ybGQ='
-        yield (runSanitizerTest, "test_should_allow_uppercase_%s_uris" % protocol,
+        runSanitizerTest("test_should_allow_uppercase_%s_uris" % protocol,
                "<img src=\"%s:%s\">foo</a>" % (protocol, rest_of_uri),
                """<img src="%s:%s">foo</a>""" % (protocol, rest_of_uri))
 
@@ -110,7 +110,7 @@ def test_sanitizer():
         if protocol == 'data':
             rest_of_uri = 'image/png;base64,aGVsbG8gd29ybGQ='
         protocol = protocol.upper()
-        yield (runSanitizerTest, "test_should_allow_uppercase_%s_uris" % protocol,
+        runSanitizerTest("test_should_allow_uppercase_%s_uris" % protocol,
                "<img src=\"%s:%s\">foo</a>" % (protocol, rest_of_uri),
                """<img src="%s:%s">foo</a>""" % (protocol, rest_of_uri))
 
