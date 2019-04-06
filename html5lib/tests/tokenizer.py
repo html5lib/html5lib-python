@@ -28,7 +28,7 @@ class TokenizerTestParser(object):
             tokenizer.currentToken = {"type": "startTag",
                                       "name": self._lastStartTag}
 
-        types = dict((v, k) for k, v in constants.tokenTypes.items())
+        types = {v: k for k, v in constants.tokenTypes.items()}
         for token in tokenizer:
             getattr(self, 'process%s' % types[token["type"]])(token)
 

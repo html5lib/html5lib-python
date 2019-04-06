@@ -119,8 +119,8 @@ class HTMLParser(object):
         self.tree = tree(namespaceHTMLElements)
         self.errors = []
 
-        self.phases = dict([(name, cls(self, self.tree)) for name, cls in
-                            getPhases(debug).items()])
+        self.phases = {name: cls(self, self.tree) for name, cls in
+                       getPhases(debug).items()}
 
     def _parse(self, stream, innerHTML=False, container="div", scripting=False, **kwargs):
 
@@ -413,8 +413,7 @@ class HTMLParser(object):
 def getPhases(debug):
     def log(function):
         """Logger that records which phase processes each token"""
-        type_names = dict((value, key) for key, value in
-                          tokenTypes.items())
+        type_names = {value: key for key, value in tokenTypes.items()}
 
         def wrapped(self, *args, **kwargs):
             if function.__name__.startswith("process") and len(args) > 0:
@@ -2478,7 +2477,7 @@ def getPhases(debug):
             currentNode = self.tree.openElements[-1]
             if (token["name"] in self.breakoutElements or
                 (token["name"] == "font" and
-                 set(token["data"].keys()) & set(["color", "face", "size"]))):
+                 set(token["data"].keys()) & {"color", "face", "size"})):
                 self.parser.parseError("unexpected-html-element-in-foreign-content",
                                        {"name": token["name"]})
                 while (self.tree.openElements[-1].namespace !=
