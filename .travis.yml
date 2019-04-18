@@ -1,9 +1,7 @@
-dist: xenial  # required for Python >= 3.7
 language: python
 python:
-  - "pypy"
   - "pypy3"
-  - "3.7"
+  - "pypy"
   - "3.6"
   - "3.5"
   - "2.7"
@@ -20,8 +18,15 @@ env:
 
 matrix:
   include:
-    - python: pypy
-      dist: trusty
+    - python: "3.7"
+      dist: xenial  # required for Python >= 3.7
+      TOXENV=optional
+    - python: "3.7"
+      dist: xenial  # required for Python >= 3.7
+      TOXENV=base
+    - python: "3.7"
+      dist: xenial  # required for Python >= 3.7
+      TOXENV=six19-optional
 
 install:
   - pip install tox codecov
