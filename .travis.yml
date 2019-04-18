@@ -20,13 +20,13 @@ matrix:
   include:
     - python: "3.7"
       dist: xenial  # required for Python >= 3.7
-      TOXENV=optional
+      env: TOXENV=optional
     - python: "3.7"
       dist: xenial  # required for Python >= 3.7
-      TOXENV=base
+      env: TOXENV=base
     - python: "3.7"
       dist: xenial  # required for Python >= 3.7
-      TOXENV=six19-optional
+      env: TOXENV=six19-optional
 
 install:
   - pip install tox codecov
