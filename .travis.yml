@@ -1,12 +1,12 @@
+dust: xenial  # required for Python >= 3.7
 language: python
 python:
   - "pypy"
+  - “pypy3”
+  - “3.7”
   - "3.6"
   - "3.5"
-  - "3.4"
   - "2.7"
-
-sudo: false
 
 cache: pip
 
