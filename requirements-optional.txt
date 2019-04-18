@@ -14,4 +14,6 @@ lxml ; platform_python_implementation == 'CPython'
 
 # DATrie can be used in place of our Python trie implementation for
 # slightly better parsing performance.
-datrie ; platform_python_implementation == 'CPython'
+# https://github.com/pytries/datrie/issues/52 although closed is not
+# yet released to https://pypi.org/project/datrie
+datrie ; platform_python_implementation == 'CPython' and python_version < '3.7'
