@@ -1,6 +1,13 @@
 Change Log
 ----------
 
+1.1.0
+~~~~~
+
+Bug fixes:
+
+* The sanitizer now permits ``<summary>`` tags.
+
 1.0.1
 ~~~~~
 

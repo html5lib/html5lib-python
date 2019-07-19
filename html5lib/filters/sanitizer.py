@@ -96,6 +96,7 @@ allowed_elements = frozenset((
     (namespaces['html'], 'strike'),
     (namespaces['html'], 'strong'),
     (namespaces['html'], 'sub'),
+    (namespaces['html'], 'summary'),
     (namespaces['html'], 'sup'),
     (namespaces['html'], 'table'),
     (namespaces['html'], 'tbody'),

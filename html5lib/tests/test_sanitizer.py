@@ -115,6 +115,18 @@ def test_sanitizer():
                """<img src="%s:%s">foo</a>""" % (protocol, rest_of_uri))
 
 
+def test_details_open_allowed():
+    sanitized = sanitize_html("<details open>.</details>")
+    expected = '<details open>.</details>'
+    assert expected == sanitized
+
+
+def test_details_summary_allowed():
+    sanitized = sanitize_html("<details><summary>.</summary><p>...</p></details>")
+    expected = '<details><summary>.</summary><p>...</p></details>'
+    assert expected == sanitized
+
+
 def test_lowercase_color_codes_in_style():
     sanitized = sanitize_html("<p style=\"border: 1px solid #a2a2a2;\"></p>")
     expected = '<p style=\"border: 1px solid #a2a2a2;\"></p>'
