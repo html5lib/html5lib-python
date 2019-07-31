@@ -147,7 +147,7 @@ convertExpected = convert(2)
 
 
 def errorMessage(input, expected, actual):
-    msg = ("Input:\n%s\nExpected:\n%s\nRecieved\n%s\n" %
+    msg = ("Input:\n%s\nExpected:\n%s\nReceived\n%s\n" %
            (repr(input), repr(expected), repr(actual)))
     if sys.version_info[0] == 2:
         msg = msg.encode("ascii", "backslashreplace")
