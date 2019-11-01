@@ -77,6 +77,7 @@ class TreeConstructionTest(pytest.Collector):
 def convertTreeDump(data):
     return "\n".join(convert(3)(data).split("\n")[1:])
 
+
 namespaceExpected = re.compile(r"^(\s*)<(\S+)>", re.M).sub
 
 

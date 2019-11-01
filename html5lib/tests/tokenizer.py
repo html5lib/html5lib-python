@@ -176,6 +176,7 @@ def unescape(test):
 def _doCapitalize(match):
     return match.group(1).upper()
 
+
 _capitalizeRe = re.compile(r"\W+(\w)").sub
 
 
