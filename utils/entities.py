@@ -96,5 +96,6 @@ def main():
     code = make_entities_code(entities)
     open("entities_constants.py", "w").write(code)
 
+
 if __name__ == "__main__":
     main()

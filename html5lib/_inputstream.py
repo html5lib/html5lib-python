@@ -443,7 +443,7 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
 
         try:
             stream.seek(stream.tell())
-        except:  # pylint:disable=bare-except
+        except Exception:
             stream = BufferedStream(stream)
 
         return stream

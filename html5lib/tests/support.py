@@ -143,6 +143,7 @@ def convert(stripChars):
         return "\n".join(rv)
     return convertData
 
+
 convertExpected = convert(2)
 
 
