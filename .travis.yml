@@ -38,4 +38,29 @@ after_script:
   - python debug-info.py
 
 after_success:
-  - codecov
+- codecov
+
+deploy:
+  - provider: pypi
+    server: https://test.pypi.org/legacy/
+    on:
+      tags: false
+      repo: html5lib/html5lib-python
+      branch: master
+      condition: $TOXENV = lint
+    user: __token__
+    password:
+      secure: "TODO"
+    distributions: sdist --format=gztar bdist_wheel
+    skip_existing: true
+  - provider: pypi
+    on:
+      tags: true
+      repo: html5lib/html5lib-python
+      branch: master
+      condition: "$TOXENV = lint"
+    user: __token__
+    password:
+      secure: "TODO"
+    distributions: sdist --format=gztar bdist_wheel
+    skip_existing: true
