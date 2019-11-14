@@ -47,7 +47,7 @@ deploy:
       tags: false
       repo: html5lib/html5lib-python
       branch: master
-      condition: $TOXENV = lint
+      condition: "$TOXENV = py36-base"
     user: __token__
     password:
       secure: "TODO"
@@ -58,7 +58,7 @@ deploy:
       tags: true
       repo: html5lib/html5lib-python
       branch: master
-      condition: "$TOXENV = lint"
+      condition: "$TOXENV = py36-base"
     user: __token__
     password:
       secure: "TODO"
