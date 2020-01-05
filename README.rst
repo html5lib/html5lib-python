@@ -91,8 +91,7 @@ More documentation is available at https://html5lib.readthedocs.io/.
 Installation
 ------------
 
-html5lib works on CPython 2.7+, CPython 3.4+ and PyPy.  To install it,
-use:
+html5lib works on CPython 3.5+ and PyPy. To install it, use:
 
 .. code-block:: bash
 
@@ -128,8 +127,8 @@ Please report any bugs on the `issue tracker
 Tests
 -----
 
-Unit tests require the ``pytest`` and ``mock`` libraries and can be
-run using the ``py.test`` command in the root directory.
+Unit tests require the ``pytest`` library and can be run using the ``py.test``
+command in the root directory.
 
 Test data are contained in a separate `html5lib-tests
 <https://github.com/html5lib/html5lib-tests>`_ repository and included

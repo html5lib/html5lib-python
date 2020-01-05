@@ -1,9 +1,6 @@
-from __future__ import absolute_import, division, unicode_literals
-
+import urllib.parse
 import re
 from xml.sax.saxutils import escape, unescape
-
-from six.moves import urllib_parse as urlparse
 
 from . import base
 from ..constants import namespaces, prefixes
@@ -749,7 +746,7 @@ class Filter(base.Filter):
             hrefs--these are removed
 
         """
-        super(Filter, self).__init__(source)
+        super().__init__(source)
         self.allowed_elements = allowed_elements
         self.allowed_attributes = allowed_attributes
         self.allowed_css_properties = allowed_css_properties
@@ -818,7 +815,7 @@ class Filter(base.Filter):
                 # remove replacement characters from unescaped characters
                 val_unescaped = val_unescaped.replace("\ufffd", "")
                 try:
-                    uri = urlparse.urlparse(val_unescaped)
+                    uri = urllib.parse.urlparse(val_unescaped)
                 except ValueError:
                     uri = None
                     del attrs[attr]

@@ -1,10 +1,8 @@
 language: python
 python:
   - "pypy3"
-  - "pypy"
   - "3.6"
   - "3.5"
-  - "2.7"
 
 cache: pip
 
@@ -14,7 +12,6 @@ env:
   matrix:
     - TOXENV=optional
     - TOXENV=base
-    - TOXENV=six19-optional
 
 matrix:
   include:
@@ -24,9 +21,6 @@ matrix:
     - python: "3.7"
       dist: xenial  # required for Python >= 3.7
       env: TOXENV=base
-    - python: "3.7"
-      dist: xenial  # required for Python >= 3.7
-      env: TOXENV=six19-optional
 
 install:
   - pip install tox codecov

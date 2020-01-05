@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
-
 from html5lib import constants, parseFragment, serialize
 from html5lib.filters import sanitizer
 

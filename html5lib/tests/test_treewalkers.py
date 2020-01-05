@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
-
 import itertools
 
 import pytest
@@ -76,30 +74,6 @@ def runTreewalkerEditTest(intext, expected, attrs_to_add, tree):
     output = attrlist.sub(sortattrs, output)
     if output not in expected:
         raise AssertionError("TreewalkerEditTest: %s\nExpected:\n%s\nReceived:\n%s" % (treeName, expected, output))
-
-
-def test_treewalker_six_mix():
-    """Str/Unicode mix. If str attrs added to tree"""
-
-    # On Python 2.x string literals are of type str. Unless, like this
-    # file, the programmer imports unicode_literals from __future__.
-    # In that case, string literals become objects of type unicode.
-
-    # This test simulates a Py2 user, modifying attributes on a document
-    # fragment but not using the u'' syntax nor importing unicode_literals
-    sm_tests = [
-        ('<a href="http://example.com">Example</a>',
-         [(str('class'), str('test123'))],
-         '<a>\n  class="test123"\n  href="http://example.com"\n  "Example"'),
-
-        ('<link href="http://example.com/cow">',
-         [(str('rel'), str('alternate'))],
-         '<link>\n  href="http://example.com/cow"\n  rel="alternate"\n  "Example"')
-    ]
-
-    for tree in sorted(treeTypes.items()):
-        for intext, attrs, expected in sm_tests:
-            yield runTreewalkerEditTest, intext, expected, attrs, tree
 
 
 @pytest.mark.parametrize("tree,char", itertools.product(sorted(treeTypes.items()), ["x", "\u1234"]))

@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
-
 import codecs
 import json
 
@@ -18,7 +16,7 @@ class SanitizerFile(pytest.File):
 
 class SanitizerTest(pytest.Item):
     def __init__(self, name, parent, test):
-        super(SanitizerTest, self).__init__(name, parent)
+        super().__init__(name, parent)
         self.obj = lambda: 1  # this is to hack around skipif needing a function!
         self.test = test
 

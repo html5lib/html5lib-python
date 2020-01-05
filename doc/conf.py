@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 #
 # html5lib documentation build configuration file, created by
 # sphinx-quickstart on Wed May  8 00:04:49 2013.
@@ -250,7 +249,7 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
 
-class CExtMock(object):
+class CExtMock:
     """Required for autodoc on readthedocs.org where you cannot build C extensions."""
     def __init__(self, *args, **kwargs):
         pass

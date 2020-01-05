@@ -4,8 +4,6 @@ environment:
     PATH: "C:\\Python27\\Scripts\\;%PATH%"
     PYTEST_COMMAND: "coverage run -m pytest"
   matrix:
-    - TOXENV: py27-base
-    - TOXENV: py27-optional
     - TOXENV: py35-base
     - TOXENV: py35-optional
     - TOXENV: py36-base
@@ -21,7 +19,7 @@ test_script:
   - tox
 
 after_test:
-  - python debug-info.py
+  - C:\\Python35\\python.exe debug-info.py
 
 on_success:
   - codecov

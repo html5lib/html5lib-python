@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
-
 # pylint:disable=wrong-import-position
 
 import os
@@ -86,7 +84,7 @@ class DefaultDict(dict):
         return dict.get(self, key, self.default)
 
 
-class TestData(object):
+class TestData:
     def __init__(self, filename, newTestHeading="data", encoding="utf8"):
         if encoding is None:
             self.f = open(filename, mode="rb")
@@ -147,11 +145,8 @@ convertExpected = convert(2)
 
 
 def errorMessage(input, expected, actual):
-    msg = ("Input:\n%s\nExpected:\n%s\nRecieved\n%s\n" %
-           (repr(input), repr(expected), repr(actual)))
-    if sys.version_info[0] == 2:
-        msg = msg.encode("ascii", "backslashreplace")
-    return msg
+    return ("Input:\n%s\nExpected:\n%s\nRecieved\n%s\n" %
+            (repr(input), repr(expected), repr(actual)))
 
 
 class TracingSaxHandler(xml.sax.handler.ContentHandler):

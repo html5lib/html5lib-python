@@ -1,7 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
-
-from six import PY2, text_type, unichr
-
 import io
 
 from . import support  # noqa
@@ -57,7 +53,7 @@ def test_maintain_attribute_order():
     # This is here because we impl it in parser and not tokenizer
     p = HTMLParser()
     # generate loads to maximize the chance a hash-based mutation will occur
-    attrs = [(unichr(x), i) for i, x in enumerate(range(ord('a'), ord('z')))]
+    attrs = [(chr(x), i) for i, x in enumerate(range(ord('a'), ord('z')))]
     token = {'name': 'html',
              'selfClosing': False,
              'selfClosingAcknowledged': False,
@@ -78,7 +74,7 @@ def test_duplicate_attribute():
 def test_maintain_duplicate_attribute_order():
     # This is here because we impl it in parser and not tokenizer
     p = HTMLParser()
-    attrs = [(unichr(x), i) for i, x in enumerate(range(ord('a'), ord('z')))]
+    attrs = [(chr(x), i) for i, x in enumerate(range(ord('a'), ord('z')))]
     token = {'name': 'html',
              'selfClosing': False,
              'selfClosingAcknowledged': False,
@@ -110,11 +106,6 @@ def test_debug_log():
                 ('dataState', 'InBodyPhase', 'InBodyPhase', 'processCharacters', {'type': 'Characters'}),
                 ('dataState', 'InBodyPhase', 'InBodyPhase', 'processEndTag', {'name': 'p', 'type': 'EndTag'}),
                 ('dataState', 'InBodyPhase', 'InBodyPhase', 'processCharacters', {'type': 'Characters'})]
-
-    if PY2:
-        for i, log in enumerate(expected):
-            log = [x.encode("ascii") if isinstance(x, text_type) else x for x in log]
-            expected[i] = tuple(log)
 
     assert parser.log == expected
 

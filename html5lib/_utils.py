@@ -1,8 +1,4 @@
-from __future__ import absolute_import, division, unicode_literals
-
 from types import ModuleType
-
-from six import text_type
 
 try:
     import xml.etree.cElementTree as default_etree
@@ -23,10 +19,10 @@ __all__ = ["default_etree", "MethodDispatcher", "isSurrogatePair",
 # escapes.
 try:
     _x = eval('"\\uD800"')  # pylint:disable=eval-used
-    if not isinstance(_x, text_type):
+    if not isinstance(_x, str):
         # We need this with u"" because of http://bugs.jython.org/issue2039
         _x = eval('u"\\uD800"')  # pylint:disable=eval-used
-        assert isinstance(_x, text_type)
+        assert isinstance(_x, str)
 except:  # pylint:disable=bare-except
     supports_lone_surrogates = False
 else:

@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
-
 import os
 import json
 
@@ -49,13 +47,11 @@ class JsonWalker(TreeWalker):
                 else:
                     namespace = default_namespace
                     name, attrib = token[1:]
-                for token in self.emptyTag(namespace, name, self._convertAttrib(attrib)):
-                    yield token
+                yield from self.emptyTag(namespace, name, self._convertAttrib(attrib))
             elif type == "Comment":
                 yield self.comment(token[1])
             elif type in ("Characters", "SpaceCharacters"):
-                for token in self.text(token[1]):
-                    yield token
+                yield from self.text(token[1])
             elif type == "Doctype":
                 if len(token) == 4:
                     yield self.doctype(token[1], token[2], token[3])

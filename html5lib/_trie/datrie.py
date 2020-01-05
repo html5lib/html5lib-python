@@ -1,7 +1,4 @@
-from __future__ import absolute_import, division, unicode_literals
-
 from datrie import Trie as DATrie
-from six import text_type
 
 from ._base import Trie as ABCTrie
 
@@ -10,7 +7,7 @@ class Trie(ABCTrie):
     def __init__(self, data):
         chars = set()
         for key in data.keys():
-            if not isinstance(key, text_type):
+            if not isinstance(key, str):
                 raise TypeError("All keys must be strings")
             for char in key:
                 chars.add(char)

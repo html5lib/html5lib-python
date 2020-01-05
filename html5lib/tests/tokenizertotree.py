@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
-
 import sys
 import os
 import json
@@ -53,14 +51,14 @@ def make_test(test_data):
 
     rv = []
     rv.append("#data")
-    rv.append(test_data["input"].encode("utf8"))
+    rv.append(test_data["input"].encode())
     rv.append("#errors")
     tree = p.parse(test_data["input"])
     output = p.tree.testSerializer(tree)
     output = "\n".join(("| " + line[3:]) if line.startswith("|  ") else line
                        for line in output.split("\n"))
     output = unnamespaceExpected(r"\1<\2>", output)
-    rv.append(output.encode("utf8"))
+    rv.append(output.encode())
     rv.append("")
     return "\n".join(rv)
 

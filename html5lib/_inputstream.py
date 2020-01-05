@@ -1,11 +1,8 @@
-from __future__ import absolute_import, division, unicode_literals
-
-from six import text_type
-from six.moves import http_client, urllib
-
+import urllib.response
 import codecs
 import re
 from io import BytesIO, StringIO
+import http.client
 
 import webencodings
 
@@ -48,7 +45,7 @@ ascii_punctuation_re = re.compile("[\u0009-\u000D\u0020-\u002F\u003A-\u0040\u005
 charsUntilRegEx = {}
 
 
-class BufferedStream(object):
+class BufferedStream:
     """Buffering for streams that do not have buffering of their own
 
     The buffer is implemented as a list of chunks on the assumption that
@@ -125,15 +122,15 @@ class BufferedStream(object):
 def HTMLInputStream(source, **kwargs):
     # Work around Python bug #20007: read(0) closes the connection.
     # http://bugs.python.org/issue20007
-    if (isinstance(source, http_client.HTTPResponse) or
+    if (isinstance(source, http.client.HTTPResponse) or
         # Also check for addinfourl wrapping HTTPResponse
         (isinstance(source, urllib.response.addbase) and
-         isinstance(source.fp, http_client.HTTPResponse))):
+         isinstance(source.fp, http.client.HTTPResponse))):
         isUnicode = False
     elif hasattr(source, "read"):
-        isUnicode = isinstance(source.read(0), text_type)
+        isUnicode = isinstance(source.read(0), str)
     else:
-        isUnicode = isinstance(source, text_type)
+        isUnicode = isinstance(source, str)
 
     if isUnicode:
         encodings = [x for x in kwargs if x.endswith("_encoding")]
@@ -145,7 +142,7 @@ def HTMLInputStream(source, **kwargs):
         return HTMLBinaryInputStream(source, **kwargs)
 
 
-class HTMLUnicodeInputStream(object):
+class HTMLUnicodeInputStream:
     """Provides a unicode stream of characters to the HTMLTokenizer.
 
     This class takes care of character encoding and removing or replacing
@@ -598,10 +595,6 @@ class EncodingBytes(bytes):
             raise TypeError
         return self[p:p + 1]
 
-    def next(self):
-        # Py2 compat
-        return self.__next__()
-
     def previous(self):
         p = self._position
         if p >= len(self):
@@ -679,7 +672,7 @@ class EncodingBytes(bytes):
             raise StopIteration
 
 
-class EncodingParser(object):
+class EncodingParser:
     """Mini parser for detecting character encoding from meta elements"""
 
     def __init__(self, data):
@@ -860,7 +853,7 @@ class EncodingParser(object):
                 attrValue.append(c)
 
 
-class ContentAttrParser(object):
+class ContentAttrParser:
     def __init__(self, data):
         assert isinstance(data, bytes)
         self.data = data

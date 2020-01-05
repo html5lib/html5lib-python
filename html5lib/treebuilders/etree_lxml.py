@@ -9,12 +9,10 @@ Docypes with no name
 When any of these things occur, we emit a DataLossWarning
 """
 
-from __future__ import absolute_import, division, unicode_literals
 # pylint:disable=protected-access
 
 import warnings
 import re
-import sys
 
 from . import base
 from ..constants import DataLossWarning
@@ -31,14 +29,14 @@ tag_regexp = re.compile("{([^}]*)}(.*)")
 comment_type = etree.Comment("asd").tag
 
 
-class DocumentType(object):
+class DocumentType:
     def __init__(self, name, publicId, systemId):
         self.name = name
         self.publicId = publicId
         self.systemId = systemId
 
 
-class Document(object):
+class Document:
     def __init__(self):
         self._elementTree = None
         self._childNodes = []
@@ -77,9 +75,7 @@ def testSerializer(element):
                 while next_element is not None:
                     serializeElement(next_element, indent + 2)
                     next_element = next_element.getnext()
-            elif isinstance(element, str) or isinstance(element, bytes):
-                # Text in a fragment
-                assert isinstance(element, str) or sys.version_info[0] == 2
+            elif isinstance(element, str):
                 rv.append("|%s\"%s\"" % (' ' * indent, element))
             else:
                 # Fragment case
@@ -306,7 +302,7 @@ class TreeBuilder(base.TreeBuilder):
         if (parent == self.document and
                 self.document._elementTree.getroot()[-1].tag == comment_type):
             warnings.warn("lxml cannot represent adjacent comments beyond the root elements", DataLossWarning)
-        super(TreeBuilder, self).insertComment(data, parent)
+        super().insertComment(data, parent)
 
     def insertRoot(self, token):
         # Because of the way libxml2 works, it doesn't seem to be possible to

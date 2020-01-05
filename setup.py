@@ -1,8 +1,5 @@
-from __future__ import print_function
-
 import ast
 import codecs
-import sys
 
 from os.path import join, dirname
 from setuptools import setup, find_packages, __version__ as setuptools_version
@@ -32,7 +29,7 @@ class Python3MarkerDict(dict):
         return self[i]
 
 
-if _markerlib and sys.version_info[0] == 3:
+if _markerlib:
     env = _markerlib.markers._VARS
     for key in list(env.keys()):
         new_key = key.replace('.', '_')
@@ -63,9 +60,8 @@ classifiers = [
     'License :: OSI Approved :: MIT License',
     'Operating System :: OS Independent',
     'Programming Language :: Python',
-    'Programming Language :: Python :: 2',
-    'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3 :: Only',
     'Programming Language :: Python :: 3.5',
     'Programming Language :: Python :: 3.6',
     'Topic :: Software Development :: Libraries :: Python Modules',
@@ -100,10 +96,9 @@ setup(name='html5lib',
       maintainer_email='james@hoppipolla.co.uk',
       packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
       install_requires=[
-          'six>=1.9',
           'webencodings',
       ],
-      python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*",
+      python_requires=">=3.5",
       extras_require={
           # A conditional extra will only install these items when the extra is
           # requested and the condition matches.

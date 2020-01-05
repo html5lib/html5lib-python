@@ -1,6 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
-from six import with_metaclass, viewkeys
-
 import types
 from collections import OrderedDict
 
@@ -84,7 +81,7 @@ def method_decorator_metaclass(function):
     return Decorated
 
 
-class HTMLParser(object):
+class HTMLParser:
     """HTML parser
 
     Generates a tree structure from a stream of (possibly malformed) HTML.
@@ -442,7 +439,7 @@ def getPhases(debug):
             return type
 
     # pylint:disable=unused-argument
-    class Phase(with_metaclass(getMetaclass(debug, log))):
+    class Phase(metaclass=getMetaclass(debug, log)):
         """Base class for helper object that implements each phase of processing
         """
 
@@ -751,7 +748,7 @@ def getPhases(debug):
                     # the abstract Unicode string, and just use the
                     # ContentAttrParser on that, but using UTF-8 allows all chars
                     # to be encoded and as a ASCII-superset works.
-                    data = _inputstream.EncodingBytes(attributes["content"].encode("utf-8"))
+                    data = _inputstream.EncodingBytes(attributes["content"].encode())
                     parser = _inputstream.ContentAttrParser(data)
                     codec = parser.parse()
                     self.parser.tokenizer.stream.changeEncoding(codec)
@@ -2771,7 +2768,7 @@ def getPhases(debug):
 
 
 def adjust_attributes(token, replacements):
-    needs_adjustment = viewkeys(token['data']) & viewkeys(replacements)
+    needs_adjustment = token['data'].keys() & replacements.keys()
     if needs_adjustment:
         token['data'] = OrderedDict((replacements.get(k, k), v)
                                     for k, v in token['data'].items())

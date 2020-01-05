@@ -1,6 +1,11 @@
 Change Log
 ----------
 
+UNRELEASED
+----------
+
+* Remove support for end-of-life Python 2.7.
+
 1.0.1
 ~~~~~
 
