@@ -418,10 +418,7 @@ def getPhases(debug):
         def wrapped(self, *args, **kwargs):
             if function.__name__.startswith("process") and len(args) > 0:
                 token = args[0]
-                try:
-                    info = {"type": type_names[token['type']]}
-                except:
-                    raise
+                info = {"type": type_names[token['type']]}
                 if token['type'] in tagTokenTypes:
                     info["name"] = token['name']
 
