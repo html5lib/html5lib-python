@@ -36,4 +36,4 @@ toml==0.10.0
 typing==3.7.4.1
 u-msgpack-python==2.5.2
 virtualenv==20.0.6
-zipp==1.2.0
+zipp==3.0.0
