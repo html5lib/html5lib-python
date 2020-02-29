@@ -20,7 +20,7 @@ Features:
 * Support Python 3.6. (#333) (Thank you, Jon Dufresne!)
 * Add CI support for Windows using AppVeyor. (Thank you, John Vandenberg!)
 * Improve testing and CI and add code coverage (#323, #334), (Thank you, Jon
-  Dufresne, John Vandenberg, Geoffrey Sneddon, Will Kahn-Greene!)
+  Dufresne, John Vandenberg, Sam Sneddon, Will Kahn-Greene!)
 * Semver-compliant version number.
 
 Bug fixes:
