@@ -32,7 +32,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'html5lib'
-copyright = '2006 - 2013, James Graham, Geoffrey Sneddon, and contributors'
+copyright = '2006 - 2013, James Graham, Sam Sneddon, and contributors'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -68,7 +68,7 @@ htmlhelp_basename = 'html5libdoc'
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
     ('index', 'html5lib.tex', 'html5lib Documentation',
-     'James Graham, Geoffrey Sneddon, and contributors', 'manual'),
+     'James Graham, Sam Sneddon, and contributors', 'manual'),
 ]
 
 # -- Options for manual page output --------------------------------------------
@@ -77,7 +77,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'html5lib', 'html5lib Documentation',
-     ['James Graham, Geoffrey Sneddon, and contributors'], 1)
+     ['James Graham, Sam Sneddon, and contributors'], 1)
 ]
 
 # -- Options for Texinfo output ------------------------------------------------
@@ -87,7 +87,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     ('index', 'html5lib', 'html5lib Documentation',
-     'James Graham, Geoffrey Sneddon, and contributors', 'html5lib', 'One line description of project.',
+     'James Graham, Sam Sneddon, and contributors', 'html5lib', 'One line description of project.',
      'Miscellaneous'),
 ]
 
