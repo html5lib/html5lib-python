@@ -1,6 +1,23 @@
 Change Log
 ----------
 
+1.1
+~~~
+
+UNRELEASED
+
+Breaking changes:
+
+* Drop support for Python 3.3. (#358)
+* Drop support for Python 3.4. (#421)
+
+Other changes:
+
+* Try to import from `collections.abc` to remove DeprecationWarning and ensure
+  `html5lib` keeps working in future Python versions. (#403)
+* Drop optional `datrie` dependency. (#442)
+
+
 1.0.1
 ~~~~~
 
