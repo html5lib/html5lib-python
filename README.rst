@@ -97,9 +97,9 @@ html5lib works on CPython 2.7+, CPython 3.5+ and PyPy. To install:
 
     $ pip install html5lib
 
-The goal is to support a (non-strict) superset of the versions that [pip
-supports](https://pip.pypa.io/en/stable/installing/#python-and-os-compatibility).
-
+The goal is to support a (non-strict) superset of the versions that `pip
+supports
+<https://pip.pypa.io/en/stable/installing/#python-and-os-compatibility>`_.
 
 Optional Dependencies
 ---------------------
