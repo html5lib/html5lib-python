@@ -5,7 +5,7 @@
 # pin all of our direct dependencies
 tox==3.14.5
 flake8==3.7.9
-pytest==3.10.1,<4  # see https://github.com/html5lib/html5lib-python/pull/429
+pytest==5.4.1  # see https://github.com/html5lib/html5lib-python/pull/429
 coverage==5.0.3
 pytest-expect==1.1.0
 mock==3.0.5
