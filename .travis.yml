@@ -2,6 +2,7 @@ language: python
 python:
   - "pypy3"
   - "pypy"
+  - "3.9-dev"
   - "3.8"
   - "3.7"
   - "3.6"
