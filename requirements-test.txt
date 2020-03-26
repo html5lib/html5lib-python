@@ -12,7 +12,7 @@ mock==3.0.5
 
 # and all recursive dependencies
 appdirs==1.4.3
-configparser==4.0.2
+configparser==5.0.0
 contextlib2==0.6.0.post1
 distlib==0.3.0
 entrypoints==0.3
