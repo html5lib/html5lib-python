@@ -668,15 +668,11 @@ class EncodingBytes(bytes):
     def jumpTo(self, bytes):
         """Look for the next sequence of bytes matching a given sequence. If
         a match is found advance the position to the last byte of the match"""
-        newPosition = self[self.position:].find(bytes)
-        if newPosition > -1:
-            # XXX: This is ugly, but I can't see a nicer way to fix this.
-            if self._position == -1:
-                self._position = 0
-            self._position += (newPosition + len(bytes) - 1)
-            return True
-        else:
+        try:
+            self._position = self.index(bytes, self.position) + len(bytes) - 1
+        except ValueError:
             raise StopIteration
+        return True
 
 
 class EncodingParser(object):
@@ -697,6 +693,10 @@ class EncodingParser(object):
             (b"<", self.handlePossibleStartTag))
         for _ in self.data:
             keepParsing = True
+            try:
+                self.data.jumpTo(b"<")
+            except StopIteration:
+                break
             for key, method in methodDispatch:
                 if self.data.matchBytes(key):
                     try:
