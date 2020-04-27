@@ -21,7 +21,7 @@ filelock==3.0.12
 funcsigs==1.0.2
 functools32==3.2.3.post2 ; python_version < '3'
 importlib-metadata==1.5.0
-importlib-resources==1.0.2
+importlib-resources==1.5.0
 mccabe==0.6.1
 packaging==20.1
 pathlib2==2.3.5
