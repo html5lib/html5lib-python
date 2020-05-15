@@ -2,7 +2,9 @@ from __future__ import absolute_import, division, unicode_literals
 from six import with_metaclass, viewkeys
 
 import types
+
 from collections import OrderedDict
+from sys import version_info
 
 from . import _inputstream
 from . import _tokenizer
@@ -22,6 +24,12 @@ from .constants import (
     E,
     _ReparseException
 )
+
+
+if version_info >= (3, 7):
+    attributeMap = dict
+else:
+    attributeMap = OrderedDict
 
 
 def parse(doc, treebuilder="etree", namespaceHTMLElements=True, **kwargs):
@@ -329,10 +337,11 @@ class HTMLParser(object):
         # HTML5 specific normalizations to the token stream
         if token["type"] == tokenTypes["StartTag"]:
             raw = token["data"]
-            token["data"] = OrderedDict(raw)
-            if len(raw) > len(token["data"]):
+            data = attributeMap(raw)
+            if len(raw) > len(data):
                 # we had some duplicated attribute, fix so first wins
-                token["data"].update(raw[::-1])
+                data.update(raw[::-1])
+            token["data"] = data
 
         return token
 
@@ -2770,8 +2779,8 @@ def getPhases(debug):
 def adjust_attributes(token, replacements):
     needs_adjustment = viewkeys(token['data']) & viewkeys(replacements)
     if needs_adjustment:
-        token['data'] = OrderedDict((replacements.get(k, k), v)
-                                    for k, v in token['data'].items())
+        token['data'] = attributeMap((replacements.get(k, k), v)
+                                     for k, v in token['data'].items())
 
 
 def impliedTagToken(name, type="EndTag", attributes=None,
