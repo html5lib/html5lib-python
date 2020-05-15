@@ -682,6 +682,9 @@ class EncodingParser(object):
         self.encoding = None
 
     def getEncoding(self):
+        if b"<meta" not in self.data:
+            return None
+
         methodDispatch = (
             (b"<!--", self.handleComment),
             (b"<meta", self.handleMeta),
