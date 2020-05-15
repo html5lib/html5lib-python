@@ -658,9 +658,7 @@ class EncodingBytes(bytes):
         """Look for a sequence of bytes at the start of a string. If the bytes
         are found return True and advance the position to the byte after the
         match. Otherwise return False and leave the position alone"""
-        p = self.position
-        data = self[p:p + len(bytes)]
-        rv = data.startswith(bytes)
+        rv = self.startswith(bytes, self.position)
         if rv:
             self.position += len(bytes)
         return rv
