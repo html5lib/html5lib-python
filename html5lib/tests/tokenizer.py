@@ -40,7 +40,7 @@ class TokenizerTestParser(object):
 
     def processStartTag(self, token):
         self.outputTokens.append(["StartTag", token["name"],
-                                  dict(token["data"][::-1]), token["selfClosing"]])
+                                  token["data"], token["selfClosing"]])
 
     def processEmptyTag(self, token):
         if token["name"] not in constants.voidElements:
