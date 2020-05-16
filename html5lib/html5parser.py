@@ -3,9 +3,6 @@ from six import with_metaclass, viewkeys
 
 import types
 
-from collections import OrderedDict
-from sys import version_info
-
 from . import _inputstream
 from . import _tokenizer
 
@@ -24,12 +21,6 @@ from .constants import (
     E,
     _ReparseException
 )
-
-
-if version_info >= (3, 7):
-    attributeMap = dict
-else:
-    attributeMap = OrderedDict
 
 
 def parse(doc, treebuilder="etree", namespaceHTMLElements=True, **kwargs):
@@ -210,7 +201,7 @@ class HTMLParser(object):
         DoctypeToken = tokenTypes["Doctype"]
         ParseErrorToken = tokenTypes["ParseError"]
 
-        for token in self.normalizedTokens():
+        for token in self.tokenizer:
             prev_token = None
             new_token = token
             while new_token is not None:
@@ -267,10 +258,6 @@ class HTMLParser(object):
             reprocess = self.phase.processEOF()
             if reprocess:
                 assert self.phase not in phases
-
-    def normalizedTokens(self):
-        for token in self.tokenizer:
-            yield self.normalizeToken(token)
 
     def parse(self, stream, *args, **kwargs):
         """Parse a HTML document into a well-formed tree
@@ -332,18 +319,6 @@ class HTMLParser(object):
         self.errors.append((self.tokenizer.stream.position(), errorcode, datavars))
         if self.strict:
             raise ParseError(E[errorcode] % datavars)
-
-    def normalizeToken(self, token):
-        # HTML5 specific normalizations to the token stream
-        if token["type"] == tokenTypes["StartTag"]:
-            raw = token["data"]
-            data = attributeMap(raw)
-            if len(raw) > len(data):
-                # we had some duplicated attribute, fix so first wins
-                data.update(raw[::-1])
-            token["data"] = data
-
-        return token
 
     def adjustMathMLAttributes(self, token):
         adjust_attributes(token, adjustMathMLAttributes)
@@ -2803,8 +2778,8 @@ def getPhases(debug):
 def adjust_attributes(token, replacements):
     needs_adjustment = viewkeys(token['data']) & viewkeys(replacements)
     if needs_adjustment:
-        token['data'] = attributeMap((replacements.get(k, k), v)
-                                     for k, v in token['data'].items())
+        token['data'] = type(token['data'])((replacements.get(k, k), v)
+                                            for k, v in token['data'].items())
 
 
 def impliedTagToken(name, type="EndTag", attributes=None,
