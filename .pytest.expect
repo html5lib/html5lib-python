@@ -1,7 +1,7 @@
 pytest-expect file v1
-(2, 7, 11, 'final', 0)
-b'html5lib/tests/test_encoding.py::test_encoding::[110]': FAIL
-b'html5lib/tests/test_encoding.py::test_encoding::[111]': FAIL
+(2, 7, 18, 'final', 0)
+b'html5lib/tests/test_encoding.py::test_parser_encoding[<!DOCTYPE HTML>\n<script>document.write(\'<meta charset="ISO-8859-\' + \'2">\')</script>-iso-8859-2]': FAIL
+b'html5lib/tests/test_encoding.py::test_prescan_encoding[<!DOCTYPE HTML>\n<script>document.write(\'<meta charset="ISO-8859-\' + \'2">\')</script>-iso-8859-2]': FAIL
 u'html5lib/tests/testdata/tokenizer/test2.test::0::dataState': FAIL
 u'html5lib/tests/testdata/tokenizer/test3.test::228::dataState': FAIL
 u'html5lib/tests/testdata/tokenizer/test3.test::231::dataState': FAIL
