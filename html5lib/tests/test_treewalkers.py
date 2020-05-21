@@ -61,24 +61,7 @@ def set_attribute_on_first_child(docfrag, name, value, treeName):
         setter['ElementTree'](docfrag)(name, value)
 
 
-def runTreewalkerEditTest(intext, expected, attrs_to_add, tree):
-    """tests what happens when we add attributes to the intext"""
-    treeName, treeClass = tree
-    if treeClass is None:
-        pytest.skip("Treebuilder not loaded")
-    parser = html5parser.HTMLParser(tree=treeClass["builder"])
-    document = parser.parseFragment(intext)
-    for nom, val in attrs_to_add:
-        set_attribute_on_first_child(document, nom, val, treeName)
-
-    document = treeClass.get("adapter", lambda x: x)(document)
-    output = treewalkers.pprint(treeClass["walker"](document))
-    output = attrlist.sub(sortattrs, output)
-    if output not in expected:
-        raise AssertionError("TreewalkerEditTest: %s\nExpected:\n%s\nReceived:\n%s" % (treeName, expected, output))
-
-
-def test_treewalker_six_mix():
+def param_treewalker_six_mix():
     """Str/Unicode mix. If str attrs added to tree"""
 
     # On Python 2.x string literals are of type str. Unless, like this
@@ -99,7 +82,25 @@ def test_treewalker_six_mix():
 
     for tree in sorted(treeTypes.items()):
         for intext, attrs, expected in sm_tests:
-            yield runTreewalkerEditTest, intext, expected, attrs, tree
+            yield intext, expected, attrs, tree
+
+
+@pytest.mark.parametrize("intext, expected, attrs_to_add, tree", param_treewalker_six_mix())
+def test_treewalker_six_mix(intext, expected, attrs_to_add, tree):
+    """tests what happens when we add attributes to the intext"""
+    treeName, treeClass = tree
+    if treeClass is None:
+        pytest.skip("Treebuilder not loaded")
+    parser = html5parser.HTMLParser(tree=treeClass["builder"])
+    document = parser.parseFragment(intext)
+    for nom, val in attrs_to_add:
+        set_attribute_on_first_child(document, nom, val, treeName)
+
+    document = treeClass.get("adapter", lambda x: x)(document)
+    output = treewalkers.pprint(treeClass["walker"](document))
+    output = attrlist.sub(sortattrs, output)
+    if output not in expected:
+        raise AssertionError("TreewalkerEditTest: %s\nExpected:\n%s\nReceived:\n%s" % (treeName, expected, output))
 
 
 @pytest.mark.parametrize("tree,char", itertools.product(sorted(treeTypes.items()), ["x", "\u1234"]))
