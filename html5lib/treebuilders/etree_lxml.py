@@ -44,7 +44,11 @@ class Document(object):
         self._childNodes = []
 
     def appendChild(self, element):
-        self._elementTree.getroot().addnext(element._element)
+        last = self._elementTree.getroot()
+        for last in self._elementTree.getroot().itersiblings():
+            pass
+
+        last.addnext(element._element)
 
     def _getChildNodes(self):
         return self._childNodes
