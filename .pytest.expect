@@ -1297,8 +1297,6 @@ u'html5lib/tests/testdata/tree-construction/tests8.dat::5::cElementTree::parser:
 u'html5lib/tests/testdata/tree-construction/tests8.dat::5::cElementTree::parser::void-namespace': FAIL
 u'html5lib/tests/testdata/tree-construction/tests8.dat::5::lxml::parser::namespaced': FAIL
 u'html5lib/tests/testdata/tree-construction/tests8.dat::5::lxml::parser::void-namespace': FAIL
-u'html5lib/tests/testdata/tree-construction/webkit01.dat::22::lxml::parser::namespaced': FAIL
-u'html5lib/tests/testdata/tree-construction/webkit01.dat::22::lxml::parser::void-namespace': FAIL
 u'html5lib/tests/testdata/tree-construction/webkit02.dat::14::DOM::parser::namespaced': FAIL
 u'html5lib/tests/testdata/tree-construction/webkit02.dat::14::DOM::parser::void-namespace': FAIL
 u'html5lib/tests/testdata/tree-construction/webkit02.dat::14::ElementTree::parser::namespaced': FAIL
