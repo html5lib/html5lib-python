@@ -141,7 +141,9 @@ def test_lxml_xml():
 
 @pytest.mark.parametrize("treeName",
                          [pytest.param(treeName, marks=[getattr(pytest.mark, treeName),
-                                                        pytest.mark.skipif(sys.version_info < (3, 7), reason="dict order undef")])
+                                                        pytest.mark.skipif(
+                                                            treeName != "lxml" or
+                                                            sys.version_info < (3, 7), reason="dict order undef")])
                           for treeName in sorted(treeTypes.keys())])
 def test_maintain_attribute_order(treeName):
     treeAPIs = treeTypes[treeName]
@@ -172,7 +174,9 @@ def test_maintain_attribute_order(treeName):
 
 @pytest.mark.parametrize("treeName",
                          [pytest.param(treeName, marks=[getattr(pytest.mark, treeName),
-                                                        pytest.mark.skipif(sys.version_info < (3, 7), reason="dict order undef")])
+                                                        pytest.mark.skipif(
+                                                            treeName != "lxml" or
+                                                            sys.version_info < (3, 7), reason="dict order undef")])
                           for treeName in sorted(treeTypes.keys())])
 def test_maintain_attribute_order_adjusted(treeName):
     treeAPIs = treeTypes[treeName]
