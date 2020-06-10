@@ -11,11 +11,18 @@ Breaking changes:
 * Drop support for Python 3.3. (#358)
 * Drop support for Python 3.4. (#421)
 
+Deprecations:
+
+* Deprecate the ``html5lib`` sanitizer (``html5lib.serialize(sanitize=True)`` and
+  ``html5lib.filters.sanitizer``). We recommend users migrate to `Bleach
+  <https://github.com/mozilla/bleach>`. Please let us know if Bleach doesn't suffice for your
+  use. (#443)
+
 Other changes:
 
-* Try to import from `collections.abc` to remove DeprecationWarning and ensure
-  `html5lib` keeps working in future Python versions. (#403)
-* Drop optional `datrie` dependency. (#442)
+* Try to import from ``collections.abc`` to remove DeprecationWarning and ensure
+  ``html5lib`` keeps working in future Python versions. (#403)
+* Drop optional ``datrie`` dependency. (#442)
 
 
 1.0.1

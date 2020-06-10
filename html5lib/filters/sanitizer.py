@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, unicode_literals
 
 import re
+import warnings
 from xml.sax.saxutils import escape, unescape
 
 from six.moves import urllib_parse as urlparse
@@ -10,6 +11,13 @@ from ..constants import namespaces, prefixes
 
 __all__ = ["Filter"]
 
+
+warnings.warn(
+    "html5lib's sanitizer is deprecated; see " +
+    "https://github.com/html5lib/html5lib-python/issues/443 and please let " +
+    "us know if Bleach in unsuitable for your needs",
+    DeprecationWarning
+)
 
 allowed_elements = frozenset((
     (namespaces['html'], 'a'),
@@ -750,6 +758,14 @@ class Filter(base.Filter):
 
         """
         super(Filter, self).__init__(source)
+
+        warnings.warn(
+            "html5lib's sanitizer is deprecated; see " +
+            "https://github.com/html5lib/html5lib-python/issues/443 and please let " +
+            "us know if Bleach in unsuitable for your needs",
+            DeprecationWarning
+        )
+
         self.allowed_elements = allowed_elements
         self.allowed_attributes = allowed_attributes
         self.allowed_css_properties = allowed_css_properties
