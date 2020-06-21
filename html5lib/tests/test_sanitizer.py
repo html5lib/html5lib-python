@@ -8,14 +8,15 @@ from html5lib.filters import sanitizer
 
 def sanitize_html(stream):
     parsed = parseFragment(stream)
-    serialized = serialize(parsed,
-                           sanitize=True,
-                           omit_optional_tags=False,
-                           use_trailing_solidus=True,
-                           space_before_trailing_solidus=False,
-                           quote_attr_values="always",
-                           quote_char='"',
-                           alphabetical_attributes=True)
+    with pytest.deprecated_call():
+        serialized = serialize(parsed,
+                               sanitize=True,
+                               omit_optional_tags=False,
+                               use_trailing_solidus=True,
+                               space_before_trailing_solidus=False,
+                               quote_attr_values="always",
+                               quote_char='"',
+                               alphabetical_attributes=True)
     return serialized
 
 
