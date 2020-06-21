@@ -1,8 +1,9 @@
 """Deprecated from html5lib 1.1.
 
-See `here <https://github.com/html5lib/html5lib-python/issues/443>`_ for information about its
-deprecation; `Bleach <https://github.com/mozilla/bleach>`_ is recommended as a replacement. Please
-let us know in the aforementioned issue if Bleach is unsuitable for your needs.
+See `here <https://github.com/html5lib/html5lib-python/issues/443>`_ for
+information about its deprecation; `Bleach <https://github.com/mozilla/bleach>`_
+is recommended as a replacement. Please let us know in the aforementioned issue
+if Bleach is unsuitable for your needs.
 
 """
 from __future__ import absolute_import, division, unicode_literals
@@ -19,13 +20,13 @@ from ..constants import namespaces, prefixes
 __all__ = ["Filter"]
 
 
-__deprecation_msg = (
+_deprecation_msg = (
     "html5lib's sanitizer is deprecated; see " +
     "https://github.com/html5lib/html5lib-python/issues/443 and please let " +
     "us know if Bleach is unsuitable for your needs"
 )
 
-warnings.warn(__deprecation_msg, DeprecationWarning)
+warnings.warn(_deprecation_msg, DeprecationWarning)
 
 allowed_elements = frozenset((
     (namespaces['html'], 'a'),
@@ -767,7 +768,7 @@ class Filter(base.Filter):
         """
         super(Filter, self).__init__(source)
 
-        warnings.warn(__deprecation_msg, DeprecationWarning)
+        warnings.warn(_deprecation_msg, DeprecationWarning)
 
         self.allowed_elements = allowed_elements
         self.allowed_attributes = allowed_attributes
