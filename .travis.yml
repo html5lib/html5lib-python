@@ -13,17 +13,13 @@ cache: pip
 
 env:
   global:
-    - PYTEST_COMMAND="coverage run -m pytest"
     - TOXENV=base,optional,six19-optional
 
 install:
-  - pip install tox codecov
+  - pip install tox
 
 script:
   - tox
 
 after_script:
   - python debug-info.py
-
-after_success:
-  - codecov
