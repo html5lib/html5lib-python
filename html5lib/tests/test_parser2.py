@@ -68,7 +68,6 @@ def test_debug_log():
                 ('dataState', 'InBodyPhase', 'InBodyPhase', 'processStartTag', {'name': 'p', 'type': 'StartTag'}),
                 ('dataState', 'InBodyPhase', 'InBodyPhase', 'processCharacters', {'type': 'Characters'}),
                 ('dataState', 'InBodyPhase', 'InBodyPhase', 'processStartTag', {'name': 'script', 'type': 'StartTag'}),
-                ('dataState', 'InBodyPhase', 'InHeadPhase', 'processStartTag', {'name': 'script', 'type': 'StartTag'}),
                 ('scriptDataState', 'TextPhase', 'TextPhase', 'processCharacters', {'type': 'Characters'}),
                 ('dataState', 'TextPhase', 'TextPhase', 'processEndTag', {'name': 'script', 'type': 'EndTag'}),
                 ('dataState', 'InBodyPhase', 'InBodyPhase', 'processCharacters', {'type': 'Characters'}),
