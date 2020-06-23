@@ -11,7 +11,7 @@ from . import _utils
 from .constants import (
     spaceCharacters, asciiUpper2Lower,
     specialElements, headingElements, cdataElements, rcdataElements,
-    tokenTypes, tagTokenTypes,
+    tokenTypes,
     namespaces,
     htmlIntegrationPointElements, mathmlTextIntegrationPointElements,
     adjustForeignAttributes as adjustForeignAttributesMap,
