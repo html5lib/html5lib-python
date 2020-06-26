@@ -4,8 +4,6 @@ Change Log
 1.1
 ~~~
 
-UNRELEASED
-
 Breaking changes:
 
 * Drop support for Python 3.3. (#358)
