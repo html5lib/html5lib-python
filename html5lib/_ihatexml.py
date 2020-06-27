@@ -136,6 +136,7 @@ def normaliseCharList(charList):
         i += j
     return rv
 
+
 # We don't really support characters above the BMP :(
 max_unicode = int("FFFF", 16)
 

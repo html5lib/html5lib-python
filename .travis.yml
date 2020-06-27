@@ -2,32 +2,19 @@ language: python
 python:
   - "pypy3"
   - "pypy"
+  - "3.8"
+  - "3.7"
   - "3.6"
   - "3.5"
-  - "3.4"
   - "2.7"
+  - "3.9-dev"
 
 cache: pip
 
 env:
   global:
     - PYTEST_COMMAND="coverage run -m pytest"
-  matrix:
-    - TOXENV=optional
-    - TOXENV=base
-    - TOXENV=six19-optional
-
-matrix:
-  include:
-    - python: "3.7"
-      dist: xenial  # required for Python >= 3.7
-      env: TOXENV=optional
-    - python: "3.7"
-      dist: xenial  # required for Python >= 3.7
-      env: TOXENV=base
-    - python: "3.7"
-      dist: xenial  # required for Python >= 3.7
-      env: TOXENV=six19-optional
+    - TOXENV=base,optional,six19-optional
 
 install:
   - pip install tox codecov
