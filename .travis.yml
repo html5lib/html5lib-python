@@ -1,22 +1,20 @@
 language: python
 python:
+  - "pypy3"
   - "pypy"
+  - "3.8"
+  - "3.7"
   - "3.6"
   - "3.5"
-  - "3.4"
   - "2.7"
-
-sudo: false
+  - "3.9-dev"
 
 cache: pip
 
 env:
   global:
     - PYTEST_COMMAND="coverage run -m pytest"
-  matrix:
-    - TOXENV=optional
-    - TOXENV=base
-    - TOXENV=six19-optional
+    - TOXENV=base,optional,six19-optional
 
 install:
   - pip install tox codecov
