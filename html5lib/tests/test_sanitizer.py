@@ -56,7 +56,6 @@ def test_wbr_allowed():
     assert expected == sanitized
 
 
-
 def param_sanitizer():
     for ns, tag_name in sanitizer.allowed_elements:
         if ns != constants.namespaces["html"]:
