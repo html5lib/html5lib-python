@@ -13,7 +13,7 @@ class SanitizerFile(pytest.File):
         with codecs.open(str(self.fspath), "r", encoding="utf-8") as fp:
             tests = json.load(fp)
         for i, test in enumerate(tests):
-            yield SanitizerTest(str(i), self, test=test)
+            yield SanitizerTest.from_parent(self, name=str(i), test=test)
 
 
 class SanitizerTest(pytest.Item):
