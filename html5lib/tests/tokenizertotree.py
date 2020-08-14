@@ -29,7 +29,7 @@ def run_file(filename, out_path):
     except ValueError:
         sys.stderr.write("Failed to load %s\n" % filename)
         return
-    name = os.path.splitext(os.path.split(filename)[1])[0]
+    name = os.path.splitext(os.path.basename(filename))[0]
     output_file = open(os.path.join(out_path, "tokenizer_%s.dat" % name), "w")
 
     if 'tests' in tests_data:
