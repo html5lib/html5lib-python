@@ -23,3 +23,15 @@ script:
 
 after_script:
   - python debug-info.py
+
+arch:
+  - amd64
+  - ppc64le    
+
+jobs:
+  exclude:
+    - arch: ppc64le
+      python: pypy
+    - arch: ppc64le
+      python: pypy3
+
