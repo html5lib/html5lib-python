@@ -34,7 +34,7 @@ implementation (i.e. ``xml.etree.cElementTree`` on Python 2.x).
 
 Two other tree types are supported: ``xml.dom.minidom`` and
 ``lxml.etree``. To use an alternative format, specify the name of
-a treebuilder:
+a treebuilder:-
 
 .. code-block:: python
 
@@ -43,7 +43,7 @@ a treebuilder:
       lxml_etree_document = html5lib.parse(f, treebuilder="lxml")
 
 When using with ``urllib2`` (Python 2), the charset from HTTP should be
-pass into html5lib as follows:
+pass into html5lib as follows:-
 
 .. code-block:: python
 
@@ -55,7 +55,7 @@ pass into html5lib as follows:
       document = html5lib.parse(f, transport_encoding=f.info().getparam("charset"))
 
 When using with ``urllib.request`` (Python 3), the charset from HTTP
-should be pass into html5lib as follows:
+should be pass into html5lib as follows:-
 
 .. code-block:: python
 
