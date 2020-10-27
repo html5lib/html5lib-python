@@ -611,12 +611,8 @@ class EncodingBytes(bytes):
         self._position = p = p - 1
         return self[p:p + 1]
 
-    def setPosition(self, position):
-        if self._position >= len(self):
-            raise StopIteration
-        self._position = position
-
-    def getPosition(self):
+    @property
+    def position(self):
         if self._position >= len(self):
             raise StopIteration
         if self._position >= 0:
@@ -624,12 +620,15 @@ class EncodingBytes(bytes):
         else:
             return None
 
-    position = property(getPosition, setPosition)
+    @position.setter
+    def position(self, position):
+        if self._position >= len(self):
+            raise StopIteration
+        self._position = position
 
-    def getCurrentByte(self):
+    @property
+    def currentByte(self):
         return self[self.position:self.position + 1]
-
-    currentByte = property(getCurrentByte)
 
     def skip(self, chars=spaceCharactersBytes):
         """Skip past a list of characters"""

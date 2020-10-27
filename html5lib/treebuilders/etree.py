@@ -41,28 +41,30 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                 etree_tag = "{%s}%s" % (namespace, name)
             return etree_tag
 
-        def _setName(self, name):
+        @property
+        def name(self):
+            return self._name
+
+        @name.setter
+        def name(self, name):
             self._name = name
             self._element.tag = self._getETreeTag(self._name, self._namespace)
 
-        def _getName(self):
-            return self._name
+        @property
+        def namespace(self):
+            return self._namespace
 
-        name = property(_getName, _setName)
-
-        def _setNamespace(self, namespace):
+        @namespace.setter
+        def namespace(self, namespace):
             self._namespace = namespace
             self._element.tag = self._getETreeTag(self._name, self._namespace)
 
-        def _getNamespace(self):
-            return self._namespace
-
-        namespace = property(_getNamespace, _setNamespace)
-
-        def _getAttributes(self):
+        @property
+        def attributes(self):
             return self._element.attrib
 
-        def _setAttributes(self, attributes):
+        @attributes.setter
+        def attributes(self, attributes):
             el_attrib = self._element.attrib
             el_attrib.clear()
             if attributes:
@@ -75,18 +77,16 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                         name = key
                     el_attrib[name] = value
 
-        attributes = property(_getAttributes, _setAttributes)
-
-        def _getChildNodes(self):
+        @property
+        def childNodes(self):
             return self._childNodes
 
-        def _setChildNodes(self, value):
+        @childNodes.setter
+        def childNodes(self, value):
             del self._element[:]
             self._childNodes = []
             for element in value:
                 self.insertChild(element)
-
-        childNodes = property(_getChildNodes, _setChildNodes)
 
         def hasContent(self):
             """Return true if the node has children or text"""
@@ -156,13 +156,13 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             self._childNodes = []
             self._flags = []
 
-        def _getData(self):
+        @property
+        def data(self):
             return self._element.text
 
-        def _setData(self, value):
+        @data.setter
+        def data(self, value):
             self._element.text = value
-
-        data = property(_getData, _setData)
 
     class DocumentType(Element):
         def __init__(self, name, publicId, systemId):
@@ -171,23 +171,23 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             self.publicId = publicId
             self.systemId = systemId
 
-        def _getPublicId(self):
+        @property
+        def publicId(self):
             return self._element.get("publicId", "")
 
-        def _setPublicId(self, value):
+        @publicId.setter
+        def publicId(self, value):
             if value is not None:
                 self._element.set("publicId", value)
 
-        publicId = property(_getPublicId, _setPublicId)
-
-        def _getSystemId(self):
+        @property
+        def systemId(self):
             return self._element.get("systemId", "")
 
-        def _setSystemId(self, value):
+        @systemId.setter
+        def systemId(self, value):
             if value is not None:
                 self._element.set("systemId", value)
-
-        systemId = property(_getSystemId, _setSystemId)
 
     class Document(Element):
         def __init__(self):

@@ -58,8 +58,9 @@ def getDomBuilder(DomImplementation):
             base.Node.__init__(self, element.nodeName)
             self.element = element
 
-        namespace = property(lambda self: hasattr(self.element, "namespaceURI") and
-                             self.element.namespaceURI or None)
+        @property
+        def namespace(self):
+            return getattr(self.element, "namespaceURI", None)
 
         def appendChild(self, node):
             node.parent = self
@@ -88,10 +89,12 @@ def getDomBuilder(DomImplementation):
                 newParent.element.appendChild(child)
             self.childNodes = []
 
-        def getAttributes(self):
+        @property
+        def attributes(self):
             return AttrList(self.element)
 
-        def setAttributes(self, attributes):
+        @attributes.setter
+        def attributes(self, attributes):
             if attributes:
                 for name, value in list(attributes.items()):
                     if isinstance(name, tuple):
@@ -104,7 +107,6 @@ def getDomBuilder(DomImplementation):
                     else:
                         self.element.setAttribute(
                             name, value)
-        attributes = property(getAttributes, setAttributes)
 
         def cloneNode(self):
             return NodeBuilder(self.element.cloneNode(False))
@@ -112,13 +114,12 @@ def getDomBuilder(DomImplementation):
         def hasContent(self):
             return self.element.hasChildNodes()
 
-        def getNameTuple(self):
+        @property
+        def nameTuple(self):
             if self.namespace is None:
                 return namespaces["html"], self.name
             else:
                 return self.namespace, self.name
-
-        nameTuple = property(getNameTuple)
 
     class TreeBuilder(base.TreeBuilder):  # pylint:disable=unused-variable
         def documentClass(self):

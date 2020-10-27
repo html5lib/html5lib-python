@@ -56,10 +56,9 @@ class Document(object):
 
         last.addnext(element._element)
 
-    def _getChildNodes(self):
+    @property
+    def childNodes(self):
         return self._childNodes
-
-    childNodes = property(_getChildNodes)
 
 
 def testSerializer(element):
@@ -233,25 +232,25 @@ class TreeBuilder(base.TreeBuilder):
                 builder.Element.__init__(self, name, namespace=namespace)
                 self._attributes = Attributes(self)
 
-            def _setName(self, name):
+            @property
+            def name(self):
+                return infosetFilter.fromXmlName(self._name)
+
+            @name.setter
+            def name(self, name):
                 self._name = infosetFilter.coerceElement(name)
                 self._element.tag = self._getETreeTag(
                     self._name, self._namespace)
 
-            def _getName(self):
-                return infosetFilter.fromXmlName(self._name)
-
-            name = property(_getName, _setName)
-
-            def _getAttributes(self):
+            @property
+            def attributes(self):
                 return self._attributes
 
-            def _setAttributes(self, value):
+            @attributes.setter
+            def attributes(self, value):
                 attributes = self.attributes
                 attributes.clear()
                 attributes.update(value)
-
-            attributes = property(_getAttributes, _setAttributes)
 
             def insertText(self, data, insertBefore=None):
                 data = infosetFilter.coerceCharacters(data)
@@ -268,14 +267,14 @@ class TreeBuilder(base.TreeBuilder):
                 data = infosetFilter.coerceComment(data)
                 builder.Comment.__init__(self, data)
 
-            def _setData(self, data):
-                data = infosetFilter.coerceComment(data)
-                self._element.text = data
-
-            def _getData(self):
+            @property
+            def data(self):
                 return self._element.text
 
-            data = property(_getData, _setData)
+            @data.setter
+            def data(self, data):
+                data = infosetFilter.coerceComment(data)
+                self._element.text = data
 
         self.elementClass = Element
         self.commentClass = Comment
