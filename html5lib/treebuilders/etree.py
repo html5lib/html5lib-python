@@ -200,8 +200,15 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
     def testSerializer(element):
         rv = []
 
-        def serializeElement(element, indent=0):
-            if not(hasattr(element, "tag")):
+        stack = [(element, 0)]
+
+        while stack:
+            element, indent = stack.pop()
+            if isinstance(element, text_type):
+                rv.append(element)
+                continue
+
+            if not (hasattr(element, "tag")):
                 element = element.getroot()
             if element.tag == "<!DOCTYPE>":
                 if element.get("publicId") or element.get("systemId"):
@@ -249,13 +256,12 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                     for name, value in sorted(attributes):
                         rv.append('|%s%s="%s"' % (' ' * (indent + 2), name, value))
                 if element.text:
-                    rv.append("|%s\"%s\"" % (' ' * (indent + 2), element.text))
-            indent += 2
-            for child in element:
-                serializeElement(child, indent)
+                    rv.append('|%s"%s"' % (" " * (indent + 2), element.text))
             if element.tail:
-                rv.append("|%s\"%s\"" % (' ' * (indent - 2), element.tail))
-        serializeElement(element, 0)
+                stack.append(('|%s"%s"' % (" " * (indent), element.tail), None))
+            indent += 2
+            for child in reversed(element):
+                stack.append((child, indent))
 
         return "\n".join(rv)
 
