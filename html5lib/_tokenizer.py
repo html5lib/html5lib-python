@@ -2,7 +2,11 @@ from __future__ import absolute_import, division, unicode_literals
 
 from six import unichr as chr
 
-from collections import deque, OrderedDict
+from collections import deque
+try:
+    from collections.abc import OrderedDict
+except ImportError:
+    from collections import OrderedDict
 from sys import version_info
 
 from .constants import spaceCharacters
