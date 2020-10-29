@@ -16,6 +16,14 @@ from .._utils import moduleFactoryFactory
 tag_regexp = re.compile("{([^}]*)}(.*)")
 
 
+def _getETreeTag(name, namespace):
+    if namespace is None:
+        etree_tag = name
+    else:
+        etree_tag = "{%s}%s" % (namespace, name)
+    return etree_tag
+
+
 def getETreeBuilder(ElementTreeImplementation, fullTree=False):
     ElementTree = ElementTreeImplementation
     ElementTreeCommentType = ElementTree.Comment("asd").tag
@@ -24,8 +32,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
         def __init__(self, name, namespace=None):
             self._name = name
             self._namespace = namespace
-            self._element = ElementTree.Element(self._getETreeTag(name,
-                                                                  namespace))
+            self._element = ElementTree.Element(_getETreeTag(name, namespace))
             if namespace is None:
                 self.nameTuple = namespaces["html"], self._name
             else:
@@ -34,13 +41,6 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             self._childNodes = []
             self._flags = []
 
-        def _getETreeTag(self, name, namespace):
-            if namespace is None:
-                etree_tag = name
-            else:
-                etree_tag = "{%s}%s" % (namespace, name)
-            return etree_tag
-
         @property
         def name(self):
             return self._name
@@ -48,7 +48,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
         @name.setter
         def name(self, name):
             self._name = name
-            self._element.tag = self._getETreeTag(self._name, self._namespace)
+            self._element.tag = _getETreeTag(self._name, self._namespace)
 
         @property
         def namespace(self):
@@ -57,7 +57,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
         @namespace.setter
         def namespace(self, namespace):
             self._namespace = namespace
-            self._element.tag = self._getETreeTag(self._name, self._namespace)
+            self._element.tag = _getETreeTag(self._name, self._namespace)
 
         @property
         def attributes(self):
