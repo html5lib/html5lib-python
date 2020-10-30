@@ -936,6 +936,7 @@ class HTMLTokenizer(object):
             self.currentToken["data"][-1][0] += data
             leavingThisState = False
 
+        assert leavingThisState == ((self._state != self.attributeNameState) or emitToken)
         if leavingThisState:
             # Attributes are not dropped at this stage. That happens when the
             # start tag token is emitted so values can still be safely appended
