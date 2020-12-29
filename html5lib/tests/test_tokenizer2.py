@@ -24,7 +24,7 @@ def test_maintain_attribute_order():
     assert len(out) == 1
     assert isinstance(out[0], StartTag)
 
-    attrs_tok = out[0].data
+    attrs_tok = out[0].attributes
     assert len(attrs_tok) == len(attrs)
 
     for (in_name, in_value), (out_name, out_value) in zip(attrs, attrs_tok.items()):
@@ -41,7 +41,7 @@ def test_duplicate_attribute():
     assert len(out) == 1
     assert isinstance(out[0], StartTag)
 
-    attrs_tok = out[0].data
+    attrs_tok = out[0].attributes
     assert len(attrs_tok) == 1
     assert list(attrs_tok.items()) == [('a', '1')]
 
@@ -57,7 +57,7 @@ def test_maintain_duplicate_attribute_order():
     assert len(out) == 1
     assert isinstance(out[0], StartTag)
 
-    attrs_tok = out[0].data
+    attrs_tok = out[0].attributes
     assert len(attrs_tok) == len(attrs)
 
     for (in_name, in_value), (out_name, out_value) in zip(attrs, attrs_tok.items()):

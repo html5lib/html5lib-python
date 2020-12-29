@@ -25,7 +25,7 @@ class TokenizerTestParser(object):
 
         tokenizer.state = getattr(tokenizer, self._state)
         if self._lastStartTag is not None:
-            tokenizer.currentToken = StartTag(name=self._lastStartTag, data=None, self_closing=False)
+            tokenizer.currentToken = StartTag(name=self._lastStartTag)
 
         for token in tokenizer:
             getattr(self, 'process%s' % token.__class__.__name__)(token)
@@ -38,12 +38,12 @@ class TokenizerTestParser(object):
 
     def processStartTag(self, token):
         self.outputTokens.append(["StartTag", token.name,
-                                  token.data, token.self_closing])
+                                  token.attributes, token.self_closing])
 
     def processEmptyTag(self, token):
         if token.name not in constants.voidElements:
             self.outputTokens.append("ParseError")
-        self.outputTokens.append(["StartTag", token.name, dict(token.data[::-1])])
+        self.outputTokens.append(["StartTag", token.name, token.attributes])
 
     def processEndTag(self, token):
         self.outputTokens.append(["EndTag", token.name, token.self_closing])

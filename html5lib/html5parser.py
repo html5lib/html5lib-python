@@ -5,6 +5,7 @@ import types
 
 from . import _inputstream
 from ._tokenizer import (
+    attributeMap,
     HTMLTokenizer,
     Characters,
     SpaceCharacters,
@@ -471,7 +472,7 @@ def getPhases(debug):
                 self.parser.parseError("non-html-root")
             # XXX Need a check here to see if the first start tag token emitted is
             # this token... If it's not, invoke self.parser.parseError().
-            for attr, value in token.data.items():
+            for attr, value in token.attributes.items():
                 if attr not in self.tree.openElements[0].attributes:
                     self.tree.openElements[0].attributes[attr] = value
             self.parser.firstStartTag = False
@@ -733,7 +734,7 @@ def getPhases(debug):
             self.tree.openElements.pop()
             token.self_closing_acknowledged = True
 
-            attributes = token.data
+            attributes = token.attributes
             if self.parser.tokenizer.stream.charEncoding[1] == "tentative":
                 if "charset" in attributes:
                     self.parser.tokenizer.stream.changeEncoding(attributes["charset"])
@@ -1018,7 +1019,7 @@ def getPhases(debug):
                 assert self.parser.innerHTML
             else:
                 self.parser.framesetOK = False
-                for attr, value in token.data.items():
+                for attr, value in token.attributes.items():
                     if attr not in self.tree.openElements[1].attributes:
                         self.tree.openElements[1].attributes[attr] = value
 
@@ -1162,8 +1163,8 @@ def getPhases(debug):
         def startTagInput(self, token):
             framesetOK = self.parser.framesetOK
             self.startTagVoidFormatting(token)
-            if ("type" in token.data and
-                    token.data["type"].translate(asciiUpper2Lower) == "hidden"):
+            token_type = token.attributes.get('type', '')
+            if token_type.translate(asciiUpper2Lower) == "hidden":
                 # input type=hidden doesn't change framesetOK
                 self.parser.framesetOK = framesetOK
 
@@ -1184,28 +1185,23 @@ def getPhases(debug):
             # No really...
             self.parser.parseError("unexpected-start-tag-treated-as",
                                    {"originalName": "image", "newName": "img"})
-            self.processStartTag(impliedTagToken("img", StartTag,
-                                                 attributes=token.data,
-                                                 selfClosing=token.self_closing))
+            self.processStartTag(impliedTagToken("img", StartTag, attributes=token.attributes))
 
         def startTagIsIndex(self, token):
             self.parser.parseError("deprecated-tag", {"name": "isindex"})
             if self.tree.formPointer:
                 return
             form_attrs = {}
-            if "action" in token.data:
-                form_attrs["action"] = token.data["action"]
+            if "action" in token.attributes:
+                form_attrs["action"] = token.attributes["action"]
             self.processStartTag(impliedTagToken("form", StartTag,
                                                  attributes=form_attrs))
             self.processStartTag(impliedTagToken("hr", StartTag))
             self.processStartTag(impliedTagToken("label", StartTag))
             # XXX Localization ...
-            if "prompt" in token.data:
-                prompt = token.data["prompt"]
-            else:
-                prompt = "This is a searchable index. Enter search keywords: "
+            prompt = token.attributes.get("prompt", "This is a searchable index. Enter search keywords: ")
             self.processCharacters(Characters(prompt))
-            attributes = token.data.copy()
+            attributes = token.attributes.copy()
             if "action" in attributes:
                 del attributes["action"]
             if "prompt" in attributes:
@@ -1767,8 +1763,8 @@ def getPhases(debug):
             return self.parser.phases["inHead"].processStartTag(token)
 
         def startTagInput(self, token):
-            if ("type" in token.data and
-                    token.data["type"].translate(asciiUpper2Lower) == "hidden"):
+            token_type = token.attributes.get('type', '')
+            if token_type.translate(asciiUpper2Lower) == "hidden":
                 self.parser.parseError("unexpected-hidden-input-in-table")
                 self.tree.insertElement(token)
                 # XXX associate with form
@@ -2483,7 +2479,7 @@ def getPhases(debug):
             currentNode = self.tree.openElements[-1]
             if (token.name in self.breakoutElements or
                 (token.name == "font" and
-                 set(token.data.keys()) & {"color", "face", "size"})):
+                 set(token.attributes.keys()) & {"color", "face", "size"})):
                 self.parser.parseError("unexpected-html-element-in-foreign-content",
                                        {"name": token.name})
                 while (self.tree.openElements[-1].namespace !=
@@ -2773,10 +2769,8 @@ def getPhases(debug):
 
 
 def adjust_attributes(token, replacements):
-    needs_adjustment = viewkeys(token.data) & viewkeys(replacements)
-    if needs_adjustment:
-        token.data = type(token.data)((replacements.get(k, k), v)
-                                            for k, v in token.data.items())
+    if viewkeys(token.attributes) & viewkeys(replacements):
+        token.attributes = attributeMap((replacements.get(k, k), v) for k, v in token.attributes.items())
 
 
 def impliedTagToken(name, type=EndTag, attributes=None,

@@ -250,7 +250,7 @@ class TreeBuilder(object):
             clone = entry.cloneNode()  # Mainly to get a new copy of the attributes
 
             # Step 9
-            tag = StartTag(name=clone.name, data=clone.attributes, self_closing=False)
+            tag = StartTag(name=clone.name, data=clone.attributes)
             tag.namespace = clone.namespace
             element = self.insertElement(tag)
 
@@ -303,7 +303,7 @@ class TreeBuilder(object):
         name = token.name
         namespace = getattr(token, "namespace", self.defaultNamespace)
         element = self.elementClass(name, namespace)
-        element.attributes = token.data
+        element.attributes = token.attributes
         return element
 
     def _getInsertFromTable(self):
@@ -325,7 +325,7 @@ class TreeBuilder(object):
         assert isinstance(name, text_type), "Element %s not unicode" % name
         namespace = getattr(token, "namespace", self.defaultNamespace)
         element = self.elementClass(name, namespace)
-        element.attributes = token.data
+        element.attributes = token.attributes
         self.openElements[-1].appendChild(element)
         self.openElements.append(element)
         return element
