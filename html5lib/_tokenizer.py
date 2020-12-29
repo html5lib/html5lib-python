@@ -891,8 +891,7 @@ class HTMLTokenizer(object):
         if data == "=":
             self.state = self.beforeAttributeValueState
         elif data in asciiLetters:
-            self.currentToken["data"][-1][0] += data +\
-                self.stream.charsUntil(asciiLetters, True)
+            self.currentToken["data"][-1][0] += data
             leavingThisState = False
         elif data == ">":
             # XXX If we emit here the attributes are converted to a dict
