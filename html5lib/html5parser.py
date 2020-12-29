@@ -2783,7 +2783,7 @@ def impliedTagToken(name, type=EndTag, attributes=None,
                     selfClosing=False):
     if attributes is None:
         attributes = {}
-    return type(name=name, data=attributes, self_closing=selfClosing)
+    return type(name=name, data=attributes)
 
 
 class ParseError(Exception):

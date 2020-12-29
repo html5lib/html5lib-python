@@ -43,23 +43,24 @@ class SpaceCharacters(Token):
 
 
 class Tag(Token):
-    def __init__(self, name, data, self_closing):
+    def __init__(self, name, data):
         self.name = name
-        self.data = data
-        self.self_closing = self_closing
+        self.data = data or []
+        self.self_closing = False
 
 class StartTag(Tag):
-    def __init__(self, name, data, self_closing, self_closing_acknowledged=False):
-        super(StartTag, self).__init__(name, data, self_closing)
-        self.self_closing_acknowledged = self_closing_acknowledged
+    def __init__(self, name, data=None):
+        super(StartTag, self).__init__(name, data)
+        self.self_closing_acknowledged = False
 
 class EndTag(Tag):
-    def __init__(self, name, data, self_closing):
-        super(EndTag, self).__init__(name, data, self_closing)
+    def __init__(self, name, data=None):
+        super(EndTag, self).__init__(name, data)
 
 class EmptyTag(Tag):
-    def __init__(self, name, data):
-        super(EmptyTag, self).__init__(name, data, self_closing)
+    def __init__(self, name, data=None):
+        super(EmptyTag, self).__init__(name, data)
+        self.self_closing = True
 
 class Comment(Token):
     pass
@@ -274,6 +275,7 @@ class HTMLTokenizer(object):
                 data = attributeMap(raw)
                 if len(raw) > len(data):
                     # we had some duplicated attribute, fix so first wins
+                    was = dict(data)
                     data.update(raw[::-1])
                 token.data = data
 
@@ -395,7 +397,7 @@ class HTMLTokenizer(object):
         elif data == "/":
             self.state = self.closeTagOpenState
         elif data in asciiLetters:
-            self.currentToken = StartTag(name=data, data=[], self_closing=False)
+            self.currentToken = StartTag(name=data)
             self.state = self.tagNameState
         elif data == ">":
             # XXX In theory it could be something besides a tag name. But
@@ -420,7 +422,7 @@ class HTMLTokenizer(object):
     def closeTagOpenState(self):
         data = self.stream.char()
         if data in asciiLetters:
-            self.currentToken = EndTag(name=data, data=[], self_closing=False)
+            self.currentToken = EndTag(name=data)
             self.state = self.tagNameState
         elif data == ">":
             self.tokenQueue.append(ParseError("expected-closing-tag-but-got-right-bracket"))
@@ -482,13 +484,13 @@ class HTMLTokenizer(object):
         appropriate = self.currentToken and self.currentToken.name.lower() == self.temporaryBuffer.lower()
         data = self.stream.char()
         if data in spaceCharacters and appropriate:
-            self.currentToken = EndTag(name=self.temporaryBuffer, data=[], self_closing=False)
+            self.currentToken = EndTag(name=self.temporaryBuffer)
             self.state = self.beforeAttributeNameState
         elif data == "/" and appropriate:
-            self.currentToken = EndTag(name=self.temporaryBuffer, data=[], self_closing=False)
+            self.currentToken = EndTag(name=self.temporaryBuffer)
             self.state = self.selfClosingStartTagState
         elif data == ">" and appropriate:
-            self.currentToken = EndTag(name=self.temporaryBuffer, data=[], self_closing=False)
+            self.currentToken = EndTag(name=self.temporaryBuffer)
             self.emitCurrentToken()
             self.state = self.dataState
         elif data in asciiLetters:
@@ -525,13 +527,13 @@ class HTMLTokenizer(object):
         appropriate = self.currentToken and self.currentToken.name.lower() == self.temporaryBuffer.lower()
         data = self.stream.char()
         if data in spaceCharacters and appropriate:
-            self.currentToken = EndTag(name=self.temporaryBuffer, data=[], self_closing=False)
+            self.currentToken = EndTag(name=self.temporaryBuffer)
             self.state = self.beforeAttributeNameState
         elif data == "/" and appropriate:
-            self.currentToken = EndTag(name=self.temporaryBuffer, data=[], self_closing=False)
+            self.currentToken = EndTag(name=self.temporaryBuffer)
             self.state = self.selfClosingStartTagState
         elif data == ">" and appropriate:
-            self.currentToken = EndTag(name=self.temporaryBuffer, data=[], self_closing=False)
+            self.currentToken = EndTag(name=self.temporaryBuffer)
             self.emitCurrentToken()
             self.state = self.dataState
         elif data in asciiLetters:
@@ -571,13 +573,13 @@ class HTMLTokenizer(object):
         appropriate = self.currentToken and self.currentToken.name.lower() == self.temporaryBuffer.lower()
         data = self.stream.char()
         if data in spaceCharacters and appropriate:
-            self.currentToken = EndTag(name=self.temporaryBuffer, data=[], self_closing=False)
+            self.currentToken = EndTag(name=self.temporaryBuffer)
             self.state = self.beforeAttributeNameState
         elif data == "/" and appropriate:
-            self.currentToken = EndTag(name=self.temporaryBuffer, data=[], self_closing=False)
+            self.currentToken = EndTag(name=self.temporaryBuffer)
             self.state = self.selfClosingStartTagState
         elif data == ">" and appropriate:
-            self.currentToken = EndTag(name=self.temporaryBuffer, data=[], self_closing=False)
+            self.currentToken = EndTag(name=self.temporaryBuffer)
             self.emitCurrentToken()
             self.state = self.dataState
         elif data in asciiLetters:
@@ -693,13 +695,13 @@ class HTMLTokenizer(object):
         appropriate = self.currentToken and self.currentToken.name.lower() == self.temporaryBuffer.lower()
         data = self.stream.char()
         if data in spaceCharacters and appropriate:
-            self.currentToken = EndTag(name=self.temporaryBuffer, data=[], self_closing=False)
+            self.currentToken = EndTag(name=self.temporaryBuffer)
             self.state = self.beforeAttributeNameState
         elif data == "/" and appropriate:
-            self.currentToken = EndTag(name=self.temporaryBuffer, data=[], self_closing=False)
+            self.currentToken = EndTag(name=self.temporaryBuffer)
             self.state = self.selfClosingStartTagState
         elif data == ">" and appropriate:
-            self.currentToken = EndTag(name=self.temporaryBuffer, data=[], self_closing=False)
+            self.currentToken = EndTag(name=self.temporaryBuffer)
             self.emitCurrentToken()
             self.state = self.dataState
         elif data in asciiLetters:
