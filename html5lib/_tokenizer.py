@@ -855,7 +855,7 @@ class HTMLTokenizer(object):
         if data == "=":
             self.state = self.beforeAttributeValueState
         elif data in asciiLetters:
-            self.currentToken.accumulateAttributeName(data + self.stream.charsUntil(asciiLetters, True))
+            self.currentToken.accumulateAttributeName(data)
         elif data == ">":
             self.emitCurrentToken()
         elif data in spaceCharacters:
