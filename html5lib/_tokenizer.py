@@ -41,21 +41,25 @@ class Characters(Token):
 class SpaceCharacters(Token):
     pass
 
-class StartTag(Token):
-    def __init__(self, name, data, self_closing, self_closing_acknowledged=False):
-        self.name = name
-        self.data = data
-        self.self_closing = self_closing
-        self.self_closing_acknowledged = self_closing_acknowledged
 
-class EndTag(Token):
+class Tag(Token):
     def __init__(self, name, data, self_closing):
         self.name = name
         self.data = data
         self.self_closing = self_closing
 
-class EmptyTag(Token):
-    pass
+class StartTag(Tag):
+    def __init__(self, name, data, self_closing, self_closing_acknowledged=False):
+        super(StartTag, self).__init__(name, data, self_closing)
+        self.self_closing_acknowledged = self_closing_acknowledged
+
+class EndTag(Tag):
+    def __init__(self, name, data, self_closing):
+        super(EndTag, self).__init__(name, data, self_closing)
+
+class EmptyTag(Tag):
+    def __init__(self, name, data):
+        super(EmptyTag, self).__init__(name, data, self_closing)
 
 class Comment(Token):
     pass
@@ -64,9 +68,6 @@ class ParseError(Token):
     def __init__(self, data, datavars=None):
         self.data = data
         self.datavars = datavars or {}
-
-
-tagTokenTypes = frozenset([StartTag, EndTag, EmptyTag])
 
 
 class HTMLTokenizer(object):
@@ -266,7 +267,7 @@ class HTMLTokenizer(object):
         """
         token = self.currentToken
         # Add token to the queue to be yielded
-        if (type(token) in tagTokenTypes):
+        if isinstance(token, Tag):
             token.name = token.name.translate(asciiUpper2Lower)
             if isinstance(token, StartTag):
                 raw = token.data

@@ -13,7 +13,7 @@ from ._tokenizer import (
     Comment,
     Doctype,
     ParseError as TokenizerParseError,
-    tagTokenTypes,
+    Tag,
 )
 
 from . import treebuilders
@@ -400,9 +400,8 @@ def getPhases(debug):
         def wrapped(self, *args, **kwargs):
             if function.__name__.startswith("process") and len(args) > 0:
                 token = args[0]
-                token_type = type(token)
-                info = {"type": token_type.__name__}
-                if token_type in tagTokenTypes:
+                info = {"type": token.__class__.__name__}
+                if isinstance(token, Tag):
                     info["name"] = token.name
 
                 self.parser.log.append((self.parser.tokenizer.state.__name__,
