@@ -477,7 +477,7 @@ class HTMLTokenizer(object):
         return True
 
     def rcdataEndTagNameState(self):
-        appropriate = self.currentToken["name"] == self.temporaryBuffer
+        appropriate = self.currentToken and self.currentToken["name"] == self.temporaryBuffer
         data = self.stream.char()
         if data in spaceCharacters and appropriate:
             self.currentToken = {"type": tokenTypes["EndTag"],
@@ -527,7 +527,7 @@ class HTMLTokenizer(object):
         return True
 
     def rawtextEndTagNameState(self):
-        appropriate = self.currentToken["name"] == self.temporaryBuffer
+        appropriate = self.currentToken and self.currentToken["name"] == self.temporaryBuffer
         data = self.stream.char()
         if data in spaceCharacters and appropriate:
             self.currentToken = {"type": tokenTypes["EndTag"],
@@ -580,7 +580,7 @@ class HTMLTokenizer(object):
         return True
 
     def scriptDataEndTagNameState(self):
-        appropriate = self.currentToken["name"] == self.temporaryBuffer
+        appropriate = self.currentToken and self.currentToken["name"] == self.temporaryBuffer
         data = self.stream.char()
         if data in spaceCharacters and appropriate:
             self.currentToken = {"type": tokenTypes["EndTag"],
@@ -716,7 +716,7 @@ class HTMLTokenizer(object):
         return True
 
     def scriptDataEscapedEndTagNameState(self):
-        appropriate = self.currentToken["name"] == self.temporaryBuffer
+        appropriate = self.currentToken and self.currentToken["name"] == self.temporaryBuffer
         data = self.stream.char()
         if data in spaceCharacters and appropriate:
             self.currentToken = {"type": tokenTypes["EndTag"],
