@@ -31,6 +31,7 @@ class Token(object):
 class Doctype(Token):
     def __init__(self, name, public_id, system_id, correct):
         self.name = name.translate(asciiUpper2Lower)
+        self.namespace = None
         self.public_id = public_id
         self.system_id = system_id
         self.correct = correct
@@ -45,6 +46,7 @@ class SpaceCharacters(Token):
 class Tag(Token):
     def __init__(self, name, attributes):
         self.name = name.translate(asciiUpper2Lower)
+        self.namespace = None
         self.attributes = attributeMap(attributes or {})
         self.self_closing = False
         self.attribute_name = ""

@@ -301,7 +301,7 @@ class TreeBuilder(object):
     def createElement(self, token):
         """Create an element but don't insert it anywhere"""
         name = token.name
-        namespace = getattr(token, "namespace", self.defaultNamespace)
+        namespace = token.namespace or self.defaultNamespace
         element = self.elementClass(name, namespace)
         element.attributes = token.attributes
         return element
@@ -323,7 +323,7 @@ class TreeBuilder(object):
     def insertElementNormal(self, token):
         name = token.name
         assert isinstance(name, text_type), "Element %s not unicode" % name
-        namespace = getattr(token, "namespace", self.defaultNamespace)
+        namespace = token.namespace or self.defaultNamespace
         element = self.elementClass(name, namespace)
         element.attributes = token.attributes
         self.openElements[-1].appendChild(element)
