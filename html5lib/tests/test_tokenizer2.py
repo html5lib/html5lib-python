@@ -4,13 +4,12 @@ import io
 
 from six import unichr, text_type
 
-from html5lib._tokenizer import HTMLTokenizer
-from html5lib.constants import tokenTypes
+from html5lib._tokenizer import HTMLTokenizer, ParseError, StartTag
 
 
 def ignore_parse_errors(toks):
     for tok in toks:
-        if tok['type'] != tokenTypes['ParseError']:
+        if not isinstance(tok, ParseError):
             yield tok
 
 
@@ -23,9 +22,9 @@ def test_maintain_attribute_order():
     out = list(ignore_parse_errors(toks))
 
     assert len(out) == 1
-    assert out[0]['type'] == tokenTypes['StartTag']
+    assert isinstance(out[0], StartTag)
 
-    attrs_tok = out[0]['data']
+    attrs_tok = out[0].data
     assert len(attrs_tok) == len(attrs)
 
     for (in_name, in_value), (out_name, out_value) in zip(attrs, attrs_tok.items()):
@@ -40,9 +39,9 @@ def test_duplicate_attribute():
     out = list(ignore_parse_errors(toks))
 
     assert len(out) == 1
-    assert out[0]['type'] == tokenTypes['StartTag']
+    assert isinstance(out[0], StartTag)
 
-    attrs_tok = out[0]['data']
+    attrs_tok = out[0].data
     assert len(attrs_tok) == 1
     assert list(attrs_tok.items()) == [('a', '1')]
 
@@ -56,9 +55,9 @@ def test_maintain_duplicate_attribute_order():
     out = list(ignore_parse_errors(toks))
 
     assert len(out) == 1
-    assert out[0]['type'] == tokenTypes['StartTag']
+    assert isinstance(out[0], StartTag)
 
-    attrs_tok = out[0]['data']
+    attrs_tok = out[0].data
     assert len(attrs_tok) == len(attrs)
 
     for (in_name, in_value), (out_name, out_value) in zip(attrs, attrs_tok.items()):

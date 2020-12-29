@@ -2918,20 +2918,6 @@ replacementCharacters = {
     0x9F: "\u0178",
 }
 
-tokenTypes = {
-    "Doctype": 0,
-    "Characters": 1,
-    "SpaceCharacters": 2,
-    "StartTag": 3,
-    "EndTag": 4,
-    "EmptyTag": 5,
-    "Comment": 6,
-    "ParseError": 7
-}
-
-tagTokenTypes = frozenset([tokenTypes["StartTag"], tokenTypes["EndTag"],
-                           tokenTypes["EmptyTag"]])
-
 
 prefixes = {v: k for k, v in namespaces.items()}
 prefixes["http://www.w3.org/1998/Math/MathML"] = "math"

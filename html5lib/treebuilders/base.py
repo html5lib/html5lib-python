@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, unicode_literals
 from six import text_type
 
 from ..constants import scopingElements, tableInsertModeElements, namespaces
+from .._tokenizer import StartTag
 
 # The scope markers are inserted when entering object elements,
 # marquees, table cells, and table captions, and are used to prevent formatting
@@ -249,10 +250,9 @@ class TreeBuilder(object):
             clone = entry.cloneNode()  # Mainly to get a new copy of the attributes
 
             # Step 9
-            element = self.insertElement({"type": "StartTag",
-                                          "name": clone.name,
-                                          "namespace": clone.namespace,
-                                          "data": clone.attributes})
+            tag = StartTag(name=clone.name, data=clone.attributes, self_closing=False)
+            tag.namespace = clone.namespace
+            element = self.insertElement(tag)
 
             # Step 10
             self.activeFormattingElements[i] = element
@@ -286,9 +286,9 @@ class TreeBuilder(object):
         self.document.appendChild(element)
 
     def insertDoctype(self, token):
-        name = token["name"]
-        publicId = token["publicId"]
-        systemId = token["systemId"]
+        name = token.name
+        publicId = token.public_id
+        systemId = token.system_id
 
         doctype = self.doctypeClass(name, publicId, systemId)
         self.document.appendChild(doctype)
@@ -296,14 +296,14 @@ class TreeBuilder(object):
     def insertComment(self, token, parent=None):
         if parent is None:
             parent = self.openElements[-1]
-        parent.appendChild(self.commentClass(token["data"]))
+        parent.appendChild(self.commentClass(token.data))
 
     def createElement(self, token):
         """Create an element but don't insert it anywhere"""
-        name = token["name"]
-        namespace = token.get("namespace", self.defaultNamespace)
+        name = token.name
+        namespace = getattr(token, "namespace", self.defaultNamespace)
         element = self.elementClass(name, namespace)
-        element.attributes = token["data"]
+        element.attributes = token.data
         return element
 
     def _getInsertFromTable(self):
@@ -321,11 +321,11 @@ class TreeBuilder(object):
     insertFromTable = property(_getInsertFromTable, _setInsertFromTable)
 
     def insertElementNormal(self, token):
-        name = token["name"]
+        name = token.name
         assert isinstance(name, text_type), "Element %s not unicode" % name
-        namespace = token.get("namespace", self.defaultNamespace)
+        namespace = getattr(token, "namespace", self.defaultNamespace)
         element = self.elementClass(name, namespace)
-        element.attributes = token["data"]
+        element.attributes = token.data
         self.openElements[-1].appendChild(element)
         self.openElements.append(element)
         return element

@@ -126,9 +126,9 @@ def getDomBuilder(DomImplementation):
             return weakref.proxy(self)
 
         def insertDoctype(self, token):
-            name = token["name"]
-            publicId = token["publicId"]
-            systemId = token["systemId"]
+            name = token.name
+            publicId = token.public_id
+            systemId = token.system_id
 
             domimpl = Dom.getDOMImplementation()
             doctype = domimpl.createDocumentType(name, publicId, systemId)

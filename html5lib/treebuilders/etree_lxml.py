@@ -308,9 +308,9 @@ class TreeBuilder(base.TreeBuilder):
         return fragment
 
     def insertDoctype(self, token):
-        name = token["name"]
-        publicId = token["publicId"]
-        systemId = token["systemId"]
+        name = token.name
+        publicId = token.public_id
+        systemId = token.system_id
 
         if not name:
             warnings.warn("lxml cannot represent empty doctype", DataLossWarning)
@@ -359,14 +359,14 @@ class TreeBuilder(base.TreeBuilder):
                 else:
                     docStr += "''"
             docStr += ">"
-            if self.doctype.name != token["name"]:
+            if self.doctype.name != token.name:
                 warnings.warn("lxml cannot represent doctype with a different name to the root element", DataLossWarning)
         docStr += "<THIS_SHOULD_NEVER_APPEAR_PUBLICLY/>"
         root = etree.fromstring(docStr)
 
         # Append the initial comments:
         for comment_token in self.initial_comments:
-            comment = self.commentClass(comment_token["data"])
+            comment = self.commentClass(comment_token.data)
             root.addprevious(comment._element)
 
         # Create the root document and add the ElementTree to it
@@ -374,8 +374,8 @@ class TreeBuilder(base.TreeBuilder):
         self.document._elementTree = root.getroottree()
 
         # Give the root element the right name
-        name = token["name"]
-        namespace = token.get("namespace", self.defaultNamespace)
+        name = token.name
+        namespace = getattr(token, "namespace", self.defaultNamespace)
         if namespace is None:
             etree_tag = name
         else:

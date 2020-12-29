@@ -8,7 +8,7 @@ import re
 import pytest
 from six import unichr
 
-from html5lib._tokenizer import HTMLTokenizer
+from html5lib._tokenizer import HTMLTokenizer, StartTag
 from html5lib import constants, _utils
 
 
@@ -25,47 +25,44 @@ class TokenizerTestParser(object):
 
         tokenizer.state = getattr(tokenizer, self._state)
         if self._lastStartTag is not None:
-            tokenizer.currentToken = {"type": "startTag",
-                                      "name": self._lastStartTag}
+            tokenizer.currentToken = StartTag(name=self._lastStartTag, data=None, self_closing=False)
 
-        types = {v: k for k, v in constants.tokenTypes.items()}
         for token in tokenizer:
-            getattr(self, 'process%s' % types[token["type"]])(token)
+            getattr(self, 'process%s' % token.__class__.__name__)(token)
 
         return self.outputTokens
 
     def processDoctype(self, token):
-        self.outputTokens.append(["DOCTYPE", token["name"], token["publicId"],
-                                  token["systemId"], token["correct"]])
+        self.outputTokens.append(["DOCTYPE", token.name, token.public_id,
+                                  token.system_id, token.correct])
 
     def processStartTag(self, token):
-        self.outputTokens.append(["StartTag", token["name"],
-                                  token["data"], token["selfClosing"]])
+        self.outputTokens.append(["StartTag", token.name,
+                                  token.data, token.self_closing])
 
     def processEmptyTag(self, token):
-        if token["name"] not in constants.voidElements:
+        if token.name not in constants.voidElements:
             self.outputTokens.append("ParseError")
-        self.outputTokens.append(["StartTag", token["name"], dict(token["data"][::-1])])
+        self.outputTokens.append(["StartTag", token.name, dict(token.data[::-1])])
 
     def processEndTag(self, token):
-        self.outputTokens.append(["EndTag", token["name"],
-                                  token["selfClosing"]])
+        self.outputTokens.append(["EndTag", token.name, token.self_closing])
 
     def processComment(self, token):
-        self.outputTokens.append(["Comment", token["data"]])
+        self.outputTokens.append(["Comment", token.data])
 
     def processSpaceCharacters(self, token):
-        self.outputTokens.append(["Character", token["data"]])
+        self.outputTokens.append(["Character", token.data])
         self.processSpaceCharacters = self.processCharacters
 
     def processCharacters(self, token):
-        self.outputTokens.append(["Character", token["data"]])
+        self.outputTokens.append(["Character", token.data])
 
     def processEOF(self, token):
         pass
 
     def processParseError(self, token):
-        self.outputTokens.append(["ParseError", token["data"]])
+        self.outputTokens.append(["ParseError", token.data])
 
 
 def concatenateCharacterTokens(tokens):
