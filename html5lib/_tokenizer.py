@@ -71,11 +71,6 @@ class EndTag(Tag):
     def __init__(self, name, data=None):
         super(EndTag, self).__init__(name, data)
 
-class EmptyTag(Tag):
-    def __init__(self, name, data=None):
-        super(EmptyTag, self).__init__(name, data)
-        self.self_closing = True
-
 class Comment(Token):
     pass
 
