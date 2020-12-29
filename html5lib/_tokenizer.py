@@ -284,6 +284,8 @@ class HTMLTokenizer(object):
         # Add token to the queue to be yielded
         if isinstance(token, Tag):
             token.name = token.name.translate(asciiUpper2Lower)
+            if self.currentToken.attribute_name in self.currentToken.attributes:
+                self.tokenQueue.append(ParseError("duplicate-attribute"))
             token.clearAttribute()
             if isinstance(token, EndTag):
                 if token.attributes:
@@ -854,18 +856,12 @@ class HTMLTokenizer(object):
 
     def attributeNameState(self):
         data = self.stream.char()
-        leavingThisState = True
-        emitToken = False
         if data == "=":
             self.state = self.beforeAttributeValueState
         elif data in asciiLetters:
             self.currentToken.accumulateAttributeName(data + self.stream.charsUntil(asciiLetters, True))
-            leavingThisState = False
         elif data == ">":
-            # XXX If we emit here the attributes are converted to a dict
-            # without being checked and when the code below runs we error
-            # because data is a dict not a list
-            emitToken = True
+            self.emitCurrentToken()
         elif data in spaceCharacters:
             self.state = self.afterAttributeNameState
         elif data == "/":
@@ -873,27 +869,14 @@ class HTMLTokenizer(object):
         elif data == "\u0000":
             self.tokenQueue.append(ParseError("invalid-codepoint"))
             self.currentToken.accumulateAttributeName("\uFFFD")
-            leavingThisState = False
         elif data in ("'", '"', "<"):
             self.tokenQueue.append(ParseError("invalid-character-in-attribute-name"))
             self.currentToken.accumulateAttributeName(data)
-            leavingThisState = False
         elif data is EOF:
             self.tokenQueue.append(ParseError("eof-in-attribute-name"))
             self.state = self.dataState
         else:
             self.currentToken.accumulateAttributeName(data)
-            leavingThisState = False
-
-        if leavingThisState:
-            # Attributes are not dropped at this stage. That happens when the
-            # start tag token is emitted so values can still be safely appended
-            # to attributes, but we do want to report the parse error in time.
-            if self.currentToken.attribute_name in self.currentToken.attributes:
-                self.tokenQueue.append(ParseError("duplicate-attribute"))
-            # XXX Fix for above XXX
-            if emitToken:
-                self.emitCurrentToken()
         return True
 
     def afterAttributeNameState(self):
