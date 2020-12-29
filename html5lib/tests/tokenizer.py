@@ -33,8 +33,8 @@ class TokenizerTestParser(object):
         return self.outputTokens
 
     def processDoctype(self, token):
-        self.outputTokens.append(["DOCTYPE", token.name, token.public_id,
-                                  token.system_id, token.correct])
+        self.outputTokens.append(["DOCTYPE", token.name, token.publicId,
+                                  token.systemId, token.correct])
 
     def processStartTag(self, token):
         self.outputTokens.append(["StartTag", token.name,

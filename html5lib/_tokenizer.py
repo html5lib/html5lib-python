@@ -29,11 +29,11 @@ class Token(object):
 
 
 class Doctype(Token):
-    def __init__(self, name, public_id, system_id, correct):
+    def __init__(self, name, publicId, systemId, correct):
         self.name = name.translate(asciiUpper2Lower)
         self.namespace = None
-        self.public_id = public_id
-        self.system_id = system_id
+        self.publicId = publicId
+        self.systemId = systemId
         self.correct = correct
 
 class Characters(Token):
@@ -1056,7 +1056,7 @@ class HTMLTokenizer(object):
                     matched = False
                     break
             if matched:
-                self.currentToken = Doctype(name="", public_id=None, system_id=None, correct=True)
+                self.currentToken = Doctype(name="", publicId=None, systemId=None, correct=True)
                 self.state = self.doctypeState
                 return True
         elif (charStack[-1] == "[" and
@@ -1329,10 +1329,10 @@ class HTMLTokenizer(object):
         if data in spaceCharacters:
             pass
         elif data == "\"":
-            self.currentToken.public_id = ""
+            self.currentToken.publicId = ""
             self.state = self.doctypePublicIdentifierDoubleQuotedState
         elif data == "'":
-            self.currentToken.public_id = ""
+            self.currentToken.publicId = ""
             self.state = self.doctypePublicIdentifierSingleQuotedState
         elif data == ">":
             self.tokenQueue.append(ParseError("unexpected-end-of-doctype"))
@@ -1356,7 +1356,7 @@ class HTMLTokenizer(object):
             self.state = self.afterDoctypePublicIdentifierState
         elif data == "\u0000":
             self.tokenQueue.append(ParseError("invalid-codepoint"))
-            self.currentToken.public_id += "\uFFFD"
+            self.currentToken.publicId += "\uFFFD"
         elif data == ">":
             self.tokenQueue.append(ParseError("unexpected-end-of-doctype"))
             self.currentToken.correct = False
@@ -1368,7 +1368,7 @@ class HTMLTokenizer(object):
             self.tokenQueue.append(self.currentToken)
             self.state = self.dataState
         else:
-            self.currentToken.public_id += data
+            self.currentToken.publicId += data
         return True
 
     def doctypePublicIdentifierSingleQuotedState(self):
@@ -1377,7 +1377,7 @@ class HTMLTokenizer(object):
             self.state = self.afterDoctypePublicIdentifierState
         elif data == "\u0000":
             self.tokenQueue.append(ParseError("invalid-codepoint"))
-            self.currentToken.public_id += "\uFFFD"
+            self.currentToken.publicId += "\uFFFD"
         elif data == ">":
             self.tokenQueue.append(ParseError("unexpected-end-of-doctype"))
             self.currentToken.correct = False
@@ -1389,7 +1389,7 @@ class HTMLTokenizer(object):
             self.tokenQueue.append(self.currentToken)
             self.state = self.dataState
         else:
-            self.currentToken.public_id += data
+            self.currentToken.publicId += data
         return True
 
     def afterDoctypePublicIdentifierState(self):
@@ -1401,11 +1401,11 @@ class HTMLTokenizer(object):
             self.state = self.dataState
         elif data == '"':
             self.tokenQueue.append(ParseError("unexpected-char-in-doctype"))
-            self.currentToken.system_id = ""
+            self.currentToken.systemId = ""
             self.state = self.doctypeSystemIdentifierDoubleQuotedState
         elif data == "'":
             self.tokenQueue.append(ParseError("unexpected-char-in-doctype"))
-            self.currentToken.system_id = ""
+            self.currentToken.systemId = ""
             self.state = self.doctypeSystemIdentifierSingleQuotedState
         elif data is EOF:
             self.tokenQueue.append(ParseError("eof-in-doctype"))
@@ -1426,10 +1426,10 @@ class HTMLTokenizer(object):
             self.tokenQueue.append(self.currentToken)
             self.state = self.dataState
         elif data == '"':
-            self.currentToken.system_id = ""
+            self.currentToken.systemId = ""
             self.state = self.doctypeSystemIdentifierDoubleQuotedState
         elif data == "'":
-            self.currentToken.system_id = ""
+            self.currentToken.systemId = ""
             self.state = self.doctypeSystemIdentifierSingleQuotedState
         elif data == EOF:
             self.tokenQueue.append(ParseError("eof-in-doctype"))
@@ -1465,10 +1465,10 @@ class HTMLTokenizer(object):
         if data in spaceCharacters:
             pass
         elif data == "\"":
-            self.currentToken.system_id = ""
+            self.currentToken.systemId = ""
             self.state = self.doctypeSystemIdentifierDoubleQuotedState
         elif data == "'":
-            self.currentToken.system_id = ""
+            self.currentToken.systemId = ""
             self.state = self.doctypeSystemIdentifierSingleQuotedState
         elif data == ">":
             self.tokenQueue.append(ParseError("unexpected-char-in-doctype"))
@@ -1492,7 +1492,7 @@ class HTMLTokenizer(object):
             self.state = self.afterDoctypeSystemIdentifierState
         elif data == "\u0000":
             self.tokenQueue.append(ParseError("invalid-codepoint"))
-            self.currentToken.system_id += "\uFFFD"
+            self.currentToken.systemId += "\uFFFD"
         elif data == ">":
             self.tokenQueue.append(ParseError("unexpected-end-of-doctype"))
             self.currentToken.correct = False
@@ -1504,7 +1504,7 @@ class HTMLTokenizer(object):
             self.tokenQueue.append(self.currentToken)
             self.state = self.dataState
         else:
-            self.currentToken.system_id += data
+            self.currentToken.systemId += data
         return True
 
     def doctypeSystemIdentifierSingleQuotedState(self):
@@ -1513,7 +1513,7 @@ class HTMLTokenizer(object):
             self.state = self.afterDoctypeSystemIdentifierState
         elif data == "\u0000":
             self.tokenQueue.append(ParseError("invalid-codepoint"))
-            self.currentToken.system_id += "\uFFFD"
+            self.currentToken.systemId += "\uFFFD"
         elif data == ">":
             self.tokenQueue.append(ParseError("unexpected-end-of-doctype"))
             self.currentToken.correct = False
@@ -1525,7 +1525,7 @@ class HTMLTokenizer(object):
             self.tokenQueue.append(self.currentToken)
             self.state = self.dataState
         else:
-            self.currentToken.system_id += data
+            self.currentToken.systemId += data
         return True
 
     def afterDoctypeSystemIdentifierState(self):

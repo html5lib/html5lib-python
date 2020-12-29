@@ -127,8 +127,8 @@ def getDomBuilder(DomImplementation):
 
         def insertDoctype(self, token):
             name = token.name
-            publicId = token.public_id
-            systemId = token.system_id
+            publicId = token.publicId
+            systemId = token.systemId
 
             domimpl = Dom.getDOMImplementation()
             doctype = domimpl.createDocumentType(name, publicId, systemId)

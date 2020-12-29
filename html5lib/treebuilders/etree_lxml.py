@@ -309,8 +309,8 @@ class TreeBuilder(base.TreeBuilder):
 
     def insertDoctype(self, token):
         name = token.name
-        publicId = token.public_id
-        systemId = token.system_id
+        publicId = token.publicId
+        systemId = token.systemId
 
         if not name:
             warnings.warn("lxml cannot represent empty doctype", DataLossWarning)

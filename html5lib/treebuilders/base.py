@@ -287,8 +287,8 @@ class TreeBuilder(object):
 
     def insertDoctype(self, token):
         name = token.name
-        publicId = token.public_id
-        systemId = token.system_id
+        publicId = token.publicId
+        systemId = token.systemId
 
         doctype = self.doctypeClass(name, publicId, systemId)
         self.document.appendChild(doctype)

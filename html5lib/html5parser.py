@@ -505,8 +505,8 @@ def getPhases(debug):
 
         def processDoctype(self, token):
             name = token.name
-            publicId = token.public_id
-            systemId = token.system_id
+            publicId = token.publicId
+            systemId = token.systemId
             correct = token.correct
 
             if (name != "html" or publicId is not None or
