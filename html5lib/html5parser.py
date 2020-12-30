@@ -205,45 +205,44 @@ class HTMLParser(object):
             prev_token = None
             new_token = token
             while new_token is not None:
+                type = new_token["type"]
+                if type == ParseErrorToken:
+                    self.parseError(new_token["data"], new_token.get("datavars", {}))
+                    break
+
                 prev_token = new_token
                 currentNode = self.tree.openElements[-1] if self.tree.openElements else None
                 currentNodeNamespace = currentNode.namespace if currentNode else None
                 currentNodeName = currentNode.name if currentNode else None
 
-                type = new_token["type"]
-
-                if type == ParseErrorToken:
-                    self.parseError(new_token["data"], new_token.get("datavars", {}))
-                    new_token = None
+                if (len(self.tree.openElements) == 0 or
+                    currentNodeNamespace == self.tree.defaultNamespace or
+                    (self.isMathMLTextIntegrationPoint(currentNode) and
+                        ((type == StartTagToken and
+                        token["name"] not in frozenset(["mglyph", "malignmark"])) or
+                        type in (CharactersToken, SpaceCharactersToken))) or
+                    (currentNodeNamespace == namespaces["mathml"] and
+                        currentNodeName == "annotation-xml" and
+                        type == StartTagToken and
+                        token["name"] == "svg") or
+                    (self.isHTMLIntegrationPoint(currentNode) and
+                        type in (StartTagToken, CharactersToken, SpaceCharactersToken))):
+                    phase = self.phase
                 else:
-                    if (len(self.tree.openElements) == 0 or
-                        currentNodeNamespace == self.tree.defaultNamespace or
-                        (self.isMathMLTextIntegrationPoint(currentNode) and
-                         ((type == StartTagToken and
-                           token["name"] not in frozenset(["mglyph", "malignmark"])) or
-                          type in (CharactersToken, SpaceCharactersToken))) or
-                        (currentNodeNamespace == namespaces["mathml"] and
-                         currentNodeName == "annotation-xml" and
-                         type == StartTagToken and
-                         token["name"] == "svg") or
-                        (self.isHTMLIntegrationPoint(currentNode) and
-                         type in (StartTagToken, CharactersToken, SpaceCharactersToken))):
-                        phase = self.phase
-                    else:
-                        phase = self.phases["inForeignContent"]
+                    phase = self.phases["inForeignContent"]
 
-                    if type == CharactersToken:
-                        new_token = phase.processCharacters(new_token)
-                    elif type == SpaceCharactersToken:
-                        new_token = phase.processSpaceCharacters(new_token)
-                    elif type == StartTagToken:
-                        new_token = phase.processStartTag(new_token)
-                    elif type == EndTagToken:
-                        new_token = phase.processEndTag(new_token)
-                    elif type == CommentToken:
-                        new_token = phase.processComment(new_token)
-                    elif type == DoctypeToken:
-                        new_token = phase.processDoctype(new_token)
+                if type == CharactersToken:
+                    new_token = phase.processCharacters(new_token)
+                elif type == SpaceCharactersToken:
+                    new_token = phase.processSpaceCharacters(new_token)
+                elif type == StartTagToken:
+                    new_token = phase.processStartTag(new_token)
+                elif type == EndTagToken:
+                    new_token = phase.processEndTag(new_token)
+                elif type == CommentToken:
+                    new_token = phase.processComment(new_token)
+                elif type == DoctypeToken:
+                    new_token = phase.processDoctype(new_token)
 
             if (type == StartTagToken and prev_token["selfClosing"] and
                     not prev_token["selfClosingAcknowledged"]):
