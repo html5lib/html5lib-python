@@ -36,8 +36,10 @@ class Doctype(Token):
         self.systemId = systemId
         self.correct = correct
 
+
 class Characters(Token):
     pass
+
 
 class SpaceCharacters(Token):
     pass
@@ -64,17 +66,21 @@ class Tag(Token):
     def accumulateAttributeValue(self, text):
         self.attribute_value += text
 
+
 class StartTag(Tag):
     def __init__(self, name, data=None):
         super(StartTag, self).__init__(name, data)
         self.self_closing_acknowledged = False
 
+
 class EndTag(Tag):
     def __init__(self, name, data=None):
         super(EndTag, self).__init__(name, data)
 
+
 class Comment(Token):
     pass
+
 
 class ParseError(Token):
     def __init__(self, data, datavars=None):
