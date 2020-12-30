@@ -781,7 +781,9 @@ class HTMLTokenizer(object):
                                     "eof-in-script-in-script"})
             self.state = self.dataState
         else:
-            self.tokenQueue.append({"type": tokenTypes["Characters"], "data": data})
+            chars = self.stream.charsUntil(("<", "-", "\u0000"))
+            self.tokenQueue.append({"type": tokenTypes["Characters"], "data":
+                                    data + chars})
         return True
 
     def scriptDataDoubleEscapedDashState(self):
