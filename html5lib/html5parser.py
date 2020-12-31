@@ -215,21 +215,22 @@ class HTMLParser(object):
                 currentNodeNamespace = currentNode.namespace if currentNode else None
                 currentNodeName = currentNode.name if currentNode else None
 
-                if (len(self.tree.openElements) == 0 or
-                    currentNodeNamespace == self.tree.defaultNamespace or
-                    (self.isMathMLTextIntegrationPoint(currentNode) and
-                        ((type == StartTagToken and
-                        token["name"] not in frozenset(["mglyph", "malignmark"])) or
-                        type in (CharactersToken, SpaceCharactersToken))) or
-                    (currentNodeNamespace == namespaces["mathml"] and
-                        currentNodeName == "annotation-xml" and
-                        type == StartTagToken and
-                        token["name"] == "svg") or
-                    (self.isHTMLIntegrationPoint(currentNode) and
-                        type in (StartTagToken, CharactersToken, SpaceCharactersToken))):
+                phase = self.phases["inForeignContent"]
+                if len(self.tree.openElements) == 0:
                     phase = self.phase
-                else:
-                    phase = self.phases["inForeignContent"]
+                elif currentNodeNamespace == self.tree.defaultNamespace:
+                    phase = self.phase
+                elif self.isMathMLTextIntegrationPoint(currentNode):
+                    if type == StartTagToken and token["name"] not in frozenset(["mglyph", "malignmark"]):
+                        phase = self.phase
+                    elif type in (CharactersToken, SpaceCharactersToken):
+                        phase = self.phase
+                elif currentNodeNamespace == namespaces["mathml"] and currentNodeName == "annotation-xml":
+                    if type == StartTagToken and token["name"] == "svg":
+                        phase = self.phase
+                elif self.isHTMLIntegrationPoint(currentNode):
+                    if type in (StartTagToken, CharactersToken, SpaceCharactersToken):
+                        phase = self.phase
 
                 if type == CharactersToken:
                     new_token = phase.processCharacters(new_token)
