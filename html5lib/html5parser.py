@@ -216,7 +216,7 @@ class HTMLParser(object):
                 currentNodeName = currentNode.name if currentNode else None
 
                 phase = self.phases["inForeignContent"]
-                if len(self.tree.openElements) == 0:
+                if currentNode is None:
                     phase = self.phase
                 elif currentNodeNamespace == self.tree.defaultNamespace:
                     phase = self.phase
