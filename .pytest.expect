@@ -1289,14 +1289,6 @@ u'html5lib/tests/testdata/tree-construction/tests25.dat::7::cElementTree::parser
 u'html5lib/tests/testdata/tree-construction/tests25.dat::7::cElementTree::parser::void-namespace': FAIL
 u'html5lib/tests/testdata/tree-construction/tests25.dat::7::lxml::parser::namespaced': FAIL
 u'html5lib/tests/testdata/tree-construction/tests25.dat::7::lxml::parser::void-namespace': FAIL
-u'html5lib/tests/testdata/tree-construction/tests8.dat::5::DOM::parser::namespaced': FAIL
-u'html5lib/tests/testdata/tree-construction/tests8.dat::5::DOM::parser::void-namespace': FAIL
-u'html5lib/tests/testdata/tree-construction/tests8.dat::5::ElementTree::parser::namespaced': FAIL
-u'html5lib/tests/testdata/tree-construction/tests8.dat::5::ElementTree::parser::void-namespace': FAIL
-u'html5lib/tests/testdata/tree-construction/tests8.dat::5::cElementTree::parser::namespaced': FAIL
-u'html5lib/tests/testdata/tree-construction/tests8.dat::5::cElementTree::parser::void-namespace': FAIL
-u'html5lib/tests/testdata/tree-construction/tests8.dat::5::lxml::parser::namespaced': FAIL
-u'html5lib/tests/testdata/tree-construction/tests8.dat::5::lxml::parser::void-namespace': FAIL
 u'html5lib/tests/testdata/tree-construction/webkit02.dat::14::DOM::parser::namespaced': FAIL
 u'html5lib/tests/testdata/tree-construction/webkit02.dat::14::DOM::parser::void-namespace': FAIL
 u'html5lib/tests/testdata/tree-construction/webkit02.dat::14::ElementTree::parser::namespaced': FAIL
