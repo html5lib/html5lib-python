@@ -1068,7 +1068,7 @@ def getPhases(debug):
             stopNames = stopNamesMap[token["name"]]
             for node in reversed(self.tree.openElements):
                 if node.name in stopNames:
-                    self.parser.phase.processEndTag(
+                    self.parser.phases["inBody"].processEndTag(
                         impliedTagToken(node.name, "EndTag"))
                     break
                 if (node.nameTuple in specialElements and
@@ -1076,7 +1076,7 @@ def getPhases(debug):
                     break
 
             if self.tree.elementInScope("p", variant="button"):
-                self.parser.phase.processEndTag(
+                self.parser.phases["inBody"].processEndTag(
                     impliedTagToken("p", "EndTag"))
 
             self.tree.insertElement(token)
