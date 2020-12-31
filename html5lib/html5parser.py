@@ -212,13 +212,11 @@ class HTMLParser(object):
 
                 prev_token = new_token
                 currentNode = self.tree.openElements[-1] if self.tree.openElements else None
-                currentNodeNamespace = currentNode.namespace if currentNode else None
-                currentNodeName = currentNode.name if currentNode else None
 
                 phase = self.phases["inForeignContent"]
                 if currentNode is None:
                     phase = self.phase
-                elif currentNodeNamespace == self.tree.defaultNamespace:
+                elif currentNode.namespace == self.tree.defaultNamespace:
                     phase = self.phase
                 elif self.isHTMLIntegrationPoint(currentNode):
                     if type in (StartTagToken, CharactersToken, SpaceCharactersToken):
@@ -228,7 +226,7 @@ class HTMLParser(object):
                         phase = self.phase
                     elif type in (CharactersToken, SpaceCharactersToken):
                         phase = self.phase
-                elif currentNodeNamespace == namespaces["mathml"] and currentNodeName == "annotation-xml":
+                elif currentNode.namespace == namespaces["mathml"] and currentNode.name == "annotation-xml":
                     if type == StartTagToken and token["name"] == "svg":
                         phase = self.phase
 
