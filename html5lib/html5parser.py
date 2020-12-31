@@ -220,6 +220,9 @@ class HTMLParser(object):
                     phase = self.phase
                 elif currentNodeNamespace == self.tree.defaultNamespace:
                     phase = self.phase
+                elif self.isHTMLIntegrationPoint(currentNode):
+                    if type in (StartTagToken, CharactersToken, SpaceCharactersToken):
+                        phase = self.phase
                 elif self.isMathMLTextIntegrationPoint(currentNode):
                     if type == StartTagToken and token["name"] not in frozenset(["mglyph", "malignmark"]):
                         phase = self.phase
@@ -227,9 +230,6 @@ class HTMLParser(object):
                         phase = self.phase
                 elif currentNodeNamespace == namespaces["mathml"] and currentNodeName == "annotation-xml":
                     if type == StartTagToken and token["name"] == "svg":
-                        phase = self.phase
-                elif self.isHTMLIntegrationPoint(currentNode):
-                    if type in (StartTagToken, CharactersToken, SpaceCharactersToken):
                         phase = self.phase
 
                 if type == CharactersToken:
