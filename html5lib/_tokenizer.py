@@ -125,20 +125,14 @@ class HTMLTokenizer(object):
                                     "illegal-codepoint-for-numeric-entity",
                                     "datavars": {"charAsInt": charAsInt}})
         else:
-            # Should speed up this check somehow (e.g. move the set to a constant)
-            if ((0x0001 <= charAsInt <= 0x0008) or
+            if (
+                (0x0001 <= charAsInt <= 0x0008) or
                 (0x000E <= charAsInt <= 0x001F) or
                 (0x007F <= charAsInt <= 0x009F) or
                 (0xFDD0 <= charAsInt <= 0xFDEF) or
-                charAsInt in frozenset([0x000B, 0xFFFE, 0xFFFF, 0x1FFFE,
-                                        0x1FFFF, 0x2FFFE, 0x2FFFF, 0x3FFFE,
-                                        0x3FFFF, 0x4FFFE, 0x4FFFF, 0x5FFFE,
-                                        0x5FFFF, 0x6FFFE, 0x6FFFF, 0x7FFFE,
-                                        0x7FFFF, 0x8FFFE, 0x8FFFF, 0x9FFFE,
-                                        0x9FFFF, 0xAFFFE, 0xAFFFF, 0xBFFFE,
-                                        0xBFFFF, 0xCFFFE, 0xCFFFF, 0xDFFFE,
-                                        0xDFFFF, 0xEFFFE, 0xEFFFF, 0xFFFFE,
-                                        0xFFFFF, 0x10FFFE, 0x10FFFF])):
+                charAsInt == 0x000B or
+                (charAsInt & 0xFFFE) == 0xFFFE
+            ):
                 self.tokenQueue.append({"type": tokenTypes["ParseError"],
                                         "data":
                                         "illegal-codepoint-for-numeric-entity",
