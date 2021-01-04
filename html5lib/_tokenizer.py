@@ -44,7 +44,6 @@ class HTMLTokenizer(object):
 
         # Setup the initial tokenizer state
         self.escapeFlag = False
-        self.lastFourChars = []
         self.state = self.dataState
         self.escape = False
 
