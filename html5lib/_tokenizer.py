@@ -43,9 +43,7 @@ class HTMLTokenizer(object):
         self.parser = parser
 
         # Setup the initial tokenizer state
-        self.escapeFlag = False
         self._state = self.dataState
-        self.escape = False
 
         # The current token being created
         self.currentToken = None
