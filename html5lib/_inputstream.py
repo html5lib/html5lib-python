@@ -246,8 +246,8 @@ class HTMLUnicodeInputStream(object):
 
         return char
 
-    def readChunk(self, chunkSize=None):
-        if chunkSize is None:
+    def readChunk(self, chunkSize=0):
+        if chunkSize == 0:
             chunkSize = self._defaultChunkSize
 
         self.prevNumLines, self.prevNumCols = self._position(self.chunkSize)
