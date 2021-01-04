@@ -54,7 +54,7 @@ class Tag(Token):
         self.attribute_name = ""
         self.attribute_value = ""
 
-    def clearAttribute(self):
+    def flushAttribute(self):
         if self.attribute_name and self.attribute_name not in self.attributes:
             self.attributes[self.attribute_name] = self.attribute_value
         self.attribute_name = ""
@@ -288,7 +288,7 @@ class HTMLTokenizer(object):
         if isinstance(token, Tag):
             if self.currentToken.attribute_name in self.currentToken.attributes:
                 self.tokenQueue.append(ParseError("duplicate-attribute"))
-            token.clearAttribute()
+            token.flushAttribute()
             if isinstance(token, EndTag):
                 if token.attributes:
                     self.tokenQueue.append(ParseError("attributes-in-end-tag"))
@@ -834,7 +834,7 @@ class HTMLTokenizer(object):
         if data in spaceCharacters:
             self.stream.charsUntil(spaceCharacters, True)
         elif data in asciiLetters:
-            self.currentToken.clearAttribute()
+            self.currentToken.flushAttribute()
             self.currentToken.accumulateAttributeName(data)
             self.state = self.attributeNameState
         elif data == ">":
@@ -843,19 +843,19 @@ class HTMLTokenizer(object):
             self.state = self.selfClosingStartTagState
         elif data in ("'", '"', "=", "<"):
             self.tokenQueue.append(ParseError("invalid-character-in-attribute-name"))
-            self.currentToken.clearAttribute()
+            self.currentToken.flushAttribute()
             self.currentToken.accumulateAttributeName(data)
             self.state = self.attributeNameState
         elif data == "\u0000":
             self.tokenQueue.append(ParseError("invalid-codepoint"))
-            self.currentToken.clearAttribute()
+            self.currentToken.flushAttribute()
             self.currentToken.accumulateAttributeName("\uFFFD")
             self.state = self.attributeNameState
         elif data is EOF:
             self.tokenQueue.append(ParseError("expected-attribute-name-but-got-eof"))
             self.state = self.dataState
         else:
-            self.currentToken.clearAttribute()
+            self.currentToken.flushAttribute()
             self.currentToken.accumulateAttributeName(data)
             self.state = self.attributeNameState
         return True
@@ -894,26 +894,26 @@ class HTMLTokenizer(object):
         elif data == ">":
             self.emitCurrentToken()
         elif data in asciiLetters:
-            self.currentToken.clearAttribute()
+            self.currentToken.flushAttribute()
             self.currentToken.accumulateAttributeName(data)
             self.state = self.attributeNameState
         elif data == "/":
             self.state = self.selfClosingStartTagState
         elif data == "\u0000":
             self.tokenQueue.append(ParseError("invalid-codepoint"))
-            self.currentToken.clearAttribute()
+            self.currentToken.flushAttribute()
             self.currentToken.accumulateAttributeName("\uFFFD")
             self.state = self.attributeNameState
         elif data in ("'", '"', "<"):
             self.tokenQueue.append(ParseError("invalid-character-after-attribute-name"))
-            self.currentToken.clearAttribute()
+            self.currentToken.flushAttribute()
             self.currentToken.accumulateAttributeName(data)
             self.state = self.attributeNameState
         elif data is EOF:
             self.tokenQueue.append(ParseError("expected-end-of-tag-but-got-eof"))
             self.state = self.dataState
         else:
-            self.currentToken.clearAttribute()
+            self.currentToken.flushAttribute()
             self.currentToken.accumulateAttributeName(data)
             self.state = self.attributeNameState
         return True
