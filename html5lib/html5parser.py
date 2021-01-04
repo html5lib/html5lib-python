@@ -134,14 +134,14 @@ class HTMLParser(object):
             self.innerHTML = self.container.lower()
 
             if self.innerHTML in cdataElements:
-                self.tokenizer.state = self.tokenizer.rcdataState
+                self.tokenizer.state = "rcdataState"
             elif self.innerHTML in rcdataElements:
-                self.tokenizer.state = self.tokenizer.rawtextState
+                self.tokenizer.state = "rawtextState"
             elif self.innerHTML == 'plaintext':
-                self.tokenizer.state = self.tokenizer.plaintextState
+                self.tokenizer.state = "plaintextState"
             else:
                 # state already is data state
-                # self.tokenizer.state = self.tokenizer.dataState
+                # self.tokenizer.state = "dataState"
                 pass
             self.phase = self.phases["beforeHtml"]
             self.phase.insertHtmlElement()
@@ -227,7 +227,7 @@ class HTMLParser(object):
                         if type in (StartTagToken, EndTagToken):
                             info["name"] = new_token['name']
 
-                        self.log.append((self.tokenizer.state.__name__,
+                        self.log.append((self.tokenizer.state,
                                          self.phase.__class__.__name__,
                                          phase.__class__.__name__,
                                          "process" + info["type"],
@@ -385,9 +385,9 @@ class HTMLParser(object):
         self.tree.insertElement(token)
 
         if contentType == "RAWTEXT":
-            self.tokenizer.state = self.tokenizer.rawtextState
+            self.tokenizer.state = "rawtextState"
         else:
-            self.tokenizer.state = self.tokenizer.rcdataState
+            self.tokenizer.state = "rcdataState"
 
         self.originalPhase = self.phase
 
@@ -742,7 +742,7 @@ class InHeadPhase(Phase):
 
     def startTagScript(self, token):
         self.tree.insertElement(token)
-        self.parser.tokenizer.state = self.parser.tokenizer.scriptDataState
+        self.parser.tokenizer.state = "scriptDataState"
         self.parser.originalPhase = self.parser.phase
         self.parser.phase = self.parser.phases["text"]
 
@@ -1063,7 +1063,7 @@ class InBodyPhase(Phase):
         if self.tree.elementInScope("p", variant="button"):
             self.endTagP(impliedTagToken("p"))
         self.tree.insertElement(token)
-        self.parser.tokenizer.state = self.parser.tokenizer.plaintextState
+        self.parser.tokenizer.state = "plaintextState"
 
     def startTagHeading(self, token):
         if self.tree.elementInScope("p", variant="button"):
@@ -1201,7 +1201,7 @@ class InBodyPhase(Phase):
 
     def startTagTextarea(self, token):
         self.tree.insertElement(token)
-        self.parser.tokenizer.state = self.parser.tokenizer.rcdataState
+        self.parser.tokenizer.state = "rcdataState"
         self.processSpaceCharacters = self.processSpaceCharactersDropNewline
         self.parser.framesetOK = False
 
