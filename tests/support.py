@@ -11,9 +11,9 @@ import xml.sax.handler
 base_path = os.path.split(__file__)[0]
 
 test_dir = os.path.join(base_path, 'testdata')
-sys.path.insert(0, os.path.abspath(os.path.join(base_path,
-                                                os.path.pardir,
-                                                os.path.pardir)))
+# sys.path.insert(0, os.path.abspath(os.path.join(base_path,
+#                                                 os.path.pardir,
+#                                                 os.path.pardir)))
 
 from html5lib import treebuilders, treewalkers, treeadapters  # noqa
 del base_path

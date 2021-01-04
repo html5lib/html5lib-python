@@ -10,6 +10,8 @@ from pkg_resources import parse_version
 
 import pkg_resources
 
+from Cython.Build import cythonize
+
 try:
     import _markerlib.markers
 except ImportError:
@@ -102,10 +104,12 @@ setup(name='html5lib',
       classifiers=classifiers,
       maintainer='James Graham',
       maintainer_email='james@hoppipolla.co.uk',
+      ext_modules = cythonize(["html5lib/_inputstream.py", "html5lib/_tokenizer.py", "html5lib/_ascii.py", "html5lib/html5parser.py"], force=True, nthreads=4, annotate=True, gdb_debug=True),
       packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
       install_requires=[
           'six>=1.9',
           'webencodings',
+          'cython'
       ],
       python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*",
       extras_require={

@@ -323,3 +323,16 @@ def test_invalid_codepoints_surrogates(inp, num):
     for _i in range(len(inp)):
         stream.char()
     assert len(stream.errors) == num
+
+
+@pytest.mark.parametrize("inp,characters,opposite,out", [
+    ("abcd", "def", False, "abc"),
+    ("abcabcdef", "abc", True, "abcabc"),
+    ("a\uEEEEbcd", "def", False, "a\uEEEEbc"),
+    ("abcab\uEEEEcdef", "abc", True, "abcab"),
+])
+def test_charsUntil(inp, characters, opposite, out):
+    fp = StringIO(inp)
+    fp.seek(0)
+    stream = HTMLUnicodeInputStream(fp)
+    assert stream.charsUntil(characters, opposite) == out

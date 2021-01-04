@@ -1,4 +1,5 @@
 from __future__ import absolute_import, division, unicode_literals
+import cython
 from six import viewkeys
 
 from . import _inputstream
@@ -2770,10 +2771,24 @@ _phases = {
 
 
 def adjust_attributes(token, replacements):
-    needs_adjustment = viewkeys(token['data']) & viewkeys(replacements)
-    if needs_adjustment:
-        token['data'] = type(token['data'])((replacements.get(k, k), v)
-                                            for k, v in token['data'].items())
+    if cython.compiled:
+        data = token['data']
+        needs_adjustment = cython.declare(cython.bint, False)
+        for k in data:
+            if k in replacements:
+                needs_adjustment = True
+                break
+
+        if needs_adjustment:
+            new_data = type(data)()
+            for k, v in data.items():
+                new_data[replacements.get(k, k)] = v
+            token['data'] = new_data
+    else:
+        needs_adjustment = viewkeys(token['data']) & viewkeys(replacements)
+        if needs_adjustment:
+            token['data'] = type(token['data'])((replacements.get(k, k), v)
+                                                for k, v in token['data'].items())
 
 
 def impliedTagToken(name, type="EndTag", attributes=None,

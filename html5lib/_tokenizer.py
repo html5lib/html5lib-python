@@ -1,4 +1,7 @@
+# cython: language_level=3
 from __future__ import absolute_import, division, unicode_literals
+
+import cython
 
 from six import unichr as chr
 
@@ -20,7 +23,15 @@ from ._trie import Trie
 
 entitiesTrie = Trie(entities)
 
-if version_info >= (3, 7):
+if cython.compiled:
+    @cython.cfunc
+    @cython.inline
+    def attributeMap():
+        if version.PY_VERSION_HEX >= 0x03070000:
+            return {}
+        else:
+            return OrderedDict()
+elif version_info >= (3, 7):
     attributeMap = dict
 else:
     attributeMap = OrderedDict
@@ -62,15 +73,161 @@ class HTMLTokenizer(object):
         self.tokenQueue = deque([])
         # Start processing. When EOF is reached self._state will return False
         # instead of True and the loop will terminate.
-        while self._state():
-            while self.stream.errors:
-                yield {"type": tokenTypes["ParseError"], "data": self.stream.errors.pop(0)}
-            while self.tokenQueue:
-                yield self.tokenQueue.popleft()
+        if cython.compiled:
+            with cython.binding(False):
+                while self._state(self):
+                    while self.stream.errors:
+                        yield {"type": tokenTypes["ParseError"], "data": self.stream.errors.pop(0)}
+                    while self.tokenQueue:
+                        yield self.tokenQueue.popleft()
+        else:
+            while self._state():
+                while self.stream.errors:
+                    yield {"type": tokenTypes["ParseError"], "data": self.stream.errors.pop(0)}
+                while self.tokenQueue:
+                    yield self.tokenQueue.popleft()
 
     @property
     def state(self):
-        return self._state.__name__
+        if cython.compiled:
+            if self._state == self.dataState:
+                return "dataState"
+            elif self._state == self.entityDataState:
+                return "entityDataState"
+            elif self._state == self.rcdataState:
+                return "rcdataState"
+            elif self._state == self.characterReferenceInRcdata:
+                return "characterReferenceInRcdata"
+            elif self._state == self.rawtextState:
+                return "rawtextState"
+            elif self._state == self.scriptDataState:
+                return "scriptDataState"
+            elif self._state == self.plaintextState:
+                return "plaintextState"
+            elif self._state == self.tagOpenState:
+                return "tagOpenState"
+            elif self._state == self.closeTagOpenState:
+                return "closeTagOpenState"
+            elif self._state == self.tagNameState:
+                return "tagNameState"
+            elif self._state == self.rcdataLessThanSignState:
+                return "rcdataLessThanSignState"
+            elif self._state == self.rcdataEndTagOpenState:
+                return "rcdataEndTagOpenState"
+            elif self._state == self.rcdataEndTagNameState:
+                return "rcdataEndTagNameState"
+            elif self._state == self.rawtextLessThanSignState:
+                return "rawtextLessThanSignState"
+            elif self._state == self.rawtextEndTagOpenState:
+                return "rawtextEndTagOpenState"
+            elif self._state == self.rawtextEndTagNameState:
+                return "rawtextEndTagNameState"
+            elif self._state == self.scriptDataLessThanSignState:
+                return "scriptDataLessThanSignState"
+            elif self._state == self.scriptDataEndTagOpenState:
+                return "scriptDataEndTagOpenState"
+            elif self._state == self.scriptDataEndTagNameState:
+                return "scriptDataEndTagNameState"
+            elif self._state == self.scriptDataEscapeStartState:
+                return "scriptDataEscapeStartState"
+            elif self._state == self.scriptDataEscapeStartDashState:
+                return "scriptDataEscapeStartDashState"
+            elif self._state == self.scriptDataEscapedState:
+                return "scriptDataEscapedState"
+            elif self._state == self.scriptDataEscapedDashState:
+                return "scriptDataEscapedDashState"
+            elif self._state == self.scriptDataEscapedDashDashState:
+                return "scriptDataEscapedDashDashState"
+            elif self._state == self.scriptDataEscapedLessThanSignState:
+                return "scriptDataEscapedLessThanSignState"
+            elif self._state == self.scriptDataEscapedEndTagOpenState:
+                return "scriptDataEscapedEndTagOpenState"
+            elif self._state == self.scriptDataEscapedEndTagNameState:
+                return "scriptDataEscapedEndTagNameState"
+            elif self._state == self.scriptDataDoubleEscapeStartState:
+                return "scriptDataDoubleEscapeStartState"
+            elif self._state == self.scriptDataDoubleEscapedState:
+                return "scriptDataDoubleEscapedState"
+            elif self._state == self.scriptDataDoubleEscapedDashState:
+                return "scriptDataDoubleEscapedDashState"
+            elif self._state == self.scriptDataDoubleEscapedDashDashState:
+                return "scriptDataDoubleEscapedDashDashState"
+            elif self._state == self.scriptDataDoubleEscapedLessThanSignState:
+                return "scriptDataDoubleEscapedLessThanSignState"
+            elif self._state == self.scriptDataDoubleEscapeEndState:
+                return "scriptDataDoubleEscapeEndState"
+            elif self._state == self.beforeAttributeNameState:
+                return "beforeAttributeNameState"
+            elif self._state == self.attributeNameState:
+                return "attributeNameState"
+            elif self._state == self.afterAttributeNameState:
+                return "afterAttributeNameState"
+            elif self._state == self.beforeAttributeValueState:
+                return "beforeAttributeValueState"
+            elif self._state == self.attributeValueDoubleQuotedState:
+                return "attributeValueDoubleQuotedState"
+            elif self._state == self.attributeValueSingleQuotedState:
+                return "attributeValueSingleQuotedState"
+            elif self._state == self.attributeValueUnQuotedState:
+                return "attributeValueUnQuotedState"
+            elif self._state == self.afterAttributeValueState:
+                return "afterAttributeValueState"
+            elif self._state == self.selfClosingStartTagState:
+                return "selfClosingStartTagState"
+            elif self._state == self.bogusCommentState:
+                return "bogusCommentState"
+            elif self._state == self.markupDeclarationOpenState:
+                return "markupDeclarationOpenState"
+            elif self._state == self.commentStartState:
+                return "commentStartState"
+            elif self._state == self.commentStartDashState:
+                return "commentStartDashState"
+            elif self._state == self.commentState:
+                return "commentState"
+            elif self._state == self.commentEndDashState:
+                return "commentEndDashState"
+            elif self._state == self.commentEndState:
+                return "commentEndState"
+            elif self._state == self.commentEndBangState:
+                return "commentEndBangState"
+            elif self._state == self.doctypeState:
+                return "doctypeState"
+            elif self._state == self.beforeDoctypeNameState:
+                return "beforeDoctypeNameState"
+            elif self._state == self.doctypeNameState:
+                return "doctypeNameState"
+            elif self._state == self.afterDoctypeNameState:
+                return "afterDoctypeNameState"
+            elif self._state == self.afterDoctypePublicKeywordState:
+                return "afterDoctypePublicKeywordState"
+            elif self._state == self.beforeDoctypePublicIdentifierState:
+                return "beforeDoctypePublicIdentifierState"
+            elif self._state == self.doctypePublicIdentifierDoubleQuotedState:
+                return "doctypePublicIdentifierDoubleQuotedState"
+            elif self._state == self.doctypePublicIdentifierSingleQuotedState:
+                return "doctypePublicIdentifierSingleQuotedState"
+            elif self._state == self.afterDoctypePublicIdentifierState:
+                return "afterDoctypePublicIdentifierState"
+            elif self._state == self.betweenDoctypePublicAndSystemIdentifiersState:
+                return "betweenDoctypePublicAndSystemIdentifiersState"
+            elif self._state == self.afterDoctypeSystemKeywordState:
+                return "afterDoctypeSystemKeywordState"
+            elif self._state == self.beforeDoctypeSystemIdentifierState:
+                return "beforeDoctypeSystemIdentifierState"
+            elif self._state == self.doctypeSystemIdentifierDoubleQuotedState:
+                return "doctypeSystemIdentifierDoubleQuotedState"
+            elif self._state == self.doctypeSystemIdentifierSingleQuotedState:
+                return "doctypeSystemIdentifierSingleQuotedState"
+            elif self._state == self.afterDoctypeSystemIdentifierState:
+                return "afterDoctypeSystemIdentifierState"
+            elif self._state == self.bogusDoctypeState:
+                return "bogusDoctypeState"
+            elif self._state == self.cdataSectionState:
+                return "cdataSectionState"
+            else:
+                raise ValueError("unreachable")
+        else:
+            return self._state.__name__
 
     @state.setter
     def state(self, newState):
@@ -111,7 +268,14 @@ class HTMLTokenizer(object):
             c = self.stream.char()
 
         # Convert the set of characters consumed to an int.
-        charAsInt = int("".join(charStack), radix)
+        if cython.compiled:
+            with cython.overflowcheck(True):
+                try:
+                    charAsInt = int("".join(charStack), radix)
+                except OverflowError:
+                    charAsInt = 0x7FFFFFFF
+        else:
+            charAsInt = int("".join(charStack), radix)
 
         # Certain characters get replaced with others
         if charAsInt in replacementCharacters:
