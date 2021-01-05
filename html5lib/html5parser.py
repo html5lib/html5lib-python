@@ -107,6 +107,7 @@ class HTMLParser(object):
 
         self.phases = {name: cls(self, self.tree) for name, cls in
                        _phases.items()}
+        self.tokenizer = None
 
     def _parse(self, stream, innerHTML=False, container="div", scripting=False, **kwargs):
 
@@ -162,7 +163,7 @@ class HTMLParser(object):
         :obj:`None` if that is not determined yet
 
         """
-        if not hasattr(self, 'tokenizer'):
+        if self.tokenizer is None:
             return None
         return self.tokenizer.stream.charEncoding[0].name
 
