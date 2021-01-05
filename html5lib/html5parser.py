@@ -151,10 +151,6 @@ class HTMLParser(object):
             self.innerHTML = False  # pylint:disable=redefined-variable-type
             self.phase = self.phases["initial"]
 
-        self.lastPhase = None
-
-        self.beforeRCDataPhase = None
-
         self.framesetOK = True
 
     @property
