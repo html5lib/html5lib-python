@@ -306,10 +306,12 @@ class TreeBuilder(object):
         element.attributes = token["data"]
         return element
 
-    def _getInsertFromTable(self):
+    @property
+    def insertFromTable(self):
         return self._insertFromTable
 
-    def _setInsertFromTable(self, value):
+    @insertFromTable.setter
+    def insertFromTable(self, value):
         """Switch the function used to insert an element from the
         normal one to the misnested table one and back again"""
         self._insertFromTable = value
@@ -317,8 +319,6 @@ class TreeBuilder(object):
             self.insertElement = self.insertElementTable
         else:
             self.insertElement = self.insertElementNormal
-
-    insertFromTable = property(_getInsertFromTable, _setInsertFromTable)
 
     def insertElementNormal(self, token):
         name = token["name"]
@@ -390,7 +390,7 @@ class TreeBuilder(object):
     def generateImpliedEndTags(self, exclude=None):
         name = self.openElements[-1].name
         # XXX td, th and tr are not actually needed
-        if (name in frozenset(("dd", "dt", "li", "option", "optgroup", "p", "rp", "rt")) and
+        if (name in ("dd", "dt", "li", "option", "optgroup", "p", "rp", "rt") and
                 name != exclude):
             self.openElements.pop()
             # XXX This is not entirely what the specification says. We should

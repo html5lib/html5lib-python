@@ -23,7 +23,7 @@ class TokenizerTestParser(object):
         tokenizer = self.tokenizer(stream, encoding)
         self.outputTokens = []
 
-        tokenizer.state = getattr(tokenizer, self._state)
+        tokenizer.state = self._state
         if self._lastStartTag is not None:
             tokenizer.currentToken = {"type": "startTag",
                                       "name": self._lastStartTag}

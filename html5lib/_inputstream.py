@@ -3,10 +3,12 @@ from __future__ import absolute_import, division, unicode_literals
 from six import text_type
 from six.moves import http_client, urllib
 
+import array
 import codecs
 import re
 from io import BytesIO, StringIO
 
+import cython
 import webencodings
 
 from .constants import EOF, spaceCharacters, asciiLetters, asciiUppercase
@@ -45,7 +47,7 @@ non_bmp_invalid_codepoints = {0x1FFFE, 0x1FFFF, 0x2FFFE, 0x2FFFF, 0x3FFFE,
 ascii_punctuation_re = re.compile("[\u0009-\u000D\u0020-\u002F\u003A-\u0040\u005C\u005B-\u0060\u007B-\u007E]")
 
 # Cache for charsUntil()
-charsUntilRegEx = {}
+charsUntilCache = {}
 
 
 class BufferedStream(object):
@@ -145,6 +147,27 @@ def HTMLInputStream(source, **kwargs):
         return HTMLBinaryInputStream(source, **kwargs)
 
 
+if cython.compiled:
+    @cython.cfunc
+    @cython.inline
+    @cython.returns(cython.ulong)
+    @cython.exceptval(check=False)
+    @cython.locals(c=cython.uchar)
+    @cython.cdivision(True)
+    def index(c):
+        return c // (cython.sizeof(cython.ulong) * 8)
+
+    @cython.cfunc
+    @cython.inline
+    @cython.returns(cython.ulong)
+    @cython.exceptval(check=False)
+    @cython.locals(c=cython.uchar)
+    @cython.cdivision(True)
+    def bit(c):
+        return cython.cast(cython.ulong, 1) << (c % (cython.sizeof(cython.ulong) * 8))
+
+
+
 class HTMLUnicodeInputStream(object):
     """Provides a unicode stream of characters to the HTMLTokenizer.
 
@@ -173,7 +196,10 @@ class HTMLUnicodeInputStream(object):
         if not _utils.supports_lone_surrogates:
             # Such platforms will have already checked for such
             # surrogate errors, so no need to do this checking.
-            self.reportCharacterErrors = None
+            if cython.compiled:
+                self.reportCharacterErrors = cython.cast(rCEf, cython.NULL)
+            else:
+                self.reportCharacterErrors = None
         elif len("\U0010FFFF") == 1:
             self.reportCharacterErrors = self.characterErrorsUCS4
         else:
@@ -231,6 +257,8 @@ class HTMLUnicodeInputStream(object):
         line, col = self._position(self.chunkOffset)
         return (line + 1, col)
 
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
     def char(self):
         """ Read one character from the stream or queue if available. Return
             EOF when EOF is reached.
@@ -246,8 +274,8 @@ class HTMLUnicodeInputStream(object):
 
         return char
 
-    def readChunk(self, chunkSize=None):
-        if chunkSize is None:
+    def readChunk(self, chunkSize=0):
+        if chunkSize == 0:
             chunkSize = self._defaultChunkSize
 
         self.prevNumLines, self.prevNumCols = self._position(self.chunkSize)
@@ -273,7 +301,10 @@ class HTMLUnicodeInputStream(object):
                 data = data[:-1]
 
         if self.reportCharacterErrors:
-            self.reportCharacterErrors(data)
+            if cython.compiled:
+                self.reportCharacterErrors(self, data)
+            else:
+                self.reportCharacterErrors(data)
 
         # Replace invalid characters
         data = data.replace("\r\n", "\n")
@@ -285,8 +316,19 @@ class HTMLUnicodeInputStream(object):
         return True
 
     def characterErrorsUCS4(self, data):
-        for _ in range(len(invalid_unicode_re.findall(data))):
-            self.errors.append("invalid-codepoint")
+        if cython.compiled:
+            for c in data:
+                if (0x0001 <= c <= 0x0008 or
+                    c == 0x000B or
+                    0x000E <= c <= 0x001F or
+                    0x007F <= c <= 0x009F or
+                    0xD800 <= c <= 0xDFFF or
+                    0xFDD0 <= c <= 0xFDEF or
+                    (c & 0xFFFE) == 0xFFFE):
+                    self.errors.append("invalid-codepoint")
+        else:
+            for _ in range(len(invalid_unicode_re.findall(data))):
+                self.errors.append("invalid-codepoint")
 
     def characterErrorsUCS2(self, data):
         # Someone picked the wrong compile option
@@ -318,45 +360,98 @@ class HTMLUnicodeInputStream(object):
         characters.
         """
 
-        # Use a cache of regexps to find the required characters
-        try:
-            chars = charsUntilRegEx[(characters, opposite)]
-        except KeyError:
-            if __debug__:
+        if cython.compiled:
+            a_len = cython.declare(Py_ssize_t, index(0x7F) + 1)
+            bitmap = cython.declare(cython.p_ulong)
+            a = cython.declare(array.array)
+            c = cython.declare(cython.Py_UCS4)
+
+            try:
+                a = charsUntilCache[characters]
+            except KeyError:
+                a = array.array('L')
+                array.resize(a, a_len)
+                array.zero(a)
+                bitmap = a.data.as_ulongs
+
                 for c in characters:
-                    assert(ord(c) < 128)
-            regex = "".join(["\\x%02x" % ord(c) for c in characters])
-            if not opposite:
-                regex = "^%s" % regex
-            chars = charsUntilRegEx[(characters, opposite)] = re.compile("[%s]+" % regex)
+                    assert c <= 0x7F
+                    bitmap[index(c)] |= bit(c)
 
-        rv = []
-
-        while True:
-            # Find the longest matching prefix
-            m = chars.match(self.chunk, self.chunkOffset)
-            if m is None:
-                # If nothing matched, and it wasn't because we ran out of chunk,
-                # then stop
-                if self.chunkOffset != self.chunkSize:
-                    break
+                charsUntilCache[characters] = a
             else:
-                end = m.end()
-                # If not the whole chunk matched, return everything
-                # up to the part that didn't match
-                if end != self.chunkSize:
-                    rv.append(self.chunk[self.chunkOffset:end])
-                    self.chunkOffset = end
-                    break
-            # If the whole remainder of the chunk matched,
-            # use it all and read the next chunk
-            rv.append(self.chunk[self.chunkOffset:])
-            if not self.readChunk():
-                # Reached EOF
-                break
+                bitmap = a.data.as_ulongs
 
-        r = "".join(rv)
-        return r
+            # we deal with opposite here as it means we can cache purely based
+            # on the pre-existing characters object and not construct a tuple
+            # to also cache on opposite; the below code is much quicker than
+            # constructing a tuple (it'll typically compile to around a dozen
+            # instructions!)
+            if opposite:
+                # this is often too long, but Cython won't let us call sizeof in Pure Python mode
+                new_bitmap = cython.declare(cython.ulong[4])
+                for i in range(a_len):
+                    new_bitmap[i] = ~bitmap[i]
+                bitmap = cython.cast(cython.p_ulong, cython.address(new_bitmap))
+
+            cyrv = ""
+
+            while True:
+                # this really should be a slice of self.chunk, but https://github.com/cython/cython/issues/3536
+                for i in range(self.chunkOffset, self.chunkSize):
+                    with cython.boundscheck(False), cython.wraparound(False):
+                        c = self.chunk[i]
+                    if c > 0x7F and opposite or c <= 0x7F and (bitmap[index(c)] & bit(c)):
+                        cyrv += self.chunk[self.chunkOffset:i]
+                        self.chunkOffset = i
+                        return cyrv
+
+                cyrv += self.chunk[self.chunkOffset:]
+                if not self.readChunk():
+                    break
+
+            return cyrv
+
+        else:
+            # Use a cache of regexps to find the required characters
+            try:
+                chars = charsUntilCache[(characters, opposite)]
+            except KeyError:
+                if __debug__:
+                    for c in characters:
+                        assert(ord(c) < 128)
+                regex = "".join(["\\x%02x" % ord(c) for c in characters])
+                if not opposite:
+                    regex = "^%s" % regex
+                chars = charsUntilCache[(characters, opposite)] = re.compile("[%s]+" % regex)
+
+            rv = []
+
+            while True:
+                # Find the longest matching prefix
+                m = chars.match(self.chunk, self.chunkOffset)
+                if m is None:
+                    # If nothing matched, and it wasn't because we ran out of chunk,
+                    # then stop
+                    if self.chunkOffset != self.chunkSize:
+                        break
+                else:
+                    end = m.end()
+                    # If not the whole chunk matched, return everything
+                    # up to the part that didn't match
+                    if end != self.chunkSize:
+                        rv.append(self.chunk[self.chunkOffset:end])
+                        self.chunkOffset = end
+                        break
+                # If the whole remainder of the chunk matched,
+                # use it all and read the next chunk
+                rv.append(self.chunk[self.chunkOffset:])
+                if not self.readChunk():
+                    # Reached EOF
+                    break
+
+            r = "".join(rv)
+            return r
 
     def unget(self, char):
         # Only one character is allowed to be ungotten at once - it must
@@ -611,12 +706,8 @@ class EncodingBytes(bytes):
         self._position = p = p - 1
         return self[p:p + 1]
 
-    def setPosition(self, position):
-        if self._position >= len(self):
-            raise StopIteration
-        self._position = position
-
-    def getPosition(self):
+    @property
+    def position(self):
         if self._position >= len(self):
             raise StopIteration
         if self._position >= 0:
@@ -624,12 +715,15 @@ class EncodingBytes(bytes):
         else:
             return None
 
-    position = property(getPosition, setPosition)
+    @position.setter
+    def position(self, position):
+        if self._position >= len(self):
+            raise StopIteration
+        self._position = position
 
-    def getCurrentByte(self):
+    @property
+    def currentByte(self):
         return self[self.position:self.position + 1]
-
-    currentByte = property(getCurrentByte)
 
     def skip(self, chars=spaceCharactersBytes):
         """Skip past a list of characters"""
@@ -660,7 +754,7 @@ class EncodingBytes(bytes):
         match. Otherwise return False and leave the position alone"""
         rv = self.startswith(bytes, self.position)
         if rv:
-            self.position += len(bytes)
+            self._position += len(bytes)
         return rv
 
     def jumpTo(self, bytes):
@@ -685,27 +779,36 @@ class EncodingParser(object):
         if b"<meta" not in self.data:
             return None
 
-        methodDispatch = (
-            (b"<!--", self.handleComment),
-            (b"<meta", self.handleMeta),
-            (b"</", self.handlePossibleEndTag),
-            (b"<!", self.handleOther),
-            (b"<?", self.handleOther),
-            (b"<", self.handlePossibleStartTag))
         for _ in self.data:
-            keepParsing = True
             try:
                 self.data.jumpTo(b"<")
             except StopIteration:
                 break
-            for key, method in methodDispatch:
-                if self.data.matchBytes(key):
-                    try:
-                        keepParsing = method()
-                        break
-                    except StopIteration:
-                        keepParsing = False
-                        break
+
+            if self.data.matchBytes(b"<!--"):
+                func = self.handleComment
+            elif self.data.matchBytes(b"<meta"):
+                func = self.handleMeta
+            elif self.data.matchBytes(b"</"):
+                func = self.handlePossibleEndTag
+            elif self.data.matchBytes(b"<!"):
+                func = self.handleOther
+            elif self.data.matchBytes(b"<?"):
+                func = self.handleOther
+            elif self.data.matchBytes(b"<"):
+                func = self.handlePossibleStartTag
+            else:
+                assert False, "unreachable"
+
+            keepParsing = True
+            try:
+                if cython.compiled:
+                    keepParsing = func(self)
+                else:
+                    keepParsing = func()
+            except StopIteration:
+                keepParsing = False
+
             if not keepParsing:
                 break
 
@@ -728,19 +831,20 @@ class EncodingParser(object):
             if attr is None:
                 return True
             else:
-                if attr[0] == b"http-equiv":
-                    hasPragma = attr[1] == b"content-type"
+                name, value = attr
+                if name == b"http-equiv":
+                    hasPragma = value == b"content-type"
                     if hasPragma and pendingEncoding is not None:
                         self.encoding = pendingEncoding
                         return False
-                elif attr[0] == b"charset":
-                    tentativeEncoding = attr[1]
+                elif name == b"charset":
+                    tentativeEncoding = value
                     codec = lookupEncoding(tentativeEncoding)
                     if codec is not None:
                         self.encoding = codec
                         return False
-                elif attr[0] == b"content":
-                    contentParser = ContentAttrParser(EncodingBytes(attr[1]))
+                elif name == b"content":
+                    contentParser = ContentAttrParser(EncodingBytes(value))
                     tentativeEncoding = contentParser.parse()
                     if tentativeEncoding is not None:
                         codec = lookupEncoding(tentativeEncoding)

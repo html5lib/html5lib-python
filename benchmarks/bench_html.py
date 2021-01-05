@@ -4,7 +4,7 @@ import sys
 
 import pyperf
 
-sys.path[0:0] = [os.path.join(os.path.dirname(__file__), "..")]
+#sys.path[0:0] = [os.path.join(os.path.dirname(__file__), "..")]
 import html5lib  # noqa: E402
 
 
@@ -49,9 +49,9 @@ if __name__ == "__main__":
         source = io.BytesIO(fh.read())
 
     if "parse" in benchmarks:
-        for tb in ("etree", "dom", "lxml"):
+        for tb in ("etree",):
             runner.bench_func("html_parse_%s" % tb, bench_parse, source, tb)
 
-    if "serialize" in benchmarks:
-        for tb in ("etree", "dom", "lxml"):
-            runner.bench_time_func("html_serialize_%s" % tb, bench_serialize, source, tb)
+    # if "serialize" in benchmarks:
+    #     for tb in ("etree",):
+    #         runner.bench_time_func("html_serialize_%s" % tb, bench_serialize, source, tb)

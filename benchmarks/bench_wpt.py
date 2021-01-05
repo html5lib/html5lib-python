@@ -4,7 +4,7 @@ import sys
 
 import pyperf
 
-sys.path[0:0] = [os.path.join(os.path.dirname(__file__), "..")]
+#sys.path[0:0] = [os.path.join(os.path.dirname(__file__), "..")]
 import html5lib  # noqa: E402
 
 

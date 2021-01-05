@@ -1,2 +1,3 @@
 six>=1.9
 webencodings
+Cython>=3.0a6

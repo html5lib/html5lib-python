@@ -16,6 +16,14 @@ from .._utils import moduleFactoryFactory
 tag_regexp = re.compile("{([^}]*)}(.*)")
 
 
+def _getETreeTag(name, namespace):
+    if namespace is None:
+        etree_tag = name
+    else:
+        etree_tag = "{%s}%s" % (namespace, name)
+    return etree_tag
+
+
 def getETreeBuilder(ElementTreeImplementation, fullTree=False):
     ElementTree = ElementTreeImplementation
     ElementTreeCommentType = ElementTree.Comment("asd").tag
@@ -24,8 +32,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
         def __init__(self, name, namespace=None):
             self._name = name
             self._namespace = namespace
-            self._element = ElementTree.Element(self._getETreeTag(name,
-                                                                  namespace))
+            self._element = ElementTree.Element(_getETreeTag(name, namespace))
             if namespace is None:
                 self.nameTuple = namespaces["html"], self._name
             else:
@@ -34,35 +41,30 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             self._childNodes = []
             self._flags = []
 
-        def _getETreeTag(self, name, namespace):
-            if namespace is None:
-                etree_tag = name
-            else:
-                etree_tag = "{%s}%s" % (namespace, name)
-            return etree_tag
-
-        def _setName(self, name):
-            self._name = name
-            self._element.tag = self._getETreeTag(self._name, self._namespace)
-
-        def _getName(self):
+        @property
+        def name(self):
             return self._name
 
-        name = property(_getName, _setName)
+        @name.setter
+        def name(self, name):
+            self._name = name
+            self._element.tag = _getETreeTag(self._name, self._namespace)
 
-        def _setNamespace(self, namespace):
-            self._namespace = namespace
-            self._element.tag = self._getETreeTag(self._name, self._namespace)
-
-        def _getNamespace(self):
+        @property
+        def namespace(self):
             return self._namespace
 
-        namespace = property(_getNamespace, _setNamespace)
+        @namespace.setter
+        def namespace(self, namespace):
+            self._namespace = namespace
+            self._element.tag = _getETreeTag(self._name, self._namespace)
 
-        def _getAttributes(self):
+        @property
+        def attributes(self):
             return self._element.attrib
 
-        def _setAttributes(self, attributes):
+        @attributes.setter
+        def attributes(self, attributes):
             el_attrib = self._element.attrib
             el_attrib.clear()
             if attributes:
@@ -75,18 +77,16 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                         name = key
                     el_attrib[name] = value
 
-        attributes = property(_getAttributes, _setAttributes)
-
-        def _getChildNodes(self):
+        @property
+        def childNodes(self):
             return self._childNodes
 
-        def _setChildNodes(self, value):
+        @childNodes.setter
+        def childNodes(self, value):
             del self._element[:]
             self._childNodes = []
             for element in value:
                 self.insertChild(element)
-
-        childNodes = property(_getChildNodes, _setChildNodes)
 
         def hasContent(self):
             """Return true if the node has children or text"""
@@ -156,52 +156,59 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             self._childNodes = []
             self._flags = []
 
-        def _getData(self):
+        @property
+        def data(self):
             return self._element.text
 
-        def _setData(self, value):
+        @data.setter
+        def data(self, value):
             self._element.text = value
-
-        data = property(_getData, _setData)
 
     class DocumentType(Element):
         def __init__(self, name, publicId, systemId):
-            Element.__init__(self, "<!DOCTYPE>")
+            super(DocumentType, self).__init__("<!DOCTYPE>")
             self._element.text = name
             self.publicId = publicId
             self.systemId = systemId
 
-        def _getPublicId(self):
+        @property
+        def publicId(self):
             return self._element.get("publicId", "")
 
-        def _setPublicId(self, value):
+        @publicId.setter
+        def publicId(self, value):
             if value is not None:
                 self._element.set("publicId", value)
 
-        publicId = property(_getPublicId, _setPublicId)
-
-        def _getSystemId(self):
+        @property
+        def systemId(self):
             return self._element.get("systemId", "")
 
-        def _setSystemId(self, value):
+        @systemId.setter
+        def systemId(self, value):
             if value is not None:
                 self._element.set("systemId", value)
 
-        systemId = property(_getSystemId, _setSystemId)
-
     class Document(Element):
         def __init__(self):
-            Element.__init__(self, "DOCUMENT_ROOT")
+            super(Document, self).__init__("DOCUMENT_ROOT")
 
     class DocumentFragment(Element):
         def __init__(self):
-            Element.__init__(self, "DOCUMENT_FRAGMENT")
+            super(DocumentFragment, self).__init__("DOCUMENT_FRAGMENT")
 
     def testSerializer(element):
         rv = []
 
-        def serializeElement(element, indent=0):
-            if not(hasattr(element, "tag")):
+        stack = [(element, 0)]
+
+        while stack:
+            element, indent = stack.pop()
+            if isinstance(element, text_type):
+                rv.append(element)
+                continue
+
+            if not (hasattr(element, "tag")):
                 element = element.getroot()
             if element.tag == "<!DOCTYPE>":
                 if element.get("publicId") or element.get("systemId"):
@@ -249,13 +256,12 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                     for name, value in sorted(attributes):
                         rv.append('|%s%s="%s"' % (' ' * (indent + 2), name, value))
                 if element.text:
-                    rv.append("|%s\"%s\"" % (' ' * (indent + 2), element.text))
-            indent += 2
-            for child in element:
-                serializeElement(child, indent)
+                    rv.append('|%s"%s"' % (" " * (indent + 2), element.text))
             if element.tail:
-                rv.append("|%s\"%s\"" % (' ' * (indent - 2), element.tail))
-        serializeElement(element, 0)
+                stack.append(('|%s"%s"' % (" " * (indent), element.tail), None))
+            indent += 2
+            for child in reversed(element):
+                stack.append((child, indent))
 
         return "\n".join(rv)
 
