@@ -209,7 +209,7 @@ class HTMLParser(object):
                         currentNodeNamespace == defaultNamespace or
                         (self.isMathMLTextIntegrationPoint(currentNode) and
                          ((type == StartTagToken and
-                           token["name"] not in frozenset(["mglyph", "malignmark"])) or
+                           token["name"] not in ("mglyph", "malignmark")) or
                           type in (CharactersToken, SpaceCharactersToken))) or
                         (currentNodeNamespace == namespaces["mathml"] and
                          currentNodeName == "annotation-xml" and
@@ -1301,11 +1301,11 @@ class InBodyPhase(Phase):
             return
         elif self.tree.openElements[-1].name != "body":
             for node in self.tree.openElements[2:]:
-                if node.name not in frozenset(("dd", "dt", "li", "optgroup",
-                                               "option", "p", "rp", "rt",
-                                               "tbody", "td", "tfoot",
-                                               "th", "thead", "tr", "body",
-                                               "html")):
+                if node.name not in ("dd", "dt", "li", "optgroup",
+                                     "option", "p", "rp", "rt",
+                                     "tbody", "td", "tfoot",
+                                     "th", "thead", "tr", "body",
+                                     "html"):
                     # Not sure this is the correct name for the parse error
                     self.parser.parseError(
                         "expected-one-end-tag-but-got-another",
@@ -1517,7 +1517,7 @@ class InBodyPhase(Phase):
             if lastNode.parent:
                 lastNode.parent.removeChild(lastNode)
 
-            if commonAncestor.name in frozenset(("table", "tbody", "tfoot", "thead", "tr")):
+            if commonAncestor.name in ("table", "tbody", "tfoot", "thead", "tr"):
                 parent, insertBefore = self.tree.getTableMisnestedNodePosition()
                 parent.insertBefore(lastNode, insertBefore)
             else:
