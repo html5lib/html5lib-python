@@ -5,9 +5,11 @@ from six import unichr as chr
 from collections import deque, OrderedDict
 from sys import version_info
 
+from ._ascii import ascii_lower
+
 from .constants import spaceCharacters
 from .constants import entities
-from .constants import asciiLetters, asciiUpper2Lower
+from .constants import asciiLetters
 from .constants import digits, hexDigits, EOF
 from .constants import tokenTypes, tagTokenTypes
 from .constants import replacementCharacters
@@ -245,7 +247,7 @@ class HTMLTokenizer(object):
         token = self.currentToken
         # Add token to the queue to be yielded
         if (token["type"] in tagTokenTypes):
-            token["name"] = token["name"].translate(asciiUpper2Lower)
+            token["name"] = ascii_lower(token["name"])
             if token["type"] == tokenTypes["StartTag"]:
                 raw = token["data"]
                 data = attributeMap(raw)
@@ -939,7 +941,7 @@ class HTMLTokenizer(object):
             # start tag token is emitted so values can still be safely appended
             # to attributes, but we do want to report the parse error in time.
             self.currentToken["data"][-1][0] = (
-                self.currentToken["data"][-1][0].translate(asciiUpper2Lower))
+                ascii_lower(self.currentToken["data"][-1][0]))
             for name, _ in self.currentToken["data"][:-1]:
                 if self.currentToken["data"][-1][0] == name:
                     self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
@@ -1360,10 +1362,10 @@ class HTMLTokenizer(object):
     def doctypeNameState(self):
         data = self.stream.char()
         if data in spaceCharacters:
-            self.currentToken["name"] = self.currentToken["name"].translate(asciiUpper2Lower)
+            self.currentToken["name"] = ascii_lower(self.currentToken["name"])
             self._state = self.afterDoctypeNameState
         elif data == ">":
-            self.currentToken["name"] = self.currentToken["name"].translate(asciiUpper2Lower)
+            self.currentToken["name"] = ascii_lower(self.currentToken["name"])
             self.tokenQueue.append(self.currentToken)
             self._state = self.dataState
         elif data == "\u0000":
@@ -1375,7 +1377,7 @@ class HTMLTokenizer(object):
             self.tokenQueue.append({"type": tokenTypes["ParseError"], "data":
                                     "eof-in-doctype-name"})
             self.currentToken["correct"] = False
-            self.currentToken["name"] = self.currentToken["name"].translate(asciiUpper2Lower)
+            self.currentToken["name"] = ascii_lower(self.currentToken["name"])
             self.tokenQueue.append(self.currentToken)
             self._state = self.dataState
         else:
