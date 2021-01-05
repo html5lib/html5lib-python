@@ -166,7 +166,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
 
     class DocumentType(Element):
         def __init__(self, name, publicId, systemId):
-            Element.__init__(self, "<!DOCTYPE>")
+            super(DocumentType, self).__init__("<!DOCTYPE>")
             self._element.text = name
             self.publicId = publicId
             self.systemId = systemId
@@ -191,11 +191,11 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
 
     class Document(Element):
         def __init__(self):
-            Element.__init__(self, "DOCUMENT_ROOT")
+            super(Document, self).__init__("DOCUMENT_ROOT")
 
     class DocumentFragment(Element):
         def __init__(self):
-            Element.__init__(self, "DOCUMENT_FRAGMENT")
+            super(DocumentFragment, self).__init__("DOCUMENT_FRAGMENT")
 
     def testSerializer(element):
         rv = []
