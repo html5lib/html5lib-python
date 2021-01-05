@@ -477,9 +477,13 @@ class HTMLTokenizer(object):
         return True
 
     def rcdataEndTagNameState(self):
+        data = self.stream.char()
+        if data in asciiLetters:
+            self.temporaryBuffer += data
+            return True
+
         name = self.temporaryBuffer.translate(asciiUpper2Lower)
         appropriate = self.currentToken and self.currentToken["name"] == name
-        data = self.stream.char()
         if data in spaceCharacters and appropriate:
             self.currentToken = {"type": tokenTypes["EndTag"],
                                  "name": name,
@@ -496,8 +500,6 @@ class HTMLTokenizer(object):
                                  "data": [], "selfClosing": False}
             self.emitCurrentToken()
             self.state = self.dataState
-        elif data in asciiLetters:
-            self.temporaryBuffer += data
         else:
             self.tokenQueue.append({"type": tokenTypes["Characters"],
                                     "data": "</" + self.temporaryBuffer})
@@ -528,9 +530,13 @@ class HTMLTokenizer(object):
         return True
 
     def rawtextEndTagNameState(self):
+        data = self.stream.char()
+        if data in asciiLetters:
+            self.temporaryBuffer += data
+            return True
+
         name = self.temporaryBuffer.translate(asciiUpper2Lower)
         appropriate = self.currentToken and self.currentToken["name"] == name
-        data = self.stream.char()
         if data in spaceCharacters and appropriate:
             self.currentToken = {"type": tokenTypes["EndTag"],
                                  "name": name,
@@ -547,8 +553,6 @@ class HTMLTokenizer(object):
                                  "data": [], "selfClosing": False}
             self.emitCurrentToken()
             self.state = self.dataState
-        elif data in asciiLetters:
-            self.temporaryBuffer += data
         else:
             self.tokenQueue.append({"type": tokenTypes["Characters"],
                                     "data": "</" + self.temporaryBuffer})
@@ -582,9 +586,13 @@ class HTMLTokenizer(object):
         return True
 
     def scriptDataEndTagNameState(self):
+        data = self.stream.char()
+        if data in asciiLetters:
+            self.temporaryBuffer += data
+            return True
+
         name = self.temporaryBuffer.translate(asciiUpper2Lower)
         appropriate = self.currentToken and self.currentToken["name"] == name
-        data = self.stream.char()
         if data in spaceCharacters and appropriate:
             self.currentToken = {"type": tokenTypes["EndTag"],
                                  "name": name,
@@ -601,8 +609,6 @@ class HTMLTokenizer(object):
                                  "data": [], "selfClosing": False}
             self.emitCurrentToken()
             self.state = self.dataState
-        elif data in asciiLetters:
-            self.temporaryBuffer += data
         else:
             self.tokenQueue.append({"type": tokenTypes["Characters"],
                                     "data": "</" + self.temporaryBuffer})
@@ -719,9 +725,13 @@ class HTMLTokenizer(object):
         return True
 
     def scriptDataEscapedEndTagNameState(self):
+        data = self.stream.char()
+        if data in asciiLetters:
+            self.temporaryBuffer += data
+            return True
+
         name = self.temporaryBuffer.translate(asciiUpper2Lower)
         appropriate = self.currentToken and self.currentToken["name"] == name
-        data = self.stream.char()
         if data in spaceCharacters and appropriate:
             self.currentToken = {"type": tokenTypes["EndTag"],
                                  "name": name,
@@ -738,8 +748,6 @@ class HTMLTokenizer(object):
                                  "data": [], "selfClosing": False}
             self.emitCurrentToken()
             self.state = self.dataState
-        elif data in asciiLetters:
-            self.temporaryBuffer += data
         else:
             self.tokenQueue.append({"type": tokenTypes["Characters"],
                                     "data": "</" + self.temporaryBuffer})
