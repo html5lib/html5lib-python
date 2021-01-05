@@ -187,15 +187,17 @@ class HTMLParser(object):
 
         type_names = {value: key for key, value in tokenTypes.items()}
         debug = self.debug
+        defaultNamespace = self.tree.defaultNamespace
 
         for token in self.tokenizer:
             prev_token = None
             new_token = token
             while new_token is not None:
                 prev_token = new_token
-                currentNode = self.tree.openElements[-1] if self.tree.openElements else None
-                currentNodeNamespace = currentNode.namespace if currentNode else None
-                currentNodeName = currentNode.name if currentNode else None
+                openElements = self.tree.openElements
+                currentNode = openElements[-1] if openElements else None
+                currentNodeNamespace = currentNode.namespace if currentNode is not None else None
+                currentNodeName = currentNode.name if currentNode is not None else None
 
                 type = new_token["type"]
 
@@ -203,8 +205,8 @@ class HTMLParser(object):
                     self.parseError(new_token["data"], new_token.get("datavars", {}))
                     new_token = None
                 else:
-                    if (len(self.tree.openElements) == 0 or
-                        currentNodeNamespace == self.tree.defaultNamespace or
+                    if (not openElements or
+                        currentNodeNamespace == defaultNamespace or
                         (self.isMathMLTextIntegrationPoint(currentNode) and
                          ((type == StartTagToken and
                            token["name"] not in frozenset(["mglyph", "malignmark"])) or
