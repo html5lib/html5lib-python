@@ -728,19 +728,20 @@ class EncodingParser(object):
             if attr is None:
                 return True
             else:
-                if attr[0] == b"http-equiv":
-                    hasPragma = attr[1] == b"content-type"
+                name, value = attr
+                if name == b"http-equiv":
+                    hasPragma = value == b"content-type"
                     if hasPragma and pendingEncoding is not None:
                         self.encoding = pendingEncoding
                         return False
-                elif attr[0] == b"charset":
-                    tentativeEncoding = attr[1]
+                elif name == b"charset":
+                    tentativeEncoding = value
                     codec = lookupEncoding(tentativeEncoding)
                     if codec is not None:
                         self.encoding = codec
                         return False
-                elif attr[0] == b"content":
-                    contentParser = ContentAttrParser(EncodingBytes(attr[1]))
+                elif name == b"content":
+                    contentParser = ContentAttrParser(EncodingBytes(value))
                     tentativeEncoding = contentParser.parse()
                     if tentativeEncoding is not None:
                         codec = lookupEncoding(tentativeEncoding)
