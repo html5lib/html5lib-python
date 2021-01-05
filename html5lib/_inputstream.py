@@ -660,7 +660,7 @@ class EncodingBytes(bytes):
         match. Otherwise return False and leave the position alone"""
         rv = self.startswith(bytes, self.position)
         if rv:
-            self.position += len(bytes)
+            self._position += len(bytes)
         return rv
 
     def jumpTo(self, bytes):
