@@ -23,7 +23,7 @@ jobs:
           python-version: 3.8
       - uses: actions/setup-python@v2
         with:
-          python-version: pypy
+          python-version: pypy-2.7
       - uses: actions/setup-python@v2
         with:
           python-version: pypy3
