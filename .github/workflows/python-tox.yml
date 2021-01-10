@@ -1,6 +1,9 @@
 on: [pull_request, push]
 jobs:
   build:
+    # Prevent duplicate builds for 'internal' pull requests on existing commits
+    # Credit: https://github.community/t/duplicate-checks-on-push-and-pull-request-simultaneous-event/18012
+    if: github.event.push || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
