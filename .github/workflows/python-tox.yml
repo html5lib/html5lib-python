@@ -28,4 +28,6 @@ jobs:
         with:
           python-version: pypy3
       - run: pip install tox
-      - run: tox
+      - run: tox --parallel
+        env:
+          TOX_PARALLEL_NO_SPINNER: 1
