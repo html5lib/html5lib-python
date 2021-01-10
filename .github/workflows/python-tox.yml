@@ -7,5 +7,25 @@ jobs:
         with:
           submodules: true
       - uses: actions/setup-python@v2
+        with:
+          python-version: 2.7
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.5
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - uses: actions/setup-python@v2
+        with:
+          python-version: pypy
+      - uses: actions/setup-python@v2
+        with:
+          python-version: pypy3
       - run: pip install tox
       - run: tox
