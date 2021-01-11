@@ -2,10 +2,7 @@ from __future__ import absolute_import, division, unicode_literals
 
 from types import ModuleType
 
-try:
-    from collections.abc import Mapping
-except ImportError:
-    from collections import Mapping
+from collections.abc import Mapping
 
 from six import text_type, PY3
 

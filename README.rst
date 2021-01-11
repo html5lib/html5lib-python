@@ -91,7 +91,7 @@ More documentation is available at https://html5lib.readthedocs.io/.
 Installation
 ------------
 
-html5lib works on CPython 2.7+, CPython 3.5+ and PyPy. To install:
+html5lib works on CPython 3.6+ and PyPy3. To install:
 
 .. code-block:: bash
 

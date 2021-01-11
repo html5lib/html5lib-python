@@ -36,8 +36,7 @@ def parse():
                 pass
         elif f == '-':
             f = sys.stdin
-            if sys.version_info[0] >= 3:
-                encoding = None
+            encoding = None
         else:
             try:
                 # Try opening from file system
@@ -135,11 +134,7 @@ def printOutput(parser, document, opts):
                 kwargs["sanitize"] = True
 
             tokens = treewalkers.getTreeWalker(opts.treebuilder)(document)
-            if sys.version_info[0] >= 3:
-                encoding = None
-            else:
-                encoding = "utf-8"
-            for text in serializer.HTMLSerializer(**kwargs).serialize(tokens, encoding=encoding):
+            for text in serializer.HTMLSerializer(**kwargs).serialize(tokens, encoding=None):
                 sys.stdout.write(text)
             if not text.endswith('\n'):
                 sys.stdout.write('\n')

@@ -14,12 +14,8 @@ from __future__ import absolute_import, division, unicode_literals
 
 import warnings
 import re
-import sys
 
-try:
-    from collections.abc import MutableMapping
-except ImportError:
-    from collections import MutableMapping
+from collections.abc import MutableMapping
 
 from . import base
 from ..constants import DataLossWarning
@@ -89,7 +85,7 @@ def testSerializer(element):
                     next_element = next_element.getnext()
             elif isinstance(element, str) or isinstance(element, bytes):
                 # Text in a fragment
-                assert isinstance(element, str) or sys.version_info[0] == 2
+                assert isinstance(element, str)
                 rv.append("|%s\"%s\"" % (' ' * indent, element))
             else:
                 # Fragment case

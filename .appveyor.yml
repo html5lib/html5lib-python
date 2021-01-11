@@ -3,10 +3,6 @@ environment:
   global:
     PATH: "C:\\Python27\\Scripts\\;%PATH%"
   matrix:
-    - TOXENV: py27-base
-    - TOXENV: py27-optional
-    - TOXENV: py35-base
-    - TOXENV: py35-optional
     - TOXENV: py36-base
     - TOXENV: py36-optional
     - TOXENV: py37-base
