@@ -16,4 +16,6 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - run: pip install tox
-      - run: tox
+      - run: tox --parallel
+        env:
+          TOX_PARALLEL_NO_SPINNER: 1
