@@ -5,31 +5,16 @@ jobs:
     # Credit: https://github.community/t/duplicate-checks-on-push-and-pull-request-simultaneous-event/18012
     if: github.event.push || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: [2.7, 3.5, 3.6, 3.7, 3.8, pypy-2.7, pypy3
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: true
       - uses: actions/setup-python@v2
         with:
-          python-version: 2.7
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.5
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.6
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.7
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-      - uses: actions/setup-python@v2
-        with:
-          python-version: pypy-2.7
-      - uses: actions/setup-python@v2
-        with:
-          python-version: pypy3
+          python-version: ${{ matrix.python }}
       - run: pip install tox
       - run: tox --parallel
         env:
