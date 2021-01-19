@@ -17,3 +17,5 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: pip install tox
       - run: tox -e py
+      - if: ${{ always() }}
+        run: python debug-info.py
