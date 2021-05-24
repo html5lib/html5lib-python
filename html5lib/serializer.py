@@ -1,4 +1,3 @@
-
 import re
 
 from codecs import register_error, xmlcharrefreplace_errors

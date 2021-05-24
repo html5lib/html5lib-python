@@ -33,7 +33,7 @@ treeTypes['ElementTree'] = {
 }
 
 try:
-    import xml.etree.cElementTree as cElementTree  # noqa
+    import xml.etree.ElementTree as cElementTree  # noqa
 except ImportError:
     treeTypes['cElementTree'] = None
 else:

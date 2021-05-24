@@ -49,9 +49,9 @@ def test_description(name, good):
     semicolon_text = {True: "with a semi-colon",
                       False: "without a semi-colon"}[with_semicolon]
     if good:
-        text = "Named entity: {} {}".format(name, semicolon_text)
+        text = f"Named entity: {name} {semicolon_text}"
     else:
-        text = "Bad named entity: {} {}".format(name, semicolon_text)
+        text = f"Bad named entity: {name} {semicolon_text}"
     return text
 
 

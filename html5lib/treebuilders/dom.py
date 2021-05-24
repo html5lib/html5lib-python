@@ -212,7 +212,7 @@ def getDomBuilder(DomImplementation):
                         value = attr.value
                         ns = attr.namespaceURI
                         if ns:
-                            name = "{} {}".format(constants.prefixes[ns], attr.localName)
+                            name = f"{constants.prefixes[ns]} {attr.localName}"
                         else:
                             name = attr.nodeName
                         attributes.append((name, value))

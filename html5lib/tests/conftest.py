@@ -69,7 +69,7 @@ def pytest_configure(config):
                             try:
                                 installed = pkg_resources.working_set.find(req)
                             except pkg_resources.VersionConflict:
-                                msgs.append("Outdated version of {} installed, need {}".format(req.name, spec))
+                                msgs.append(f"Outdated version of {req.name} installed, need {spec}")
                             else:
                                 if not installed:
                                     msgs.append("Need %s" % spec)
@@ -78,7 +78,7 @@ def pytest_configure(config):
         import xml.etree.ElementTree as ElementTree
 
         try:
-            import xml.etree.cElementTree as cElementTree
+            import xml.etree.ElementTree as cElementTree
         except ImportError:
             msgs.append("cElementTree unable to be imported")
         else:

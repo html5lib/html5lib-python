@@ -99,7 +99,7 @@ def test_treewalker_six_mix(intext, expected, attrs_to_add, tree):
     output = treewalkers.pprint(treeClass["walker"](document))
     output = attrlist.sub(sortattrs, output)
     if output not in expected:
-        raise AssertionError("TreewalkerEditTest: {}\nExpected:\n{}\nReceived:\n{}".format(treeName, expected, output))
+        raise AssertionError(f"TreewalkerEditTest: {treeName}\nExpected:\n{expected}\nReceived:\n{output}")
 
 
 @pytest.mark.parametrize("tree,char", itertools.product(sorted(treeTypes.items()), ["x", "\u1234"]))
@@ -149,7 +149,7 @@ def test_maintain_attribute_order(treeName):
 
     # generate loads to maximize the chance a hash-based mutation will occur
     attrs = [(chr(x), str(i)) for i, x in enumerate(range(ord('a'), ord('z')))]
-    data = "<span " + " ".join("{}='{}'".format(x, i) for x, i in attrs) + ">"
+    data = "<span " + " ".join(f"{x}='{i}'" for x, i in attrs) + ">"
 
     parser = html5parser.HTMLParser(tree=treeAPIs["builder"])
     document = parser.parseFragment(data)

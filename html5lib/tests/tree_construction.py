@@ -119,7 +119,7 @@ class ParserTest(pytest.Item):
 
         errStr = []
         for (line, col), errorcode, datavars in p.errors:
-            assert isinstance(datavars, dict), "{}, {}".format(errorcode, repr(datavars))
+            assert isinstance(datavars, dict), f"{errorcode}, {repr(datavars)}"
             errStr.append("Line: %i Col: %i %s" % (line, col,
                                                    constants.E[errorcode] % datavars))
 

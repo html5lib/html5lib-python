@@ -1,4 +1,3 @@
-
 from ..constants import scopingElements, tableInsertModeElements, namespaces
 
 # The scope markers are inserted when entering object elements,
@@ -41,11 +40,11 @@ class Node:
         self._flags = []
 
     def __str__(self):
-        attributesStr = " ".join("{}=\"{}\"".format(name, value)
+        attributesStr = " ".join(f"{name}=\"{value}\""
                                  for name, value in
                                  self.attributes.items())
         if attributesStr:
-            return "<{} {}>".format(self.name, attributesStr)
+            return f"<{self.name} {attributesStr}>"
         else:
             return "<%s>" % (self.name)
 

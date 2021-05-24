@@ -80,7 +80,7 @@ def parse():
         if document:
             printOutput(p, document, opts)
             t2 = time.time()
-            sys.stderr.write("\n\nRun took: {:f}s (plus {:f}s to print the output)".format(t1 - t0, t2 - t1))
+            sys.stderr.write(f"\n\nRun took: {t1 - t0:f}s (plus {t2 - t1:f}s to print the output)")
         else:
             sys.stderr.write("\n\nRun took: %fs" % (t1 - t0))
     else:

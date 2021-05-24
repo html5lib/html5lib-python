@@ -108,7 +108,7 @@ def pprint(walker):
                         ns = constants.prefixes[namespace]
                     else:
                         ns = namespace
-                    name = "{} {}".format(ns, localname)
+                    name = f"{ns} {localname}"
                 else:
                     name = localname
                 output.append("{}{}=\"{}\"".format(" " * indent, name, value))

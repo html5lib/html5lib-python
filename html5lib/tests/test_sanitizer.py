@@ -58,19 +58,19 @@ def param_sanitizer():
         if tag_name == 'image':
             yield ("test_should_allow_%s_tag" % tag_name,
                    "<img title=\"1\"/>foo &lt;bad&gt;bar&lt;/bad&gt; baz",
-                   "<{} title='1'>foo <bad>bar</bad> baz</{}>".format(tag_name, tag_name))
+                   f"<{tag_name} title='1'>foo <bad>bar</bad> baz</{tag_name}>")
         elif tag_name == 'br':
             yield ("test_should_allow_%s_tag" % tag_name,
                    "<br title=\"1\"/>foo &lt;bad&gt;bar&lt;/bad&gt; baz<br/>",
-                   "<{} title='1'>foo <bad>bar</bad> baz</{}>".format(tag_name, tag_name))
+                   f"<{tag_name} title='1'>foo <bad>bar</bad> baz</{tag_name}>")
         elif tag_name in constants.voidElements:
             yield ("test_should_allow_%s_tag" % tag_name,
                    "<%s title=\"1\"/>foo &lt;bad&gt;bar&lt;/bad&gt; baz" % tag_name,
-                   "<{} title='1'>foo <bad>bar</bad> baz</{}>".format(tag_name, tag_name))
+                   f"<{tag_name} title='1'>foo <bad>bar</bad> baz</{tag_name}>")
         else:
             yield ("test_should_allow_%s_tag" % tag_name,
-                   "<{} title=\"1\">foo &lt;bad&gt;bar&lt;/bad&gt; baz</{}>".format(tag_name, tag_name),
-                   "<{} title='1'>foo <bad>bar</bad> baz</{}>".format(tag_name, tag_name))
+                   f"<{tag_name} title=\"1\">foo &lt;bad&gt;bar&lt;/bad&gt; baz</{tag_name}>",
+                   f"<{tag_name} title='1'>foo <bad>bar</bad> baz</{tag_name}>")
 
     for ns, attribute_name in sanitizer.allowed_attributes:
         if ns is not None:
@@ -83,16 +83,16 @@ def param_sanitizer():
         if attribute_name in sanitizer.attr_val_is_uri:
             attribute_value = '%s://sub.domain.tld/path/object.ext' % sanitizer.allowed_protocols[0]
         yield ("test_should_allow_%s_attribute" % attribute_name,
-               "<p {}=\"{}\">foo &lt;bad&gt;bar&lt;/bad&gt; baz</p>".format(attribute_name, attribute_value),
-               "<p {}='{}'>foo <bad>bar</bad> baz</p>".format(attribute_name, attribute_value))
+               f"<p {attribute_name}=\"{attribute_value}\">foo &lt;bad&gt;bar&lt;/bad&gt; baz</p>",
+               f"<p {attribute_name}='{attribute_value}'>foo <bad>bar</bad> baz</p>")
 
     for protocol in sanitizer.allowed_protocols:
         rest_of_uri = '//sub.domain.tld/path/object.ext'
         if protocol == 'data':
             rest_of_uri = 'image/png;base64,aGVsbG8gd29ybGQ='
         yield ("test_should_allow_uppercase_%s_uris" % protocol,
-               "<img src=\"{}:{}\">foo</a>".format(protocol, rest_of_uri),
-               """<img src="{}:{}">foo</a>""".format(protocol, rest_of_uri))
+               f"<img src=\"{protocol}:{rest_of_uri}\">foo</a>",
+               f"""<img src="{protocol}:{rest_of_uri}">foo</a>""")
 
     for protocol in sanitizer.allowed_protocols:
         rest_of_uri = '//sub.domain.tld/path/object.ext'
@@ -100,8 +100,8 @@ def param_sanitizer():
             rest_of_uri = 'image/png;base64,aGVsbG8gd29ybGQ='
         protocol = protocol.upper()
         yield ("test_should_allow_uppercase_%s_uris" % protocol,
-               "<img src=\"{}:{}\">foo</a>".format(protocol, rest_of_uri),
-               """<img src="{}:{}">foo</a>""".format(protocol, rest_of_uri))
+               f"<img src=\"{protocol}:{rest_of_uri}\">foo</a>",
+               f"""<img src="{protocol}:{rest_of_uri}">foo</a>""")
 
 
 @pytest.mark.parametrize("expected, input",

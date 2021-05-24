@@ -36,7 +36,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             if namespace is None:
                 etree_tag = name
             else:
-                etree_tag = "{{{}}}{}".format(namespace, name)
+                etree_tag = f"{{{namespace}}}{name}"
             return etree_tag
 
         def _setName(self, name):
@@ -68,7 +68,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                 # allocation on average
                 for key, value in attributes.items():
                     if isinstance(key, tuple):
-                        name = "{{{}}}{}".format(key[2], key[1])
+                        name = f"{{{key[2]}}}{key[1]}"
                     else:
                         name = key
                     el_attrib[name] = value
@@ -208,7 +208,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                     rv.append("""<!DOCTYPE %s "%s" "%s">""" %
                               (element.text, publicId, systemId))
                 else:
-                    rv.append("<!DOCTYPE {}>".format(element.text))
+                    rv.append(f"<!DOCTYPE {element.text}>")
             elif element.tag == "DOCUMENT_ROOT":
                 rv.append("#document")
                 if element.text is not None:
@@ -221,7 +221,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                 rv.append("|{}<!-- {} -->".format(' ' * indent, element.text))
             else:
                 assert isinstance(element.tag, str), \
-                    "Expected unicode, got {}, {}".format(type(element.tag), element.tag)
+                    f"Expected unicode, got {type(element.tag)}, {element.tag}"
                 nsmatch = tag_regexp.match(element.tag)
 
                 if nsmatch is None:
@@ -229,7 +229,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                 else:
                     ns, name = nsmatch.groups()
                     prefix = constants.prefixes[ns]
-                    name = "{} {}".format(prefix, name)
+                    name = f"{prefix} {name}"
                 rv.append("|{}<{}>".format(' ' * indent, name))
 
                 if hasattr(element, "attrib"):
@@ -239,7 +239,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                         if nsmatch is not None:
                             ns, name = nsmatch.groups()
                             prefix = constants.prefixes[ns]
-                            attr_string = "{} {}".format(prefix, name)
+                            attr_string = f"{prefix} {name}"
                         else:
                             attr_string = name
                         attributes.append((attr_string, value))
@@ -273,7 +273,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                     rv.append("""<!DOCTYPE %s PUBLIC "%s" "%s">""" %
                               (element.text, publicId, systemId))
                 else:
-                    rv.append("<!DOCTYPE {}>".format(element.text))
+                    rv.append(f"<!DOCTYPE {element.text}>")
             elif element.tag == "DOCUMENT_ROOT":
                 if element.text is not None:
                     rv.append(element.text)
@@ -286,23 +286,23 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                     serializeElement(child)
 
             elif element.tag == ElementTreeCommentType:
-                rv.append("<!--{}-->".format(element.text))
+                rv.append(f"<!--{element.text}-->")
             else:
                 # This is assumed to be an ordinary element
                 if not element.attrib:
-                    rv.append("<{}>".format(filter.fromXmlName(element.tag)))
+                    rv.append(f"<{filter.fromXmlName(element.tag)}>")
                 else:
                     attr = " ".join("{}=\"{}\"".format(
                         filter.fromXmlName(name), value)
                         for name, value in element.attrib.items())
-                    rv.append("<{} {}>".format(element.tag, attr))
+                    rv.append(f"<{element.tag} {attr}>")
                 if element.text:
                     rv.append(element.text)
 
                 for child in element:
                     serializeElement(child)
 
-                rv.append("</{}>".format(element.tag))
+                rv.append(f"</{element.tag}>")
 
             if element.tail:
                 rv.append(element.tail)

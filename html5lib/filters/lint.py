@@ -1,4 +1,3 @@
-
 from . import base
 from ..constants import namespaces, voidElements
 
@@ -56,7 +55,7 @@ class Filter(base.Filter):
                 assert isinstance(name, str)
                 assert name != ""
                 if (not namespace or namespace == namespaces["html"]) and name in voidElements:
-                    assert False, "Void element reported as EndTag token: {tag}".format(tag=name)
+                    assert False, f"Void element reported as EndTag token: {name}"
                 elif self.require_matching_tags:
                     start = open_elements.pop()
                     assert start == (namespace, name)
@@ -85,6 +84,6 @@ class Filter(base.Filter):
                 assert isinstance(token["data"], str)
 
             else:
-                assert False, "Unknown token type: {type}".format(type=type)
+                assert False, f"Unknown token type: {type}"
 
             yield token

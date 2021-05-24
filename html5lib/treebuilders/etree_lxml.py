@@ -115,7 +115,7 @@ def testSerializer(element):
                         ns, name = nsmatch.groups()
                         name = infosetFilter.fromXmlName(name)
                         prefix = constants.prefixes[ns]
-                        attr_string = "{} {}".format(prefix, name)
+                        attr_string = f"{prefix} {name}"
                     else:
                         attr_string = infosetFilter.fromXmlName(name)
                     attributes.append((attr_string, value))
@@ -150,23 +150,23 @@ def tostring(element):
             serializeElement(element.getroot())
 
         elif element.tag == comment_type:
-            rv.append("<!--{}-->".format(element.text))
+            rv.append(f"<!--{element.text}-->")
 
         else:
             # This is assumed to be an ordinary element
             if not element.attrib:
-                rv.append("<{}>".format(element.tag))
+                rv.append(f"<{element.tag}>")
             else:
-                attr = " ".join("{}=\"{}\"".format(name, value)
+                attr = " ".join(f"{name}=\"{value}\""
                                 for name, value in element.attrib.items())
-                rv.append("<{} {}>".format(element.tag, attr))
+                rv.append(f"<{element.tag} {attr}>")
             if element.text:
                 rv.append(element.text)
 
             for child in element:
                 serializeElement(child)
 
-            rv.append("</{}>".format(element.tag))
+            rv.append(f"</{element.tag}>")
 
         if hasattr(element, "tail") and element.tail:
             rv.append(element.tail)
@@ -195,7 +195,7 @@ class TreeBuilder(base.TreeBuilder):
 
             def _coerceKey(self, key):
                 if isinstance(key, tuple):
-                    name = "{{{}}}{}".format(key[2], infosetFilter.coerceAttribute(key[1]))
+                    name = f"{{{key[2]}}}{infosetFilter.coerceAttribute(key[1])}"
                 else:
                     name = infosetFilter.coerceAttribute(key)
                 return name
@@ -371,7 +371,7 @@ class TreeBuilder(base.TreeBuilder):
         if namespace is None:
             etree_tag = name
         else:
-            etree_tag = "{{{}}}{}".format(namespace, name)
+            etree_tag = f"{{{namespace}}}{name}"
         root.tag = etree_tag
 
         # Add the root element to the internal child/open data structures

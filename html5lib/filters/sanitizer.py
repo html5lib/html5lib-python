@@ -872,7 +872,7 @@ class Filter(base.Filter):
             assert token_type in ("StartTag", "EmptyTag")
             attrs = []
             for (ns, name), v in token["data"].items():
-                attrs.append(' {}="{}"'.format(name if ns is None else "{}:{}".format(prefixes[ns], name), escape(v)))
+                attrs.append(' {}="{}"'.format(name if ns is None else f"{prefixes[ns]}:{name}", escape(v)))
             token["data"] = "<{}{}>".format(token["name"], ''.join(attrs))
         else:
             token["data"] = "<%s>" % token["name"]
