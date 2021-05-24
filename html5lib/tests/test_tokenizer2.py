@@ -1,6 +1,5 @@
 import io
 
-from six import unichr, text_type
 
 from html5lib._tokenizer import HTMLTokenizer
 from html5lib.constants import tokenTypes

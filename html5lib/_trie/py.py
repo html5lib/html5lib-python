@@ -1,4 +1,3 @@
-from six import text_type
 
 from bisect import bisect_left
 

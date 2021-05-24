@@ -10,8 +10,7 @@ if Bleach is unsuitable for your needs.
 import re
 import warnings
 from xml.sax.saxutils import escape, unescape
-
-from six.moves import urllib_parse as urlparse
+import urllib.parse
 
 from . import base
 from ..constants import namespaces, prefixes
@@ -837,7 +836,7 @@ class Filter(base.Filter):
                 # remove replacement characters from unescaped characters
                 val_unescaped = val_unescaped.replace("\ufffd", "")
                 try:
-                    uri = urlparse.urlparse(val_unescaped)
+                    uri = urllib.parse.urlparse(val_unescaped)
                 except ValueError:
                     uri = None
                     del attrs[attr]

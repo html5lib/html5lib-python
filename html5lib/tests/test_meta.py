@@ -1,4 +1,3 @@
-import six
 from unittest.mock import Mock
 
 from . import support
@@ -25,7 +24,6 @@ def test_errorMessage():
     r = support.errorMessage(input, expected, actual)
 
     # Assertions!
-    assert six.PY3
     assert "Input:\n1\nExpected:\n2\nReceived\n3\n" == r
 
     assert input.__repr__.call_count == 1

@@ -4,7 +4,6 @@ import warnings
 import re
 
 import pytest
-from six import unichr
 
 from html5lib._tokenizer import HTMLTokenizer
 from html5lib import constants, _utils

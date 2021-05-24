@@ -1,6 +1,5 @@
 # pylint:disable=protected-access
 
-from six import text_type
 
 import re
 

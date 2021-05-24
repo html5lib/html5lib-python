@@ -1,7 +1,6 @@
 import itertools
 import sys
 
-from six import unichr, text_type
 import pytest
 
 try:

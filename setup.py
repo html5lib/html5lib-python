@@ -98,7 +98,6 @@ setup(name='html5lib',
       maintainer_email='james@hoppipolla.co.uk',
       packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
       install_requires=[
-          'six>=1.9',
           'webencodings',
       ],
       python_requires=">=3.6",

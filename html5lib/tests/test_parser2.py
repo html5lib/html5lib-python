@@ -1,5 +1,3 @@
-from six import PY2, text_type
-
 import io
 
 from . import support  # noqa
@@ -72,11 +70,6 @@ def test_debug_log():
                 ('dataState', 'InBodyPhase', 'InBodyPhase', 'processCharacters', {'type': 'Characters'}),
                 ('dataState', 'InBodyPhase', 'InBodyPhase', 'processEndTag', {'name': 'p', 'type': 'EndTag'}),
                 ('dataState', 'InBodyPhase', 'InBodyPhase', 'processCharacters', {'type': 'Characters'})]
-
-    if PY2:
-        for i, log in enumerate(expected):
-            log = [x.encode("ascii") if isinstance(x, str) else x for x in log]
-            expected[i] = tuple(log)
 
     assert parser.log == expected
 

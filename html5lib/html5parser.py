@@ -1,4 +1,3 @@
-from six import with_metaclass, viewkeys
 
 import types
 

@@ -23,7 +23,6 @@ from . import etree as etree_builders
 from .. import _ihatexml
 
 import lxml.etree as etree
-from six import PY3, binary_type
 
 
 fullTree = True
@@ -203,8 +202,6 @@ class TreeBuilder(base.TreeBuilder):
 
             def __getitem__(self, key):
                 value = self._element._element.attrib[self._coerceKey(key)]
-                if not PY3 and isinstance(value, bytes):
-                    value = value.decode("ascii")
                 return value
 
             def __setitem__(self, key, value):

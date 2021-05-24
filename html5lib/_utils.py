@@ -2,7 +2,6 @@ from types import ModuleType
 
 from collections.abc import Mapping
 
-from six import text_type, PY3
 
 import xml.etree.ElementTree as default_etree
 

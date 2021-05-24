@@ -10,7 +10,7 @@ cache: pip
 
 env:
   global:
-    - TOXENV=base,optional,six19-optional
+    - TOXENV=base,optional
 
 install:
   - pip install tox

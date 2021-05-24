@@ -1,4 +1,3 @@
-from six import text_type
 
 import re
 

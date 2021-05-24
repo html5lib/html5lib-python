@@ -1,4 +1,3 @@
-from six import text_type
 
 from . import base
 from ..constants import namespaces, voidElements
