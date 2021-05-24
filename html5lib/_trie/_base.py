@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
-
 from collections.abc import Mapping
 
 
@@ -8,7 +6,7 @@ class Trie(Mapping):
 
     def keys(self, prefix=None):
         # pylint:disable=arguments-differ
-        keys = super(Trie, self).keys()
+        keys = super().keys()
 
         if prefix is None:
             return set(keys)

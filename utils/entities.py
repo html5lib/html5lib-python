@@ -49,9 +49,9 @@ def test_description(name, good):
     semicolon_text = {True: "with a semi-colon",
                       False: "without a semi-colon"}[with_semicolon]
     if good:
-        text = "Named entity: %s %s" % (name, semicolon_text)
+        text = "Named entity: {} {}".format(name, semicolon_text)
     else:
-        text = "Bad named entity: %s %s" % (name, semicolon_text)
+        text = "Bad named entity: {} {}".format(name, semicolon_text)
     return text
 
 
@@ -80,7 +80,7 @@ def subentity_exists(entity_name, entities):
 
 
 def make_entities_code(entities):
-    entities_text = "\n".join("    \"%s\": u\"%s\"," % (
+    entities_text = "\n".join("    \"{}\": u\"{}\",".format(
         name, entities[name].encode(
             "unicode-escape").replace("\"", "\\\""))
         for name in sorted(entities.keys()))

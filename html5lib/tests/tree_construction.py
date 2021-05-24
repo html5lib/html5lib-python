@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
-
 import itertools
 import re
 import warnings
@@ -31,14 +29,13 @@ class TreeConstructionFile(pytest.File):
 
 class TreeConstructionTest(pytest.Collector):
     def __init__(self, name, parent=None, config=None, session=None, testdata=None):
-        super(TreeConstructionTest, self).__init__(name, parent, config, session)
+        super().__init__(name, parent, config, session)
         self.testdata = testdata
 
     def collect(self):
         for treeName, treeAPIs in sorted(treeTypes.items()):
-            for x in itertools.chain(self._getParserTests(treeName, treeAPIs),
-                                     self._getTreeWalkerTests(treeName, treeAPIs)):
-                yield x
+            yield from itertools.chain(self._getParserTests(treeName, treeAPIs),
+                                       self._getTreeWalkerTests(treeName, treeAPIs))
 
     def _getParserTests(self, treeName, treeAPIs):
         if treeAPIs is not None and "adapter" in treeAPIs:
@@ -79,7 +76,7 @@ namespaceExpected = re.compile(r"^(\s*)<(\S+)>", re.M).sub
 
 class ParserTest(pytest.Item):
     def __init__(self, name, parent, test, treeClass, namespaceHTMLElements):
-        super(ParserTest, self).__init__(name, parent)
+        super().__init__(name, parent)
         self.test = test
         self.treeClass = treeClass
         self.namespaceHTMLElements = namespaceHTMLElements
@@ -122,7 +119,7 @@ class ParserTest(pytest.Item):
 
         errStr = []
         for (line, col), errorcode, datavars in p.errors:
-            assert isinstance(datavars, dict), "%s, %s" % (errorcode, repr(datavars))
+            assert isinstance(datavars, dict), "{}, {}".format(errorcode, repr(datavars))
             errStr.append("Line: %i Col: %i %s" % (line, col,
                                                    constants.E[errorcode] % datavars))
 
@@ -144,7 +141,7 @@ class ParserTest(pytest.Item):
 
 class TreeWalkerTest(pytest.Item):
     def __init__(self, name, parent, test, treeAPIs):
-        super(TreeWalkerTest, self).__init__(name, parent)
+        super().__init__(name, parent)
         self.test = test
         self.treeAPIs = treeAPIs
 

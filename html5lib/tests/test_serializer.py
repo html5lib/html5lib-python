@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
-
 import os
 import json
 
@@ -221,6 +219,6 @@ def test_serializer(input, expected, options):
 
     result = serialize_html(input, options)
     if len(expected) == 1:
-        assert expected[0] == result, "Expected:\n%s\nActual:\n%s\nOptions:\n%s" % (expected[0], result, str(options))
+        assert expected[0] == result, "Expected:\n{}\nActual:\n{}\nOptions:\n{}".format(expected[0], result, str(options))
     elif result not in expected:
-        assert False, "Expected: %s, Received: %s" % (expected, result)
+        assert False, "Expected: {}, Received: {}".format(expected, result)

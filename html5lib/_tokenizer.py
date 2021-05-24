@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
-
 from six import unichr as chr
 
 from collections import deque, OrderedDict
@@ -24,7 +22,7 @@ else:
     attributeMap = OrderedDict
 
 
-class HTMLTokenizer(object):
+class HTMLTokenizer:
     """ This class takes care of tokenizing HTML.
 
     * self.currentToken
@@ -50,7 +48,7 @@ class HTMLTokenizer(object):
 
         # The current token being created
         self.currentToken = None
-        super(HTMLTokenizer, self).__init__()
+        super().__init__()
 
     def __iter__(self):
         """ This is where the magic happens.

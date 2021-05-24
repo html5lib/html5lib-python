@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
-
 from six import PY2, text_type
 
 import io
@@ -39,7 +37,7 @@ def test_namespace_html_elements_0_etree():
     doc = parse("<html></html>",
                 treebuilder="etree",
                 namespaceHTMLElements=True)
-    assert doc.tag == "{%s}html" % (namespaces["html"],)
+    assert doc.tag == "{{{}}}html".format(namespaces["html"])
 
 
 def test_namespace_html_elements_1_etree():
@@ -77,7 +75,7 @@ def test_debug_log():
 
     if PY2:
         for i, log in enumerate(expected):
-            log = [x.encode("ascii") if isinstance(x, text_type) else x for x in log]
+            log = [x.encode("ascii") if isinstance(x, str) else x for x in log]
             expected[i] = tuple(log)
 
     assert parser.log == expected

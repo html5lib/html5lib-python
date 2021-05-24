@@ -1,4 +1,3 @@
-from __future__ import print_function
 import os.path
 import sys
 
@@ -54,7 +53,7 @@ def pytest_configure(config):
         # Check for optional requirements
         req_file = os.path.join(_root, "requirements-optional.txt")
         if os.path.exists(req_file):
-            with open(req_file, "r") as fp:
+            with open(req_file) as fp:
                 for line in fp:
                     if (line.strip() and
                         not (line.startswith("-r") or
@@ -70,7 +69,7 @@ def pytest_configure(config):
                             try:
                                 installed = pkg_resources.working_set.find(req)
                             except pkg_resources.VersionConflict:
-                                msgs.append("Outdated version of %s installed, need %s" % (req.name, spec))
+                                msgs.append("Outdated version of {} installed, need {}".format(req.name, spec))
                             else:
                                 if not installed:
                                     msgs.append("Need %s" % spec)

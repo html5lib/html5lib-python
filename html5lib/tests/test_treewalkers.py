@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
-
 import itertools
 import sys
 
@@ -74,11 +72,11 @@ def param_treewalker_six_mix():
     # fragment but not using the u'' syntax nor importing unicode_literals
     sm_tests = [
         ('<a href="http://example.com">Example</a>',
-         [(str('class'), str('test123'))],
+         [('class', 'test123')],
          '<a>\n  class="test123"\n  href="http://example.com"\n  "Example"'),
 
         ('<link href="http://example.com/cow">',
-         [(str('rel'), str('alternate'))],
+         [('rel', 'alternate')],
          '<link>\n  href="http://example.com/cow"\n  rel="alternate"\n  "Example"')
     ]
 
@@ -102,7 +100,7 @@ def test_treewalker_six_mix(intext, expected, attrs_to_add, tree):
     output = treewalkers.pprint(treeClass["walker"](document))
     output = attrlist.sub(sortattrs, output)
     if output not in expected:
-        raise AssertionError("TreewalkerEditTest: %s\nExpected:\n%s\nReceived:\n%s" % (treeName, expected, output))
+        raise AssertionError("TreewalkerEditTest: {}\nExpected:\n{}\nReceived:\n{}".format(treeName, expected, output))
 
 
 @pytest.mark.parametrize("tree,char", itertools.product(sorted(treeTypes.items()), ["x", "\u1234"]))
@@ -151,8 +149,8 @@ def test_maintain_attribute_order(treeName):
         pytest.skip("Treebuilder not loaded")
 
     # generate loads to maximize the chance a hash-based mutation will occur
-    attrs = [(unichr(x), text_type(i)) for i, x in enumerate(range(ord('a'), ord('z')))]
-    data = "<span " + " ".join("%s='%s'" % (x, i) for x, i in attrs) + ">"
+    attrs = [(chr(x), str(i)) for i, x in enumerate(range(ord('a'), ord('z')))]
+    data = "<span " + " ".join("{}='{}'".format(x, i) for x, i in attrs) + ">"
 
     parser = html5parser.HTMLParser(tree=treeAPIs["builder"])
     document = parser.parseFragment(data)

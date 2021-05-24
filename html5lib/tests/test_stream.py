@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
-
 from . import support  # noqa
 
 import codecs
@@ -105,7 +103,7 @@ def test_char_ascii():
 
 
 def test_char_utf8():
-    stream = HTMLInputStream('\u2018'.encode('utf-8'), override_encoding='utf-8')
+    stream = HTMLInputStream('\u2018'.encode(), override_encoding='utf-8')
     assert stream.charEncoding[0].name == 'utf-8'
     assert stream.char() == '\u2018'
 
@@ -186,7 +184,7 @@ def test_python_issue_20007():
     Make sure we have a work-around for Python bug #20007
     http://bugs.python.org/issue20007
     """
-    class FakeSocket(object):
+    class FakeSocket:
         def makefile(self, _mode, _bufsize=None):
             # pylint:disable=unused-argument
             return BytesIO(b"HTTP/1.1 200 Ok\r\n\r\nText")
@@ -205,7 +203,7 @@ def test_python_issue_20007_b():
     if six.PY2:
         return
 
-    class FakeSocket(object):
+    class FakeSocket:
         def makefile(self, _mode, _bufsize=None):
             # pylint:disable=unused-argument
             return BytesIO(b"HTTP/1.1 200 Ok\r\n\r\nText")
