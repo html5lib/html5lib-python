@@ -127,7 +127,7 @@ Please report any bugs on the `issue tracker
 Tests
 -----
 
-Unit tests require the ``pytest`` and ``mock`` libraries and can be
+Unit tests require the ``pytest`` library and can be
 run using the ``py.test`` command in the root directory.
 
 Test data are contained in a separate `html5lib-tests
