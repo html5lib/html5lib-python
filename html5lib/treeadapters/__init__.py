@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2006-2021 html5lib contributors. See AUTHORS.rst
+#
+# SPDX-License-Identifier: MIT
+
 """Tree adapters let you convert from one tree structure to another
 
 Example:

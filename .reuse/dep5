@@ -1,0 +1,5 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+
+Files: benchmarks/data/wpt/*
+Copyright: 2019 web-platform-tests contributors
+License: BSD-3-Clause

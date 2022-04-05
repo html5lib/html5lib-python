@@ -1,3 +1,7 @@
+REM SPDX-FileCopyrightText: 2006-2021 html5lib contributors. See AUTHORS.rst
+REM
+REM SPDX-License-Identifier: MIT
+
 @ECHO OFF
 
 REM Command file for Sphinx documentation

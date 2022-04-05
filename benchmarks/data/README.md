@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2006-2021 html5lib contributors. See AUTHORS.rst
+
+SPDX-License-Identifier: MIT
+-->
+
 The files in this data are derived from:
 
  * `html.html`: from [html](http://github.com/whatwg/html), revision

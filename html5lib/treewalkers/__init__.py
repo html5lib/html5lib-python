@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2006-2021 html5lib contributors. See AUTHORS.rst
+#
+# SPDX-License-Identifier: MIT
+
 """A collection of modules for iterating through different kinds of
 tree, generating tokens identical to those produced by the tokenizer
 module.

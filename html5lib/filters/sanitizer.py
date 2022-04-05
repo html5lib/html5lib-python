@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2006-2021 html5lib contributors. See AUTHORS.rst
+#
+# SPDX-License-Identifier: MIT
+
 """Deprecated from html5lib 1.1.
 
 See `here <https://github.com/html5lib/html5lib-python/issues/443>`_ for

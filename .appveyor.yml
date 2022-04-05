@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2006-2021 html5lib contributors. See AUTHORS.rst
+#
+# SPDX-License-Identifier: MIT
+
 # To activate, change the Appveyor settings to use `.appveyor.yml`.
 environment:
   global:

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2006-2021 html5lib contributors. See AUTHORS.rst
+#
+# SPDX-License-Identifier: MIT
+
 """Module for supporting the lxml.etree library. The idea here is to use as much
 of the native library as possible, without using fragile hacks like custom element
 names that break between releases. The downside of this is that we cannot represent
