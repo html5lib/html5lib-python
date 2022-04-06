@@ -1,7 +1,3 @@
-# SPDX-FileCopyrightText: 2006-2021 html5lib contributors. See AUTHORS.rst
-#
-# SPDX-License-Identifier: MIT
-
 pytest-expect file v1
 (2, 7, 18, 'final', 0)
 b'html5lib/tests/test_encoding.py::test_parser_encoding[<!DOCTYPE HTML>\\n<script>document.write(\'<meta charset="ISO-8859-\' + \'2">\')</script>-iso-8859-2]': FAIL
