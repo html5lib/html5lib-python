@@ -89,7 +89,7 @@ def pytest_configure(config):
         pytest.exit("\n".join(msgs))
 
 
-def pytest_collect_file(path, parent):
+def pytest_collect_file(file_path, path, parent):
     dir = os.path.abspath(path.dirname)
     dir_and_parents = set()
     while dir not in dir_and_parents:
@@ -98,13 +98,13 @@ def pytest_collect_file(path, parent):
 
     if _tree_construction in dir_and_parents:
         if path.ext == ".dat":
-            return TreeConstructionFile.from_parent(parent, fspath=path)
+            return TreeConstructionFile.from_parent(parent, path=file_path)
     elif _tokenizer in dir_and_parents:
         if path.ext == ".test":
-            return TokenizerFile.from_parent(parent, fspath=path)
+            return TokenizerFile.from_parent(parent, path=file_path)
     elif _sanitizer_testdata in dir_and_parents:
         if path.ext == ".dat":
-            return SanitizerFile.from_parent(parent, fspath=path)
+            return SanitizerFile.from_parent(parent, path=file_path)
 
 
 # Tiny wrapper to allow .from_parent constructors on older pytest for PY27
