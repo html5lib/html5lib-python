@@ -1,9 +1,8 @@
 html5lib
 ========
 
-.. image:: https://travis-ci.org/html5lib/html5lib-python.svg?branch=master
-    :target: https://travis-ci.org/html5lib/html5lib-python
-
+.. image:: https://github.com/html5lib/html5lib-python/actions/workflows/python-tox.yml/badge.svg
+    :target: https://github.com/html5lib/html5lib-python/actions/workflows/python-tox.yml
 
 html5lib is a pure-python library for parsing HTML. It is designed to
 conform to the WHATWG HTML specification, as is implemented by all major
