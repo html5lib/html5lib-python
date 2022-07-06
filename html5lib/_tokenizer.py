@@ -1,5 +1,4 @@
-from collections import deque, OrderedDict
-from sys import version_info
+from collections import deque
 
 from .constants import spaceCharacters
 from .constants import entities
@@ -13,11 +12,6 @@ from ._inputstream import HTMLInputStream
 from ._trie import Trie
 
 entitiesTrie = Trie(entities)
-
-if version_info >= (3, 7):
-    attributeMap = dict
-else:
-    attributeMap = OrderedDict
 
 
 class HTMLTokenizer:
@@ -232,7 +226,7 @@ class HTMLTokenizer:
             token["name"] = token["name"].translate(asciiUpper2Lower)
             if token["type"] == tokenTypes["StartTag"]:
                 raw = token["data"]
-                data = attributeMap(raw)
+                data = dict(raw)
                 if len(raw) > len(data):
                     # we had some duplicated attribute, fix so first wins
                     data.update(raw[::-1])
