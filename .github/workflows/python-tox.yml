@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           cache: pip
-          cachr-dependency-path: "requirements*"
+          cache-dependency-path: "requirements*.txt"
       - run: pip install tox
       - run: tox -e py
       - if: ${{ always() }}
