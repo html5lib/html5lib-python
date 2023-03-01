@@ -145,7 +145,7 @@ Questions?
 ----------
 
 Check out `the docs https://html5lib.readthedocs.io/en/latest/`_. Still
-need help? Go to our `Github Discussions
+need help? Go to our `GitHub Discussions
 https://github.com/html5lib/html5lib-python/discussions`_.
 
 You can also browse the archives of the `html5lib-discuss mailing list 
