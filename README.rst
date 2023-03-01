@@ -128,7 +128,7 @@ Tests
 -----
 
 Unit tests require the ``pytest`` and ``mock`` libraries and can be
-run using the ``py.test`` command in the root directory.
+run using the ``pytest`` command in the root directory.
 
 Test data are contained in a separate `html5lib-tests
 <https://github.com/html5lib/html5lib-tests>`_ repository and included

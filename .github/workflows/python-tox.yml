@@ -6,15 +6,18 @@ jobs:
     if: github.event.push || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        python: [2.7, 3.5, 3.6, 3.7, 3.8, pypy-2.7, pypy3]
+        python: ["2.7", "3.5", "3.6", "3.7", "3.8", "3.9", "3.10", "3.11", "pypy-2.7", "pypy-3.8"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: true
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: "requirements*.txt"
       - run: pip install tox
       - run: tox -e py
       - if: ${{ always() }}
