@@ -144,8 +144,9 @@ which can be found on PyPI.
 Questions?
 ----------
 
-Ask on IRC in `#whatwg on irc.freenode.net
-<http://wiki.whatwg.org/wiki/IRC>`_.
+Check out `the docs https://html5lib.readthedocs.io/en/latest/`_. Still
+need help? Go to our `Github Discussions
+https://github.com/html5lib/html5lib-python/discussions`_.
 
-Or browse the archives of the `html5lib-discuss mailing list 
+You can also browse the archives of the `html5lib-discuss mailing list 
 https://www.mail-archive.com/html5lib-discuss@googlegroups.com/`_.
