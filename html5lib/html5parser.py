@@ -115,6 +115,9 @@ class HTMLParser(object):
 
         if tree is None:
             tree = treebuilders.getTreeBuilder("etree")
+        elif isinstance(tree, str):
+            tree = treebuilders.getTreeBuilder(tree)
+
         self.tree = tree(namespaceHTMLElements)
         self.errors = []
 
