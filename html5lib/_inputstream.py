@@ -324,7 +324,7 @@ class HTMLUnicodeInputStream(object):
         except KeyError:
             if __debug__:
                 for c in characters:
-                    assert(ord(c) < 128)
+                    assert ord(c) < 128
             regex = "".join(["\\x%02x" % ord(c) for c in characters])
             if not opposite:
                 regex = "^%s" % regex

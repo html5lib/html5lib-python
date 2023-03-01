@@ -37,7 +37,7 @@ def getETreeBuilder(ElementTreeImplementation):
                 else:
                     node = elt
 
-            if not(hasattr(node, "tag")):
+            if not hasattr(node, "tag"):
                 node = node.getroot()
 
             if node.tag in ("DOCUMENT_ROOT", "DOCUMENT_FRAGMENT"):
