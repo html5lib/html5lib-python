@@ -11,8 +11,6 @@ Bug fixes:
 1.1
 ~~~
 
-UNRELEASED
-
 Breaking changes:
 
 * Drop support for Python 3.3. (#358)
@@ -103,7 +101,7 @@ Released on July 14, 2016
   tested, doesn't entirely work, and as far as I can tell is
   completely unused by anyone.**
 
-* Move testsuite to ``py.test``.
+* Move testsuite to ``pytest``.
 
 * **Fix #124: move to webencodings for decoding the input byte stream;
   this makes html5lib compliant with the Encoding Standard, and

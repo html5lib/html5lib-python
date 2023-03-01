@@ -1,9 +1,14 @@
 from __future__ import absolute_import, division, unicode_literals
 
+import warnings
+
 import pytest
 
 from html5lib import constants, parseFragment, serialize
-from html5lib.filters import sanitizer
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", DeprecationWarning)
+    from html5lib.filters import sanitizer
 
 
 def sanitize_html(stream):

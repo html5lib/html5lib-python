@@ -1,0 +1,24 @@
+on: [pull_request, push]
+jobs:
+  build:
+    # Prevent duplicate builds for 'internal' pull requests on existing commits
+    # Credit: https://github.community/t/duplicate-checks-on-push-and-pull-request-simultaneous-event/18012
+    if: github.event.push || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["2.7", "3.7", "3.8", "3.9", "3.10", "3.11", "pypy-2.7", "pypy-3.8"]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: "requirements*.txt"
+      - run: pip install tox
+      - run: tox -e py
+      - if: ${{ always() }}
+        run: python debug-info.py

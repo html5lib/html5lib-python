@@ -1,9 +1,8 @@
 html5lib
 ========
 
-.. image:: https://travis-ci.org/html5lib/html5lib-python.svg?branch=master
-    :target: https://travis-ci.org/html5lib/html5lib-python
-
+.. image:: https://github.com/html5lib/html5lib-python/actions/workflows/python-tox.yml/badge.svg
+    :target: https://github.com/html5lib/html5lib-python/actions/workflows/python-tox.yml
 
 html5lib is a pure-python library for parsing HTML. It is designed to
 conform to the WHATWG HTML specification, as is implemented by all major
@@ -128,7 +127,7 @@ Tests
 -----
 
 Unit tests require the ``pytest`` and ``mock`` libraries and can be
-run using the ``py.test`` command in the root directory.
+run using the ``pytest`` command in the root directory.
 
 Test data are contained in a separate `html5lib-tests
 <https://github.com/html5lib/html5lib-tests>`_ repository and included
@@ -145,7 +144,9 @@ which can be found on PyPI.
 Questions?
 ----------
 
-There's a mailing list available for support on Google Groups,
-`html5lib-discuss <http://groups.google.com/group/html5lib-discuss>`_,
-though you may get a quicker response asking on IRC in `#whatwg on
-irc.freenode.net <http://wiki.whatwg.org/wiki/IRC>`_.
+Check out `the docs <https://html5lib.readthedocs.io/en/latest/>`_. Still
+need help? Go to our `GitHub Discussions
+<https://github.com/html5lib/html5lib-python/discussions>`_.
+
+You can also browse the archives of the `html5lib-discuss mailing list 
+<https://www.mail-archive.com/html5lib-discuss@googlegroups.com/>`_.
