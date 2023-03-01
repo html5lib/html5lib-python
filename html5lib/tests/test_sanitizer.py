@@ -111,6 +111,18 @@ def param_sanitizer():
                """<img src="%s:%s">foo</a>""" % (protocol, rest_of_uri))
 
 
+def test_details_open_allowed():
+    sanitized = sanitize_html("<details open>.</details>")
+    expected = '<details open>.</details>'
+    assert expected == sanitized
+
+
+def test_details_summary_allowed():
+    sanitized = sanitize_html("<details><summary>.</summary><p>...</p></details>")
+    expected = '<details><summary>.</summary><p>...</p></details>'
+    assert expected == sanitized
+
+
 @pytest.mark.parametrize("expected, input",
                          (pytest.param(expected, input, id=id)
                           for id, expected, input in param_sanitizer()))
