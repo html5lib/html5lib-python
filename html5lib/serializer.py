@@ -222,14 +222,14 @@ class HTMLSerializer(object):
         self.strict = False
 
     def encode(self, string):
-        assert(isinstance(string, text_type))
+        assert isinstance(string, text_type)
         if self.encoding:
             return string.encode(self.encoding, "htmlentityreplace")
         else:
             return string
 
     def encodeStrict(self, string):
-        assert(isinstance(string, text_type))
+        assert isinstance(string, text_type)
         if self.encoding:
             return string.encode(self.encoding, "strict")
         else:

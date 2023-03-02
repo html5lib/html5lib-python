@@ -1,8 +1,7 @@
-# To activate, change the Appveyor settings to use `.appveyor.yml`.
+image: Visual Studio 2019
 environment:
   global:
     PATH: "C:\\Python27\\Scripts\\;%PATH%"
-    PYTEST_COMMAND: "coverage run -m pytest"
   matrix:
     - TOXENV: py27-base
     - TOXENV: py27-optional
@@ -14,10 +13,14 @@ environment:
     - TOXENV: py37-optional
     - TOXENV: py38-base
     - TOXENV: py38-optional
+    - TOXENV: py39-base
+    - TOXENV: py39-optional
+    - TOXENV: py310-base
+    - TOXENV: py310-optional
 
 install:
   - git submodule update --init --recursive
-  - python -m pip install tox codecov
+  - python -m pip install tox
 
 build: off
 
@@ -26,6 +29,3 @@ test_script:
 
 after_test:
   - python debug-info.py
-
-on_success:
-  - codecov

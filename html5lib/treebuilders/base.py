@@ -121,6 +121,7 @@ class Node(object):
 
 class ActiveFormattingElements(list):
     def append(self, node):
+        """Append node to the end of the list."""
         equalCount = 0
         if node != Marker:
             for element in self[::-1]:

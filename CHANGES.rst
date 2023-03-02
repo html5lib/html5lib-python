@@ -4,17 +4,27 @@ Change Log
 1.2
 ~~~
 
+Unreleased yet
+
 Features:
 
+* Add support for the ``<wbr>`` element in the sanitizer, `which indicates
+  a line break opportunity <https://html.spec.whatwg.org/#the-wbr-element>`_.
+  This element is allowed by default. (#395) (Thank you, Tom Most!)
 * Add support for serializing the ``<ol reversed>`` boolean attribute. (Thank
-  you, Tom Most!)
+  you, Tom Most!) (#396)
 * The ``<ol reversed>`` and ``<ol start>`` attributes are now permitted by the
   sanitizer. (#321) (Thank you, Tom Most!)
+
+Bug fixes:
+
+* The sanitizer now permits ``<summary>`` tags. It used to allow ``<details>``
+  already. (#423)
 
 1.1
 ~~~
 
-UNRELEASED
+Released on June 23, 2020
 
 Breaking changes:
 
@@ -106,7 +116,7 @@ Released on July 14, 2016
   tested, doesn't entirely work, and as far as I can tell is
   completely unused by anyone.**
 
-* Move testsuite to ``py.test``.
+* Move testsuite to ``pytest``.
 
 * **Fix #124: move to webencodings for decoding the input byte stream;
   this makes html5lib compliant with the Encoding Standard, and

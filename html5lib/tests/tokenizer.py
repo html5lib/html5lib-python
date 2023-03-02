@@ -192,7 +192,7 @@ class TokenizerFile(pytest.File):
             tests = json.load(fp)
         if 'tests' in tests:
             for i, test in enumerate(tests['tests']):
-                yield TokenizerTestCollector(str(i), self, testdata=test)
+                yield TokenizerTestCollector.from_parent(self, name=str(i), testdata=test)
 
 
 class TokenizerTestCollector(pytest.Collector):
@@ -207,10 +207,10 @@ class TokenizerTestCollector(pytest.Collector):
     def collect(self):
         for initialState in self.testdata["initialStates"]:
             initialState = capitalize(initialState)
-            item = TokenizerTest(initialState,
-                                 self,
-                                 self.testdata,
-                                 initialState)
+            item = TokenizerTest.from_parent(self,
+                                             name=initialState,
+                                             test=self.testdata,
+                                             initialState=initialState)
             if self.testdata["input"] is None:
                 item.add_marker(pytest.mark.skipif(True, reason="Relies on lone surrogates"))
             yield item
