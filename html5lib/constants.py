@@ -577,7 +577,7 @@ voidElements = frozenset([
 
 # Removals and deprecations in the HTML 5 spec:
 # ^1: command
-#     http://lists.whatwg.org/pipermail/whatwg-whatwg.org/2012-December/038472.html 
+#     http://lists.whatwg.org/pipermail/whatwg-whatwg.org/2012-December/038472.html
 #     https://github.com/whatwg/html/commit/9e2e25f4ae90969a7c64e0763c98548a35b50af8
 # ^2: event-source
 #     renamed to eventsource in 7/2008:
