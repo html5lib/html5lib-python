@@ -55,6 +55,12 @@ def test_data_uri_disallowed_type():
     assert expected == sanitized
 
 
+def test_wbr_allowed():
+    sanitized = sanitize_html('<wbr>')
+    expected = '<wbr/>'
+    assert expected == sanitized
+
+
 def param_sanitizer():
     for ns, tag_name in sanitizer.allowed_elements:
         if ns != constants.namespaces["html"]:
