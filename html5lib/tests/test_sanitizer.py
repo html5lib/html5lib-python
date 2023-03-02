@@ -1,9 +1,14 @@
 from __future__ import absolute_import, division, unicode_literals
 
+import warnings
+
 import pytest
 
 from html5lib import constants, parseFragment, serialize
-from html5lib.filters import sanitizer
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", DeprecationWarning)
+    from html5lib.filters import sanitizer
 
 
 def sanitize_html(stream):
@@ -110,6 +115,18 @@ def param_sanitizer():
         yield ("test_should_allow_uppercase_%s_uris" % protocol,
                "<img src=\"%s:%s\">foo</a>" % (protocol, rest_of_uri),
                """<img src="%s:%s">foo</a>""" % (protocol, rest_of_uri))
+
+
+def test_details_open_allowed():
+    sanitized = sanitize_html("<details open>.</details>")
+    expected = '<details open>.</details>'
+    assert expected == sanitized
+
+
+def test_details_summary_allowed():
+    sanitized = sanitize_html("<details><summary>.</summary><p>...</p></details>")
+    expected = '<details><summary>.</summary><p>...</p></details>'
+    assert expected == sanitized
 
 
 @pytest.mark.parametrize("expected, input",

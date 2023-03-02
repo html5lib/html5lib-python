@@ -1,9 +1,6 @@
 treeadapters Package
 ====================
 
-:mod:`~html5lib.treeadapters` Package
--------------------------------------
-
 .. automodule:: html5lib.treeadapters
     :members:
     :show-inheritance:

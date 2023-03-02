@@ -4,17 +4,22 @@ Change Log
 1.2
 ~~~
 
+Unreleased yet
+
 Features:
 
-* Add support for the ``<wbr>`` element, `which indicates a line break
-  opportunity <https://html.spec.whatwg.org/#the-wbr-element>`_. This element
-  is allowed by default by the sanitizer. (#395) (Thank you, Tom Most!)
+* Add support for the ``<wbr>`` element in the sanitizer, `which indicates
+  a line break opportunity <https://html.spec.whatwg.org/#the-wbr-element>`_.
+  This element is allowed by default. (#395) (Thank you, Tom Most!)
 
+Bug fixes:
+
+* The sanitizer now permits ``<summary>`` tags.
 
 1.1
 ~~~
 
-UNRELEASED
+Released on June 23, 2020
 
 Breaking changes:
 
@@ -33,7 +38,6 @@ Other changes:
 * Try to import from ``collections.abc`` to remove DeprecationWarning and ensure
   ``html5lib`` keeps working in future Python versions. (#403)
 * Drop optional ``datrie`` dependency. (#442)
-
 
 1.0.1
 ~~~~~
@@ -107,7 +111,7 @@ Released on July 14, 2016
   tested, doesn't entirely work, and as far as I can tell is
   completely unused by anyone.**
 
-* Move testsuite to ``py.test``.
+* Move testsuite to ``pytest``.
 
 * **Fix #124: move to webencodings for decoding the input byte stream;
   this makes html5lib compliant with the Encoding Standard, and

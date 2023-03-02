@@ -16,7 +16,7 @@ documentation. Some useful information:
 - We keep the master branch passing all tests at all times on all
   supported versions.
 
-`Travis CI <https://travis-ci.org/html5lib/html5lib-python/>`_ is run
+`GitHub Actions <https://github.com/html5lib/html5lib-python/actions>`_ is run
 against all pull requests and should enforce all of the above.
 
 We use `Opera Critic <https://critic.hoppipolla.co.uk/>`_ as an external
