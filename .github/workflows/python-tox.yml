@@ -7,7 +7,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ["2.7", "3.7", "3.8", "3.9", "3.10", "3.11"]
+        # 2.7, 3.5, and 3.6 run on Windows via AppVeyor
+        python: ["3.7", "3.8", "3.9", "3.10", "3.11"]
         os: [ubuntu-latest, windows-latest]
         deps: [base, optional]
         include:
