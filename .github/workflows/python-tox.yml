@@ -66,6 +66,6 @@ jobs:
           fi
           echo TOX_PYTHON=$V >>$GITHUB_ENV
       - run: pip install tox
-        run: tox -e ${{ env.TOX_PYTHON }}-${{ matrix.deps }}
+      - run: tox -e ${{ env.TOX_PYTHON }}-${{ matrix.deps }}
       - if: ${{ always() }}
         run: python debug-info.py
