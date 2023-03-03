@@ -154,3 +154,21 @@ def test_uppercase_color_codes_in_style():
     sanitized = sanitize_html("<p style=\"border: 1px solid #A2A2A2;\"></p>")
     expected = '<p style=\"border: 1px solid #A2A2A2;\"></p>'
     assert expected == sanitized
+
+
+def test_ol_start_allowed():
+    sanitized = sanitize_html("<ol start=2><li>.</ol>")
+    expected = '<ol start="2"><li>.</li></ol>'
+    assert expected == sanitized
+
+
+def test_ol_type_allowed():
+    sanitized = sanitize_html("<ol type=I><li>.</ol>")
+    expected = '<ol type="I"><li>.</li></ol>'
+    assert expected == sanitized
+
+
+def test_ol_reversed_allowed():
+    sanitized = sanitize_html("<ol reversed><li>.</ol>")
+    expected = '<ol reversed><li>.</li></ol>'
+    assert expected == sanitized
