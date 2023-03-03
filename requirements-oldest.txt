@@ -8,7 +8,9 @@ webencodings==0.5.1
 genshi==0.7.1 ; python_version < '3.8'
 genshi==0.7.6 ; python_version >= '3.8'
 chardet==2.2.1
-lxml==3.4.0 ; python_version < '3.7'
+# this should be 3.4.0 but there are no Linux
+# binary wheels for older releases 
+lxml==3.8.0 ; python_version < '3.7'
 # minimums for 3.x are actually different:
 # - 3.7 is actually 4.1.1
 # - 3.8 is actually 4.3.5
@@ -17,7 +19,7 @@ lxml==3.4.0 ; python_version < '3.7'
 lxml==4.9.0 ; python_version >= '3.7'
 
 # requirements-test.txt
-flake8==3.8.1
+flake8==3.9.2
 pytest==4.6.10 ; python_version < '3'
 pytest==5.4.2 ; python_version >= '3'
 coverage==5.1
