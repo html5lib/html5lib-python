@@ -19,7 +19,8 @@ lxml==3.8.0 ; python_version < '3.7'
 lxml==4.9.0 ; python_version >= '3.7'
 
 # requirements-test.txt
-flake8==3.9.2
+flake8==3.9.2 ; python_version < '3.6'
+flake8==5.0.4; python_version >= '3.6'
 pytest==4.6.10 ; python_version < '3'
 pytest==5.4.2 ; python_version >= '3'
 coverage==5.1
