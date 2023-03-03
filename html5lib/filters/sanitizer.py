@@ -598,6 +598,8 @@ allowed_css_properties = frozenset((
     'height',
     'letter-spacing',
     'line-height',
+    'max-height',
+    'min-height',
     'max-width',
     'min-width',
     'overflow',
