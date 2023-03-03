@@ -16,7 +16,7 @@ lxml==3.8.0 ; python_version < '3.7'
 # - 3.8 is actually 4.3.5
 # - 3.9-3.10 is actually 4.5.2
 # - 3.11 is actually 4.9.0
-lxml==4.9.0 ; python_version >= '3.7'
+lxml==4.9.1 ; python_version >= '3.7'
 
 # requirements-test.txt
 flake8==3.9.2 ; python_version < '3.6'
