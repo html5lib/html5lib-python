@@ -52,20 +52,13 @@ jobs:
           cache: pip
           cache-dependency-path: |
             requirements-oldest.txt
-      - name: Determine Python version for Tox
-        run: |
-          V=${{ matrix.python }}
-          if [[ "$V" = pypy-2* ]]; then
-            V=pypy
-          elif [[ "$V" = pypy-3* ]]; then
-            V=pypy3
-          elif [[ "$V" = ~* ]]; then
-            V=py$(NORM_V=${V:1:4};echo ${NORM_V//./})
-          else
-            V=py${V//./}
-          fi
-          echo TOX_PYTHON=$V >>$GITHUB_ENV
+      - if: ${{ matrix.os == 'windows-latest' }}
+        name: Determine environment name for Tox (PowerShell)
+        run: python toxver.py >> $env:GITHUB_ENV
+      - if: ${{ matrix.os == 'ubuntu-latest' }}
+        name: Determine environment name for Tox (Bash)
+        run: python toxver.py >> $GITHUB_ENV
       - run: pip install tox
-      - run: tox -e ${{ env.TOX_PYTHON }}-${{ matrix.deps }}
+      - run: tox
       - if: ${{ always() }}
         run: python debug-info.py
