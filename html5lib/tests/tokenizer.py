@@ -28,7 +28,7 @@ class TokenizerTestParser(object):
             tokenizer.currentToken = {"type": "startTag",
                                       "name": self._lastStartTag}
 
-        types = dict((v, k) for k, v in constants.tokenTypes.items())
+        types = {v: k for k, v in constants.tokenTypes.items()}
         for token in tokenizer:
             getattr(self, 'process%s' % types[token["type"]])(token)
 
@@ -40,7 +40,7 @@ class TokenizerTestParser(object):
 
     def processStartTag(self, token):
         self.outputTokens.append(["StartTag", token["name"],
-                                  dict(token["data"][::-1]), token["selfClosing"]])
+                                  token["data"], token["selfClosing"]])
 
     def processEmptyTag(self, token):
         if token["name"] not in constants.voidElements:
@@ -176,6 +176,7 @@ def unescape(test):
 def _doCapitalize(match):
     return match.group(1).upper()
 
+
 _capitalizeRe = re.compile(r"\W+(\w)").sub
 
 
@@ -191,7 +192,7 @@ class TokenizerFile(pytest.File):
             tests = json.load(fp)
         if 'tests' in tests:
             for i, test in enumerate(tests['tests']):
-                yield TokenizerTestCollector(str(i), self, testdata=test)
+                yield TokenizerTestCollector.from_parent(self, name=str(i), testdata=test)
 
 
 class TokenizerTestCollector(pytest.Collector):
@@ -206,10 +207,10 @@ class TokenizerTestCollector(pytest.Collector):
     def collect(self):
         for initialState in self.testdata["initialStates"]:
             initialState = capitalize(initialState)
-            item = TokenizerTest(initialState,
-                                 self,
-                                 self.testdata,
-                                 initialState)
+            item = TokenizerTest.from_parent(self,
+                                             name=initialState,
+                                             test=self.testdata,
+                                             initialState=initialState)
             if self.testdata["input"] is None:
                 item.add_marker(pytest.mark.skipif(True, reason="Relies on lone surrogates"))
             yield item

@@ -8,7 +8,7 @@ import codecs
 import glob
 import xml.sax.handler
 
-base_path = os.path.split(__file__)[0]
+base_path = os.path.dirname(__file__)
 
 test_dir = os.path.join(base_path, 'testdata')
 sys.path.insert(0, os.path.abspath(os.path.join(base_path,
@@ -143,11 +143,12 @@ def convert(stripChars):
         return "\n".join(rv)
     return convertData
 
+
 convertExpected = convert(2)
 
 
 def errorMessage(input, expected, actual):
-    msg = ("Input:\n%s\nExpected:\n%s\nRecieved\n%s\n" %
+    msg = ("Input:\n%s\nExpected:\n%s\nReceived\n%s\n" %
            (repr(input), repr(expected), repr(actual)))
     if sys.version_info[0] == 2:
         msg = msg.encode("ascii", "backslashreplace")

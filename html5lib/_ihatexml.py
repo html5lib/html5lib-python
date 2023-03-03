@@ -104,18 +104,15 @@ def charStringToList(chars):
     charRanges = [item.strip() for item in chars.split(" | ")]
     rv = []
     for item in charRanges:
-        foundMatch = False
         for regexp in (reChar, reCharRange):
             match = regexp.match(item)
             if match is not None:
                 rv.append([hexToInt(item) for item in match.groups()])
                 if len(rv[-1]) == 1:
                     rv[-1] = rv[-1] * 2
-                foundMatch = True
                 break
-        if not foundMatch:
+        else:
             assert len(item) == 1
-
             rv.append([ord(item)] * 2)
     rv = normaliseCharList(rv)
     return rv
@@ -135,6 +132,7 @@ def normaliseCharList(charList):
             j += 1
         i += j
     return rv
+
 
 # We don't really support characters above the BMP :(
 max_unicode = int("FFFF", 16)
@@ -254,7 +252,7 @@ class InfosetFilter(object):
         nameRest = name[1:]
         m = nonXmlNameFirstBMPRegexp.match(nameFirst)
         if m:
-            warnings.warn("Coercing non-XML name", DataLossWarning)
+            warnings.warn("Coercing non-XML name: %s" % name, DataLossWarning)
             nameFirstOutput = self.getReplacementCharacter(nameFirst)
         else:
             nameFirstOutput = nameFirst
@@ -262,7 +260,7 @@ class InfosetFilter(object):
         nameRestOutput = nameRest
         replaceChars = set(nonXmlNameBMPRegexp.findall(nameRest))
         for char in replaceChars:
-            warnings.warn("Coercing non-XML name", DataLossWarning)
+            warnings.warn("Coercing non-XML name: %s" % name, DataLossWarning)
             replacement = self.getReplacementCharacter(char)
             nameRestOutput = nameRestOutput.replace(char, replacement)
         return nameFirstOutput + nameRestOutput

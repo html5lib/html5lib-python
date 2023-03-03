@@ -1,6 +1,15 @@
+"""Deprecated from html5lib 1.1.
+
+See `here <https://github.com/html5lib/html5lib-python/issues/443>`_ for
+information about its deprecation; `Bleach <https://github.com/mozilla/bleach>`_
+is recommended as a replacement. Please let us know in the aforementioned issue
+if Bleach is unsuitable for your needs.
+
+"""
 from __future__ import absolute_import, division, unicode_literals
 
 import re
+import warnings
 from xml.sax.saxutils import escape, unescape
 
 from six.moves import urllib_parse as urlparse
@@ -10,6 +19,14 @@ from ..constants import namespaces, prefixes
 
 __all__ = ["Filter"]
 
+
+_deprecation_msg = (
+    "html5lib's sanitizer is deprecated; see " +
+    "https://github.com/html5lib/html5lib-python/issues/443 and please let " +
+    "us know if Bleach is unsuitable for your needs"
+)
+
+warnings.warn(_deprecation_msg, DeprecationWarning)
 
 allowed_elements = frozenset((
     (namespaces['html'], 'a'),
@@ -96,6 +113,7 @@ allowed_elements = frozenset((
     (namespaces['html'], 'strike'),
     (namespaces['html'], 'strong'),
     (namespaces['html'], 'sub'),
+    (namespaces['html'], 'summary'),
     (namespaces['html'], 'sup'),
     (namespaces['html'], 'table'),
     (namespaces['html'], 'tbody'),
@@ -111,6 +129,7 @@ allowed_elements = frozenset((
     (namespaces['html'], 'ul'),
     (namespaces['html'], 'var'),
     (namespaces['html'], 'video'),
+    (namespaces['html'], 'wbr'),
     (namespaces['mathml'], 'maction'),
     (namespaces['mathml'], 'math'),
     (namespaces['mathml'], 'merror'),
@@ -346,6 +365,7 @@ allowed_attributes = frozenset((
     (None, 'maxsize'),
     (None, 'minsize'),
     (None, 'other'),
+    (None, 'reversed'),
     (None, 'rowalign'),
     (None, 'rowalign'),
     (None, 'rowalign'),
@@ -356,6 +376,7 @@ allowed_attributes = frozenset((
     (None, 'scriptlevel'),
     (None, 'selection'),
     (None, 'separator'),
+    (None, 'start'),
     (None, 'stretchy'),
     (None, 'width'),
     (None, 'width'),
@@ -752,6 +773,9 @@ class Filter(base.Filter):
 
         """
         super(Filter, self).__init__(source)
+
+        warnings.warn(_deprecation_msg, DeprecationWarning)
+
         self.allowed_elements = allowed_elements
         self.allowed_attributes = allowed_attributes
         self.allowed_css_properties = allowed_css_properties

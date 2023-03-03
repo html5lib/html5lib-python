@@ -519,8 +519,8 @@ adjustForeignAttributes = {
     "xmlns:xlink": ("xmlns", "xlink", namespaces["xmlns"])
 }
 
-unadjustForeignAttributes = dict([((ns, local), qname) for qname, (prefix, local, ns) in
-                                  adjustForeignAttributes.items()])
+unadjustForeignAttributes = {(ns, local): qname for qname, (prefix, local, ns) in
+                             adjustForeignAttributes.items()}
 
 spaceCharacters = frozenset([
     "\t",
@@ -544,8 +544,7 @@ asciiLetters = frozenset(string.ascii_letters)
 digits = frozenset(string.digits)
 hexDigits = frozenset(string.hexdigits)
 
-asciiUpper2Lower = dict([(ord(c), ord(c.lower()))
-                         for c in string.ascii_uppercase])
+asciiUpper2Lower = {ord(c): ord(c.lower()) for c in string.ascii_uppercase}
 
 # Heading elements need to be ordered
 headingElements = (
@@ -558,22 +557,35 @@ headingElements = (
 )
 
 voidElements = frozenset([
+    "area",
     "base",
-    "command",
-    "event-source",
+    "br",
+    "col",
+    "command",  # removed ^1
+    "embed",
+    "event-source",  # renamed and later removed ^2
+    "hr",
+    "img",
+    "input",
     "link",
     "meta",
-    "hr",
-    "br",
-    "img",
-    "embed",
-    "param",
-    "area",
-    "col",
-    "input",
+    "param",  # deprecated ^3
     "source",
-    "track"
+    "track",
+    "wbr",
 ])
+
+# Removals and deprecations in the HTML 5 spec:
+# ^1: command
+#     http://lists.whatwg.org/pipermail/whatwg-whatwg.org/2012-December/038472.html
+#     https://github.com/whatwg/html/commit/9e2e25f4ae90969a7c64e0763c98548a35b50af8
+# ^2: event-source
+#     renamed to eventsource in 7/2008:
+#     https://github.com/whatwg/html/commit/d157945d0285b4463a04b57318da0c4b300a99e7
+#     removed entirely in 2/2009:
+#     https://github.com/whatwg/html/commit/43cbdbfbb7eb74b0d65e0f4caab2020c0b2a16ff
+# ^3: param
+#     https://developer.mozilla.org/en-US/docs/Web/HTML/Element/param
 
 cdataElements = frozenset(['title', 'textarea'])
 
@@ -605,6 +617,7 @@ booleanAttributes = {
     "button": frozenset(["disabled", "autofocus"]),
     "input": frozenset(["disabled", "readonly", "required", "autofocus", "checked", "ismap"]),
     "select": frozenset(["disabled", "readonly", "autofocus", "multiple"]),
+    "ol": frozenset(["reversed"]),
     "output": frozenset(["disabled", "readonly"]),
     "iframe": frozenset(["seamless"]),
 }
@@ -2934,7 +2947,7 @@ tagTokenTypes = frozenset([tokenTypes["StartTag"], tokenTypes["EndTag"],
                            tokenTypes["EmptyTag"]])
 
 
-prefixes = dict([(v, k) for k, v in namespaces.items()])
+prefixes = {v: k for k, v in namespaces.items()}
 prefixes["http://www.w3.org/1998/Math/MathML"] = "math"
 
 

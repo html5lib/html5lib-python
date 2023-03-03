@@ -26,7 +26,7 @@ class TreeConstructionFile(pytest.File):
     def collect(self):
         tests = TestData(str(self.fspath), "data")
         for i, test in enumerate(tests):
-            yield TreeConstructionTest(str(i), self, testdata=test)
+            yield TreeConstructionTest.from_parent(self, name=str(i), testdata=test)
 
 
 class TreeConstructionTest(pytest.Collector):
@@ -48,34 +48,31 @@ class TreeConstructionTest(pytest.Collector):
                 nodeid = "%s::parser::namespaced" % treeName
             else:
                 nodeid = "%s::parser::void-namespace" % treeName
-            item = ParserTest(nodeid,
-                              self,
-                              self.testdata,
-                              treeAPIs["builder"] if treeAPIs is not None else None,
-                              namespaceHTMLElements)
+            item = ParserTest.from_parent(self,
+                                          name=nodeid,
+                                          test=self.testdata,
+                                          treeClass=treeAPIs["builder"] if treeAPIs is not None else None,
+                                          namespaceHTMLElements=namespaceHTMLElements)
             item.add_marker(getattr(pytest.mark, treeName))
             item.add_marker(pytest.mark.parser)
             if namespaceHTMLElements:
                 item.add_marker(pytest.mark.namespaced)
-            if treeAPIs is None:
-                item.add_marker(pytest.mark.skipif(True, reason="Treebuilder not loaded"))
             yield item
 
     def _getTreeWalkerTests(self, treeName, treeAPIs):
         nodeid = "%s::treewalker" % treeName
-        item = TreeWalkerTest(nodeid,
-                              self,
-                              self.testdata,
-                              treeAPIs)
+        item = TreeWalkerTest.from_parent(self,
+                                          name=nodeid,
+                                          test=self.testdata,
+                                          treeAPIs=treeAPIs)
         item.add_marker(getattr(pytest.mark, treeName))
         item.add_marker(pytest.mark.treewalker)
-        if treeAPIs is None:
-            item.add_marker(pytest.mark.skipif(True, reason="Treebuilder not loaded"))
         yield item
 
 
 def convertTreeDump(data):
     return "\n".join(convert(3)(data).split("\n")[1:])
+
 
 namespaceExpected = re.compile(r"^(\s*)<(\S+)>", re.M).sub
 
@@ -83,12 +80,14 @@ namespaceExpected = re.compile(r"^(\s*)<(\S+)>", re.M).sub
 class ParserTest(pytest.Item):
     def __init__(self, name, parent, test, treeClass, namespaceHTMLElements):
         super(ParserTest, self).__init__(name, parent)
-        self.obj = lambda: 1  # this is to hack around skipif needing a function!
         self.test = test
         self.treeClass = treeClass
         self.namespaceHTMLElements = namespaceHTMLElements
 
     def runtest(self):
+        if self.treeClass is None:
+            pytest.skip("Treebuilder not loaded")
+
         p = html5parser.HTMLParser(tree=self.treeClass,
                                    namespaceHTMLElements=self.namespaceHTMLElements)
 
@@ -146,11 +145,13 @@ class ParserTest(pytest.Item):
 class TreeWalkerTest(pytest.Item):
     def __init__(self, name, parent, test, treeAPIs):
         super(TreeWalkerTest, self).__init__(name, parent)
-        self.obj = lambda: 1  # this is to hack around skipif needing a function!
         self.test = test
         self.treeAPIs = treeAPIs
 
     def runtest(self):
+        if self.treeAPIs is None:
+            pytest.skip("Treebuilder not loaded")
+
         p = html5parser.HTMLParser(tree=self.treeAPIs["builder"])
 
         input = self.test['data']
