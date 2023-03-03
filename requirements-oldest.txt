@@ -17,7 +17,6 @@ lxml==3.4.0 ; python_version < '3.7'
 lxml==4.9.0 ; python_version >= '3.7'
 
 # requirements-test.txt
-tox==3.15.1
 flake8==3.8.1
 pytest==4.6.10 ; python_version < '3'
 pytest==5.4.2 ; python_version >= '3'
