@@ -54,10 +54,10 @@ jobs:
             requirements-oldest.txt
       - if: ${{ matrix.os == 'windows-latest' }}
         name: Determine environment name for Tox (PowerShell)
-        run: python toxver.py >> $env:GITHUB_ENV
+        run: python toxver.py ${{ matrix.python }} ${{ matrix.deps }} >> $env:GITHUB_ENV
       - if: ${{ matrix.os == 'ubuntu-latest' }}
         name: Determine environment name for Tox (Bash)
-        run: python toxver.py >> $GITHUB_ENV
+        run: python toxver.py ${{ matrix.python }} ${{ matrix.deps }} >> $GITHUB_ENV
       - run: pip install tox
       - run: tox
       - if: ${{ always() }}
