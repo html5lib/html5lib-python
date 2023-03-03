@@ -1,4 +1,4 @@
-# To activate, change the Appveyor settings to use `.appveyor.yml`.
+image: Visual Studio 2019
 environment:
   global:
     PATH: "C:\\Python27\\Scripts\\;%PATH%"
@@ -9,10 +9,6 @@ environment:
     - TOXENV: py35-optional
     - TOXENV: py36-base
     - TOXENV: py36-optional
-    - TOXENV: py37-base
-    - TOXENV: py37-optional
-    - TOXENV: py38-base
-    - TOXENV: py38-optional
 
 install:
   - git submodule update --init --recursive

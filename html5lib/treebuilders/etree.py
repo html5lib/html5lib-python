@@ -108,7 +108,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             node.parent = None
 
         def insertText(self, data, insertBefore=None):
-            if not(len(self._element)):
+            if not len(self._element):
                 if not self._element.text:
                     self._element.text = ""
                 self._element.text += data
@@ -201,7 +201,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
         rv = []
 
         def serializeElement(element, indent=0):
-            if not(hasattr(element, "tag")):
+            if not hasattr(element, "tag"):
                 element = element.getroot()
             if element.tag == "<!DOCTYPE>":
                 if element.get("publicId") or element.get("systemId"):

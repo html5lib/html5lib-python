@@ -19,7 +19,8 @@ import os
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.viewcode']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.viewcode',
+              'sphinx.ext.intersphinx']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -90,6 +91,13 @@ texinfo_documents = [
      'James Graham, Sam Sneddon, and contributors', 'html5lib', 'One line description of project.',
      'Miscellaneous'),
 ]
+
+
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3/', None),
+    'lxml': ('https://lxml.de/apidoc/', None),
+    'chardet': ('https://chardet.readthedocs.io/en/latest/', None),
+}
 
 
 class CExtMock(object):

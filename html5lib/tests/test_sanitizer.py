@@ -1,9 +1,14 @@
 from __future__ import absolute_import, division, unicode_literals
 
+import warnings
+
 import pytest
 
 from html5lib import constants, parseFragment, serialize
-from html5lib.filters import sanitizer
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", DeprecationWarning)
+    from html5lib.filters import sanitizer
 
 
 def sanitize_html(stream):
@@ -47,6 +52,12 @@ def test_invalid_ipv6_url():
 def test_data_uri_disallowed_type():
     sanitized = sanitize_html('<audio controls="" src="data:text/html,<html>"></audio>')
     expected = "<audio controls></audio>"
+    assert expected == sanitized
+
+
+def test_wbr_allowed():
+    sanitized = sanitize_html('<wbr>')
+    expected = '<wbr/>'
     assert expected == sanitized
 
 
@@ -106,6 +117,18 @@ def param_sanitizer():
                """<img src="%s:%s">foo</a>""" % (protocol, rest_of_uri))
 
 
+def test_details_open_allowed():
+    sanitized = sanitize_html("<details open>.</details>")
+    expected = '<details open>.</details>'
+    assert expected == sanitized
+
+
+def test_details_summary_allowed():
+    sanitized = sanitize_html("<details><summary>.</summary><p>...</p></details>")
+    expected = '<details><summary>.</summary><p>...</p></details>'
+    assert expected == sanitized
+
+
 @pytest.mark.parametrize("expected, input",
                          (pytest.param(expected, input, id=id)
                           for id, expected, input in param_sanitizer()))
@@ -130,4 +153,22 @@ def test_lowercase_color_codes_in_style():
 def test_uppercase_color_codes_in_style():
     sanitized = sanitize_html("<p style=\"border: 1px solid #A2A2A2;\"></p>")
     expected = '<p style=\"border: 1px solid #A2A2A2;\"></p>'
+    assert expected == sanitized
+
+
+def test_ol_start_allowed():
+    sanitized = sanitize_html("<ol start=2><li>.</ol>")
+    expected = '<ol start="2"><li>.</li></ol>'
+    assert expected == sanitized
+
+
+def test_ol_type_allowed():
+    sanitized = sanitize_html("<ol type=I><li>.</ol>")
+    expected = '<ol type="I"><li>.</li></ol>'
+    assert expected == sanitized
+
+
+def test_ol_reversed_allowed():
+    sanitized = sanitize_html("<ol reversed><li>.</ol>")
+    expected = '<ol reversed><li>.</li></ol>'
     assert expected == sanitized
