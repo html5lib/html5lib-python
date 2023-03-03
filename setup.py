@@ -108,23 +108,23 @@ setup(name='html5lib',
       packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
       install_requires=[
           'six>=1.9',
-          'webencodings',
+          'webencodings>=0.5.1',
       ],
       python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*",
       extras_require={
           # A conditional extra will only install these items when the extra is
           # requested and the condition matches.
-          "lxml:platform_python_implementation == 'CPython'": ["lxml"],
+          "lxml:platform_python_implementation == 'CPython'": ["lxml>=3.4.0"],
 
           # Standard extras, will be installed when the extra is requested.
-          "genshi": ["genshi"],
-          "chardet": ["chardet>=2.2"],
+          "genshi": ["genshi>=0.7.1"],
+          "chardet": ["chardet>=2.2.1"],
 
           # The all extra combines a standard extra which will be used anytime
           # the all extra is requested, and it extends it with a conditional
           # extra that will be installed whenever the condition matches and the
           # all extra is requested.
-          "all": ["genshi", "chardet>=2.2"],
-          "all:platform_python_implementation == 'CPython'": ["lxml"],
+          "all": ["genshi>=0.7.1", "chardet>=2.2.1"],
+          "all:platform_python_implementation == 'CPython'": ["lxml>=3.4.0"],
       },
       )

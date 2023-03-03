@@ -4,21 +4,68 @@ jobs:
     # Prevent duplicate builds for 'internal' pull requests on existing commits
     # Credit: https://github.community/t/duplicate-checks-on-push-and-pull-request-simultaneous-event/18012
     if: github.event.push || github.event.pull_request.head.repo.full_name != github.repository
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python: ["2.7", "3.7", "3.8", "3.9", "3.10", "3.11", "pypy-2.7", "pypy-3.8"]
+        python: ["2.7", "3.7", "3.8", "3.9", "3.10", "3.11"]
+        os: [ubuntu-latest, windows-latest]
+        deps: [base, optional]
+        include:
+          - python: "pypy-2.7"
+            os: ubuntu-latest
+            deps: base
+          - python: "pypy-3.8"
+            os: ubuntu-latest
+            deps: base
+          - python: "2.7"
+            os: ubuntu-latest
+            deps: oldest
+          - python: "3.7"
+            os: ubuntu-latest
+            deps: oldest
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: true
-      - uses: actions/setup-python@v4
+      - if: ${{ matrix.deps == 'base' }}
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
           cache: pip
-          cache-dependency-path: "requirements*.txt"
+          cache-dependency-path: |
+            requirements.txt
+            requirements-test.txt
+      - if: ${{ matrix.deps == 'optional' }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-optional.txt
+            requirements-test.txt
+      - if: ${{ matrix.deps == 'oldest' }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: |
+            requirements-oldest.txt
+      - name: Determine Python version for Tox
+        run: |
+          V=${{ matrix.python }}
+          if [[ "$V" = pypy-2* ]]; then
+            V=pypy
+          elif [[ "$V" = pypy-3* ]]; then
+            V=pypy3
+          elif [[ "$V" = ~* ]]; then
+            V=py$(NORM_V=${V:1:4};echo ${NORM_V//./})
+          else
+            V=py${V//./}
+          fi
+          echo TOX_PYTHON=$V >>$GITHUB_ENV
       - run: pip install tox
-      - run: tox -e py
+        run: tox -e ${{ env.TOX_PYTHON }}-${{ matrix.deps }}
       - if: ${{ always() }}
         run: python debug-info.py
