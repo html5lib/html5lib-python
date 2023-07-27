@@ -246,7 +246,7 @@ class TokenizerTest(pytest.Item):
     def repr_failure(self, excinfo):
         traceback = excinfo.traceback
         ntraceback = traceback.cut(path=__file__)
-        excinfo.traceback = ntraceback.filter()
+        excinfo.traceback = ntraceback.filter(excinfo)
 
         return excinfo.getrepr(funcargs=True,
                                showlocals=False,
