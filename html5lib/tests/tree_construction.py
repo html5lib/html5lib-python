@@ -135,7 +135,13 @@ class ParserTest(pytest.Item):
     def repr_failure(self, excinfo):
         traceback = excinfo.traceback
         ntraceback = traceback.cut(path=__file__)
-        excinfo.traceback = ntraceback.filter()
+
+        if pytest.version_tuple >= (7, 4, 0):
+            filter_args = (excinfo,)
+        else:
+            filter_args = ()
+
+        excinfo.traceback = ntraceback.filter(*filter_args)
 
         return excinfo.getrepr(funcargs=True,
                                showlocals=False,
