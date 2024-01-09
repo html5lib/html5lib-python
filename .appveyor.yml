@@ -16,13 +16,15 @@ environment:
 
 install:
   - git submodule update --init --recursive
-  - python -m pip install tox
+  - py --list
+  - py -VV
+  - py -m pip install --upgrade pip
+  - py -m pip install tox
 
 build: off
 
 test_script:
-  - py --list
-  - tox
+  - py -m tox
 
 after_test:
   - python debug-info.py
