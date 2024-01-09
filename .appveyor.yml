@@ -1,8 +1,7 @@
 # appveyor.yml - https://www.appveyor.com/docs/lang/python
-# https://www.appveyor.com/docs/windows-images-software/#visual-studio-2019
 # https://www.appveyor.com/docs/windows-images-software/#visual-studio-2022
 ---
-image: Visual Studio 2019
+image: Visual Studio 2022
 environment:
   matrix:
     - PY_PYTHON: 2.7
@@ -27,4 +26,4 @@ test_script:
   - py -m tox
 
 after_test:
-  - python debug-info.py
+  - py debug-info.py
