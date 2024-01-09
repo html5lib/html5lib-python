@@ -18,7 +18,7 @@ jobs:
             os: ubuntu-latest
             deps: base
           - python: "2.7"
-            os: ubuntu-latest
+            os: ubuntu-20.04
             deps: oldest
           - python: "3.8"
             os: ubuntu-latest
