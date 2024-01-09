@@ -246,7 +246,8 @@ class TokenizerTest(pytest.Item):
     def repr_failure(self, excinfo):
         traceback = excinfo.traceback
         ntraceback = traceback.cut(path=__file__)
-        excinfo.traceback = ntraceback.filter(excinfo)
+        filter_args = (excinfo,) if pytest.version_tuple >= (7, 4, 0) else ()
+        excinfo.traceback = ntraceback.filter(*filter_args)
 
         return excinfo.getrepr(funcargs=True,
                                showlocals=False,
