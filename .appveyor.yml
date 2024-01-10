@@ -1,23 +1,29 @@
-image: Visual Studio 2019
+# appveyor.yml - https://www.appveyor.com/docs/lang/python
+# https://www.appveyor.com/docs/windows-images-software/#visual-studio-2022
+---
+image: Visual Studio 2022
 environment:
-  global:
-    PATH: "C:\\Python27\\Scripts\\;%PATH%"
   matrix:
-    - TOXENV: py27-base
-    - TOXENV: py27-optional
-    - TOXENV: py35-base
-    - TOXENV: py35-optional
-    - TOXENV: py36-base
-    - TOXENV: py36-optional
+    - PY_PYTHON: 2.7
+      TOXENV: py27-base
+    - PY_PYTHON: 2.7
+      TOXENV: py27-optional
+    - PY_PYTHON: 3.7
+      TOXENV: py37-base
+    - PY_PYTHON: 3.7
+      TOXENV: py37-optional
 
 install:
   - git submodule update --init --recursive
-  - python -m pip install tox
+  - py --list
+  - py -VV
+  - py -m pip install --upgrade pip
+  - py -m pip install tox
 
 build: off
 
 test_script:
-  - tox
+  - py -m tox
 
 after_test:
-  - python debug-info.py
+  - py debug-info.py
