@@ -7,30 +7,27 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 2.7, 3.5, and 3.6 run on Windows via AppVeyor
-        python: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        # 2.7 and 3.7 run on Windows via AppVeyor
+        python: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         os: [ubuntu-latest, windows-latest]
         deps: [base, optional]
         include:
           - python: "pypy-2.7"
             os: ubuntu-latest
             deps: base
-          - python: "pypy-3.8"
+          - python: "pypy-3.10"
             os: ubuntu-latest
             deps: base
-          - python: "2.7"
-            os: ubuntu-latest
-            deps: oldest
-          - python: "3.7"
+          - python: "3.8"
             os: ubuntu-latest
             deps: oldest
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
       - if: ${{ matrix.deps == 'base' }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
           cache: pip
@@ -38,7 +35,7 @@ jobs:
             requirements.txt
             requirements-test.txt
       - if: ${{ matrix.deps == 'optional' }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
           cache: pip
@@ -47,7 +44,7 @@ jobs:
             requirements-optional.txt
             requirements-test.txt
       - if: ${{ matrix.deps == 'oldest' }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
           cache: pip
