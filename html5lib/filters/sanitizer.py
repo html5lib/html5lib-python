@@ -853,7 +853,7 @@ class Filter(base.Filter):
                 if uri and uri.scheme:
                     if uri.scheme not in self.allowed_protocols:
                         del attrs[attr]
-                    if uri.scheme == 'data':
+                    elif uri.scheme == 'data':
                         m = data_content_type.match(uri.path)
                         if not m:
                             del attrs[attr]
