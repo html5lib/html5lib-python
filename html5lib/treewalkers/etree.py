@@ -33,7 +33,7 @@ def getETreeBuilder(ElementTreeImplementation):
             if isinstance(node, tuple):  # It might be the root Element
                 elt, _, _, flag = node
                 if flag in ("text", "tail"):
-                    return base.TEXT, getattr(elt, flag)
+                    return base.TEXT, getattr(elt, flag).getvalue()
                 else:
                     node = elt
 
@@ -44,11 +44,15 @@ def getETreeBuilder(ElementTreeImplementation):
                 return (base.DOCUMENT,)
 
             elif node.tag == "<!DOCTYPE>":
-                return (base.DOCTYPE, node.text,
-                        node.get("publicId"), node.get("systemId"))
+                return (
+                    base.DOCTYPE,
+                    node.text.getvalue(),
+                    node.get("publicId"),
+                    node.get("systemId"),
+                )
 
             elif node.tag == ElementTreeCommentType:
-                return base.COMMENT, node.text
+                return base.COMMENT, node.text.getvalue()
 
             else:
                 assert isinstance(node.tag, string_types), type(node.tag)

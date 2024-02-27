@@ -16,6 +16,23 @@ from .._utils import moduleFactoryFactory
 tag_regexp = re.compile("{([^}]*)}(.*)")
 
 
+class TextBuffer:
+    def __init__(self, initial=""):
+        self.chunks = [initial]
+
+    def __str__(self):
+        return "".join(self.chunks)
+
+    def getvalue(self):
+        return "".join(self.chunks)
+
+    def append(self, other):
+        self.chunks.append(other)
+
+    def __eq__(self, other):
+        return self.getvalue() == other
+
+
 def getETreeBuilder(ElementTreeImplementation, fullTree=False):
     ElementTree = ElementTreeImplementation
     ElementTreeCommentType = ElementTree.Comment("asd").tag
@@ -110,25 +127,25 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
         def insertText(self, data, insertBefore=None):
             if not len(self._element):
                 if not self._element.text:
-                    self._element.text = ""
-                self._element.text += data
+                    self._element.text = TextBuffer("")
+                self._element.text.append(data)
             elif insertBefore is None:
                 # Insert the text as the tail of the last child element
                 if not self._element[-1].tail:
-                    self._element[-1].tail = ""
-                self._element[-1].tail += data
+                    self._element[-1].tail = TextBuffer("")
+                self._element[-1].tail.append(data)
             else:
                 # Insert the text before the specified node
                 children = list(self._element)
                 index = children.index(insertBefore._element)
                 if index > 0:
                     if not self._element[index - 1].tail:
-                        self._element[index - 1].tail = ""
-                    self._element[index - 1].tail += data
+                        self._element[index - 1].tail = TextBuffer("")
+                    self._element[index - 1].tail.append(data)
                 else:
                     if not self._element.text:
-                        self._element.text = ""
-                    self._element.text += data
+                        self._element.text = TextBuffer("")
+                    self._element.text.append(data)
 
         def cloneNode(self):
             element = type(self)(self.name, self.namespace)
@@ -138,13 +155,15 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
 
         def reparentChildren(self, newParent):
             if newParent.childNodes:
-                newParent.childNodes[-1]._element.tail += self._element.text
+                newParent.childNodes[-1]._element.tail.append(
+                    self._element.text.getvalue()
+                )
             else:
                 if not newParent._element.text:
-                    newParent._element.text = ""
+                    newParent._element.text = TextBuffer("")
                 if self._element.text is not None:
-                    newParent._element.text += self._element.text
-            self._element.text = ""
+                    newParent._element.text.append(self._element.text.getvalue())
+            self._element.text = TextBuffer("")
             base.Node.reparentChildren(self, newParent)
 
     class Comment(Element):
@@ -152,22 +171,23 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
             # Use the superclass constructor to set all properties on the
             # wrapper element
             self._element = ElementTree.Comment(data)
+            self._element.text = TextBuffer(data)
             self.parent = None
             self._childNodes = []
             self._flags = []
 
         def _getData(self):
-            return self._element.text
+            return self._element.text.getvalue()
 
         def _setData(self, value):
-            self._element.text = value
+            self._element.text = TextBuffer(value)
 
         data = property(_getData, _setData)
 
     class DocumentType(Element):
         def __init__(self, name, publicId, systemId):
             Element.__init__(self, "<!DOCTYPE>")
-            self._element.text = name
+            self._element.text = TextBuffer(name)
             self.publicId = publicId
             self.systemId = systemId
 
@@ -208,19 +228,19 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                     publicId = element.get("publicId") or ""
                     systemId = element.get("systemId") or ""
                     rv.append("""<!DOCTYPE %s "%s" "%s">""" %
-                              (element.text, publicId, systemId))
+                              (element.text.getvalue(), publicId, systemId))
                 else:
-                    rv.append("<!DOCTYPE %s>" % (element.text,))
+                    rv.append("<!DOCTYPE %s>" % (element.text.getvalue(),))
             elif element.tag == "DOCUMENT_ROOT":
                 rv.append("#document")
                 if element.text is not None:
-                    rv.append("|%s\"%s\"" % (' ' * (indent + 2), element.text))
+                    rv.append("|%s\"%s\"" % (' ' * (indent + 2), element.text.getvalue()))
                 if element.tail is not None:
                     raise TypeError("Document node cannot have tail")
                 if hasattr(element, "attrib") and len(element.attrib):
                     raise TypeError("Document node cannot have attributes")
             elif element.tag == ElementTreeCommentType:
-                rv.append("|%s<!-- %s -->" % (' ' * indent, element.text))
+                rv.append("|%s<!-- %s -->" % (' ' * indent, element.text.getvalue()))
             else:
                 assert isinstance(element.tag, text_type), \
                     "Expected unicode, got %s, %s" % (type(element.tag), element.tag)
@@ -248,13 +268,14 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
 
                     for name, value in sorted(attributes):
                         rv.append('|%s%s="%s"' % (' ' * (indent + 2), name, value))
-                if element.text:
-                    rv.append("|%s\"%s\"" % (' ' * (indent + 2), element.text))
+                if element.text and element.text.getvalue():
+                    rv.append("|%s\"%s\"" % (' ' * (indent + 2), element.text.getvalue()))
             indent += 2
             for child in element:
                 serializeElement(child, indent)
             if element.tail:
-                rv.append("|%s\"%s\"" % (' ' * (indent - 2), element.tail))
+                rv.append("|%s\"%s\"" % (' ' * (indent - 2), element.tail.getvalue()))
+
         serializeElement(element, 0)
 
         return "\n".join(rv)
@@ -272,13 +293,15 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                 if element.get("publicId") or element.get("systemId"):
                     publicId = element.get("publicId") or ""
                     systemId = element.get("systemId") or ""
-                    rv.append("""<!DOCTYPE %s PUBLIC "%s" "%s">""" %
-                              (element.text, publicId, systemId))
+                    rv.append(
+                        """<!DOCTYPE %s PUBLIC "%s" "%s">"""
+                        % (element.text.getvalue(), publicId, systemId)
+                    )
                 else:
-                    rv.append("<!DOCTYPE %s>" % (element.text,))
+                    rv.append("<!DOCTYPE %s>" % (element.text.getvalue(),))
             elif element.tag == "DOCUMENT_ROOT":
                 if element.text is not None:
-                    rv.append(element.text)
+                    rv.append(element.text.getvalue())
                 if element.tail is not None:
                     raise TypeError("Document node cannot have tail")
                 if hasattr(element, "attrib") and len(element.attrib):
@@ -288,7 +311,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                     serializeElement(child)
 
             elif element.tag == ElementTreeCommentType:
-                rv.append("<!--%s-->" % (element.text,))
+                rv.append("<!--%s-->" % (element.text.getvalue(),))
             else:
                 # This is assumed to be an ordinary element
                 if not element.attrib:
@@ -299,7 +322,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                         for name, value in element.attrib.items()])
                     rv.append("<%s %s>" % (element.tag, attr))
                 if element.text:
-                    rv.append(element.text)
+                    rv.append(element.text.getvalue())
 
                 for child in element:
                     serializeElement(child)
@@ -307,7 +330,7 @@ def getETreeBuilder(ElementTreeImplementation, fullTree=False):
                 rv.append("</%s>" % (element.tag,))
 
             if element.tail:
-                rv.append(element.tail)
+                rv.append(element.tail.getvalue())
 
         serializeElement(element)
 
