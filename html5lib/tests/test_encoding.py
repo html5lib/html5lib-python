@@ -1,4 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
 
 import os
 
@@ -9,7 +8,7 @@ from html5lib import HTMLParser, _inputstream
 
 
 def test_basic_prescan_length():
-    data = "<title>Caf\u00E9</title><!--a--><meta charset='utf-8'>".encode('utf-8')
+    data = "<title>Caf\u00E9</title><!--a--><meta charset='utf-8'>".encode()
     pad = 1024 - len(data) + 1
     data = data.replace(b"-a-", b"-" + (b"a" * pad) + b"-")
     assert len(data) == 1024  # Sanity
@@ -18,7 +17,7 @@ def test_basic_prescan_length():
 
 
 def test_parser_reparse():
-    data = "<title>Caf\u00E9</title><!--a--><meta charset='utf-8'>".encode('utf-8')
+    data = "<title>Caf\u00E9</title><!--a--><meta charset='utf-8'>".encode()
     pad = 10240 - len(data) + 1
     data = data.replace(b"-a-", b"-" + (b"a" * pad) + b"-")
     assert len(data) == 10240  # Sanity

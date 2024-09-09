@@ -1,4 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
 
 from genshi.core import QName, Attrs
 from genshi.core import START, END, TEXT, COMMENT, DOCTYPE

@@ -29,7 +29,7 @@ or:
 
 By default, the ``document`` will be an ``xml.etree`` element instance.
 Whenever possible, html5lib chooses the accelerated ``ElementTree``
-implementation (i.e. ``xml.etree.cElementTree`` on Python 2.x).
+implementation.
 
 Two other tree types are supported: ``xml.dom.minidom`` and
 ``lxml.etree``. To use an alternative format, specify the name of
@@ -40,18 +40,6 @@ a treebuilder:
   import html5lib
   with open("mydocument.html", "rb") as f:
       lxml_etree_document = html5lib.parse(f, treebuilder="lxml")
-
-When using with ``urllib2`` (Python 2), the charset from HTTP should be
-pass into html5lib as follows:
-
-.. code-block:: python
-
-  from contextlib import closing
-  from urllib2 import urlopen
-  import html5lib
-
-  with closing(urlopen("http://example.com/")) as f:
-      document = html5lib.parse(f, transport_encoding=f.info().getparam("charset"))
 
 When using with ``urllib.request`` (Python 3), the charset from HTTP
 should be pass into html5lib as follows:
@@ -90,7 +78,7 @@ More documentation is available at https://html5lib.readthedocs.io/.
 Installation
 ------------
 
-html5lib works on CPython 2.7+, CPython 3.5+ and PyPy. To install:
+html5lib works on CPython 3.8+ and PyPy. To install:
 
 .. code-block:: bash
 

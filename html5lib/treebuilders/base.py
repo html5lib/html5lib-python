@@ -1,6 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
-from six import text_type
-
 from ..constants import scopingElements, tableInsertModeElements, namespaces
 
 # The scope markers are inserted when entering object elements,
@@ -20,7 +17,7 @@ listElementsMap = {
 }
 
 
-class Node(object):
+class Node:
     """Represents an item in the tree"""
     def __init__(self, name):
         """Creates a Node
@@ -144,7 +141,7 @@ class ActiveFormattingElements(list):
         return True
 
 
-class TreeBuilder(object):
+class TreeBuilder:
     """Base treebuilder implementation
 
     * documentClass - the class to use for the bottommost node of a document
@@ -200,7 +197,7 @@ class TreeBuilder(object):
         # match any node with that name
         exactNode = hasattr(target, "nameTuple")
         if not exactNode:
-            if isinstance(target, text_type):
+            if isinstance(target, str):
                 target = (namespaces["html"], target)
             assert isinstance(target, tuple)
 
@@ -323,7 +320,7 @@ class TreeBuilder(object):
 
     def insertElementNormal(self, token):
         name = token["name"]
-        assert isinstance(name, text_type), "Element %s not unicode" % name
+        assert isinstance(name, str), "Element %s not unicode" % name
         namespace = token.get("namespace", self.defaultNamespace)
         element = self.elementClass(name, namespace)
         element.attributes = token["data"]

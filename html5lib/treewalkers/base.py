@@ -1,4 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
 
 from xml.dom import Node
 from ..constants import namespaces, voidElements, spaceCharacters
@@ -17,7 +16,7 @@ UNKNOWN = "<#UNKNOWN#>"
 spaceCharacters = "".join(spaceCharacters)
 
 
-class TreeWalker(object):
+class TreeWalker:
     """Walks a tree yielding tokens
 
     Tokens are dicts that all have a ``type`` field specifying the type of the

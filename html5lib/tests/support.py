@@ -1,4 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
 
 # pylint:disable=wrong-import-position
 
@@ -86,7 +85,7 @@ class DefaultDict(dict):
         return dict.get(self, key, self.default)
 
 
-class TestData(object):
+class TestData:
     def __init__(self, filename, newTestHeading="data", encoding="utf8"):
         if encoding is None:
             self.f = open(filename, mode="rb")

@@ -1,4 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
 
 from html5lib.filters.whitespace import Filter
 from html5lib.constants import spaceCharacters

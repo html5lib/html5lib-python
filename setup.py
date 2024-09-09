@@ -1,4 +1,3 @@
-from __future__ import print_function
 
 import ast
 import codecs
@@ -64,11 +63,7 @@ classifiers = [
     'Operating System :: OS Independent',
     'Programming Language :: Python',
     'Programming Language :: Python :: 2',
-    'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.5',
-    'Programming Language :: Python :: 3.6',
-    'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
@@ -107,10 +102,9 @@ setup(name='html5lib',
       maintainer_email='james@hoppipolla.co.uk',
       packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
       install_requires=[
-          'six>=1.9',
           'webencodings>=0.5.1',
       ],
-      python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*",
+      python_requires=">=3.8",
       extras_require={
           # A conditional extra will only install these items when the extra is
           # requested and the condition matches.

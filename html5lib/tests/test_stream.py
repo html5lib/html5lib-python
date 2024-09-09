@@ -1,4 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
 
 from . import support  # noqa
 
@@ -8,8 +7,8 @@ from io import BytesIO, StringIO
 
 import pytest
 
-import six
-from six.moves import http_client, urllib
+import http.client
+import urllib.response
 
 from html5lib._inputstream import (BufferedStream, HTMLInputStream,
                                    HTMLUnicodeInputStream, HTMLBinaryInputStream)
@@ -105,7 +104,7 @@ def test_char_ascii():
 
 
 def test_char_utf8():
-    stream = HTMLInputStream('\u2018'.encode('utf-8'), override_encoding='utf-8')
+    stream = HTMLInputStream('\u2018'.encode(), override_encoding='utf-8')
     assert stream.charEncoding[0].name == 'utf-8'
     assert stream.char() == '\u2018'
 
@@ -186,12 +185,12 @@ def test_python_issue_20007():
     Make sure we have a work-around for Python bug #20007
     http://bugs.python.org/issue20007
     """
-    class FakeSocket(object):
+    class FakeSocket:
         def makefile(self, _mode, _bufsize=None):
             # pylint:disable=unused-argument
             return BytesIO(b"HTTP/1.1 200 Ok\r\n\r\nText")
 
-    source = http_client.HTTPResponse(FakeSocket())
+    source = http.client.HTTPResponse(FakeSocket())
     source.begin()
     stream = HTMLInputStream(source)
     assert stream.charsUntil(" ") == "Text"
@@ -202,15 +201,12 @@ def test_python_issue_20007_b():
     Make sure we have a work-around for Python bug #20007
     http://bugs.python.org/issue20007
     """
-    if six.PY2:
-        return
-
-    class FakeSocket(object):
+    class FakeSocket:
         def makefile(self, _mode, _bufsize=None):
             # pylint:disable=unused-argument
             return BytesIO(b"HTTP/1.1 200 Ok\r\n\r\nText")
 
-    source = http_client.HTTPResponse(FakeSocket())
+    source = http.client.HTTPResponse(FakeSocket())
     source.begin()
     wrapped = urllib.response.addinfourl(source, source.msg, "http://example.com")
     stream = HTMLInputStream(wrapped)

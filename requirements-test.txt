@@ -6,5 +6,6 @@ pytest>=4.6.10,<5 ; python_version < '3'
 pytest>=5.4.2,<8 ; python_version >= '3'
 coverage>=5.1,<6
 pytest-expect>=1.1.0,<2
+six>=1.9 # required by pytest-expect
 mock>=3.0.5,<4 ; python_version < '3.3'
 setuptools; python_version >= '3.12'

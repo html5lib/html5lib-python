@@ -12,18 +12,11 @@ Examples:
     $ toxver.py pypy-3.8 base
     TOXENV=pypy3-base
 
-    $ toxver.py 2.7 oldest
-    TOXENV=py27-oldest
-
     $ toxver.py ~3.12.0-0 optional
     TOXENV=py312-optional
 
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 
 import sys
 
@@ -34,10 +27,6 @@ def main(argv):
         return 1
 
     deps = argv[2]
-
-    if argv[1].startswith("pypy-2"):
-        print("TOXENV=pypy-" + deps)
-        return 0
 
     if argv[1].startswith("pypy-3"):
         print("TOXENV=pypy3-" + deps)

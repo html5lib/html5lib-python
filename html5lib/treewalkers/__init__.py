@@ -8,7 +8,6 @@ implements a 'serialize' method which takes a tree as sole argument and
 returns an iterator which generates tokens.
 """
 
-from __future__ import absolute_import, division, unicode_literals
 
 from .. import constants
 from .._utils import default_etree

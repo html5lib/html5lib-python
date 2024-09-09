@@ -1,4 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
 
 import sys
 import os
@@ -25,7 +24,7 @@ def main(out_path):
 
 def run_file(filename, out_path):
     try:
-        tests_data = json.load(open(filename, "r"))
+        tests_data = json.load(open(filename))
     except ValueError:
         sys.stderr.write("Failed to load %s\n" % filename)
         return

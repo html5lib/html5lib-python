@@ -1,10 +1,6 @@
-from __future__ import absolute_import, division, unicode_literals
 
 
-try:
-    from collections.abc import MutableMapping
-except ImportError:  # Python 2.7
-    from collections import MutableMapping
+from collections.abc import MutableMapping
 from xml.dom import minidom, Node
 import weakref
 

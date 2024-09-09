@@ -1,7 +1,6 @@
 # This allows us to install the actually oldest supported dependencies and test whether that works.
 
 # requirements.txt
-six==1.9
 webencodings==0.5.1
 
 # requirements-optional.txt

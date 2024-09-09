@@ -12,9 +12,6 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         deps: [base, optional]
         include:
-          - python: "pypy-2.7"
-            os: ubuntu-latest
-            deps: base
           - python: "pypy-3.10"
             os: ubuntu-latest
             deps: base

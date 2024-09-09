@@ -42,7 +42,7 @@ def parse():
             try:
                 # Try opening from file system
                 f = open(f, "rb")
-            except IOError as e:
+            except OSError as e:
                 sys.stderr.write("Unable to open file: %s\n" % e)
                 sys.exit(1)
     except IndexError:

@@ -1,4 +1,3 @@
-from __future__ import print_function, unicode_literals
 
 import platform
 import sys
@@ -12,7 +11,7 @@ info = {
     "maxsize": sys.maxsize
 }
 
-search_modules = ["chardet", "genshi", "html5lib", "lxml", "six"]
+search_modules = ["chardet", "genshi", "html5lib", "lxml"]
 found_modules = []
 
 for m in search_modules:

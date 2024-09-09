@@ -1,4 +1,3 @@
-from __future__ import print_function
 import os.path
 import sys
 
@@ -54,7 +53,7 @@ def pytest_configure(config):
         # Check for optional requirements
         req_file = os.path.join(_root, "requirements-optional.txt")
         if os.path.exists(req_file):
-            with open(req_file, "r") as fp:
+            with open(req_file) as fp:
                 for line in fp:
                     if (line.strip() and
                         not (line.startswith("-r") or
@@ -79,7 +78,7 @@ def pytest_configure(config):
         import xml.etree.ElementTree as ElementTree
 
         try:
-            import xml.etree.cElementTree as cElementTree
+            import xml.etree.ElementTree as cElementTree
         except ImportError:
             msgs.append("cElementTree unable to be imported")
         else:

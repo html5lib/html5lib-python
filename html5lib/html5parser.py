@@ -1,6 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals
-from six import viewkeys
-
 from . import _inputstream
 from . import _tokenizer
 
@@ -69,7 +66,7 @@ def parseFragment(doc, container="div", treebuilder="etree", namespaceHTMLElemen
     return p.parseFragment(doc, container=container, **kwargs)
 
 
-class HTMLParser(object):
+class HTMLParser:
     """HTML parser
 
     Generates a tree structure from a stream of (possibly malformed) HTML.
@@ -397,7 +394,7 @@ class HTMLParser(object):
         self.phase = self.phases["text"]
 
 
-class Phase(object):
+class Phase:
     """Base class for helper object that implements each phase of processing
     """
     __slots__ = ("parser", "tree", "__startTagCache", "__endTagCache")
@@ -428,7 +425,7 @@ class Phase(object):
     def processStartTag(self, token):
         # Note the caching is done here rather than BoundMethodDispatcher as doing it there
         # requires a circular reference to the Phase, and this ends up with a significant
-        # (CPython 2.7, 3.8) GC cost when parsing many short inputs
+        # (CPython 3.8) GC cost when parsing many short inputs
         name = token["name"]
         # In Py2, using `in` is quicker in general than try/except KeyError
         # In Py3, `in` is quicker when there are few cache hits (typically short inputs)
@@ -455,7 +452,7 @@ class Phase(object):
     def processEndTag(self, token):
         # Note the caching is done here rather than BoundMethodDispatcher as doing it there
         # requires a circular reference to the Phase, and this ends up with a significant
-        # (CPython 2.7, 3.8) GC cost when parsing many short inputs
+        # (CPython 3.8) GC cost when parsing many short inputs
         name = token["name"]
         # In Py2, using `in` is quicker in general than try/except KeyError
         # In Py3, `in` is quicker when there are few cache hits (typically short inputs)
@@ -2774,7 +2771,7 @@ _phases = {
 
 
 def adjust_attributes(token, replacements):
-    needs_adjustment = viewkeys(token['data']) & viewkeys(replacements)
+    needs_adjustment = token['data'].keys() & replacements.keys()
     if needs_adjustment:
         token['data'] = type(token['data'])((replacements.get(k, k), v)
                                             for k, v in token['data'].items())
