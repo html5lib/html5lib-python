@@ -93,8 +93,9 @@ with open(join(here, "html5lib", "__init__.py"), "rb") as init_file:
         if (len(a.targets) == 1 and
                 isinstance(a.targets[0], ast.Name) and
                 a.targets[0].id == "__version__" and
-                isinstance(a.value, ast.Str)):
-            version = a.value.s
+                ((sys.version_info >= (3, 8) and isinstance(a.value, ast.Constant)) or
+                    isinstance(a.value, ast.Str))):
+            version = a.value.value if sys.version_info >= (3, 8) else a.value.s
 
 setup(name='html5lib',
       version=version,
