@@ -12,7 +12,11 @@ import re
 import warnings
 from xml.sax.saxutils import escape, unescape
 
-from six.moves import urllib_parse as urlparse
+try:
+    from six.moves import urllib_parse as urlparse
+except ModuleNotFoundError:
+    # Support for Python 3.12+ where six.moves is not available. 
+    import urllib.parse as urlparse
 
 from . import base
 from ..constants import namespaces, prefixes
