@@ -9,7 +9,13 @@ from io import BytesIO, StringIO
 import pytest
 
 import six
-from six.moves import http_client, urllib
+
+try:
+    from six.moves import http_client, urllib
+except ModuleNotFoundError:
+    # Support for Python 3.12+ where six.moves is not available. 
+    import http.client as http_client
+    import urllib
 
 from html5lib._inputstream import (BufferedStream, HTMLInputStream,
                                    HTMLUnicodeInputStream, HTMLBinaryInputStream)
