@@ -212,9 +212,9 @@ def test_python_issue_20007_b():
 
     source = http_client.HTTPResponse(FakeSocket())
     source.begin()
-    wrapped = urllib.response.addinfourl(source, source.msg, "http://example.com")
-    stream = HTMLInputStream(wrapped)
-    assert stream.charsUntil(" ") == "Text"
+    with urllib.response.addinfourl(source, source.msg, "http://example.com") as wrapped:
+        stream = HTMLInputStream(wrapped)
+        assert stream.charsUntil(" ") == "Text"
 
 
 @pytest.mark.parametrize("inp,num",
