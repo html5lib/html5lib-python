@@ -2,7 +2,12 @@ from __future__ import print_function
 import os.path
 import sys
 
-import pkg_resources
+from packaging.requirements import Requirement
+from packaging.markers import Marker
+try:
+    from importlib import metadata
+except ImportError:
+    import importlib_metadata as metadata
 import pytest
 
 from .tree_construction import TreeConstructionFile
@@ -63,17 +68,16 @@ def pytest_configure(config):
                             spec, marker = line.strip().split(";", 1)
                         else:
                             spec, marker = line.strip(), None
-                        req = pkg_resources.Requirement.parse(spec)
-                        if marker and not pkg_resources.evaluate_marker(marker):
+                        req = Requirement(spec)
+                        if marker and not Marker(marker).evaluate():
                             msgs.append("%s not available in this environment" % spec)
                         else:
                             try:
-                                installed = pkg_resources.working_set.find(req)
-                            except pkg_resources.VersionConflict:
-                                msgs.append("Outdated version of %s installed, need %s" % (req.name, spec))
-                            else:
-                                if not installed:
-                                    msgs.append("Need %s" % spec)
+                                installed = metadata.version(req.name)
+                                if not req.specifier.contains(installed, prereleases=True):
+                                    msgs.append("Outdated version of %s installed, need %s" % (req.name, spec))
+                            except metadata.PackageNotFoundError:
+                                msgs.append("Need %s" % spec)
 
         # Check cElementTree
         import xml.etree.ElementTree as ElementTree

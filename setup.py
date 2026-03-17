@@ -6,9 +6,12 @@ import sys
 
 from os.path import join, dirname
 from setuptools import setup, find_packages, __version__ as setuptools_version
-from pkg_resources import parse_version
 
-import pkg_resources
+try:
+    import pkg_resources
+    from pkg_resources import parse_version
+except ImportError:
+    pkg_resources = None
 
 try:
     import _markerlib.markers
