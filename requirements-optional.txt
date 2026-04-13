@@ -10,4 +10,5 @@ chardet>=2.2.1
 
 # lxml is supported with its own treebuilder ("lxml") and otherwise
 # uses the standard ElementTree support
-lxml>=3.4.0 ; platform_python_implementation == 'CPython'
+lxml>=3.4.0, <5.0.0 ; python_version < '3.0' and platform_python_implementation == 'CPython'
+lxml>=3.4.0 ; python_version >= '3.0' and platform_python_implementation == 'CPython'

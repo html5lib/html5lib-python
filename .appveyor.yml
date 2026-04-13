@@ -1,7 +1,8 @@
 # appveyor.yml - https://www.appveyor.com/docs/lang/python
-# https://www.appveyor.com/docs/windows-images-software/#visual-studio-2022
+# https://www.appveyor.com/docs/windows-images-software/#visual-studio-2017
 ---
-image: Visual Studio 2022
+image: Visual Studio 2017
+
 environment:
   matrix:
     - PY_PYTHON: 2.7
