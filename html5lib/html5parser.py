@@ -364,10 +364,16 @@ class HTMLParser(object):
                 assert self.innerHTML
                 last = True
                 nodeName = self.innerHTML
-            # Check for conditions that should only happen in the innerHTML
-            # case
-            if nodeName in ("select", "colgroup", "head", "html"):
-                assert self.innerHTML
+            # "select" may appear in the stack during normal parsing (e.g.
+            # inside foreign content); in that case fall through to the
+            # newModes lookup so we end up in "inSelect".  The remaining
+            # names ("colgroup", "head", "html") should only be reachable
+            # when the fragment-parsing algorithm is in use.  Malformed
+            # markup can land us here in a full parse, so gracefully skip
+            # those nodes rather than crashing with an AssertionError.
+            if nodeName in ("colgroup", "head", "html"):
+                if not self.innerHTML:
+                    continue
 
             if not last and node.namespace != self.tree.defaultNamespace:
                 continue
@@ -1696,7 +1702,11 @@ class InTablePhase(Phase):
         if self.tree.openElements[-1].name != "html":
             self.parser.parseError("eof-in-table")
         else:
-            assert self.parser.innerHTML
+            # The current node is <html>; in normal parsing this is the
+            # innerHTML case, but malformed markup (e.g. <table><svg><html>)
+            # can reach here too.  Either way, just stop parsing.
+            if not self.parser.innerHTML:
+                self.parser.parseError("eof-in-table")
         # Stop parsing
 
     def processSpaceCharacters(self, token):
