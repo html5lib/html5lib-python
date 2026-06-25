@@ -91,3 +91,15 @@ def test_self_closing_col():
     parser = HTMLParser()
     parser.parseFragment('<table><colgroup><col /></colgroup></table>')
     assert not parser.errors
+
+
+def test_malformed_select_in_foreign_content_does_not_crash():
+    parser = HTMLParser()
+    assert parser.parse(b'-<math><sElect><mi><sElect><sElect>') is not None
+    assert parser.errors
+
+
+def test_malformed_table_with_html_in_foreign_content_does_not_crash():
+    parser = HTMLParser()
+    assert parser.parse(b'\xc3\xb1<table><svg><html>') is not None
+    assert parser.errors
