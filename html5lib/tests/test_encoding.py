@@ -82,7 +82,7 @@ def param_encoding():
             yield test[b'data'], test[b'encoding']
 
 
-@pytest.mark.parametrize("data, encoding", param_encoding())
+@pytest.mark.parametrize("data, encoding", list(param_encoding()))
 def test_parser_encoding(data, encoding):
     p = HTMLParser()
     assert p.documentEncoding is None
@@ -92,7 +92,7 @@ def test_parser_encoding(data, encoding):
     assert encoding == p.documentEncoding, errorMessage(data, encoding, p.documentEncoding)
 
 
-@pytest.mark.parametrize("data, encoding", param_encoding())
+@pytest.mark.parametrize("data, encoding", list(param_encoding()))
 def test_prescan_encoding(data, encoding):
     stream = _inputstream.HTMLBinaryInputStream(data, useChardet=False)
     encoding = encoding.lower().decode("ascii")

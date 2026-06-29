@@ -87,7 +87,7 @@ def param_treewalker_six_mix():
             yield intext, expected, attrs, tree
 
 
-@pytest.mark.parametrize("intext, expected, attrs_to_add, tree", param_treewalker_six_mix())
+@pytest.mark.parametrize("intext, expected, attrs_to_add, tree", list(param_treewalker_six_mix()))
 def test_treewalker_six_mix(intext, expected, attrs_to_add, tree):
     """tests what happens when we add attributes to the intext"""
     treeName, treeClass = tree
@@ -105,7 +105,7 @@ def test_treewalker_six_mix(intext, expected, attrs_to_add, tree):
         raise AssertionError("TreewalkerEditTest: %s\nExpected:\n%s\nReceived:\n%s" % (treeName, expected, output))
 
 
-@pytest.mark.parametrize("tree,char", itertools.product(sorted(treeTypes.items()), ["x", "\u1234"]))
+@pytest.mark.parametrize("tree,char", list(itertools.product(sorted(treeTypes.items()), ["x", "\u1234"])))
 def test_fragment_single_char(tree, char):
     expected = [
         {'data': char, 'type': 'Characters'}
