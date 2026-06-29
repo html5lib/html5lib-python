@@ -130,8 +130,8 @@ def test_details_summary_allowed():
 
 
 @pytest.mark.parametrize("expected, input",
-                         (pytest.param(expected, input, id=id)
-                          for id, expected, input in param_sanitizer()))
+                         [pytest.param(expected, input, id=id)
+                          for id, expected, input in param_sanitizer()])
 def test_sanitizer(expected, input):
     parsed = parseFragment(expected)
     expected = serialize(parsed,

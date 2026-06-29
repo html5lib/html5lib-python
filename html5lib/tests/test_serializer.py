@@ -155,14 +155,12 @@ def testSpecQuoteAttribute(c):
     test_serializer(input_, output_, options_)
 
 
-@pytest.mark.parametrize("c", list("\t\n\u000C\x20\r\"'=<>`"
-                                   "\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n"
+@pytest.mark.parametrize("c", list("\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n"
                                    "\x0b\x0c\r\x0e\x0f\x10\x11\x12\x13\x14\x15"
                                    "\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f"
-                                   "\x20\x2f\x60\xa0\u1680\u180e\u180f\u2000"
-                                   "\u2001\u2002\u2003\u2004\u2005\u2006\u2007"
-                                   "\u2008\u2009\u200a\u2028\u2029\u202f\u205f"
-                                   "\u3000"))
+                                   "\x20\"'=<>/\x60\xa0\u1680\u180e\u180f"
+                                   "\u2000\u2001\u2002\u2003\u2004\u2005\u2006"
+                                   "\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000"))
 def testLegacyQuoteAttribute(c):
     input_ = [["StartTag", "http://www.w3.org/1999/xhtml", "span",
                [{"namespace": None, "name": "foo", "value": c}]]]
@@ -212,7 +210,7 @@ def param_serializer():
                 yield test["input"], test["expected"], test.get("options", {})
 
 
-@pytest.mark.parametrize("input, expected, options", param_serializer())
+@pytest.mark.parametrize("input, expected, options", list(param_serializer()))
 def test_serializer(input, expected, options):
     encoding = options.get("encoding", None)
 
