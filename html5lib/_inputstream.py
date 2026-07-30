@@ -483,7 +483,7 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
         # Guess with chardet, if available
         if chardet:
             try:
-                from chardet.universaldetector import UniversalDetector
+                from chardet import UniversalDetector
             except ImportError:
                 pass
             else:
