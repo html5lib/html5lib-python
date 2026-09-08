@@ -20,6 +20,9 @@ Bug fixes:
 
 * The sanitizer now permits ``<summary>`` tags. It used to allow ``<details>``
   already. (#423)
+* Encoding detection no longer triggers a ``DeprecationWarning`` under
+  chardet 7+, which moved ``UniversalDetector`` out of
+  ``chardet.universaldetector``. (#601)
 
 1.1
 ~~~

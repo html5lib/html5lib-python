@@ -483,10 +483,16 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
         # Guess with chardet, if available
         if chardet:
             try:
-                from chardet.universaldetector import UniversalDetector
+                # chardet 7+ moved UniversalDetector here; the older
+                # chardet.universaldetector path still works but now raises
+                # a DeprecationWarning.
+                from chardet.detector import UniversalDetector
             except ImportError:
-                pass
-            else:
+                try:
+                    from chardet.universaldetector import UniversalDetector
+                except ImportError:
+                    UniversalDetector = None
+            if UniversalDetector is not None:
                 buffers = []
                 detector = UniversalDetector()
                 while not detector.done:
