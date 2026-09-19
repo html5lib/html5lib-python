@@ -6,9 +6,10 @@ import sys
 
 from os.path import join, dirname
 from setuptools import setup, find_packages, __version__ as setuptools_version
-from pkg_resources import parse_version
-
-import pkg_resources
+try:
+    import pkg_resources
+except ImportError:
+    pkg_resources = None
 
 try:
     import _markerlib.markers
@@ -50,7 +51,7 @@ if _markerlib and sys.version_info[0] == 3:
 # recognise the markers needed by this setup.py
 # Change this to setuptools 20.10.0 to support all markers.
 if pkg_resources:
-    if parse_version(setuptools_version) < parse_version('18.5'):
+    if (pkg_resources.parse_version(setuptools_version) < pkg_resources.parse_version('18.5')):
         MarkerEvaluation = pkg_resources.MarkerEvaluation
 
         del pkg_resources.parser
