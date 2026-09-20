@@ -323,3 +323,19 @@ def test_invalid_codepoints_surrogates(inp, num):
     for _i in range(len(inp)):
         stream.char()
     assert len(stream.errors) == num
+
+
+def test_content_attr_parser_unquoted_charset_stops_at_semicolon():
+    """Unquoted charset values terminate at ';' per HTML meta encoding rules.
+
+    Regression for https://github.com/html5lib/html5lib-python/issues/92
+    """
+    from html5lib._inputstream import ContentAttrParser, EncodingBytes
+
+    # Trailing parameters after ';' must not become part of the charset.
+    assert ContentAttrParser(EncodingBytes(b"charset=iso8859-2;text/html")).parse() == b"iso8859-2"
+    assert ContentAttrParser(EncodingBytes(b"text/html; charset=iso-8859-2;")).parse() == b"iso-8859-2"
+    # Spaces still terminate (existing behaviour).
+    assert ContentAttrParser(EncodingBytes(b"charset=iso8859-2 text/html")).parse() == b"iso8859-2"
+    # Quoted values may contain ';' literally until the closing quote.
+    assert ContentAttrParser(EncodingBytes(b"charset=\"iso8859-2;x\"")).parse() == b"iso8859-2;x"

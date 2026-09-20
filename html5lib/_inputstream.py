@@ -888,10 +888,11 @@ class ContentAttrParser(object):
                 else:
                     return None
             else:
-                # Unquoted value
+                # Unquoted value — HTML terminates at whitespace or ';'
+                # (see encoding extraction from meta content attribute)
                 oldPosition = self.data.position
                 try:
-                    self.data.skipUntil(spaceCharactersBytes)
+                    self.data.skipUntil(spaceCharactersBytes | frozenset([b";"]))
                     return self.data[oldPosition:self.data.position]
                 except StopIteration:
                     # Return the whole remaining value
