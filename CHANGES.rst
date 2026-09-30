@@ -20,6 +20,9 @@ Bug fixes:
 
 * The sanitizer now permits ``<summary>`` tags. It used to allow ``<details>``
   already. (#423)
+* Stop treating ``;`` as part of an unquoted charset in a meta
+  ``Content-Type``. ``charset=iso-8859-2;text/html`` is now decoded as
+  ``iso-8859-2``. (#92)
 
 1.1
 ~~~
