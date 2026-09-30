@@ -8,6 +8,18 @@ from .support import get_data_files, test_dir, errorMessage, TestData as _TestDa
 from html5lib import HTMLParser, _inputstream
 
 
+@pytest.mark.parametrize("content, expected", [
+    (b"charset=iso8859-2;text/html", b"iso8859-2"),
+    (b"text/html;charset=iso-8859-2", b"iso-8859-2"),
+    (b"text/html;charset=iso-8859-2;", b"iso-8859-2"),
+    (b"charset=iso-8859-2 ", b"iso-8859-2"),
+    (b'charset="iso-8859-2";text/html', b"iso-8859-2"),
+])
+def test_content_attr_parser_charset(content, expected):
+    parser = _inputstream.ContentAttrParser(_inputstream.EncodingBytes(content))
+    assert parser.parse() == expected
+
+
 def test_basic_prescan_length():
     data = "<title>Caf\u00E9</title><!--a--><meta charset='utf-8'>".encode('utf-8')
     pad = 1024 - len(data) + 1
@@ -37,6 +49,9 @@ def test_parser_reparse():
     ("iso-8859-2", b"", {"override_encoding": "iso-8859-2", "transport_encoding": "iso-8859-3"}),
     ("iso-8859-2", b"<meta charset=iso-8859-3>", {"transport_encoding": "iso-8859-2"}),
     ("iso-8859-2", b"<meta charset=iso-8859-2>", {"same_origin_parent_encoding": "iso-8859-3"}),
+    # Trailing ';' must not be treated as part of an unquoted charset (#92)
+    ("iso-8859-2", b'<meta http-equiv="content-type" content="charset=iso-8859-2;text/html">', {}),
+    ("iso-8859-2", b'<meta http-equiv="content-type" content="text/html;charset=iso-8859-2;">', {}),
     ("iso-8859-2", b"", {"same_origin_parent_encoding": "iso-8859-2", "likely_encoding": "iso-8859-3"}),
     ("iso-8859-2", b"", {"same_origin_parent_encoding": "utf-16", "likely_encoding": "iso-8859-2"}),
     ("iso-8859-2", b"", {"same_origin_parent_encoding": "utf-16be", "likely_encoding": "iso-8859-2"}),

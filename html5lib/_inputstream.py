@@ -15,6 +15,9 @@ from . import _utils
 
 # Non-unicode versions of constants for use in the pre-parser
 spaceCharactersBytes = frozenset([item.encode("ascii") for item in spaceCharacters])
+# Unquoted charset values in a meta Content-Type stop at ASCII whitespace or ';'
+# https://html.spec.whatwg.org/#algorithm-for-extracting-a-character-encoding-from-a-meta-element
+contentCharsetTerminators = spaceCharactersBytes | frozenset([b";"])
 asciiLettersBytes = frozenset([item.encode("ascii") for item in asciiLetters])
 asciiUppercaseBytes = frozenset([item.encode("ascii") for item in asciiUppercase])
 spacesAngleBrackets = spaceCharactersBytes | frozenset([b">", b"<"])
@@ -891,7 +894,7 @@ class ContentAttrParser(object):
                 # Unquoted value
                 oldPosition = self.data.position
                 try:
-                    self.data.skipUntil(spaceCharactersBytes)
+                    self.data.skipUntil(contentCharsetTerminators)
                     return self.data[oldPosition:self.data.position]
                 except StopIteration:
                     # Return the whole remaining value
