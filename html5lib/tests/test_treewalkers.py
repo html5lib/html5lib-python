@@ -15,6 +15,7 @@ from .support import treeTypes
 
 from html5lib import html5parser, treewalkers
 from html5lib.filters.lint import Filter as Lint
+from html5lib.serializer import HTMLSerializer
 
 import re
 attrlist = re.compile(r"^(\s+)\w+=.*(\n\1\w+=.*)+", re.M)
@@ -121,6 +122,28 @@ def test_fragment_single_char(tree, char):
     output = Lint(treeClass["walker"](document))
 
     assert list(output) == expected
+
+
+@pytest.mark.parametrize("tree,intext",
+                         itertools.product(sorted(treeTypes.items()),
+                                           ["", "<!doctype html>"]))
+def test_fragment_empty(tree, intext):
+    treeName, treeClass = tree
+    if treeClass is None:
+        pytest.skip("Treebuilder not loaded")
+
+    parser = html5parser.HTMLParser(tree=treeClass["builder"])
+    document = parser.parseFragment(intext)
+    document = treeClass.get("adapter", lambda x: x)(document)
+
+    assert list(Lint(treeClass["walker"](document))) == []
+    assert "".join(HTMLSerializer().serialize(treeClass["walker"](document))) == ""
+
+
+@pytest.mark.skipif(treeTypes["lxml"] is None, reason="lxml not importable")
+def test_lxml_empty_list():
+    walker = treewalkers.getTreeWalker('lxml')
+    assert list(Lint(walker([]))) == []
 
 
 @pytest.mark.skipif(treeTypes["lxml"] is None, reason="lxml not importable")
