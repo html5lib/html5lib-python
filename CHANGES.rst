@@ -18,6 +18,8 @@ Features:
 
 Bug fixes:
 
+* Allow the lxml treewalker to serialize empty fragments without raising
+  ``IndexError``. (#343)
 * The sanitizer now permits ``<summary>`` tags. It used to allow ``<details>``
   already. (#423)
 

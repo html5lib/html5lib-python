@@ -55,7 +55,7 @@ class Root(object):
         return None
 
     def __len__(self):
-        return 1
+        return len(self.children)
 
 
 class Doctype(object):
@@ -180,11 +180,12 @@ class TreeWalker(base.NonRecursiveTreeWalker):
     def getFirstChild(self, node):
         assert not isinstance(node, tuple), "Text nodes have no children"
 
-        assert len(node) or node.text, "Node has no children"
         if node.text:
             return (node, "text")
-        else:
+        elif len(node):
             return node[0]
+        else:
+            return None
 
     def getNextSibling(self, node):
         if isinstance(node, tuple):  # Text node
