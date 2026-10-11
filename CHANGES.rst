@@ -18,6 +18,9 @@ Features:
 
 Bug fixes:
 
+* Detect declared encodings after short comments whose terminators overlap
+  the comment opener. (#427)
+
 * The sanitizer now permits ``<summary>`` tags. It used to allow ``<details>``
   already. (#423)
 

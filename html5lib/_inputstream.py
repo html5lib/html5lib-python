@@ -712,7 +712,8 @@ class EncodingParser(object):
         return self.encoding
 
     def handleComment(self):
-        """Skip over comments"""
+        """Skip over comments, including terminators overlapping the opener."""
+        self.data.position -= 2
         return self.data.jumpTo(b"-->")
 
     def handleMeta(self):
