@@ -115,3 +115,19 @@ else:
             encoding = _inputstream.HTMLInputStream(fp.read()).charEncoding
             assert encoding[0].name == "big5"
 # pylint:enable=wrong-import-position
+
+
+@pytest.mark.parametrize("comment", [b"<!-->", b"<!--->", b"<!---->", b"<!--normal-->"])
+def test_prescan_short_comments(comment):
+    data = comment + b"<meta charset=iso-8859-2>"
+    encoding = _inputstream.EncodingParser(data).getEncoding()
+    assert encoding is not None
+    assert encoding.name == "iso-8859-2"
+    stream = _inputstream.HTMLBinaryInputStream(data, useChardet=False)
+    assert stream.charEncoding[0].name == "iso-8859-2"
+
+
+def test_prescan_ignores_meta_inside_comment():
+    data = b"<!--<meta charset=utf-8>--><meta charset=iso-8859-2>"
+    encoding = _inputstream.EncodingParser(data).getEncoding()
+    assert encoding.name == "iso-8859-2"
