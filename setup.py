@@ -6,9 +6,14 @@ import sys
 
 from os.path import join, dirname
 from setuptools import setup, find_packages, __version__ as setuptools_version
-from pkg_resources import parse_version
 
-import pkg_resources
+try:
+    from pkg_resources import parse_version
+    import pkg_resources
+except ImportError:
+    # setuptools>=81 may omit pkg_resources; only needed for old marker shims.
+    pkg_resources = None
+    parse_version = None
 
 try:
     import _markerlib.markers
