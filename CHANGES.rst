@@ -18,6 +18,7 @@ Features:
 
 Bug fixes:
 
+* Keep cached tree builder modules when another configuration is requested. (#585)
 * The sanitizer now permits ``<summary>`` tags. It used to allow ``<details>``
   already. (#423)
 
