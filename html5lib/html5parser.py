@@ -749,6 +749,15 @@ class InHeadPhase(Phase):
         self.parser.originalPhase = self.parser.phase
         self.parser.phase = self.parser.phases["text"]
 
+    def startTagTemplate(self, token):
+        # WHATWG "in head": insert the element, then switch to "in template".
+        # Template contents stay as ordinary children (html5lib does not yet
+        # implement the template content document fragment).
+        self.tree.insertElement(token)
+        self.parser.framesetOK = False
+        self.parser.originalPhase = self.parser.phase
+        self.parser.phase = self.parser.phases["inTemplate"]
+
     def startTagOther(self, token):
         self.anythingElse()
         return token
@@ -774,6 +783,7 @@ class InHeadPhase(Phase):
         (("noframes", "style"), startTagNoFramesStyle),
         ("noscript", startTagNoscript),
         ("script", startTagScript),
+        ("template", startTagTemplate),
         (("base", "basefont", "bgsound", "command", "link"),
          startTagBaseLinkCommand),
         ("meta", startTagMeta),
@@ -909,13 +919,76 @@ class AfterHeadPhase(Phase):
         ("body", startTagBody),
         ("frameset", startTagFrameset),
         (("base", "basefont", "bgsound", "link", "meta", "noframes", "script",
-          "style", "title"),
+          "style", "template", "title"),
          startTagFromHead),
         ("head", startTagHead)
     ])
     startTagHandler.default = startTagOther
     endTagHandler = _utils.MethodDispatcher([(("body", "html", "br"),
                                               endTagHtmlBodyBr)])
+    endTagHandler.default = endTagOther
+
+
+class InTemplatePhase(Phase):
+    """Simplified "in template" insertion mode.
+
+    Places template contents as ordinary children of the ``template`` element.
+    Full WHATWG template content fragments and the stack of template insertion
+    modes are not implemented.
+    """
+    __slots__ = tuple()
+
+    def processEOF(self):
+        self.parser.parseError("eof-in-template")
+        self.endTagTemplate(impliedTagToken("template"))
+        return True
+
+    def processComment(self, token):
+        self.tree.insertComment(token)
+
+    def processCharacters(self, token):
+        self.tree.insertText(token["data"])
+
+    def processSpaceCharacters(self, token):
+        self.tree.insertText(token["data"])
+
+    def startTagTemplate(self, token):
+        return self.parser.phases["inHead"].processStartTag(token)
+
+    def startTagOther(self, token):
+        self.tree.insertElement(token)
+
+    def endTagTemplate(self, token):
+        for i, node in enumerate(reversed(self.tree.openElements)):
+            if node.name == "template":
+                del self.tree.openElements[-(i + 1):]
+                break
+        else:
+            self.parser.parseError("unexpected-end-tag", {"name": "template"})
+            return
+        self.parser.phase = self.parser.originalPhase
+
+    def endTagOther(self, token):
+        # Pop a matching open element inside the template when present.
+        for node in reversed(self.tree.openElements):
+            if node.name == "template":
+                self.parser.parseError("unexpected-end-tag", {"name": token["name"]})
+                return
+            if node.name == token["name"]:
+                while self.tree.openElements[-1].name != token["name"]:
+                    self.tree.openElements.pop()
+                self.tree.openElements.pop()
+                return
+        self.parser.parseError("unexpected-end-tag", {"name": token["name"]})
+
+    startTagHandler = _utils.MethodDispatcher([
+        ("template", startTagTemplate),
+    ])
+    startTagHandler.default = startTagOther
+
+    endTagHandler = _utils.MethodDispatcher([
+        ("template", endTagTemplate),
+    ])
     endTagHandler.default = endTagOther
 
 
@@ -1581,7 +1654,7 @@ class InBodyPhase(Phase):
     startTagHandler = _utils.MethodDispatcher([
         ("html", Phase.startTagHtml),
         (("base", "basefont", "bgsound", "command", "link", "meta",
-          "script", "style", "title"),
+          "script", "style", "template", "title"),
          startTagProcessInHead),
         ("body", startTagBody),
         ("frameset", startTagFrameset),
@@ -2752,6 +2825,7 @@ _phases = {
     "inHead": InHeadPhase,
     "inHeadNoscript": InHeadNoscriptPhase,
     "afterHead": AfterHeadPhase,
+    "inTemplate": InTemplatePhase,
     "inBody": InBodyPhase,
     "text": TextPhase,
     "inTable": InTablePhase,

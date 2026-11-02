@@ -289,6 +289,8 @@ E = {
         "Unexpected end of file. Expected inhead-noscript content",
     "char-in-head-noscript":
         "Unexpected non-space character. Expected inhead-noscript content",
+    "eof-in-template":
+        "Unexpected end of file. Expected template content",
     "XXX-undefined-error":
         "Undefined error (this sucks and should be fixed)",
 }
@@ -410,6 +412,7 @@ specialElements = frozenset([
     (namespaces["html"], "table"),
     (namespaces["html"], "tbody"),
     (namespaces["html"], "td"),
+    (namespaces["html"], "template"),
     (namespaces["html"], "textarea"),
     (namespaces["html"], "tfoot"),
     (namespaces["html"], "th"),

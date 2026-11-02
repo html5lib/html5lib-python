@@ -18,6 +18,10 @@ Features:
 
 Bug fixes:
 
+* Place ``<template>`` elements in ``<head>`` when they appear before
+  ``<body>``, matching the WHATWG "in head" / "in body" insertion-mode rules.
+  Template contents are still stored as ordinary children rather than a
+  content document fragment. (#595)
 * The sanitizer now permits ``<summary>`` tags. It used to allow ``<details>``
   already. (#423)
 

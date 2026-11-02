@@ -91,3 +91,21 @@ def test_self_closing_col():
     parser = HTMLParser()
     parser.parseFragment('<table><colgroup><col /></colgroup></table>')
     assert not parser.errors
+
+
+def test_template_before_body_goes_in_head():
+    # Issue #595: <template> before <body> must use the in-head rules.
+    doc = parse("<template></template>", treebuilder="dom", namespaceHTMLElements=False)
+    head = [c for c in doc.documentElement.childNodes if getattr(c, "localName", None) == "head"][0]
+    body = [c for c in doc.documentElement.childNodes if getattr(c, "localName", None) == "body"][0]
+    head_names = [c.localName for c in head.childNodes if getattr(c, "localName", None)]
+    body_names = [c.localName for c in body.childNodes if getattr(c, "localName", None)]
+    assert head_names == ["template"]
+    assert body_names == []
+
+
+def test_template_before_body_keeps_text_content():
+    doc = parse("<template>hi</template>", treebuilder="dom", namespaceHTMLElements=False)
+    template = doc.getElementsByTagName("template")[0]
+    assert template.parentNode.localName == "head"
+    assert [c.data for c in template.childNodes if getattr(c, "data", None) is not None] == ["hi"]
