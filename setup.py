@@ -84,6 +84,7 @@ with codecs.open(join(here, 'README.rst'), 'r', 'utf8') as readme_file:
     with codecs.open(join(here, 'CHANGES.rst'), 'r', 'utf8') as changes_file:
         long_description = readme_file.read() + '\n' + changes_file.read()
 
+
 def string_constant(node):
     """Return the value of a string literal node, or None.
 
