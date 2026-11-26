@@ -84,6 +84,21 @@ with codecs.open(join(here, 'README.rst'), 'r', 'utf8') as readme_file:
     with codecs.open(join(here, 'CHANGES.rst'), 'r', 'utf8') as changes_file:
         long_description = readme_file.read() + '\n' + changes_file.read()
 
+def string_constant(node):
+    """Return the value of a string literal node, or None.
+
+    String literals are ast.Constant since Python 3.8 and ast.Str before
+    that, and ast.Str was removed in Python 3.14, so neither class can be
+    used for an isinstance check on every supported version. Both node
+    types are duck-typed here instead: ast.Str stores the string in "s",
+    ast.Constant in "value".
+    """
+    value = getattr(node, "value", getattr(node, "s", None))
+    if isinstance(value, str):
+        return value
+    return None
+
+
 version = None
 with open(join(here, "html5lib", "__init__.py"), "rb") as init_file:
     t = ast.parse(init_file.read(), filename="__init__.py", mode="exec")
@@ -92,9 +107,8 @@ with open(join(here, "html5lib", "__init__.py"), "rb") as init_file:
     for a in assignments:
         if (len(a.targets) == 1 and
                 isinstance(a.targets[0], ast.Name) and
-                a.targets[0].id == "__version__" and
-                isinstance(a.value, ast.Str)):
-            version = a.value.s
+                a.targets[0].id == "__version__"):
+            version = string_constant(a.value) or version
 
 setup(name='html5lib',
       version=version,
