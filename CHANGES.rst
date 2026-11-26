@@ -20,6 +20,8 @@ Bug fixes:
 
 * The sanitizer now permits ``<summary>`` tags. It used to allow ``<details>``
   already. (#423)
+* Fix building and installing on Python 3.14, where the ``ast.Str`` class
+  used to read the package version in ``setup.py`` was removed. (#588)
 
 1.1
 ~~~
